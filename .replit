@@ -6,3 +6,8 @@ packages = ["freetype", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp
 
 [agent]
 expertMode = true
+
+[userenv]
+
+[userenv.shared]
+GROQ_MODEL = "openai/gpt-oss-20b"
