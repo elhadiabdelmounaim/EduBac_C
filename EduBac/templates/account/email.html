@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}Adresses e-mail{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <h1 class="h4 mb-4">Mes adresses e-mail</h1>
+        {% if user.emailaddress_set.all %}
+        <div class="card mb-4">
+            <ul class="list-group list-group-flush">
+                {% for emailaddress in user.emailaddress_set.all %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>
+                        {{ emailaddress.email }}
+                        {% if emailaddress.primary %}<span class="badge bg-primary ms-1">Principale</span>{% endif %}
+                        {% if emailaddress.verified %}<span class="badge bg-success ms-1">Vérifiée</span>
+                        {% else %}<span class="badge bg-warning text-dark ms-1">Non vérifiée</span>{% endif %}
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h6">Ajouter une adresse e-mail</h2>
+                <form method="post" action="{% url 'account_email' %}">
+                    {% csrf_token %}
+                    <div class="input-group mb-3">
+                        <input type="email" name="email" class="form-control" placeholder="nouvelle@adresse.com" required>
+                        <button type="submit" name="action_add" class="btn btn-edubac">Ajouter</button>
+                    </div>
+                </form>
+                <form method="post" action="{% url 'account_email' %}" class="mt-2">
+                    {% csrf_token %}
+                    <button type="submit" name="action_send" class="btn btn-outline-secondary btn-sm">
+                        Renvoyer l'e-mail de vérification
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

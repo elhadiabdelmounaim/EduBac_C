@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-4">
+    <h1 class="h3 fw-bold text-danger">Supprimer cette classe ?</h1>
+    <p class="text-muted">Cette action est irréversible pour la classe elle-même.</p>
+</div>
+
+<div class="card shadow-sm border-0 border-danger" style="border-radius:16px; max-width:560px;">
+    <div class="card-body">
+        <h5 class="fw-bold" style="color:var(--edubac-navy);">{{ classroom.name }}</h5>
+        <p class="text-muted small mb-3">{{ classroom.get_niveau_display }} · Code : {{ classroom.code }}</p>
+
+        <p class="mb-2">Cette classe contient :</p>
+        <ul class="mb-3">
+            <li><strong>{{ members_count }}</strong> élève{{ members_count|pluralize }}</li>
+            <li><strong>{{ quiz_count }}</strong> quiz avec résultats</li>
+            <li><strong>{{ results_count }}</strong> résultat{{ results_count|pluralize }}</li>
+        </ul>
+
+        {% if has_excel %}
+        <div class="alert alert-warning small">
+            Un fichier Excel contenant les résultats de cette classe existe également.
+        </div>
+        {% endif %}
+
+        <div class="alert alert-info small">
+            <strong>Important :</strong> les comptes utilisateurs des élèves ne seront
+            <strong>pas</strong> supprimés. Seules les associations à cette classe seront retirées.
+            Les résultats de quiz restent dans la base de données.
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            {% if has_excel %}
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" name="delete_excel" id="delete_excel">
+                <label class="form-check-label" for="delete_excel">
+                    Supprimer également le fichier Excel
+                </label>
+            </div>
+            {% endif %}
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'classrooms:detail' classroom.pk %}" class="btn btn-outline-secondary">
+                    Annuler
+                </a>
+                <button type="submit" class="btn btn-danger"
+                        onclick="return confirm('Confirmer la suppression définitive de la classe « {{ classroom.name }} » ?');">
+                    🗑 Supprimer la classe
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

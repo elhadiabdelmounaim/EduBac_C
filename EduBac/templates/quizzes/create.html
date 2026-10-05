@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 mb-4">Créer un quiz</h1>
+<form method="post" class="card card-body shadow-sm" style="max-width:560px">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label class="form-label">Titre</label>
+        <input type="text" name="title" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Leçon</label>
+        <select name="lesson" class="form-select" required>
+            <option value="">— Choisir —</option>
+            {% for l in lessons %}
+            <option value="{{ l.pk }}">{{ l.course.name }} — {{ l.title }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Durée (min)</label>
+            <input type="number" name="duration" class="form-control" value="30" min="5" max="180">
+        </div>
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Difficulté</label>
+            <select name="difficulty" class="form-select">
+                <option value="facile">Facile</option>
+                <option value="moyen" selected>Moyen</option>
+                <option value="difficile">Difficile</option>
+            </select>
+        </div>
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Statut</label>
+            <select name="status" class="form-select">
+                <option value="draft" selected>Brouillon</option>
+                <option value="published">Publié</option>
+            </select>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-edubac">Créer le quiz</button>
+    <a href="{% url 'quizzes:manage' %}" class="btn btn-link">Annuler</a>
+</form>
+<p class="small text-muted mt-3">Astuce : pour générer les questions avec l’IA, ouvrez une leçon puis « Générer un quiz avec l’IA ».</p>
+{% endblock %}

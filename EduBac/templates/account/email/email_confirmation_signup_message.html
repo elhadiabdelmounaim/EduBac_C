@@ -1,0 +1,12 @@
+{% extends "account/email/base_message.html" %}
+{% block subject %}Bienvenue sur EduBac{% endblock %}
+{% block content %}
+<p>Bienvenue sur <strong>EduBac</strong> !</p>
+<p>Pour finaliser votre inscription et accéder à la plateforme, confirmez votre adresse e-mail :</p>
+<p style="text-align:center;">
+  <a href="{{ activate_url }}" class="btn">Activer mon compte</a>
+</p>
+<p class="muted">Ou copiez ce lien :</p>
+<p class="link">{{ activate_url }}</p>
+<p>Une fois votre compte activé, vous pourrez consulter les cours, les leçons et les quiz de mathématiques.</p>
+{% endblock %}

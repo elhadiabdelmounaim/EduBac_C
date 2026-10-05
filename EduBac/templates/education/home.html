@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="hero text-center mb-4 fade-up">
+    <div class="hero-symbols" aria-hidden="true">
+        <span class="hs1">∑</span>
+        <span class="hs2">π</span>
+        <span class="hs3">√</span>
+        <span class="hs4">∞</span>
+    </div>
+    <div class="position-relative" style="z-index:1;">
+        <div class="display-5 mb-2">📐</div>
+        <h1 class="display-5 fw-bold"><i class="bi bi-mortarboard-fill"></i> EduBac</h1>
+        <p class="lead mb-1">Les mathématiques, plus proches de toi</p>
+        <p class="mt-1 opacity-75 small">Apprendre aujourd'hui, réussir demain</p>
+    </div>
+</div>
+
+<div class="illus-card mb-4 fade-up fade-up-delay-1">
+    <div class="reader-illus float-soft">📖</div>
+    <div class="flex-grow-1">
+        <h2 class="h5 fw-bold mb-1" style="color:var(--edubac-navy);">Explore les niveaux scolaires</h2>
+        <p class="mb-0 text-muted small">Du Tronc Commun au 2<sup>ème</sup> Bac — leçons, quiz et assistant IA pour progresser en maths.</p>
+    </div>
+    <span class="illus-math im1">∫</span>
+    <span class="illus-math im2">Δ</span>
+    <span class="illus-math im3">≈</span>
+</div>
+
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+    <div>
+        <h2 class="h4 fw-bold mb-1" style="color:var(--edubac-navy);">Tous les niveaux</h2>
+        <p class="text-muted mb-0 small">Choisissez votre niveau pour accéder aux leçons.</p>
+    </div>
+</div>
+
+<div class="edubac-grid mb-4">
+{% for n in niveaux %}
+    <div class="fade-up">
+        <a href="{% url 'education:niveau_detail' n.code %}" class="level-card lc-{{ n.order }}">
+            <div>
+                <div class="level-icon">
+                    {% if n.order == 1 %}🔢
+                    {% elif n.order == 2 %}🧪
+                    {% elif n.order == 3 %}📊
+                    {% elif n.order == 4 %}📚
+                    {% elif n.order == 5 %}🧬
+                    {% elif n.order == 6 %}⚡
+                    {% else %}✍️{% endif %}
+                </div>
+                <h3>{{ n.label }}</h3>
+                <p>{{ n.count }} leçon{{ n.count|pluralize }}</p>
+            </div>
+            <span class="lc-symbol">
+                {% if n.order == 1 %}ℕ
+                {% elif n.order == 2 %}f(x)
+                {% elif n.order == 3 %}∇
+                {% elif n.order == 4 %}Σ
+                {% elif n.order == 5 %}∫
+                {% elif n.order == 6 %}ℂ
+                {% else %}P{% endif %}
+            </span>
+            <div class="text-end mt-2">
+                <i class="bi bi-chevron-right opacity-50"></i>
+            </div>
+        </a>
+    </div>
+{% empty %}
+    <div class="full-width"><div class="alert alert-info">Les cours seront bientôt disponibles.</div></div>
+{% endfor %}
+</div>
+
+<div class="math-quote">
+    <div class="quote-mark">“</div>
+    <p>Les mathématiques sont le langage avec lequel Dieu a écrit l'univers.</p>
+    <div class="quote-author">— Galilée</div>
+</div>
+{% endblock %}

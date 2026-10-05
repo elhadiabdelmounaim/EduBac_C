@@ -1,0 +1,7 @@
+{% extends "account/email/base_message.html" %}
+{% block subject %}Adresse e-mail supprimée{% endblock %}
+{% block content %}
+<p>Bonjour,</p>
+<p>L'adresse e-mail <strong>{{ email }}</strong> a été retirée de votre compte EduBac.</p>
+<p class="muted">Si vous n'êtes pas à l'origine de cette action, contactez le support.</p>
+{% endblock %}

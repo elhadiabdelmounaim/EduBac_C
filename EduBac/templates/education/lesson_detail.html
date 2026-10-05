@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% load markdown_extras %}
+{% block title %}{{ lesson.title }}
+<a href="{% url 'ai:assistant_lesson' lesson.pk %}" class="ai-fab" title="Demander a l'assistant IA">
+    <i class="bi bi-robot"></i>
+    <span class="ai-fab-text">Assistant IA</span>
+</a>
+<button type="button" class="focus-mode-btn" id="focusModeBtn" title="Mode lecture" aria-label="Mode lecture">
+    <i class="bi bi-book" id="focusModeIcon"></i>
+</button>
+
+{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+.lesson-md {
+    line-height: 1.7;
+    color: var(--edubac-text, #1a1f36);
+    font-size: 1.02rem;
+}
+.lesson-md h1, .lesson-md h2, .lesson-md h3, .lesson-md h4 {
+    color: var(--edubac-navy, #2A0C3D);
+    font-weight: 700;
+    margin-top: 1.25rem;
+    margin-bottom: 0.6rem;
+}
+.lesson-md h2 { font-size: 1.25rem; }
+.lesson-md h3 { font-size: 1.1rem; }
+.lesson-md p { margin-bottom: 0.85rem; }
+.lesson-md ul, .lesson-md ol { padding-left: 1.4rem; margin-bottom: 0.85rem; }
+.lesson-md blockquote {
+    border-left: 4px solid var(--edubac-accent, #DD8826);
+    background: rgba(243, 230, 167, 0.35);
+    margin: 1rem 0;
+    padding: 0.75rem 1rem;
+    border-radius: 0 12px 12px 0;
+}
+.lesson-md code {
+    background: rgba(56, 103, 105, 0.08);
+    padding: 0.1rem 0.35rem;
+    border-radius: 6px;
+    font-size: 0.92em;
+}
+.lesson-md pre {
+    background: #1a1f36;
+    color: #f5f7fa;
+    padding: 1rem;
+    border-radius: 12px;
+    overflow-x: auto;
+}
+.lesson-md table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+}
+.lesson-md th, .lesson-md td {
+    border: 1px solid rgba(0,0,0,.08);
+    padding: 0.5rem 0.75rem;
+}
+.lesson-md th { background: rgba(56, 103, 105, 0.1); }
+.lesson-md .katex-display { margin: 1rem 0; overflow-x: auto; }
+</style>
+{% endblock %}
+{% block content %}
+<nav class="edubac-breadcrumb" aria-label="Fil d'Ariane">
+    <a href="{% url 'education:home' %}"><i class="bi bi-house-door"></i></a>
+    <span class="sep">/</span>
+    <a href="{% url 'education:niveau_detail' course.niveau %}">{{ course.get_niveau_display }}</a>
+    <span class="sep">/</span>
+    <span class="current" title="{{ lesson.title }}">{{ lesson.title }}</span>
+</nav>
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+    <div>
+        <h1 class="h3 fw-bold" style="color:var(--edubac-navy);">{{ lesson.title }}</h1>
+        <p class="text-muted small mb-0">{{ course.name }} · Markdown + LaTeX</p>
+    </div>
+    {% if user.is_authenticated %}
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="toggle_fav">
+        <button type="submit" class="btn btn-sm {% if is_fav %}btn-accent{% else %}btn-outline-primary{% endif %}">
+            <i class="bi bi-star{% if is_fav %}-fill{% endif %}"></i>
+            {% if is_fav %}Favori{% else %}Favoris{% endif %}
+        </button>
+    </form>
+    {% endif %}
+</div>
+
+{% if lesson.summary %}
+<div class="card shadow-sm mb-3 border-0" style="border-left:4px solid var(--edubac-accent)!important;border-radius:16px;">
+    <div class="card-body">
+        <h2 class="h6 fw-bold"><i class="bi bi-lightning-charge"></i> Fiche résumé</h2>
+        <div class="lesson-md">{{ lesson.summary|markdown_latex }}</div>
+    </div>
+</div>
+{% endif %}
+
+<div class="card shadow-sm mb-3 border-0" style="border-radius:16px;">
+    <div class="card-body">
+        <h2 class="h6 fw-bold mb-3">Contenu du cours</h2>
+        {% if lesson.content %}
+        <div class="lesson-md" id="lessonContent">{{ lesson.content|markdown_latex }}</div>
+        {% else %}
+        <p class="text-muted mb-0">Contenu à venir. Tu pourras coller du Markdown + LaTeX ici, et joindre un PDF.</p>
+        {% endif %}
+        {% if lesson.pdf %}
+        <div class="mt-3 d-flex gap-2">
+            <a href="{{ lesson.pdf.url }}" class="btn btn-edubac btn-sm" target="_blank">Ouvrir le PDF</a>
+            <a href="{{ lesson.pdf.url }}" class="btn btn-outline-primary btn-sm" download>Télécharger</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card shadow-sm mb-3 border-0" style="border-radius:16px;">
+    <div class="card-header bg-white fw-bold">Besoin d'une explication ?</div>
+    <div class="card-body d-flex flex-wrap gap-2">
+        <a href="{% url 'ai:assistant_lesson' lesson.pk %}" class="btn btn-accent btn-sm">
+            <i class="bi bi-robot"></i> Assistant IA
+        </a>
+        <a href="{% url 'quizzes:errors' %}" class="btn btn-outline-primary btn-sm">Mes points faibles</a>
+    </div>
+</div>
+
+{% if faq_items %}
+<div class="card shadow-sm mb-3 border-0" style="border-radius:16px;">
+    <div class="card-header bg-white fw-bold">Questions fréquentes</div>
+    <div class="accordion accordion-flush" id="faqAcc">
+        {% for item in faq_items %}
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq{{ forloop.counter }}">
+                    {{ item.q }}
+                </button>
+            </h2>
+            <div id="faq{{ forloop.counter }}" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
+                <div class="accordion-body lesson-md">{{ item.a|default:"—"|markdown_latex }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+
+<div class="understand-bar">
+    <span class="small text-muted me-1 align-self-center">As-tu compris cette lecon ?</span>
+    <button type="button" class="btn btn-sm btn-outline-success btn-understand" data-state="yes">
+        <i class="bi bi-emoji-smile"></i> Oui, compris
+    </button>
+    <button type="button" class="btn btn-sm btn-outline-warning btn-understand" data-state="no">
+        <i class="bi bi-emoji-neutral"></i> A revoir
+    </button>
+</div>
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+    {% if prev_lesson %}
+    <a href="{% url 'education:lesson_detail' prev_lesson.pk %}" class="btn btn-link btn-sm">← {{ prev_lesson.title|truncatechars:30 }}</a>
+    {% endif %}
+    {% if next_lesson %}
+    <a href="{% url 'education:lesson_detail' next_lesson.pk %}" class="btn btn-edubac btn-sm">
+        Leçon suivante : {{ next_lesson.title|truncatechars:30 }} →
+    </a>
+    {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+        onload="renderMathInElement(document.body, {
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\\\(', right: '\\\\)', display: false},
+                {left: '\\\\[', right: '\\\\]', display: true}
+            ],
+            throwOnError: false
+        });"></script>
+
+<script>
+(function(){
+  var btn = document.getElementById('focusModeBtn');
+  var icon = document.getElementById('focusModeIcon');
+  if(btn){
+    btn.addEventListener('click', function(){
+      document.body.classList.toggle('focus-mode');
+      var on = document.body.classList.contains('focus-mode');
+      if(icon) icon.className = on ? 'bi bi-arrows-angle-contract' : 'bi bi-book';
+      btn.title = on ? 'Quitter le mode lecture' : 'Mode lecture';
+    });
+  }
+  document.querySelectorAll('.btn-understand').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('.btn-understand').forEach(function(x){ x.classList.remove('active'); });
+      b.classList.add('active');
+      try { localStorage.setItem('edubac-lesson-{{ lesson.pk }}', b.getAttribute('data-state')); } catch(e){}
+    });
+    try {
+      var saved = localStorage.getItem('edubac-lesson-{{ lesson.pk }}');
+      if(saved && b.getAttribute('data-state')===saved) b.classList.add('active');
+    } catch(e){}
+  });
+})();
+</script>
+{% endblock %}
+

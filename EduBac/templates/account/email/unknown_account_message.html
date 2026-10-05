@@ -1,0 +1,8 @@
+{% extends "account/email/base_message.html" %}
+{% block subject %}Demande concernant un compte EduBac{% endblock %}
+{% block content %}
+<p>Bonjour,</p>
+<p>Une action a été demandée pour l'adresse <strong>{{ email }}</strong> sur EduBac.</p>
+<p>Aucun compte n'est associé à cette adresse.</p>
+<p class="muted">Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail.</p>
+{% endblock %}

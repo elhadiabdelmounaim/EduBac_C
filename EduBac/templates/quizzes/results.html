@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% load markdown_extras %}
+{% block content %}
+{% with score=attempt.score|default:0 %}
+<div class="score-hero fade-up {% if score >= 70 %}success{% elif score >= 40 %}warning{% else %}danger{% endif %}" id="scoreHero">
+    {% if score >= 70 %}
+    <div class="score-emoji">🎉</div>
+    <div class="score-big">{{ score }}%</div>
+    <p class="fw-semibold mb-0 mt-2">Bravo ! Excellent travail</p>
+    <p class="small text-muted mb-0">{{ correct }} bonne(s) réponse(s) sur {{ total }}</p>
+    {% elif score >= 40 %}
+    <div class="score-emoji">👍</div>
+    <div class="score-big">{{ score }}%</div>
+    <p class="fw-semibold mb-0 mt-2">Pas mal — continue</p>
+    <p class="small text-muted mb-0">{{ correct }} bonne(s) réponse(s) sur {{ total }}</p>
+    {% else %}
+    <div class="score-emoji">💪</div>
+    <div class="score-big">{{ score }}%</div>
+    <p class="fw-semibold mb-0 mt-2">Revois la leçon et réessaie</p>
+    <p class="small text-muted mb-0">{{ correct }} bonne(s) réponse(s) sur {{ total }}</p>
+    {% endif %}
+</div>
+{% endwith %}
+
+<div class="row g-3 mb-3 fade-up fade-up-delay-1">
+    <div class="col-4">
+        <div class="card border-0 shadow-sm text-center h-100" style="border-radius:14px;">
+            <div class="card-body py-3">
+                <div class="fs-4 fw-bold" style="color:var(--edubac-teal);">{{ total }}</div>
+                <div class="small text-muted">Questions</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="card border-0 shadow-sm text-center h-100" style="border-radius:14px;">
+            <div class="card-body py-3">
+                <div class="fs-4 fw-bold text-success">{{ correct }}</div>
+                <div class="small text-muted">Bonnes</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="card border-0 shadow-sm text-center h-100" style="border-radius:14px;">
+            <div class="card-body py-3">
+                <div class="fs-4 fw-bold text-danger">{{ wrong }}</div>
+                <div class="small text-muted">Mauvaises</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm fade-up fade-up-delay-1 mb-3 border-0" style="border-radius:16px;">
+    <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center" style="border-radius:16px 16px 0 0;">
+        <span><i class="bi bi-card-checklist me-1"></i> {{ attempt.quiz.title }} — Correction</span>
+        <span class="badge" style="background:var(--edubac-light);color:var(--edubac-teal);">
+            Score : {{ attempt.score|default:0 }}%
+        </span>
+    </div>
+    <div class="card-body p-0">
+        {% for item in detailed %}
+        <div class="p-3 {% if not forloop.last %}border-bottom{% endif %}"
+             style="border-left:4px solid {% if item.is_correct %}#70A974{% else %}#c0392b{% endif %};">
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                <div class="small text-muted fw-semibold">Question {{ forloop.counter }}</div>
+                {% if item.is_correct %}
+                <span class="badge bg-success">Correct</span>
+                {% else %}
+                <span class="badge bg-danger">Incorrect</span>
+                {% endif %}
+            </div>
+            <div class="fw-semibold mb-2">{{ item.question.text|latex }}</div>
+
+            <div class="mb-2">
+                <div class="small text-muted">Ta réponse</div>
+                <div class="{% if item.is_correct %}text-success{% else %}text-danger{% endif %} fw-semibold">
+                    {% if item.student_answer %}{{ item.student_answer|latex }}{% else %}<em class="text-muted">Aucune (temps écoulé)</em>{% endif %}
+                </div>
+            </div>
+
+            {% if not item.is_correct and item.good_answer %}
+            <div class="mb-2">
+                <div class="small text-muted">Bonne réponse</div>
+                <div class="text-success fw-semibold">{{ item.good_answer|latex }}</div>
+            </div>
+            {% endif %}
+
+            {% if item.choices %}
+            <ul class="list-unstyled small mb-2">
+                {% for c in item.choices %}
+                <li class="py-1 {% if c.is_correct %}text-success fw-semibold{% elif item.student_answer == c.text and not item.is_correct %}text-danger{% endif %}">
+                    {% if c.is_correct %}<i class="bi bi-check-circle-fill"></i>
+                    {% elif item.student_answer == c.text %}<i class="bi bi-x-circle"></i>
+                    {% else %}<i class="bi bi-circle"></i>{% endif %}
+                    {{ c.text|latex }}
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            {% if item.explanation %}
+            <div class="mt-2 p-2 rounded-3 small" style="background:#f7f8fa;">
+                <strong><i class="bi bi-lightbulb"></i> Explication</strong>
+                <div class="mt-1 lesson-md">{{ item.explanation|latex }}</div>
+            </div>
+            {% endif %}
+            <div class="mt-2">
+                <a href="/tableau/correction/{{ attempt.pk }}/{{ item.question.pk }}/"
+                   class="btn btn-sm btn-edubac">
+                    <i class="bi bi-easel"></i> Ouvrir le tableau de correction
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="p-3 text-muted">Aucune réponse enregistrée.</div>
+        {% endfor %}
+    </div>
+</div>
+
+{% if new_badges %}
+<div class="alert alert-success fade-up">Nouveau badge débloqué ! Va voir <a href="/compte/badges/">Mes badges</a>.</div>
+{% endif %}
+
+{% if attempt.teacher_comment %}
+<div class="alert alert-info fade-up">
+    <strong>Commentaire du professeur :</strong> {{ attempt.teacher_comment }}
+</div>
+{% endif %}
+
+<div class="d-flex flex-wrap gap-2 fade-up fade-up-delay-2 mb-4">
+    <a href="{% url 'quizzes:review' attempt.pk %}" class="btn btn-edubac btn-sm">
+        <i class="bi bi-book"></i> Mode révision
+    </a>
+    <a href="{% url 'quizzes:errors' %}" class="btn btn-outline-primary btn-sm">Mes erreurs</a>
+    <a href="{% url 'quizzes:my_results' %}" class="btn btn-outline-primary btn-sm">Mes résultats</a>
+    <a href="{% url 'quizzes:assigned' %}" class="btn btn-outline-primary btn-sm">Mes quiz</a>
+</div>
+{% endblock %}
+{% block extra_css %}{% include "includes/katex.html" %}{% endblock %}
+{% block extra_js %}
+<script>
+(function() {
+    var hero = document.getElementById('scoreHero');
+    if (!hero || !hero.classList.contains('success')) return;
+    var colors = ['#70A974', '#DD8826', '#1a6b6b', '#F3E6A7', '#e74c3c'];
+    for (var i = 0; i < 18; i++) {
+        var bit = document.createElement('span');
+        bit.className = 'confetti-bit';
+        bit.style.left = (Math.random() * 100) + '%';
+        bit.style.top = (Math.random() * 20) + '%';
+        bit.style.background = colors[i % colors.length];
+        bit.style.animationDelay = (Math.random() * 1.5) + 's';
+        hero.appendChild(bit);
+    }
+})();
+</script>
+{% endblock %}

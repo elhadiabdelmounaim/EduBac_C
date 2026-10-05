@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 fw-bold mb-2" style="color:var(--edubac-navy);">Points faibles</h1>
+<p class="text-muted mb-4">Questions souvent ratées — révise ces notions en priorité.</p>
+{% if wrong %}
+<ul class="list-group shadow-sm mb-4">
+{% for w in wrong %}
+<li class="list-group-item">
+    <div class="d-flex justify-content-between align-items-start gap-2">
+        <div>
+            <div class="fw-semibold">{{ w.question__text|truncatechars:120 }}</div>
+            <div class="small text-muted">{{ w.question__quiz__title }}</div>
+        </div>
+        <span class="badge bg-danger">{{ w.n }}×</span>
+    </div>
+</li>
+{% endfor %}
+</ul>
+<div class="alert alert-info">
+    <strong>Conseil :</strong> ouvre l’<a href="{% url 'ai:assistant' %}">Assistant IA</a>,
+    choisis la leçon concernée, niveau <em>Simple</em>, puis demande une explication
+    « par étapes » ou « exemple ».
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">✅</div>
+    <h3>Pas de point faible repéré</h3>
+    <p class="text-muted small">Continue les quiz pour affiner l’analyse.</p>
+</div>
+{% endif %}
+{% endblock %}

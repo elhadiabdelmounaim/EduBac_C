@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Prof-Étudiant Chat{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/chat.css">
+{% endblock %}
+{% block content %}
+<div class="chat-app {% if active_classroom %}chat-room-open{% endif %}"
+     id="chatApp"
+     data-user-id="{{ user.id }}"
+     data-classroom-id="{{ active_classroom.pk|default:'' }}"
+     data-csrf="{{ csrf_token }}" data-user-role="{{ user.role }}" data-is-teacher="{% if user.role == 'teacher' %}1{% else %}0{% endif %}">
+
+  {# ---- Liste des Classes ---- #}
+  <aside class="chat-sidebar" id="chatSidebar">
+    <div class="chat-sidebar-header">
+      <h1 class="chat-title">💬 Prof-Étudiant Chat</h1>
+      <p class="chat-subtitle mb-0">Discussions de classe sécurisées</p>
+      <div class="chat-search-box">
+        <i class="bi bi-search"></i>
+        <input type="search" id="chatRoomSearch" placeholder="Rechercher une classe…" autocomplete="off">
+      </div>
+    </div>
+    <div class="chat-room-list" id="chatRoomList">
+      {% for r in rooms %}
+      <a href="{% url 'chat:room' r.classroom_id %}"
+         class="chat-room-item {% if active_classroom and active_classroom.pk == r.classroom_id %}active{% endif %}"
+         data-classroom-id="{{ r.classroom_id }}"
+         data-name="{{ r.name|lower }}">
+        <div class="chat-avatar">{{ r.avatar_letter }}</div>
+        <div class="chat-room-meta">
+          <div class="chat-room-top">
+            <span class="chat-room-name">{{ r.name }}</span>
+            <span class="chat-room-time">{{ r.last_message_time }}</span>
+          </div>
+          <div class="chat-room-bottom">
+            <span class="chat-room-preview">{% if r.last_message %}{{ r.last_message }}{% else %}Aucun message{% endif %}</span>
+            {% if r.unread %}<span class="chat-unread-badge">{{ r.unread }}</span>{% endif %}
+          </div>
+        </div>
+      </a>
+      {% empty %}
+      <div class="chat-empty-list">
+        <i class="bi bi-chat-square-dots"></i>
+        <p class="mb-0">{% if user.role == 'teacher' or user.is_teacher %}Créez une classe pour discuter avec vos élèves.{% else %}Rejoignez une classe pour discuter avec votre professeur.{% endif %}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </aside>
+
+  {# ---- Zone de conversation ---- #}
+  <section class="chat-main" id="chatMain">
+    {% if active_classroom %}
+    <header class="chat-main-header">
+      <button type="button" class="chat-back-btn d-lg-none" id="chatBackBtn" aria-label="Retour">
+        <i class="bi bi-arrow-left"></i>
+      </button>
+      <div class="chat-avatar chat-avatar-lg">{{ active_classroom.name|slice:":1"|upper }}</div>
+      <div class="chat-header-info">
+        <div class="chat-header-name">{{ active_classroom.name }}</div>
+        <div class="chat-header-status">
+          {{ members_count }} membre{{ members_count|pluralize }}
+          <span>•</span>
+          <span class="chat-online-dot" title="En ligne"></span>
+          En ligne
+        </div>
+      </div>
+      <div class="chat-header-actions">
+        <button type="button" title="Rechercher" aria-label="Rechercher"><i class="bi bi-search"></i></button>
+        <button type="button" title="Menu" aria-label="Menu"><i class="bi bi-three-dots-vertical"></i></button>
+      </div>
+    </header>
+
+    <div class="chat-messages" id="chatMessages" aria-live="polite">
+      <div class="chat-messages-loading text-center py-4" style="color:#8B8399;">Chargement…</div>
+    </div>
+
+    <footer class="chat-composer">
+      <div class="chat-emoji-panel" id="chatEmojiPanel" hidden>
+        <div class="chat-emoji-grid" id="chatEmojiGrid"></div>
+      </div>
+      <div class="chat-reply-bar" id="chatReplyBar" hidden>
+        <div class="chat-reply-bar-inner">
+          <span class="chat-reply-bar-label">Répondre à <strong id="chatReplyName"></strong></span>
+          <span class="chat-reply-bar-text" id="chatReplyText"></span>
+        </div>
+        <button type="button" id="chatReplyCancel" title="Annuler">&times;</button>
+      </div>
+      <div class="chat-file-preview" id="chatFilePreview" hidden>
+        <span id="chatFilePreviewName"></span>
+        <button type="button" id="chatFileClear" title="Retirer">&times;</button>
+      </div>
+      <div class="chat-pinned-bar" id="chatPinnedBar" hidden></div>
+      <form id="chatForm" autocomplete="off" enctype="multipart/form-data">
+        <div class="chat-composer-tools">
+          <button type="button" class="chat-tool-btn" id="chatEmojiBtn" title="Emoji" aria-label="Emoji">
+            <i class="bi bi-emoji-smile"></i>
+          </button>
+          <button type="button" class="chat-tool-btn" id="chatAttachBtn" title="Image ou fichier" aria-label="Pièce jointe">
+            <i class="bi bi-paperclip"></i>
+          </button>
+          <button type="button" class="chat-tool-btn" id="chatVoiceBtn" title="Message vocal" aria-label="Vocal">
+            <i class="bi bi-mic"></i>
+          </button>
+          <input type="file" id="chatFileInput" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,audio/*" hidden>
+        </div>
+        <div class="chat-input-wrap">
+          <textarea id="chatInput" rows="1" placeholder="Écrire un message…" maxlength="4000"></textarea>
+        </div>
+        <button type="submit" class="chat-send-btn" title="Envoyer" aria-label="Envoyer">
+          <i class="bi bi-send-fill"></i>
+        </button>
+      </form>
+    </footer>
+    {% else %}
+    <div class="chat-placeholder">
+      <div class="chat-placeholder-icon">💬</div>
+      <h2>Prof-Étudiant Chat</h2>
+      <p>Sélectionnez une classe pour commencer la conversation avec votre {% if user.role == 'teacher' %}classe{% else %}professeur{% endif %}.</p>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="/static/js/chat.js"></script>
+{% endblock %}

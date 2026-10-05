@@ -1,0 +1,13 @@
+{% if breadcrumbs %}
+<nav class="edubac-breadcrumb" aria-label="Fil d'Ariane">
+    <a href="{% url 'education:home' %}"><i class="bi bi-house-door"></i></a>
+    {% for crumb in breadcrumbs %}
+    <span class="sep">/</span>
+    {% if crumb.url %}
+    <a href="{{ crumb.url }}">{{ crumb.label }}</a>
+    {% else %}
+    <span class="current" title="{{ crumb.label }}">{{ crumb.label }}</span>
+    {% endif %}
+    {% endfor %}
+</nav>
+{% endif %}

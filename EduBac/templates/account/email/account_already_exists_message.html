@@ -1,0 +1,11 @@
+{% extends "account/email/base_message.html" %}
+{% block subject %}Un compte existe déjà{% endblock %}
+{% block content %}
+<p>Bonjour,</p>
+<p>Quelqu'un a tenté de créer un compte EduBac avec l'adresse <strong>{{ email }}</strong>.</p>
+<p>Un compte existe déjà avec cette adresse. Si c'était vous :</p>
+<p style="text-align:center;">
+  <a href="{{ password_reset_url }}" class="btn">Réinitialiser mon mot de passe</a>
+</p>
+<p class="muted">Si ce n'était pas vous, ignorez cet e-mail.</p>
+{% endblock %}

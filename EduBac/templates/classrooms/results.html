@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-4">
+    <div>
+        <h1 class="h3 fw-bold mb-1" style="color:var(--edubac-navy);">Résultats — {{ classroom.name }}</h1>
+        <p class="text-muted small mb-0">
+            {{ classroom.get_niveau_display }}
+            · {{ nb_eleves }} élève{{ nb_eleves|pluralize }}
+            · {{ nb_quiz }} quiz
+        </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'classrooms:download_excel' classroom.pk %}" class="btn btn-edubac btn-sm">
+            📊 Télécharger Excel (classe)
+        </a>
+        <form method="post" action="{% url 'classrooms:regenerate_excel' classroom.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-primary btn-sm" title="Régénérer depuis la base de données">
+                🔄 Régénérer Excel
+            </button>
+        </form>
+        <a href="{% url 'classrooms:detail' classroom.pk %}" class="btn btn-outline-secondary btn-sm">← Classe</a>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0" style="border-radius:16px;">
+    <div class="card-header bg-white fw-bold">Résultats par quiz</div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Quiz</th>
+                    <th class="text-center">Élèves</th>
+                    <th class="text-center">Tentatives</th>
+                    <th class="text-center">Moyenne</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in quiz_rows %}
+                <tr>
+                    <td>
+                        <div class="fw-semibold">{{ row.quiz.title }}</div>
+                        {% if row.quiz.lesson %}
+                        <div class="small text-muted">{{ row.quiz.lesson.title }}</div>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">{{ row.nb_eleves }}</td>
+                    <td class="text-center">{{ row.nb_attempts }}</td>
+                    <td class="text-center">
+                        {% if row.avg is not None %}
+                        <span class="badge bg-primary">{{ row.avg }}%</span>
+                        <span class="small text-muted">({{ row.avg_note }}/20)</span>
+                        {% else %}
+                        —
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'quizzes:student_results' %}?classe={{ classroom.pk }}&quiz={{ row.quiz.pk }}"
+                           class="btn btn-sm btn-outline-primary">Voir</a>
+                        <a href="{% url 'classrooms:download_quiz_excel' classroom.pk row.quiz.pk %}"
+                           class="btn btn-sm btn-outline-success">Excel</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-muted text-center py-4">
+                        Aucun résultat pour le moment. Les élèves doivent terminer un quiz.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<p class="small text-muted mt-3">
+    La base de données Django est la source principale. Le fichier Excel est une exportation
+    synchronisée (et régénérable à tout moment).
+</p>
+{% endblock %}

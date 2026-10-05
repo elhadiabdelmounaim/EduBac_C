@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'education:home' %}">Accueil</a></li>
+        <li class="breadcrumb-item active">{{ niveau_label }}</li>
+    </ol>
+</nav>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center"
+         style="background: var(--edubac-navy); color: #fff;">
+        <h1 class="h4 mb-0">{{ niveau_label }}</h1>
+        <span class="badge" style="background: var(--edubac-cream); color: var(--edubac-navy);">
+            {{ lessons|length }} leçon{{ lessons|length|pluralize }}
+        </span>
+    </div>
+    <div class="card-body p-0">
+        {% if lessons %}
+        <div class="list-group list-group-flush lesson-accordion">
+            {% for item in lessons %}
+            <div class="lesson-row border-bottom">
+                <button type="button"
+                        class="lesson-toggle w-100 d-flex justify-content-between align-items-center gap-2 py-3 px-3 border-0 bg-white text-start"
+                        data-lesson-toggle
+                        aria-expanded="false">
+                    <span class="d-flex align-items-center gap-2 min-width-0">
+                        <span class="lesson-num">{{ forloop.counter }}</span>
+                        <span class="fw-semibold text-truncate">{{ item.obj.title }}</span>
+                        {% if item.has_file %}
+                        <span class="badge bg-success">PDF</span>
+                        {% endif %}
+                    </span>
+                    <i class="bi bi-chevron-down lesson-chevron flex-shrink-0"></i>
+                </button>
+                <div class="lesson-panel d-none px-3 pb-3">
+                    <div class="d-flex flex-wrap gap-2">
+                        {% if item.has_file %}
+                        <a href="{{ item.obj.pdf.url }}"
+                           class="btn btn-edubac btn-sm"
+                           target="_blank"
+                           rel="noopener">
+                            <i class="bi bi-eye"></i> Ouvrir
+                        </a>
+                        <a href="{{ item.obj.pdf.url }}"
+                           class="btn btn-outline-primary btn-sm"
+                           download>
+                            <i class="bi bi-download"></i> Télécharger
+                        </a>
+                        {% else %}
+                        <button type="button" class="btn btn-edubac btn-sm" disabled title="PDF non disponible">
+                            <i class="bi bi-eye"></i> Ouvrir
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm" disabled title="PDF non disponible">
+                            <i class="bi bi-download"></i> Télécharger
+                        </button>
+                        <span class="small text-muted align-self-center">Fichier bientôt disponible</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="p-4 text-muted">Aucune leçon pour ce niveau.</div>
+        {% endif %}
+    </div>
+</div>
+<div class="illus-card mb-4 mt-2">
+    <div class="reader-illus" style="font-size:2.5rem;width:72px;height:72px;">📚</div>
+    <div>
+        <div class="fw-bold" style="color:var(--edubac-navy);">{{ niveau_label }}</div>
+        <p class="small text-muted mb-0">Ouvre une leçon pour consulter ou télécharger le cours. Bonne révision !</p>
+    </div>
+    <span class="illus-math im1">∑</span>
+    <span class="illus-math im2">π</span>
+</div>
+<a href="{% url 'education:home' %}" class="btn btn-outline-primary btn-sm">
+    <i class="bi bi-arrow-left"></i> Retour
+</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    document.querySelectorAll('[data-lesson-toggle]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var row = btn.closest('.lesson-row');
+            var panel = row.querySelector('.lesson-panel');
+            var open = !panel.classList.contains('d-none');
+            // Fermer les autres
+            document.querySelectorAll('.lesson-panel').forEach(function (p) {
+                p.classList.add('d-none');
+            });
+            document.querySelectorAll('[data-lesson-toggle]').forEach(function (b) {
+                b.setAttribute('aria-expanded', 'false');
+                b.classList.remove('is-open');
+            });
+            if (!open) {
+                panel.classList.remove('d-none');
+                btn.setAttribute('aria-expanded', 'true');
+                btn.classList.add('is-open');
+            }
+        });
+    });
+})();
+</script>
+{% endblock %}

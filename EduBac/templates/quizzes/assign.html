@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 mb-4">Affecter un quiz</h1>
+<form method="post" class="card card-body shadow-sm" style="max-width:640px">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label class="form-label">Quiz</label>
+        <select name="quiz" class="form-select" required {% if selected_quiz %}disabled{% endif %}>
+            {% for q in quizzes %}
+            <option value="{{ q.pk }}" {% if selected_quiz and selected_quiz.pk == q.pk %}selected{% endif %}>{{ q.title }}</option>
+            {% endfor %}
+        </select>
+        {% if selected_quiz %}<input type="hidden" name="quiz" value="{{ selected_quiz.pk }}">{% endif %}
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Cible</label>
+        <select name="target" id="targetSelect" class="form-select">
+            <option value="students">Élèves individuels</option>
+            <option value="classroom">Classe entière</option>
+        </select>
+    </div>
+    <div class="mb-3" id="studentsBlock">
+        <label class="form-label">Élèves</label>
+        <select name="students" class="form-select" multiple size="6">
+            {% for s in students %}
+            <option value="{{ s.pk }}">{{ s.get_full_name }} ({{ s.username }})</option>
+            {% endfor %}
+        </select>
+        <div class="form-text">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs élèves.</div>
+    </div>
+    <div class="mb-3 d-none" id="classroomBlock">
+        <label class="form-label">Classe</label>
+        <select name="classroom" class="form-select">
+            {% for c in classrooms %}
+            <option value="{{ c.pk }}">{{ c.name }} ({{ c.code }})</option>
+            {% empty %}
+            <option value="">Aucune classe</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Date limite (optionnel)</label>
+        <input type="datetime-local" name="deadline" class="form-control">
+    </div>
+    <button type="submit" class="btn btn-accent">Affecter</button>
+    <a href="{% url 'quizzes:manage' %}" class="btn btn-link">Annuler</a>
+</form>
+<script>
+document.getElementById('targetSelect').addEventListener('change', function() {
+    const isClass = this.value === 'classroom';
+    document.getElementById('classroomBlock').classList.toggle('d-none', !isClass);
+    document.getElementById('studentsBlock').classList.toggle('d-none', isClass);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+{% load markdown_extras %}
+{% block content %}
+<div class="quiz-builder fade-up">
+
+    {# ---- En-tête de page ---- #}
+    <header class="qb-page-header">
+        <div class="qb-page-header__text">
+            <h1 class="quiz-builder-title">Générer un quiz intelligent avec l’IA</h1>
+            <p class="qb-page-subtitle">Paramètres → génération de quiz → envoi aux élèves</p>
+        </div>
+    </header>
+
+    {# ---- Barre d’étapes ---- #}
+    <nav class="steps-bar fade-up fade-up-delay-1" aria-label="Étapes de création">
+        <div class="step-item {% if not quiz_created %}active{% else %}done{% endif %}">
+            <span class="step-num">{% if quiz_created %}<i class="bi bi-check"></i>{% else %}1{% endif %}</span>
+            <span class="step-label">Paramètres</span>
+        </div>
+        <div class="step-connector" aria-hidden="true"></div>
+        <div class="step-item {% if not quiz_created %}active{% else %}done{% endif %}">
+            <span class="step-num">{% if quiz_created %}<i class="bi bi-check"></i>{% else %}2{% endif %}</span>
+            <span class="step-label">Générer (IA)</span>
+        </div>
+        <div class="step-connector" aria-hidden="true"></div>
+        <div class="step-item {% if quiz_created %}active{% endif %}">
+            <span class="step-num">3</span>
+            <span class="step-label">Envoyer</span>
+        </div>
+    </nav>
+
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <form method="post" id="genForm" data-loading>
+        {% csrf_token %}
+        <div class="qb-layout">
+
+            {# ======== Colonne configuration (65%) ======== #}
+            <section class="qb-config-panel">
+                <div class="qb-section-card">
+                    <div class="qb-section-card__head">
+                        <span class="qb-section-card__title">
+                            <i class="bi bi-sliders"></i>
+                            Configuration du quiz
+                        </span>
+                        <span class="qb-section-card__badge">65%</span>
+                    </div>
+
+                    <div class="qb-section-card__body">
+                        <div class="qb-fields-grid">
+
+                            <div class="qb-card">
+                                <div class="qb-card-head">
+                                    <i class="bi bi-mortarboard-fill"></i>
+                                    <span>Niveau scolaire</span>
+                                </div>
+                                <div class="qb-card-body">
+                                    <select name="niveau" id="niveauSelect" class="form-select" required>
+                                        <option value="">— Choisir —</option>
+                                        {% for n in niveaux %}
+                                        <option value="{{ n.code }}" {% if selected_niveau == n.code %}selected{% endif %}>{{ n.label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="qb-card">
+                                <div class="qb-card-head">
+                                    <i class="bi bi-book-fill"></i>
+                                    <span>Leçon / Sujet</span>
+                                </div>
+                                <div class="qb-card-body">
+                                    <select name="lesson" id="lessonSelect" class="form-select" required>
+                                        <option value="">— Choisir —</option>
+                                        {% for l in lessons %}
+                                        <option value="{{ l.pk }}">{{ l.order }}. {{ l.title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="qb-card">
+                                <div class="qb-card-head">
+                                    <i class="bi bi-stars"></i>
+                                    <span>Niveau de difficulté</span>
+                                </div>
+                                <div class="qb-card-body">
+                                    <select name="difficulty" id="difficultySelect" class="form-select">
+                                        <option value="facile">Facile — application directe</option>
+                                        <option value="moyen" selected>Moyen — 2–3 étapes</option>
+                                        <option value="difficile">Difficile — type examen</option>
+                                    </select>
+                                    <div class="form-text mt-1" id="difficultyHint">Questions avec raisonnement standard du cours (2–3 étapes).</div>
+                                </div>
+                            </div>
+
+                            <div class="qb-card">
+                                <div class="qb-card-head">
+                                    <i class="bi bi-hourglass-split"></i>
+                                    <span>Temps par question</span>
+                                </div>
+                                <div class="qb-card-body">
+                                    <div class="input-group">
+                                        <input type="number" name="seconds_per_question" id="secondsPerQ" class="form-control" value="20" min="5" max="120">
+                                        <span class="input-group-text">sec</span>
+                                    </div>
+                                    <div class="form-text">Durée allouée à chaque question.</div>
+                                </div>
+                            </div>
+
+                            <div class="qb-card">
+                                <div class="qb-card-head">
+                                    <i class="bi bi-list-ol"></i>
+                                    <span>Nombre de questions</span>
+                                </div>
+                                <div class="qb-card-body">
+                                    <input type="number" name="question_count" id="questionCount" class="form-control" value="5" min="1" max="20">
+                                </div>
+                            </div>
+
+                            <div class="qb-card">
+                                <div class="qb-card-head">
+                                    <i class="bi bi-cpu"></i>
+                                    <span>Modèle IA</span>
+                                </div>
+                                <div class="qb-card-body">
+                                    <select name="ai_provider" id="aiProviderSelect" class="form-select mb-2">
+                                        {% for p in ai_providers %}
+                                        <option value="{{ p.id }}" {% if not p.configured %}disabled{% endif %}>
+                                            {{ p.label }}{% if not p.configured %} (clé non configurée){% endif %}
+                                        </option>
+                                        {% empty %}
+                                        <option value="groq">Groq</option>
+                                        {% endfor %}
+                                    </select>
+                                    <select name="ai_model" id="aiModelSelect" class="form-select">
+                                        <option value="">— Défaut du provider —</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                        </div>{# /.qb-fields-grid #}
+
+                        <div class="qb-generate-wrap">
+                            <button type="submit" name="action" value="generate" class="qb-generate-btn" id="genBtn">
+                                <i class="bi bi-magic"></i>
+                                <span>Générer le quiz avec l’IA</span>
+                            </button>
+                            <div id="genLoading" class="d-none qb-loading-status">
+                                <div class="small text-muted">Génération en cours…</div>
+                                <div class="qb-loading-bar"><span></span></div>
+                            </div>
+                        </div>
+                    </div>{# /.qb-section-card__body #}
+                </div>{# /.qb-section-card #}
+            </section>
+
+            {# ======== Colonne aperçu (35%) ======== #}
+            <aside class="qb-preview-panel">
+                <div class="qb-preview" id="livePreview">
+                    <div class="qb-preview__head">
+                        <h3 class="qb-preview__title">
+                            <i class="bi bi-eye"></i>
+                            Aperçu dynamique
+                        </h3>
+                        <span class="qb-preview__badge">35%</span>
+                    </div>
+
+                    <div class="qb-preview__meta" id="pvMeta">
+                        <div class="qb-preview-row">
+                            <span class="qb-preview-label">Sujet</span>
+                            <strong id="pvTitle">—</strong>
+                        </div>
+                        <div class="qb-preview-row">
+                            <span class="qb-preview-label">Niveau</span>
+                            <strong id="pvNiveau">—</strong>
+                        </div>
+                        <div class="qb-preview-row">
+                            <span class="qb-preview-label">Difficulté</span>
+                            <strong id="pvDiff">Moyen</strong>
+                        </div>
+                        <div class="qb-preview-row">
+                            <span class="qb-preview-label">Temps / question</span>
+                            <strong><span id="pvSec">20</span> s</strong>
+                        </div>
+                        <div class="qb-preview-row">
+                            <span class="qb-preview-label">Questions</span>
+                            <strong id="pvCount">5</strong>
+                        </div>
+                    </div>
+
+                    {% if quiz_created and preview %}
+                        <div class="qb-preview__questions">
+                            {% for q in preview|slice:":4" %}
+                            <div class="qb-preview-q">{{ q.text|truncatechars:90 }}</div>
+                            {% endfor %}
+                            {% if preview|length > 4 %}
+                            <div class="qb-preview-more">+ {{ preview|length|add:"-4" }} autres…</div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="qb-preview-empty" id="pvEmpty">
+                            <i class="bi bi-info-circle"></i>
+                            <p>Guide : Configurez et générez.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </aside>
+
+        </div>{# /.qb-layout #}
+    </form>
+
+    {% if quiz_created and preview %}
+    <div class="qb-detail-card fade-up">
+        <div class="qb-detail-card__head">
+            <span><i class="bi bi-card-checklist"></i> Aperçu détaillé — {{ quiz_created.title }}</span>
+            <div class="qb-detail-card__actions">
+                <a href="{% url 'quizzes:edit_questions' quiz_created.pk %}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-pencil"></i> Modifier
+                </a>
+                <span class="qb-time-badge">{{ quiz_created.seconds_per_question }} s / question</span>
+            </div>
+        </div>
+        <div class="qb-detail-card__body">
+            <ol class="qb-detail-list">
+                {% for q in preview %}
+                <li>
+                    <div class="qb-detail-q">{{ q.text }}</div>
+                    {% if q.choices.all %}
+                    <ul class="qb-option-list">
+                        {% for c in q.choices.all %}
+                        <li class="{% if c.is_correct %}is-selected{% endif %}">
+                            {% if c.is_correct %}<i class="bi bi-check-circle-fill"></i>{% else %}<i class="bi bi-circle"></i>{% endif %}
+                            {{ c.text }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    {% if q.explanation %}
+                    <div class="qb-detail-explain"><strong>Explication :</strong> {{ q.explanation }}</div>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ol>
+        </div>
+
+        <div class="qb-detail-card__foot">
+            <form method="post" id="sendQuizForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="send">
+                <input type="hidden" name="quiz_id" value="{{ quiz_created.pk }}">
+                <input type="hidden" name="niveau" value="{{ selected_niveau }}">
+                <input type="hidden" name="lesson" value="{{ quiz_created.lesson_id }}">
+                <div class="row g-3 mb-3 align-items-end">
+                    <div class="col-md-5">
+                        <label class="form-label small fw-semibold" for="classroomSelect">
+                            Classe concernée <span class="text-danger">*</span>
+                        </label>
+                        <select name="classroom" id="classroomSelect" class="form-select" required>
+                            <option value="">— Choisir une classe —</option>
+                            {% for c in classrooms %}
+                            <option value="{{ c.pk }}">{{ c.name }} ({{ c.code }})</option>
+                            {% empty %}
+                            <option value="" disabled>Aucune classe — créez-en une d’abord</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Seuls les élèves de cette classe recevront le quiz.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold" for="deadlineInput">Date limite (optionnel)</label>
+                        <input type="datetime-local" name="deadline" id="deadlineInput" class="form-control">
+                    </div>
+                    <div class="col-md-3 d-flex flex-wrap gap-2">
+                        <button type="submit" class="btn btn-edubac flex-grow-1">
+                            <i class="bi bi-send"></i> Envoyer le quiz
+                        </button>
+                    </div>
+                </div>
+                <a href="{% url 'quizzes:edit_questions' quiz_created.pk %}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-pencil"></i> Ajuster les questions
+                </a>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+</div>{# /.quiz-builder #}
+
+<script>
+(function(){
+  var hints = {
+    facile: 'Questions d\'application immédiate du cours.',
+    moyen: 'Questions avec raisonnement standard du cours (2–3 étapes).',
+    difficile: 'Questions type examen, multi-étapes et pièges classiques.'
+  };
+  var secs = { facile: 15, moyen: 20, difficile: 30 };
+  var sel = document.getElementById('difficultySelect');
+  var hint = document.getElementById('difficultyHint');
+  var sec = document.getElementById('secondsPerQ') || document.querySelector('input[name="seconds_per_question"]');
+  var count = document.getElementById('questionCount');
+  var niveau = document.getElementById('niveauSelect');
+  var lesson = document.getElementById('lessonSelect');
+  var pvDiff = document.getElementById('pvDiff');
+  var pvSec = document.getElementById('pvSec');
+  var pvCount = document.getElementById('pvCount');
+  var pvNiveau = document.getElementById('pvNiveau');
+  var pvTitle = document.getElementById('pvTitle');
+
+  function syncPreview(){
+    if(pvDiff && sel) {
+      var t = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : 'Moyen';
+      pvDiff.textContent = t.split('—')[0].trim() || 'Moyen';
+    }
+    if(pvSec && sec) pvSec.textContent = sec.value || '20';
+    if(pvCount && count) pvCount.textContent = count.value || '5';
+    if(pvNiveau && niveau) {
+      var opt = niveau.options[niveau.selectedIndex];
+      pvNiveau.textContent = (opt && opt.value) ? opt.text : '—';
+    }
+    if(pvTitle && lesson) {
+      var lo = lesson.options[lesson.selectedIndex];
+      if(lo && lo.value) pvTitle.textContent = lo.text.replace(/^\d+\.\s*/, '');
+      else pvTitle.textContent = '—';
+    }
+  }
+
+  function syncDiff(){
+    var v = sel ? sel.value : 'moyen';
+    if(hint) hint.textContent = hints[v] || '';
+    if(sec && !sec.dataset.manual) sec.value = secs[v] || 20;
+    syncPreview();
+  }
+  if(sel){
+    sel.addEventListener('change', syncDiff);
+    if(sec) sec.addEventListener('input', function(){ sec.dataset.manual = '1'; syncPreview(); });
+    if(count) count.addEventListener('input', syncPreview);
+    if(niveau) niveau.addEventListener('change', syncPreview);
+    if(lesson) lesson.addEventListener('change', syncPreview);
+    syncDiff();
+  }
+
+  var form = document.getElementById('genForm');
+  var genBtn = document.getElementById('genBtn');
+  var genLoading = document.getElementById('genLoading');
+  if(form && genBtn){
+    form.addEventListener('submit', function(e){
+      var act = (e.submitter && e.submitter.value) || 'generate';
+      if(act === 'generate' && genLoading){
+        genLoading.classList.remove('d-none');
+        genBtn.disabled = true;
+      }
+    });
+  }
+})();
+</script>
+
+<script>
+document.getElementById('niveauSelect').addEventListener('change', function() {
+    var v = this.value;
+    if (v) window.location = '{% url "quizzes:teacher_ai" %}?niveau=' + encodeURIComponent(v);
+});
+</script>
+
+<script>
+(function(){
+  var providers = {
+{% for p in ai_providers %}
+    "{{ p.id }}": [{% for m in p.models %}{"id":"{{ m.id }}","label":"{{ m.label|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]{% if not forloop.last %},{% endif %}
+{% endfor %}
+  };
+  var prov = document.getElementById('aiProviderSelect');
+  var model = document.getElementById('aiModelSelect');
+  function fill(){
+    if(!prov || !model) return;
+    var list = providers[prov.value] || [];
+    model.innerHTML = '<option value="">— Défaut du provider —</option>';
+    list.forEach(function(m){
+      var o = document.createElement('option');
+      o.value = m.id; o.textContent = m.label;
+      model.appendChild(o);
+    });
+  }
+  if(prov){ prov.addEventListener('change', fill); fill(); }
+})();
+</script>
+{% endblock %}
+{% block extra_css %}{% include "includes/katex.html" %}{% endblock %}

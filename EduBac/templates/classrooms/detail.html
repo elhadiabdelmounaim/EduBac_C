@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+    <div>
+        <h1 class="h3 fw-bold mb-1" style="color:var(--edubac-navy);">{{ classroom.name }}</h1>
+        <p class="text-muted small mb-0">
+            {{ classroom.get_niveau_display }}
+            · Code : <strong class="user-select-all">{{ classroom.code }}</strong>
+            {% if classroom.is_active %}
+            <span class="badge bg-success ms-1">Active</span>
+            {% else %}
+            <span class="badge bg-secondary ms-1">Archivée</span>
+            {% endif %}
+        </p>
+    </div>
+    {% if is_teacher_owner %}
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'classrooms:edit' classroom.pk %}" class="btn btn-sm btn-outline-primary">Modifier</a>
+        <form method="post" action="{% url 'classrooms:toggle_active' classroom.pk %}">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-outline-primary">
+                {% if classroom.is_active %}Archiver{% else %}Réactiver{% endif %}
+            </button>
+        </form>
+        <a href="{% url 'quizzes:teacher_ai' %}" class="btn btn-sm btn-accent">Envoyer un quiz</a>
+        <a href="{% url 'classrooms:delete' classroom.pk %}" class="btn btn-sm btn-outline-danger">🗑 Supprimer</a>
+    </div>
+    {% endif %}
+</div>
+
+{% if is_teacher_owner %}
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card shadow-sm border-0 text-center h-100" style="border-radius:12px;">
+            <div class="card-body py-3">
+                <div class="fs-4 fw-bold" style="color:var(--edubac-navy);">{{ nb_eleves }}</div>
+                <div class="small text-muted">Élèves</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card shadow-sm border-0 text-center h-100" style="border-radius:12px;">
+            <div class="card-body py-3">
+                <div class="fs-4 fw-bold" style="color:var(--edubac-navy);">{{ nb_quiz }}</div>
+                <div class="small text-muted">Quiz</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card shadow-sm border-0 text-center h-100" style="border-radius:12px;">
+            <div class="card-body py-3">
+                <div class="fs-4 fw-bold" style="color:var(--edubac-navy);">{{ nb_results }}</div>
+                <div class="small text-muted">Résultats</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card shadow-sm border-0 text-center h-100" style="border-radius:12px;">
+            <div class="card-body py-3 d-flex flex-column align-items-center justify-content-center gap-1">
+                <a href="{% url 'classrooms:results' classroom.pk %}" class="btn btn-sm btn-edubac w-100">📊 Résultats</a>
+                <a href="{% url 'classrooms:download_excel' classroom.pk %}" class="btn btn-sm btn-outline-success w-100">📥 Excel</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="card shadow-sm border-0" style="border-radius:16px;">
+    <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
+        <span>Élèves ({{ members|length }})</span>
+        {% if is_teacher_owner %}
+        <span class="small text-muted">Code d'invitation : <strong class="user-select-all">{{ classroom.code }}</strong></span>
+        {% endif %}
+    </div>
+    <ul class="list-group list-group-flush">
+        {% for m in members %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+                <div class="fw-semibold">{{ m.user.get_full_name|default:m.user.username }}</div>
+                <div class="small text-muted">
+                    {{ m.user.email }}
+                    {% if m.user.student_profile %}
+                    · {{ m.user.student_profile.get_niveau_display }}
+                    {% endif %}
+                    · depuis {{ m.joined_at|date:"d/m/Y" }}
+                </div>
+            </div>
+            {% if is_teacher_owner %}
+            <form method="post" action="{% url 'classrooms:remove_member' classroom.pk m.user_id %}"
+                  onsubmit="return confirm('Retirer cet élève de la classe ?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger">Retirer</button>
+            </form>
+            {% endif %}
+        </li>
+        {% empty %}
+        <li class="list-group-item text-muted">
+            Aucun élève pour le moment. Donnez le code <strong>{{ classroom.code }}</strong>.
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+{% if is_teacher_owner and quiz_stats %}
+<div class="card shadow-sm border-0 mt-4" style="border-radius:16px;">
+    <div class="card-header bg-white fw-bold">Quiz avec résultats</div>
+    <ul class="list-group list-group-flush">
+        {% for s in quiz_stats %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+                <span class="fw-semibold">{{ s.quiz.title }}</span>
+                <span class="small text-muted ms-2">{{ s.count }} résultat{{ s.count|pluralize }}</span>
+                {% if s.avg is not None %}
+                <span class="badge bg-primary ms-1">moy. {{ s.avg }}%</span>
+                {% endif %}
+            </div>
+            <div class="d-flex gap-1">
+                <a href="{% url 'quizzes:student_results' %}?classe={{ classroom.pk }}&quiz={{ s.quiz.pk }}"
+                   class="btn btn-sm btn-outline-primary">Voir</a>
+                <a href="{% url 'classrooms:download_quiz_excel' classroom.pk s.quiz.pk %}"
+                   class="btn btn-sm btn-outline-success">Excel</a>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+{% if is_teacher_owner %}<a href="{% url 'classrooms:list' %}" class="btn btn-link btn-sm mt-3">← Mes classes</a>{% else %}<a href="{% url 'classrooms:list' %}" class="btn btn-link btn-sm mt-3">← Ma classe</a>{% endif %}
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="auth-page">
+    <span class="auth-float f1">∑</span>
+    <span class="auth-float f2">π</span>
+    <div class="auth-card position-relative">
+        <div class="auth-brand">
+            <img src="/static/img/edubac-logo.png" alt="EduBac" class="auth-logo float-soft">
+            <h1 class="h4 fw-bold mb-1" style="color:var(--edubac-navy);">Connexion</h1>
+            <p class="text-muted small mb-0">E-mail et mot de passe — le rôle est détecté automatiquement</p>
+        </div>
+        {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+        <form method="post" action="{% url 'accounts:login' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label small fw-semibold">E-mail</label>
+                <input type="email" name="email" class="form-control" required autofocus
+                       placeholder="votre@email.com" autocomplete="username">
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-semibold">Mot de passe</label>
+                <div class="password-field">
+                    <input type="password" name="password" id="loginPassword" class="form-control" required
+                           placeholder="Votre mot de passe" autocomplete="current-password">
+                    <button type="button" class="password-toggle" data-target="loginPassword" aria-label="Afficher">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-edubac w-100 py-2 mb-3">Se connecter</button>
+        </form>
+        <p class="text-center small mb-0 text-muted">
+            Pas encore de compte ?
+            <a href="{% url 'accounts:register_student' %}" class="fw-semibold">Inscription élève</a>
+            ·
+            <a href="{% url 'accounts:register_teacher' %}" class="fw-semibold">Inscription enseignant</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.querySelectorAll('.password-toggle').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var input = document.getElementById(btn.getAttribute('data-target'));
+    var icon = btn.querySelector('i');
+    if (!input) return;
+    if (input.type === 'password') { input.type = 'text'; if (icon) icon.className = 'bi bi-eye-slash'; }
+    else { input.type = 'password'; if (icon) icon.className = 'bi bi-eye'; }
+  });
+});
+</script>
+{% endblock %}

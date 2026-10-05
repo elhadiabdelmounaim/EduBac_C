@@ -1,0 +1,70 @@
+/* Quiz correction whiteboard — palette EduBac inchangée */
+.qwb-shell { display: flex; flex-direction: column; gap: 0.5rem; min-height: 70vh; }
+.qwb-toolbar {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+  gap: 0.5rem; padding: 0.5rem 0.75rem; background: #fff;
+  border-radius: 14px; box-shadow: 0 2px 12px rgba(30,42,74,0.06);
+}
+.qwb-toolbar__left, .qwb-toolbar__right { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+.qwb-main { display: grid; grid-template-columns: 1fr 240px; gap: 0.75rem; flex: 1; min-height: 520px; }
+.qwb-canvas-wrap {
+  position: relative; overflow: hidden; background: #f5f7fa;
+  border-radius: 16px; border: 1px solid rgba(42,12,61,0.08);
+  touch-action: none;
+}
+.qwb-canvas {
+  position: absolute; transform-origin: 0 0; width: 2400px; height: 1600px;
+}
+.qwb-el {
+  position: absolute; min-width: 80px; min-height: 40px;
+  background: #fff; border: 1.5px solid rgba(42,12,61,0.12);
+  border-radius: 12px; padding: 0.55rem 0.7rem; box-shadow: 0 2px 10px rgba(30,42,74,0.06);
+  cursor: grab; user-select: none; overflow: hidden;
+}
+.qwb-el.is-selected { border-color: var(--edubac-teal, #1a6b6b); box-shadow: 0 0 0 3px rgba(26,107,107,0.18); }
+.qwb-el.is-locked { cursor: default; opacity: 0.92; border-style: dashed; }
+.qwb-el[data-emphasis="success"] { border-left: 4px solid #70A974; }
+.qwb-el[data-emphasis="warning"] { border-left: 4px solid #DD8826; }
+.qwb-el[data-emphasis="error"] { border-left: 4px solid #c0392b; }
+.qwb-el__type {
+  font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+  color: #8899a6; letter-spacing: 0.04em; margin-bottom: 0.25rem;
+}
+.qwb-el__body { font-size: 0.88rem; color: #2c3345; line-height: 1.35; word-break: break-word; }
+.qwb-el__body .katex { font-size: 1.05em; }
+.qwb-sidebar {
+  background: #fff; border-radius: 14px; padding: 0.85rem;
+  box-shadow: 0 2px 12px rgba(30,42,74,0.06); overflow: auto; max-height: 70vh;
+}
+.qwb-linear .list-group-item { cursor: pointer; border-radius: 8px !important; margin-bottom: 2px; }
+.qwb-linear .list-group-item.active { background: var(--edubac-light, #e8f4f4); color: var(--edubac-navy, #1e2a4a); border-color: transparent; }
+@media (max-width: 767.98px) {
+  .qwb-main { grid-template-columns: 1fr; }
+  .qwb-sidebar { max-height: 220px; }
+  .qwb-toolbar__right .btn { min-width: 44px; min-height: 44px; }
+}
+
+/* Connexions SVG */
+.qwb-svg-links {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 1; overflow: visible;
+}
+.qwb-canvas { z-index: 2; }
+.qwb-link-line { stroke: #5c2d7a; stroke-width: 2; fill: none; }
+.qwb-link-label {
+  font-size: 11px; fill: #5c2d7a; font-weight: 600;
+}
+
+/* Chat */
+.qwb-chat-log {
+  max-height: 180px; overflow-y: auto;
+  background: #f7f8fa; border-radius: 10px; padding: 0.5rem;
+  border: 1px solid rgba(42,12,61,0.08);
+}
+.qwb-chat-msg { margin-bottom: 0.5rem; line-height: 1.35; }
+.qwb-chat-msg.user { color: var(--edubac-navy, #1e2a4a); font-weight: 600; }
+.qwb-chat-msg.bot { color: #4a4560; }
+.qwb-proposal {
+  border: 1px dashed rgba(42,12,61,0.2); border-radius: 10px;
+  padding: 0.45rem 0.55rem; margin-bottom: 0.35rem; background: #fff;
+}

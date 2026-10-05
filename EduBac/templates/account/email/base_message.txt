@@ -1,0 +1,7 @@
+{% load account %}{% user_display user as user_display %}Bonjour{% if user_display %} {{ user_display }}{% endif %},
+
+{% block content %}{% endblock %}
+
+—
+EduBac — La mathématique, plus proche de toi !
+Plateforme d'apprentissage des mathématiques

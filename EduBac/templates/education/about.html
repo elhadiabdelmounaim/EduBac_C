@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="fade-up" style="max-width:720px;">
+    <h1 class="h3 fw-bold mb-3" style="color:var(--edubac-navy);">À propos d'EduBac</h1>
+    <div class="card border-0 shadow-sm" style="border-radius:16px;">
+        <div class="card-body p-4">
+            <p class="lead mb-3" style="color:var(--edubac-teal);">
+                EduBac — la plateforme de mathématiques pour le lycée marocain.
+            </p>
+            <p>
+                EduBac aide les élèves et les enseignants à progresser en mathématiques
+                grâce à des cours structurés par niveau, des quiz intelligents générés par IA,
+                un suivi des résultats et des outils collaboratifs (classes, chat, whiteboard).
+            </p>
+            <h2 class="h6 fw-bold mt-4 mb-2">Pour les élèves</h2>
+            <ul class="mb-3">
+                <li>Leçons du Tronc commun au Bac (SM, PC, SVT…)</li>
+                <li>Quiz chronométrés et entraînement libre</li>
+                <li>Assistant IA pour expliquer le cours</li>
+                <li>Suivi de progression, badges et classements</li>
+            </ul>
+            <h2 class="h6 fw-bold mt-4 mb-2">Pour les enseignants</h2>
+            <ul class="mb-3">
+                <li>Création de classes et invitation par code</li>
+                <li>Génération de quiz par IA (plusieurs providers)</li>
+                <li>Résultats et export Excel par classe</li>
+                <li>Envoi de quiz aux classes ou au niveau</li>
+            </ul>
+            <p class="text-muted small mb-0">
+                © EduBac — Mathématiques · Plateforme éducative
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

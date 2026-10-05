@@ -1,0 +1,8 @@
+{% extends "account/email/base_message.txt" %}
+
+{% block content %}Vous (ou quelqu'un d'autre) avez demandé une action liée à l'adresse {{ email }} sur EduBac.
+
+Aucun compte n'est associé à cette adresse. Si vous souhaitez créer un compte, rendez-vous sur la page d'inscription.
+
+Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail.
+{% endblock %}

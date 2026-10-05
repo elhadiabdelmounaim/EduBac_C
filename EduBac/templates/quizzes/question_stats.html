@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load markdown_extras %}
+{% block content %}
+<h1 class="h3 fw-bold mb-3">Stats par question — {{ quiz.title }}</h1>
+<table class="table table-hover bg-white shadow-sm">
+    <thead class="table-light"><tr><th>#</th><th>Question</th><th>Réponses</th><th>Correctes</th><th>Réussite</th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+    <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ r.question.text|latex }}</td>
+        <td>{{ r.total }}</td>
+        <td>{{ r.correct }}</td>
+        <td>
+            {% if r.pct is not None %}
+            <div class="progress" style="height:10px;width:100px;display:inline-flex;">
+                <div class="progress-bar {% if r.pct >= 70 %}bg-success{% elif r.pct >= 40 %}bg-warning{% else %}bg-danger{% endif %}" style="width:{{ r.pct }}%"></div>
+            </div>
+            {{ r.pct }}%
+            {% else %}—{% endif %}
+        </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" class="text-muted">Pas encore de données.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+<a href="{% url 'quizzes:manage' %}" class="btn btn-outline-primary btn-sm">Retour</a>
+{% endblock %}
+{% block extra_css %}{% include "includes/katex.html" %}{% endblock %}

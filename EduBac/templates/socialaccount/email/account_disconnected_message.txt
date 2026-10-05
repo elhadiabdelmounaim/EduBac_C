@@ -1,0 +1,4 @@
+{% extends "account/email/base_message.txt" %}
+
+{% block content %}Le compte {{ provider }} a été déconnecté de votre compte EduBac.
+{% endblock %}

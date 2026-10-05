@@ -1,0 +1,9 @@
+{% extends "account/email/base_message.html" %}
+{% block subject %}Adresse e-mail modifiée{% endblock %}
+{% block content %}
+<p>Bonjour,</p>
+<p>L'adresse e-mail associée à votre compte <strong>EduBac</strong> a été modifiée.</p>
+{% if from_email %}<p>Ancienne adresse : <strong>{{ from_email }}</strong></p>{% endif %}
+{% if to_email %}<p>Nouvelle adresse : <strong>{{ to_email }}</strong></p>{% endif %}
+<p class="muted">Si vous n'êtes pas à l'origine de ce changement, contactez le support immédiatement.</p>
+{% endblock %}

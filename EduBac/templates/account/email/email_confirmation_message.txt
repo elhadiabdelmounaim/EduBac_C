@@ -1,0 +1,13 @@
+{% extends "account/email/base_message.txt" %}
+{% load account %}{% user_display user as user_display %}
+
+{% block content %}Merci de vous être inscrit sur EduBac.
+
+Pour activer votre compte, cliquez sur le lien suivant (ou copiez-le dans votre navigateur) :
+
+{{ activate_url }}
+
+Ce lien est valable pendant quelques jours.
+
+Si vous n'êtes pas à l'origine de cette inscription, ignorez simplement cet e-mail.
+{% endblock %}

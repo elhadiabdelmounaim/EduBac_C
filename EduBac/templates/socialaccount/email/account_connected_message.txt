@@ -1,0 +1,6 @@
+{% extends "account/email/base_message.txt" %}
+
+{% block content %}Un compte {{ provider }} a été connecté à votre compte EduBac.
+
+Si vous n'êtes pas à l'origine de cette action, déconnectez ce compte social depuis votre profil et contactez le support.
+{% endblock %}

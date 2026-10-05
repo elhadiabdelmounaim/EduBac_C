@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 fw-bold mb-4" style="color:var(--edubac-navy);">Ma progression</h1>
+{% if profile %}<p class="text-muted">Niveau : {{ profile.get_niveau_display }}</p>{% endif %}
+
+<div class="mb-4">
+    <div class="d-flex justify-content-between small mb-1">
+        <span>Progression globale</span>
+        <span class="fw-bold">{{ stats.progress }} %</span>
+    </div>
+    <div class="progress" style="height:14px">
+        <div class="progress-bar bg-edubac" style="width: {{ stats.progress }}%"></div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="stat-pill"><div class="val">{{ stats.avg_score }}%</div><div class="lbl">Score moyen</div></div></div>
+    <div class="col-md-4"><div class="stat-pill"><div class="val">{{ stats.attempts }}</div><div class="lbl">Quiz terminés</div></div></div>
+    <div class="col-md-4"><div class="stat-pill"><div class="val">{{ stats.assignments_done }}/{{ stats.assignments_total }}</div><div class="lbl">Assignations</div></div></div>
+</div>
+
+{% if chart_scores %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white fw-bold">Évolution des scores</div>
+    <div class="card-body">
+        <div class="d-flex align-items-end gap-2" style="height:140px;">
+            {% for s in chart_scores %}
+            <div class="flex-fill text-center" title="{{ s.label }} : {{ s.score }}%">
+                <div class="mx-auto rounded-top" style="height:{{ s.height }}%;min-height:4px;width:70%;background:linear-gradient(180deg,var(--edubac-teal),var(--edubac-green));"></div>
+                <div class="small text-muted mt-1" style="font-size:0.65rem;">{{ s.label }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<h2 class="h5">Historique récent</h2>
+<ul class="list-group shadow-sm">
+{% for a in attempts %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <span>{{ a.quiz.title }} <small class="text-muted">{{ a.submitted_at|date:"d/m/Y" }}</small></span>
+        <span>
+            <span class="fw-bold me-2">{{ a.score }}%</span>
+            <a href="{% url 'quizzes:review' a.pk %}" class="btn btn-sm btn-outline-primary">Révision</a>
+        </span>
+    </li>
+{% empty %}
+    <li class="list-group-item text-muted">Pas encore d'historique.</li>
+{% endfor %}
+</ul>
+{% endblock %}

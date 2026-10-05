@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 fw-bold mb-4" style="color:var(--edubac-navy);">Tableau de bord</h1>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <a href="{% url 'classrooms:list' %}" class="quick-card qc-teal">
+            <div class="qc-icon"><i class="bi bi-people"></i></div>
+            <div class="fw-bold">Mes classes</div>
+            <div class="small opacity-75">{{ classrooms|length }} classe{{ classrooms|length|pluralize }}</div>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="{% url 'classrooms:students' %}" class="quick-card qc-green">
+            <div class="qc-icon"><i class="bi bi-person-badge"></i></div>
+            <div class="fw-bold">Mes élèves</div>
+            <div class="small opacity-75">{{ total_students }} élève{{ total_students|pluralize }}</div>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="{% url 'quizzes:manage' %}" class="quick-card qc-orange">
+            <div class="qc-icon"><i class="bi bi-pencil-square"></i></div>
+            <div class="fw-bold">Mes quiz</div>
+            <div class="small opacity-75">{{ my_quizzes|length }} récents</div>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="{% url 'quizzes:student_results' %}" class="quick-card qc-purple">
+            <div class="qc-icon"><i class="bi bi-bar-chart"></i></div>
+            <div class="fw-bold">Résultats</div>
+            <div class="small opacity-75">{% if avg_score %}Moy. {{ avg_score }}%{% else %}—{% endif %}</div>
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white fw-bold border-0 pt-3">Activité récente</div>
+            <ul class="list-group list-group-flush">
+                {% for a in recent_attempts %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="small">{{ a.student.get_full_name }} — {{ a.quiz.title }}</span>
+                    <span class="fw-bold text-primary">{{ a.score }}%</span>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">Pas encore d'activité.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white fw-bold border-0 pt-3 d-flex justify-content-between">
+                <span>Mes classes</span>
+                <a href="{% url 'classrooms:list' %}" class="small">Voir tout</a>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for c in classrooms %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>{{ c.name }} <code class="small">{{ c.code }}</code></span>
+                    <span class="badge" style="background:var(--edubac-light);color:var(--edubac-teal);">{{ c.nb_eleves }} élèves</span>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">Aucune classe.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

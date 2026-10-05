@@ -1,0 +1,92 @@
+<aside class="edubac-sidebar" id="edubacSidebar">
+    <div class="sidebar-header d-flex align-items-center justify-content-between d-lg-none">
+        <span class="fw-semibold text-white">Menu</span>
+        <button type="button" class="btn btn-link text-white p-0 border-0" id="sidebarClose" aria-label="Fermer">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <nav class="sidebar-nav">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                   href="{% url 'accounts:dashboard' %}">
+                    <i class="bi bi-speedometer2"></i><span>Tableau de bord</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.app_name == 'classrooms' and request.resolver_match.url_name != 'students' %}active{% endif %}"
+                   href="{% url 'classrooms:list' %}">
+                    <i class="bi bi-people"></i><span>Mes classes</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'students' %}active{% endif %}"
+                   href="{% url 'classrooms:students' %}">
+                    <i class="bi bi-person-badge"></i><span>Mes élèves</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.app_name == 'chat' %}active{% endif %}"
+                   href="{% url 'chat:home' %}">
+                    <i class="bi bi-chat-dots"></i><span>Chat</span>
+                    {% if chat_unread_total %}<span class="sidebar-badge">{{ chat_unread_total }}</span>{% endif %}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.app_name == 'education' and request.resolver_match.url_name == 'home' %}active{% endif %}"
+                   href="{% url 'education:home' %}">
+                    <i class="bi bi-book"></i><span>Cours</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'niveaux' or request.resolver_match.url_name == 'my_lessons' %}active{% endif %}"
+                   href="{% url 'education:niveaux' %}">
+                    <i class="bi bi-journal-text"></i><span>Leçons / Niveaux</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'manage' %}active{% endif %}"
+                   href="{% url 'quizzes:manage' %}">
+                    <i class="bi bi-pencil-square"></i><span>Mes quiz</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'teacher_ai' %}active{% endif %}"
+                   href="{% url 'quizzes:teacher_ai' %}">
+                    <i class="bi bi-stars"></i><span>Générer avec l'IA</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'student_results' %}active{% endif %}"
+                   href="{% url 'quizzes:student_results' %}">
+                    <i class="bi bi-bar-chart-line"></i><span>Résultats des élèves</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'teacher_stats' %}active{% endif %}"
+                   href="{% url 'quizzes:teacher_stats' %}">
+                    <i class="bi bi-graph-up-arrow"></i><span>Statistiques</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.app_name == 'whiteboard' %}active{% endif %}"
+                   href="{% url 'whiteboard:list' %}">
+                    <i class="bi bi-easel"></i><span>Whiteboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}"
+                   href="{% url 'education:about' %}">
+                    <i class="bi bi-info-circle"></i><span>À propos</span>
+                </a>
+            </li>
+            <li class="nav-item mt-2">
+                <a class="nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}"
+                   href="{% url 'accounts:profile' %}">
+                    <i class="bi bi-gear"></i><span>Paramètres</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    <div class="sidebar-footer"><i class="bi bi-lightbulb me-1"></i> Apprendre aujourd'hui,<br>réussir demain.</div>
+</aside>

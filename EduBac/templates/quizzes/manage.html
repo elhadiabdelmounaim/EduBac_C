@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Mes quiz</h1>
+    <div class="d-flex gap-2">
+        <a href="{% url 'quizzes:teacher_ai' %}" class="btn btn-edubac btn-sm"><i class="bi bi-plus-circle"></i> Générer (IA)</a>
+        <a href="{% url 'quizzes:assign' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-send"></i> Affecter</a>
+        <a href="{% url 'quizzes:teacher_stats' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-graph-up"></i> Statistiques</a>
+    </div>
+</div>
+<div class="table-responsive">
+<table class="table table-hover bg-white shadow-sm">
+    <thead class="table-light">
+        <tr>
+            <th>Titre</th><th>Leçon</th><th>Statut</th><th>Questions</th><th>Tentatives</th><th></th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for q in quizzes %}
+        <tr>
+            <td class="fw-semibold">{{ q.title }}</td>
+            <td class="small">{{ q.lesson.title }}</td>
+            <td>
+                {% if q.status == 'published' %}<span class="badge bg-success">Publié</span>
+                {% elif q.status == 'draft' %}<span class="badge bg-secondary">Brouillon</span>
+                {% else %}<span class="badge bg-dark">{{ q.get_status_display }}</span>{% endif %}
+            </td>
+            <td>{{ q.nb_questions }}</td>
+            <td>{{ q.nb_attempts }}</td>
+            <td class="text-nowrap">
+                {% if q.status != 'published' %}
+                <a href="{% url 'quizzes:publish' q.pk %}" class="btn btn-sm btn-accent">Publier</a>
+                <a href="{% url 'quizzes:schedule' q.pk %}" class="btn btn-sm btn-outline-secondary">Programmer</a>
+                {% endif %}
+                {% if q.publish_at and q.status != 'published' %}
+                <span class="badge bg-info text-dark">⏰ {{ q.publish_at|date:"d/m H:i" }}</span>
+                {% endif %}
+                <a href="{% url 'quizzes:edit_questions' q.pk %}" class="btn btn-sm btn-outline-secondary">Questions</a>
+                <a href="{% url 'quizzes:question_stats' q.pk %}" class="btn btn-sm btn-outline-secondary">Stats</a>
+                <a href="{% url 'quizzes:duplicate' q.pk %}" class="btn btn-sm btn-outline-secondary">Dupliquer</a>
+                <a href="{% url 'quizzes:assign_quiz' q.pk %}" class="btn btn-sm btn-outline-primary">Affecter</a>
+                <a href="/admin/quizzes/quiz/{{ q.pk }}/change/" class="btn btn-sm btn-outline-secondary">Éditer</a>
+            </td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="6" class="text-muted">Aucun quiz. <a href="{% url 'quizzes:teacher_ai' %}">Générer avec l'IA</a></td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

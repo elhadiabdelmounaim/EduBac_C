@@ -1,0 +1,10 @@
+{% extends "account/email/base_message.txt" %}
+
+{% block content %}Bienvenue sur EduBac !
+
+Pour finaliser votre inscription et accéder à la plateforme, confirmez votre adresse e-mail en cliquant sur le lien suivant :
+
+{{ activate_url }}
+
+Une fois votre compte activé, vous pourrez consulter les cours, les leçons et les quiz de mathématiques.
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load markdown_extras %}
+{% block content %}
+<h1 class="h3 fw-bold mb-3" style="color:var(--edubac-navy);">Révision détaillée — {{ attempt.quiz.title }}</h1>
+<p class="mb-4">Score : <strong>{{ attempt.score }} %</strong> — lis chaque explication pour progresser.</p>
+{% for a in answers %}
+<div class="card shadow-sm mb-3 {% if a.is_correct %}border-success{% else %}border-danger{% endif %}">
+    <div class="card-body">
+        <div class="fw-semibold mb-2">{{ forloop.counter }}. {{ a.question.text|latex }}</div>
+        <p class="mb-1">
+            Votre réponse :
+            <span class="{% if a.is_correct %}text-success{% else %}text-danger{% endif %} fw-semibold">
+                {{ a.answer|default:"(vide)"|latex }}
+            </span>
+            {% if a.is_correct %}<i class="bi bi-check-circle text-success"></i>
+            {% else %}<i class="bi bi-x-circle text-danger"></i>{% endif %}
+        </p>
+        <p class="mb-2 small">Bonne réponse : <strong>{{ a.question.correct_answer|latex }}</strong></p>
+        {% if a.question.explanation %}
+        <div class="alert alert-light border mb-0">
+            <strong><i class="bi bi-lightbulb"></i> Explication :</strong>
+            <div class="lesson-md">{{ a.question.explanation|latex }}</div>
+        </div>
+        {% endif %}
+        {% if not a.is_correct %}
+        <a href="{% url 'ai:assistant' %}" class="btn btn-sm btn-outline-primary mt-2">Demander une autre explication à l'IA</a>
+        {% endif %}
+    </div>
+</div>
+{% empty %}
+<div class="alert alert-info">Aucune réponse enregistrée.</div>
+{% endfor %}
+<a href="{% url 'quizzes:my_results' %}" class="btn btn-outline-primary btn-sm">Mes résultats</a>
+{% endblock %}
+{% block extra_css %}{% include "includes/katex.html" %}{% endblock %}

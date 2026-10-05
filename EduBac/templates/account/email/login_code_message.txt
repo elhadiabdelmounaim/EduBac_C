@@ -1,0 +1,8 @@
+{% extends "account/email/base_message.txt" %}
+
+{% block content %}Voici votre code de connexion EduBac :
+
+{{ code }}
+
+Ce code est valable pour une durée limitée. Ne le partagez avec personne.
+{% endblock %}

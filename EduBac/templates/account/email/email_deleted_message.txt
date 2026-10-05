@@ -1,0 +1,6 @@
+{% extends "account/email/base_message.txt" %}
+
+{% block content %}L'adresse e-mail {{ email }} a été retirée de votre compte EduBac.
+
+Si vous n'êtes pas à l'origine de cette action, contactez le support.
+{% endblock %}

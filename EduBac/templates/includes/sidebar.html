@@ -1,0 +1,9 @@
+{# Choisit le sidebar selon le rôle #}
+{% if user.is_authenticated %}
+    {% if user.is_teacher %}
+        {% include "includes/sidebar_teacher.html" %}
+    {% else %}
+        {% include "includes/sidebar_student.html" %}
+    {% endif %}
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+{% endif %}

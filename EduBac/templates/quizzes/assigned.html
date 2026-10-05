@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 fw-bold mb-2" style="color:var(--edubac-navy);">Mes quiz</h1>
+<p class="text-muted small mb-3">Quiz assignés par tes professeurs</p>
+
+{% if my_classes %}
+<p class="text-muted small mb-3">
+    Classe :
+    {% with c=my_classes.0 %}
+    <span class="badge me-1" style="background:var(--edubac-light);color:var(--edubac-teal);">{{ c.name }}</span>
+    {% endwith %}
+</p>
+{% endif %}
+
+{% if not has_class %}
+<div class="empty-state fade-up">
+    <div class="empty-icon">👥</div>
+    <h3>Aucune classe rejointe</h3>
+    <p class="text-muted small mb-3">
+        Rejoins une classe avec le code de ton professeur pour recevoir des quiz.
+    </p>
+    <a href="{% url 'classrooms:join' %}" class="btn btn-edubac btn-sm">Rejoindre une classe</a>
+</div>
+{% elif items %}
+<div class="quiz-grid">
+{% for it in items %}
+    <div>
+        <div class="card shadow-sm h-100 border-0" style="border-radius:16px;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h2 class="h6 fw-bold mb-0" style="color:var(--edubac-navy);">{{ it.quiz.title }}</h2>
+                    <span class="badge bg-{{ it.status_class }}">{{ it.status }}</span>
+                </div>
+                <ul class="list-unstyled small text-muted mb-3">
+                    <li><i class="bi bi-book me-1"></i> Mathématiques
+                        {% if it.course %} — {{ it.course.name }}{% endif %}
+                    </li>
+                    {% if it.lesson %}
+                    <li><i class="bi bi-journal-text me-1"></i> {{ it.lesson.title }}</li>
+                    {% endif %}
+                    {% if it.teacher %}
+                    <li><i class="bi bi-person me-1"></i> {{ it.teacher.get_full_name|default:it.teacher.username }}</li>
+                    {% endif %}
+                    <li><i class="bi bi-list-ol me-1"></i> {{ it.quiz.question_count }} question{{ it.quiz.question_count|pluralize }}</li>
+                    <li><i class="bi bi-clock me-1"></i>
+                        {% if it.quiz.seconds_per_question %}
+                        {{ it.quiz.seconds_per_question }} s / question
+                        {% else %}
+                        {{ it.quiz.duration }} min
+                        {% endif %}
+                    </li>
+                    {% if it.assignment.deadline %}
+                    <li><i class="bi bi-calendar-event me-1"></i> Limite : {{ it.assignment.deadline|date:"d/m/Y H:i" }}</li>
+                    {% endif %}
+                </ul>
+                {% if it.active %}
+                <a href="{% url 'quizzes:start' it.quiz.pk %}" class="btn btn-accent btn-sm">COMMENCER LE QUIZ</a>
+                {% elif it.last_attempt %}
+                <a href="{% url 'quizzes:results' it.last_attempt.pk %}" class="btn btn-outline-primary btn-sm">Voir le résultat</a>
+                {% else %}
+                <span class="text-muted small">Non disponible</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endfor %}
+</div>
+{% else %}
+<div class="empty-state fade-up">
+    <div class="empty-icon">📋</div>
+    <h3>Aucun quiz assigné</h3>
+    <p class="text-muted small mb-0">Quand ton professeur enverra un quiz à ta classe, il apparaîtra ici.</p>
+</div>
+{% endif %}
+{% endblock %}

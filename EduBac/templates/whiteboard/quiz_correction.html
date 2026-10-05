@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load markdown_extras %}
+{% block title %}Tableau de correction{% endblock %}
+{% block extra_css %}
+{% include "includes/katex.html" %}
+<link rel="stylesheet" href="/static/css/quiz_whiteboard.css">
+{% endblock %}
+{% block content %}
+<div class="qwb-shell" id="qwbShell"
+     data-attempt="{{ attempt.pk }}"
+     data-question="{{ question.pk }}"
+     data-mode="{{ mode }}"
+     data-api="{% url 'whiteboard:quiz_correction_api' attempt.pk question.pk %}"
+     data-csrf="{{ csrf_token }}">
+
+  <header class="qwb-toolbar">
+    <div class="qwb-toolbar__left">
+      <a href="/quizzes/tentative/{{ attempt.pk }}/resultats/" class="btn btn-sm btn-outline-primary" id="qwbBack">
+        <i class="bi bi-arrow-left"></i> Retour au quiz
+      </a>
+      <span class="qwb-mode badge {% if mode == 'full' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+        {% if mode == 'full' %}Correction complète{% else %}Mode indice{% endif %}
+      </span>
+      <span class="qwb-status small text-muted" id="qwbStatus">Chargement…</span>
+    </div>
+    <div class="qwb-toolbar__right">
+      <button type="button" class="btn btn-sm btn-outline-primary" id="qwbZoomOut" aria-label="Zoom arrière">−</button>
+      <button type="button" class="btn btn-sm btn-outline-primary" id="qwbZoomReset" aria-label="Recentrer">100%</button>
+      <button type="button" class="btn btn-sm btn-outline-primary" id="qwbZoomIn" aria-label="Zoom avant">+</button>
+      <button type="button" class="btn btn-sm btn-outline-primary" id="qwbUndo" aria-label="Annuler" title="Ctrl+Z">↶</button>
+      <button type="button" class="btn btn-sm btn-outline-primary" id="qwbRedo" aria-label="Rétablir" title="Ctrl+Y">↷</button>
+      <button type="button" class="btn btn-sm btn-edubac" id="qwbGenerate">
+        <i class="bi bi-magic"></i> Générer
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-primary d-none" id="qwbRegen">Régénérer</button>
+    </div>
+  </header>
+
+  {% if mode == 'hint' %}
+  <div class="alert alert-warning py-2 px-3 mb-2 small">
+    Mode indice : la bonne réponse n’est pas révélée tant que le quiz n’est pas terminé.
+  </div>
+  {% endif %}
+
+  <div class="qwb-warning alert alert-info py-2 px-3 mb-2 small d-none" id="qwbWarning"></div>
+
+  <div class="qwb-main">
+    <div class="qwb-canvas-wrap" id="qwbCanvasWrap">
+      <svg class="qwb-svg-links" id="qwbLinks" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="qwb-canvas" id="qwbCanvas" role="application" aria-label="Tableau de correction" tabindex="0"></div>
+    </div>
+    <aside class="qwb-sidebar" aria-label="Panneau latéral">
+      <h3 class="h6 fw-bold mb-2">Objets</h3>
+      <ol class="qwb-linear list-group list-group-flush small" id="qwbLinear"></ol>
+      <div class="mt-3" id="qwbProps">
+        <h3 class="h6 fw-bold">Propriétés</h3>
+        <p class="small text-muted mb-1">Sélectionnez un objet pour le modifier ou poser une question.</p>
+        <textarea id="qwbEditText" class="form-control form-control-sm d-none" rows="3" maxlength="2000" aria-label="Contenu de l’objet"></textarea>
+        <div class="d-flex flex-wrap gap-1 mt-2">
+          <button type="button" class="btn btn-sm btn-outline-primary d-none" id="qwbDup">Dupliquer</button>
+          <button type="button" class="btn btn-sm btn-outline-primary d-none" id="qwbLock">Verrouiller</button>
+          <button type="button" class="btn btn-sm btn-outline-danger d-none" id="qwbDel">Supprimer</button>
+        </div>
+      </div>
+
+      <div class="qwb-chat mt-3" id="qwbChat">
+        <h3 class="h6 fw-bold mb-2"><i class="bi bi-chat-dots"></i> Demander à l’IA</h3>
+        <div class="qwb-chat-log small" id="qwbChatLog" aria-live="polite"></div>
+        <div class="input-group input-group-sm mt-2">
+          <input type="text" id="qwbChatInput" class="form-control" maxlength="1000"
+                 placeholder="Posez votre question à l’IA…" aria-label="Message à l’IA">
+          <button type="button" class="btn btn-edubac" id="qwbChatSend" aria-label="Envoyer">
+            <i class="bi bi-send"></i>
+          </button>
+        </div>
+        <div id="qwbProposals" class="mt-2"></div>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="/static/js/quiz_whiteboard.js"></script>
+{% endblock %}

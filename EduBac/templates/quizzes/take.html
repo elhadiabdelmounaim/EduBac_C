@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% load markdown_extras %}
+{% block content %}
+<div class="quiz-header-bar fade-up">
+    <div style="flex:1;min-width:0;">
+        <div class="small text-muted mb-1 text-truncate">{{ attempt.quiz.title }}</div>
+        <div class="fw-bold">Question {{ progress }} / {{ total }}</div>
+        <div class="progress quiz-progress mt-2">
+            <div class="progress-bar bg-edubac" role="progressbar"
+                 style="width: {% widthratio progress total 100 %}%"
+                 aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="{{ total }}"></div>
+        </div>
+    </div>
+    <div class="quiz-timer-ring" id="timerRing" style="--pct: 100;" aria-live="polite" aria-atomic="true">
+        <div class="timer-inner">
+            <strong id="timerText">--</strong>
+            <small>sec</small>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm fade-up fade-up-delay-1 border-0 quiz-take-shell" style="border-radius:16px;">
+    <div class="card-body p-3 p-md-4">
+        <h2 class="h5 mb-3 fw-bold">{{ question.text|latex }}</h2>
+        {% if hint %}
+        <div class="mb-3">
+            <button type="button" class="btn btn-sm btn-outline-primary" id="hintBtn" data-hint="{{ hint|escape }}">
+                <i class="bi bi-lightbulb"></i> Indice (niveau 1)
+            </button>
+            <div id="hintBox1" class="alert alert-warning mt-2 d-none small mb-0"></div>
+            <div id="hintBox2" class="alert alert-warning mt-2 d-none small mb-0"></div>
+        </div>
+        {% endif %}
+        <form method="post" id="quizForm" data-loading>
+            {% csrf_token %}
+            <div class="choices-list" role="radiogroup" aria-label="Choix de réponse">
+            {% for choice in choices %}
+            <label class="choice-btn">
+                <input type="radio" name="answer" value="{{ choice.text }}" required>
+                <span>{{ choice.text|latex }}</span>
+            </label>
+            {% endfor %}
+            </div>
+            <div class="d-grid d-sm-flex gap-2 mt-3">
+                <button type="submit" class="btn btn-edubac px-4 py-2">
+                    {% if progress == total %}
+                    <i class="bi bi-check2-circle"></i> Terminer le quiz
+                    {% else %}
+                    Question suivante <i class="bi bi-arrow-right"></i>
+                    {% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block extra_css %}{% include "includes/katex.html" %}{% endblock %}
+{% block extra_js %}
+<script>
+(function() {
+    var totalTime = {{ seconds_per_question|default:20 }};
+    var remaining = {{ remaining_seconds|default:0 }};
+    if (remaining <= 0) remaining = totalTime;
+    var el = document.getElementById('timerText');
+    var ring = document.getElementById('timerRing');
+    var form = document.getElementById('quizForm');
+
+    var hb=document.getElementById('hintBtn');
+    if(hb){
+      var fullHint = hb.getAttribute('data-hint') || '';
+      var step=0;
+      var h1=document.getElementById('hintBox1');
+      var h2=document.getElementById('hintBox2');
+      var mid=Math.max(20, Math.floor(fullHint.length/2));
+      hb.addEventListener('click',function(){
+        step++;
+        if(step===1){
+          h1.textContent='💡 Indice léger : '+fullHint.slice(0, mid)+'…';
+          h1.classList.remove('d-none');
+          hb.innerHTML='<i class="bi bi-lightbulb"></i> Indice plus fort (niveau 2)';
+        } else {
+          h2.textContent='💡 Indice complet : '+fullHint;
+          h2.classList.remove('d-none');
+          hb.disabled=true;
+        }
+      });
+    }
+    document.querySelectorAll('.choice-btn').forEach(function(lab) {
+        lab.addEventListener('click', function() {
+            document.querySelectorAll('.choice-btn').forEach(function(x) { x.classList.remove('selected'); });
+            lab.classList.add('selected');
+        });
+    });
+
+    function tick() {
+        var pct = Math.max(0, Math.round((remaining / totalTime) * 100));
+        if (ring) ring.style.setProperty('--pct', pct);
+        el.textContent = String(remaining);
+        if (remaining <= 5 && remaining > 0 && ring) ring.classList.add('urgent');
+        if (remaining <= 0) {
+            el.textContent = '0';
+            if (form) {
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'answer';
+                input.value = '__timeout__';
+                form.appendChild(input);
+                form.querySelectorAll('[required]').forEach(function(e) { e.removeAttribute('required'); });
+                form.submit();
+            }
+            return;
+        }
+        remaining -= 1;
+        setTimeout(tick, 1000);
+    }
+    tick();
+})();
+</script>
+{% endblock %}

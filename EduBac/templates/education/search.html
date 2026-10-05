@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 fw-bold mb-3" style="color:var(--edubac-navy);">Recherche</h1>
+<form method="get" class="mb-4">
+    <div class="input-group" style="max-width:520px;">
+        <input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Cours, leçon, mot-clé…" autofocus>
+        <button class="btn btn-edubac" type="submit"><i class="bi bi-search"></i></button>
+    </div>
+</form>
+{% if q %}
+<p class="text-muted small">Résultats pour « {{ q }} »</p>
+<div class="row g-4">
+    <div class="col-md-6">
+        <h2 class="h5">Cours ({{ courses|length }})</h2>
+        <ul class="list-group shadow-sm">
+            {% for c in courses %}
+            <li class="list-group-item">
+                <a href="{% url 'education:course_detail' c.pk %}">{{ c.name }}</a>
+                <span class="small text-muted"> — {{ c.get_niveau_display }}</span>
+            </li>
+            {% empty %}
+            <li class="list-group-item text-muted">Aucun cours.</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="col-md-6">
+        <h2 class="h5">Leçons ({{ lessons|length }})</h2>
+        <ul class="list-group shadow-sm">
+            {% for l in lessons %}
+            <li class="list-group-item">
+                <a href="{% url 'education:lesson_detail' l.pk %}">{{ l.title }}</a>
+                <span class="small text-muted"> — {{ l.course.get_niveau_display }}</span>
+            </li>
+            {% empty %}
+            <li class="list-group-item text-muted">Aucune leçon.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

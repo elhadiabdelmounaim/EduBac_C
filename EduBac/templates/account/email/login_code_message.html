@@ -1,0 +1,8 @@
+{% extends "account/email/base_message.html" %}
+{% block subject %}Votre code de connexion{% endblock %}
+{% block content %}
+<p>Bonjour,</p>
+<p>Voici votre code de connexion <strong>EduBac</strong> :</p>
+<p style="text-align:center; font-size:1.8rem; font-weight:700; letter-spacing:4px; color:#2A0C3D;">{{ code }}</p>
+<p class="muted">Ce code est valable pour une durée limitée. Ne le partagez avec personne.</p>
+{% endblock %}

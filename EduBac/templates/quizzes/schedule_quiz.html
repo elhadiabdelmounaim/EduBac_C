@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Programmer — {{ quiz.title }}{% endblock %}
+{% block content %}
+<div class="card border-0 shadow-sm" style="max-width:520px;">
+  <div class="card-body p-4">
+    <h1 class="h4 fw-bold mb-1">⏰ Programmer la publication</h1>
+    <p class="text-muted">{{ quiz.title }}</p>
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Date et heure de publication</label>
+        <input type="datetime-local" name="publish_at" class="form-control"
+               value="{% if quiz.publish_at %}{{ quiz.publish_at|date:'Y-m-d\\TH:i' }}{% endif %}">
+        <div class="form-text">Le quiz restera en brouillon jusqu'à cette date, puis sera publié automatiquement.</div>
+      </div>
+      <button type="submit" class="btn btn-edubac">Enregistrer</button>
+      <a href="{% url 'quizzes:manage' %}" class="btn btn-link">Annuler</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 fw-bold mb-3" style="color:var(--edubac-navy);">Créer une classe</h1>
+{% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+<form method="post" class="card shadow-sm border-0" style="max-width:520px;border-radius:16px;">
+    {% csrf_token %}
+    <div class="card-body p-4">
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Nom de la classe *</label>
+            <input type="text" name="name" class="form-control" required placeholder="Ex. : 1ère Bac SM — Groupe A">
+        </div>
+        <div class="mb-4">
+            <label class="form-label fw-semibold">Niveau</label>
+            <select name="niveau" class="form-select">
+                {% for val, label in niveaux %}
+                <option value="{{ val }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-edubac">Créer la classe</button>
+        <a href="{% url 'classrooms:list' %}" class="btn btn-link">Annuler</a>
+    </div>
+</form>
+{% endblock %}

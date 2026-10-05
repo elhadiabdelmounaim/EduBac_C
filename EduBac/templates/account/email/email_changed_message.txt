@@ -1,0 +1,9 @@
+{% extends "account/email/base_message.txt" %}
+
+{% block content %}L'adresse e-mail associée à votre compte EduBac a été modifiée.
+
+{% if from_email %}Ancienne adresse : {{ from_email }}
+{% endif %}{% if to_email %}Nouvelle adresse : {{ to_email }}
+{% endif %}
+Si vous n'êtes pas à l'origine de ce changement, contactez le support immédiatement.
+{% endblock %}

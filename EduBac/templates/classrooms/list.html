@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0 fw-bold" style="color:var(--edubac-navy);">Mes classes</h1>
+    {% if user.is_teacher %}
+    <a href="{% url 'classrooms:create' %}" class="btn btn-edubac"><i class="bi bi-plus-lg"></i> Créer une classe</a>
+    {% elif user.is_student %}
+    <a href="{% url 'classrooms:join' %}" class="btn btn-edubac">Rejoindre une classe</a>
+    {% endif %}
+</div>
+<div class="row g-3">
+    {% for c in classrooms %}
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0" style="border-radius:16px;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <a href="{% url 'classrooms:detail' c.pk %}" class="text-decoration-none flex-grow-1">
+                        <h5 class="fw-bold mb-1" style="color:var(--edubac-navy);">{{ c.name }}</h5>
+                    </a>
+                    {% if c.is_active %}
+                    <span class="badge bg-success">Active</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Archivée</span>
+                    {% endif %}
+                </div>
+                <p class="text-muted small mb-2">
+                    {{ c.get_niveau_display }}
+                    {% if user.is_teacher %}
+                    · Code : {{ c.code }}
+                    {% if c.nb_eleves is not None %} · {{ c.nb_eleves }} élève{{ c.nb_eleves|pluralize }}{% endif %}
+                    {% endif %}
+                </p>
+                {% if user.is_teacher %}
+                <div class="d-flex flex-wrap gap-1 mt-2">
+                    <a href="{% url 'classrooms:detail' c.pk %}" class="btn btn-sm btn-outline-primary">Voir</a>
+                    <a href="{% url 'classrooms:edit' c.pk %}" class="btn btn-sm btn-outline-secondary">Modifier</a>
+                    <a href="{% url 'classrooms:results' c.pk %}" class="btn btn-sm btn-outline-success">Résultats</a>
+                    <a href="{% url 'classrooms:delete' c.pk %}" class="btn btn-sm btn-outline-danger">🗑</a>
+                </div>
+                {% else %}
+                <a href="{% url 'classrooms:detail' c.pk %}" class="btn btn-sm btn-outline-primary">Voir</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="empty-state">
+            <div class="empty-icon">👥</div>
+            <h3>Aucune classe</h3>
+            {% if user.is_teacher %}
+            <p class="text-muted small mb-3">Crée ta première classe pour y inviter des élèves.</p>
+            <a href="{% url 'classrooms:create' %}" class="btn btn-edubac btn-sm">Créer une classe</a>
+            {% else %}
+            <p class="text-muted small mb-3">Rejoins une classe avec le code de ton professeur.</p>
+            <a href="{% url 'classrooms:join' %}" class="btn btn-edubac btn-sm">Rejoindre</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

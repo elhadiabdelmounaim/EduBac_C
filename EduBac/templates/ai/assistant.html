@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="illus-card mb-4">
+    <div class="reader-illus float-soft">🤖</div>
+    <div>
+        <h1 class="h4 fw-bold mb-1" style="color:var(--edubac-navy);">Assistant IA</h1>
+        <p class="text-muted small mb-0">Explications adaptées à ton niveau — étapes, exemples, reformulation.</p>
+    </div>
+</div>
+<div class="row g-4">
+    <div class="col-lg-8">
+        <form method="post" class="card card-body shadow-sm mb-3" id="aiForm">
+            {% csrf_token %}
+            {% if conversation %}<input type="hidden" name="conversation_id" value="{{ conversation.pk }}">{% endif %}
+            <input type="hidden" name="style" id="styleField" value="standard">
+            <input type="hidden" name="previous_answer" id="prevField" value="">
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Leçon</label>
+                <select name="lesson_id" class="form-select" required>
+                    <option value="">— Choisir —</option>
+                    {% for course in courses %}
+                    <optgroup label="{{ course.get_niveau_display }} — {{ course.name }}">
+                        {% for lesson in course.get_lessons %}
+                        <option value="{{ lesson.pk }}" {% if conversation and conversation.lesson_id == lesson.pk %}selected{% endif %}>{{ lesson.title }}</option>
+                        {% endfor %}
+                    </optgroup>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Niveau d'explication</label>
+                <div class="btn-group w-100" role="group">
+                    <input type="radio" class="btn-check" name="level" id="lvl1" value="simple" {% if level == 'simple' %}checked{% endif %}>
+                    <label class="btn btn-outline-primary" for="lvl1">Simple</label>
+                    <input type="radio" class="btn-check" name="level" id="lvl2" value="normal" {% if level != 'simple' and level != 'approfondi' %}checked{% endif %}>
+                    <label class="btn btn-outline-primary" for="lvl2">Normal</label>
+                    <input type="radio" class="btn-check" name="level" id="lvl3" value="approfondi" {% if level == 'approfondi' %}checked{% endif %}>
+                    <label class="btn btn-outline-primary" for="lvl3">Approfondi</label>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Ta question</label>
+                <textarea name="question" id="questionField" class="form-control" rows="3" required placeholder="Ex. : Explique la dérivée d'une fonction…"></textarea>
+            </div>
+            <div class="d-flex flex-wrap gap-2 mb-2">
+                <button type="submit" class="btn btn-accent" onclick="document.getElementById('styleField').value='standard'">
+                    <i class="bi bi-send"></i> Expliquer
+                </button>
+                <button type="submit" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('styleField').value='etapes'">
+                    Par étapes
+                </button>
+                <button type="submit" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('styleField').value='exemple'">
+                    Exemple + exercice
+                </button>
+                <button type="submit" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('styleField').value='erreur'">
+                    J'ai fait une erreur
+                </button>
+            </div>
+        </form>
+
+        {% if response %}
+        <div class="ai-response mb-3" id="lastResponse">{{ response }}</div>
+        <form method="post" class="mb-4">
+            {% csrf_token %}
+            {% if conversation %}<input type="hidden" name="conversation_id" value="{{ conversation.pk }}">{% endif %}
+            <input type="hidden" name="lesson_id" value="{{ conversation.lesson_id }}">
+            <input type="hidden" name="level" value="{{ level }}">
+            <input type="hidden" name="style" value="autrement">
+            <input type="hidden" name="previous_answer" value="{{ response }}">
+            <input type="hidden" name="question" value="Explique autrement de façon plus claire">
+            <button type="submit" class="btn btn-edubac btn-sm">
+                <i class="bi bi-arrow-repeat"></i> Explique autrement
+            </button>
+        </form>
+        {% endif %}
+
+        {% if conversation %}
+        <div class="card shadow-sm">
+            <div class="card-header bg-white fw-bold">Fil de conversation</div>
+            <ul class="list-group list-group-flush">
+                {% for m in conversation.messages.all %}
+                <li class="list-group-item">
+                    <span class="badge {% if m.role == 'user' %}bg-primary{% else %}bg-success{% endif %}">{{ m.get_role_display }}</span>
+                    <div class="mt-1" style="white-space:pre-wrap;">{{ m.content }}</div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-white fw-bold">Comment bien demander</div>
+            <div class="card-body small text-muted">
+                <ul class="mb-0">
+                    <li><strong>Simple</strong> : mots faciles, analogies</li>
+                    <li><strong>Normal</strong> : cours de lycée</li>
+                    <li><strong>Approfondi</strong> : plus de détails</li>
+                    <li><strong>Par étapes</strong> : 1, 2, 3…</li>
+                    <li><strong>Exemple</strong> : corrigé puis exercice</li>
+                </ul>
+            </div>
+        </div>
+        <div class="card shadow-sm">
+            <div class="card-header bg-white fw-bold">Historique</div>
+            <ul class="list-group list-group-flush">
+                {% for h in history %}
+                <li class="list-group-item">
+                    <a href="?c={{ h.pk }}">{{ h.title|default:h.created_at|date:"d/m H:i" }}</a>
+                    <div class="small text-muted">{{ h.updated_at|date:"d/m/Y H:i" }}</div>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">Aucune conversation.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

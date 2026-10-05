@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card position-relative" style="max-width:480px;">
+        <div class="auth-brand">
+<img src="/static/img/edubac-logo.png" alt="EduBac" class="auth-logo float-soft">
+            <h1 class="h4 fw-bold mb-1" style="color:var(--edubac-navy);">Inscription enseignant</h1>
+            <p class="text-muted small mb-0">Nom, e-mail et mot de passe — aucun code requis</p>
+        </div>
+        {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-2">
+                <label class="form-label small fw-semibold">Nom *</label>
+                <input type="text" name="name" class="form-control" required
+                       placeholder="Prénom et nom" autocomplete="name">
+            </div>
+            <div class="mb-2">
+                <label class="form-label small fw-semibold">E-mail *</label>
+                <input type="email" name="email" class="form-control" required autocomplete="email">
+            </div>
+            <div class="mb-2">
+                <label class="form-label small fw-semibold">Mot de passe *</label>
+                <div class="password-field">
+                    <input type="password" name="password" id="p1" class="form-control" required minlength="6" autocomplete="new-password">
+                    <button type="button" class="password-toggle" data-target="p1"><i class="bi bi-eye"></i></button>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-semibold">Confirmer le mot de passe *</label>
+                <div class="password-field">
+                    <input type="password" name="password2" id="p2" class="form-control" required minlength="6" autocomplete="new-password">
+                    <button type="button" class="password-toggle" data-target="p2"><i class="bi bi-eye"></i></button>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-accent w-100 py-2 mb-3">Créer mon compte</button>
+        </form>
+        <p class="text-center small mb-0 text-muted">
+            Déjà un compte ? <a href="{% url 'accounts:login' %}" class="fw-semibold">Connexion</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.querySelectorAll('.password-toggle').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var input = document.getElementById(btn.getAttribute('data-target'));
+    var icon = btn.querySelector('i');
+    if (!input) return;
+    if (input.type === 'password') { input.type = 'text'; if (icon) icon.className = 'bi bi-eye-slash'; }
+    else { input.type = 'password'; if (icon) icon.className = 'bi bi-eye'; }
+  });
+});
+</script>
+{% endblock %}

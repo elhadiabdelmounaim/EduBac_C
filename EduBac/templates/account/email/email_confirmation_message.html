@@ -1,0 +1,13 @@
+{% extends "account/email/base_message.html" %}
+{% block subject %}Confirmez votre adresse e-mail{% endblock %}
+{% block content %}
+<p>Bonjour{% if user.get_full_name %} {{ user.get_full_name }}{% endif %},</p>
+<p>Merci de vous être inscrit sur <strong>EduBac</strong>.</p>
+<p>Pour activer votre compte, cliquez sur le bouton ci-dessous :</p>
+<p style="text-align:center;">
+  <a href="{{ activate_url }}" class="btn">Confirmer mon e-mail</a>
+</p>
+<p class="muted">Ou copiez ce lien dans votre navigateur :</p>
+<p class="link">{{ activate_url }}</p>
+<p class="muted">Si vous n'êtes pas à l'origine de cette inscription, ignorez cet e-mail.</p>
+{% endblock %}

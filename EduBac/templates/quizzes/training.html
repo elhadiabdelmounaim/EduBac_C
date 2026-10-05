@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 mb-4">Entraînement</h1>
+<p class="text-muted">Quiz publiés pour votre niveau — entraînez-vous librement.</p>
+<div class="row g-3">
+{% for q in quizzes %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card card-niveau h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ q.title }}</h5>
+                <p class="small text-muted mb-2">{{ q.lesson.title }} · {{ q.lesson.course.name }}</p>
+                <span class="badge badge-difficulte-{{ q.difficulty }}">{{ q.get_difficulty_display }}</span>
+                <span class="badge bg-light text-dark">{{ q.duration }} min</span>
+                <div class="mt-3">
+                    <a href="{% url 'quizzes:detail' q.pk %}" class="btn btn-edubac btn-sm">Commencer</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% empty %}
+    <div class="col-12"><div class="alert alert-info">Aucun quiz d'entraînement disponible.</div></div>
+{% endfor %}
+</div>
+{% endblock %}

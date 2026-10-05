@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0 fw-bold" style="color:var(--edubac-navy);">Résultats des élèves</h1>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'quizzes:export_excel' %}?classe={{ class_id }}{% if quiz_id %}&quiz={{ quiz_id }}{% endif %}"
+           class="btn btn-edubac btn-sm">
+            <i class="bi bi-file-earmark-excel"></i> Télécharger Excel
+        </a>
+        <a href="{% url 'quizzes:export_csv' %}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-download"></i> CSV
+        </a>
+    </div>
+</div>
+
+<form method="get" class="card shadow-sm border-0 mb-4" style="border-radius:16px;">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label small fw-semibold">Classe</label>
+                <select name="classe" class="form-select" onchange="this.form.submit()">
+                    <option value="">— Toutes mes classes —</option>
+                    {% for c in classrooms %}
+                    <option value="{{ c.pk }}" {% if class_id == c.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ c.name }} ({{ c.get_niveau_display }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label small fw-semibold">Quiz</label>
+                <select name="quiz" class="form-select" onchange="this.form.submit()">
+                    <option value="">— Tous les quiz —</option>
+                    {% for q in quizzes %}
+                    <option value="{{ q.pk }}" {% if quiz_id == q.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ q.title }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'quizzes:student_results' %}" class="btn btn-outline-secondary w-100">Réinitialiser</a>
+            </div>
+        </div>
+        {% if selected_class %}
+        <p class="small text-muted mb-0 mt-2">
+            Classe sélectionnée : <strong>{{ selected_class.name }}</strong>
+            · Code {{ selected_class.code }}
+        </p>
+        {% endif %}
+    </div>
+</form>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-pill">
+            <div class="val">{{ stats.total|default:0 }}</div>
+            <div class="lbl">Tentatives</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-pill">
+            <div class="val">{% if stats.avg %}{{ stats.avg|floatformat:1 }}%{% else %}—{% endif %}</div>
+            <div class="lbl">Score moyen</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-pill">
+            <div class="val">{{ classrooms|length }}</div>
+            <div class="lbl">Classes</div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0" style="border-radius:16px;">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Élève</th>
+                    <th>Quiz</th>
+                    <th>Leçon</th>
+                    <th>Score</th>
+                    <th>Date</th>
+                    <th>Heure</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for a in attempts %}
+                <tr>
+                    <td>
+                        <div class="fw-semibold">{{ a.student.get_full_name|default:a.student.username }}</div>
+                        <div class="small text-muted">{{ a.student.email }}</div>
+                    </td>
+                    <td>{{ a.quiz.title }}</td>
+                    <td class="small">{{ a.quiz.lesson.title|default:"—" }}</td>
+                    <td>
+                        <span class="fw-bold {% if a.score >= 70 %}text-success{% elif a.score >= 40 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ a.score }} %
+                        </span>
+                    </td>
+                    <td class="small">{{ a.submitted_at|date:"d/m/Y" }}</td>
+                    <td class="small">{{ a.submitted_at|date:"H:i" }}</td>
+                    <td>
+                        <a href="{% url 'quizzes:comment' a.pk %}" class="btn btn-sm btn-outline-primary">Commenter</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="7" class="text-muted text-center py-4">
+                        Aucun résultat pour ce filtre.
+                        {% if not classrooms %}
+                        <br><span class="small">Crée d’abord une classe et envoie un quiz.</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

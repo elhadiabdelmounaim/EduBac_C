@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 mb-4">Mes cours</h1>
+{% if profile %}<p class="text-muted">Niveau : {{ profile.get_niveau_display }}</p>{% endif %}
+<div class="row g-3">
+{% for c in courses %}
+    <div class="col-md-6">
+        <a href="{% url 'education:course_detail' c.pk %}" class="card card-niveau text-decoration-none">
+            <div class="card-body">
+                <h5 class="card-title">{{ c.name }}</h5>
+                <p class="small text-muted mb-0">{{ c.description|truncatewords:20 }}</p>
+            </div>
+        </a>
+    </div>
+{% empty %}
+    <div class="col-12"><div class="alert alert-info">Aucun cours pour votre niveau.</div></div>
+{% endfor %}
+</div>
+{% endblock %}

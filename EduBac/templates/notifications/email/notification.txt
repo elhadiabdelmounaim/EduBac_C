@@ -1,0 +1,15 @@
+EduBac — Mathématiques
+======================
+
+Bonjour {{ recipient_name }},
+
+{{ title }}
+
+{{ message }}
+{% if link %}
+
+Ouvrir : {{ link }}
+{% endif %}
+
+—
+Message automatique EduBac

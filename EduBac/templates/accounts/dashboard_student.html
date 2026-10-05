@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="welcome-banner">
+    <div class="row align-items-center">
+        <div class="col-auto d-none d-md-block">
+            <div class="reader-illus float-soft">🧑‍🎓</div>
+        </div>
+        <div class="col">
+            <h1 class="h3 fw-bold mb-1" style="color:var(--edubac-navy);">
+                Bonjour{% if user.first_name %} {{ user.first_name }}{% endif %} 👋
+            </h1>
+            <p class="text-muted mb-0">Continue ton apprentissage en mathématiques. ∑ · π · √</p>
+            {% if profile %}<span class="badge mt-2" style="background:var(--edubac-light);color:var(--edubac-teal);">{{ profile.get_niveau_display }}</span>{% endif %}
+        </div>
+        <div class="col-lg-3 d-none d-lg-flex justify-content-end gap-2" style="font-size:1.8rem;opacity:.35;">
+            <span class="float-soft">∫</span>
+            <span class="float-soft-delay">∞</span>
+        </div>
+    </div>
+</div>
+
+
+{% if continue_lesson %}
+<div class="continue-card fade-up">
+    <div>
+        <h3><i class="bi bi-play-circle me-1"></i> Continuer l'apprentissage</h3>
+        <p>{{ continue_lesson.title }} · {{ continue_lesson.course.name }}</p>
+    </div>
+    <a href="{% url 'education:lesson_detail' continue_lesson.pk %}" class="btn btn-sm">Reprendre →</a>
+</div>
+{% elif courses %}
+<div class="continue-card fade-up">
+    <div>
+        <h3><i class="bi bi-lightning me-1"></i> Prêt à apprendre ?</h3>
+        <p>Ouvre tes cours et commence une leçon dès maintenant.</p>
+    </div>
+    <a href="{% url 'accounts:my_courses' %}" class="btn btn-sm">Mes cours →</a>
+</div>
+{% endif %}
+
+{% if active_challenge %}
+<div class="alert alert-info border-0 shadow-sm mb-3">
+    <strong>🎯 {{ active_challenge.title }}</strong>
+    <span class="small text-muted"> — {{ active_challenge.description }}</span>
+    <span class="badge bg-primary ms-1">Objectif : {{ active_challenge.target_quizzes }} quiz</span>
+</div>
+{% endif %}
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-pill">
+            <div class="val">🔥 {{ streak|default:0 }}</div>
+            <div class="lbl">Jours de série</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-pill">
+            <div class="val">{{ weekly.done|default:0 }}/{{ weekly.goal|default:5 }}</div>
+            <div class="lbl">Objectif semaine</div>
+            <div class="progress mt-2" style="height:8px;"><div class="progress-bar bg-edubac" style="width:{{ weekly.pct|default:0 }}%"></div></div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <a href="{% url 'accounts:badges' %}" class="stat-pill d-block text-decoration-none">
+            <div class="val">🏅</div>
+            <div class="lbl">Mes badges</div>
+        </a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <a href="{% url 'accounts:my_courses' %}" class="quick-card qc-teal">
+            <div class="qc-icon"><i class="bi bi-book"></i></div>
+            <div class="fw-bold">Mes cours</div>
+            <div class="small opacity-75">{{ courses|length }} disponible{{ courses|length|pluralize }}</div>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="{% url 'accounts:my_lessons' %}" class="quick-card qc-green">
+            <div class="qc-icon"><i class="bi bi-journal-text"></i></div>
+            <div class="fw-bold">Mes leçons</div>
+            <div class="small opacity-75">Programme</div>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="{% url 'quizzes:training' %}" class="quick-card qc-orange">
+            <div class="qc-icon"><i class="bi bi-bullseye"></i></div>
+            <div class="fw-bold">Entraînement</div>
+            <div class="small opacity-75">{{ training_count }} quiz</div>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="{% url 'quizzes:assigned' %}" class="quick-card qc-purple">
+            <div class="qc-icon"><i class="bi bi-clipboard-check"></i></div>
+            <div class="fw-bold">Quiz assignés</div>
+            <div class="small opacity-75">{{ stats.assignments_done }}/{{ stats.assignments_total }} faits</div>
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center border-0 pt-3">
+                <span class="fw-bold">Quiz assignés récents</span>
+                <a href="{% url 'quizzes:assigned' %}" class="small">Voir tout</a>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for a in assignments %}
+                <li class="list-group-item d-flex justify-content-between align-items-center px-3">
+                    <div>
+                        <div class="fw-semibold">{{ a.quiz.title }}</div>
+                        <div class="small text-muted">{{ a.quiz.lesson.title }}</div>
+                    </div>
+                    <a href="{% url 'quizzes:detail' a.quiz.pk %}" class="btn btn-accent btn-sm">Commencer</a>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted px-3">Aucun quiz assigné.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-3 fw-bold">Ma progression</div>
+            <div class="card-body text-center">
+                <div class="progress-ring-wrap mb-3">
+                    <svg width="120" height="120" viewBox="0 0 120 120">
+                        <circle cx="60" cy="60" r="52" fill="none" stroke="#e5ecec" stroke-width="10"/>
+                        <circle cx="60" cy="60" r="52" fill="none" stroke="#1a6b6b" stroke-width="10"
+                                stroke-linecap="round"
+                                stroke-dasharray="{{ stats.progress|default:0 }}, 100"
+                                pathLength="100"/>
+                    </svg>
+                    <div class="progress-ring-text">
+                        <strong>{{ stats.progress }}%</strong>
+                        <span class="small text-muted">global</span>
+                    </div>
+                </div>
+                <div class="row g-2 text-start">
+                    <div class="col-4"><div class="stat-pill py-2"><div class="val" style="font-size:1.1rem;">{{ stats.attempts }}</div><div class="lbl">Quiz</div></div></div>
+                    <div class="col-4"><div class="stat-pill py-2"><div class="val" style="font-size:1.1rem;">{{ stats.avg_score }}%</div><div class="lbl">Moyenne</div></div></div>
+                    <div class="col-4"><div class="stat-pill py-2"><div class="val" style="font-size:1.1rem;">{{ stats.assignments_done }}</div><div class="lbl">Faits</div></div></div>
+                </div>
+                <a href="{% url 'accounts:progress' %}" class="btn btn-outline-primary btn-sm mt-3">Détails</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

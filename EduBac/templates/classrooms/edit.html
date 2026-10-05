@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-4">
+    <h1 class="h3 fw-bold" style="color:var(--edubac-navy);">Modifier la classe</h1>
+    <p class="text-muted small">{{ classroom.name }} · Code : {{ classroom.code }}</p>
+</div>
+
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+<div class="card shadow-sm border-0" style="border-radius:16px; max-width:520px;">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Nom de la classe</label>
+                <input type="text" name="name" class="form-control" required
+                       value="{{ classroom.name }}" maxlength="150"
+                       placeholder="Ex. 2BAC PC-SVT">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Niveau scolaire</label>
+                <select name="niveau" class="form-select">
+                    {% for value, label in niveaux %}
+                    <option value="{{ value }}" {% if classroom.niveau == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-edubac">Enregistrer</button>
+                <a href="{% url 'classrooms:detail' classroom.pk %}" class="btn btn-outline-secondary">Annuler</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

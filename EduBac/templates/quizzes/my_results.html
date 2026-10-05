@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 mb-4">Mes résultats</h1>
+{% if attempts %}
+<div class="table-responsive">
+<table class="table table-hover bg-white shadow-sm">
+    <thead class="table-light">
+        <tr><th>Quiz</th><th>Score</th><th>Date</th><th></th></tr>
+    </thead>
+    <tbody>
+    {% for a in attempts %}
+        <tr>
+            <td>{{ a.quiz.title }}</td>
+            <td>
+                <span class="fw-bold {% if a.score >= 70 %}text-success{% elif a.score >= 40 %}text-warning{% else %}text-danger{% endif %}">
+                    {{ a.score }} %
+                </span>
+            </td>
+            <td class="small text-muted">{{ a.submitted_at|date:"d/m/Y H:i" }}</td>
+            <td><a href="{% url 'quizzes:results' a.pk %}" class="btn btn-sm btn-outline-primary">Détail</a></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">📊</div>
+    <h3>Pas encore de résultats</h3>
+    <p class="text-muted small mb-3">Termine un quiz pour voir tes scores ici.</p>
+    <a href="{% url 'quizzes:training' %}" class="btn btn-edubac btn-sm">S'entraîner</a>
+</div>
+{% endif %}
+{% endblock %}

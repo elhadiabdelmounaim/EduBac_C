@@ -1,0 +1,20 @@
+# Environnement
+.env
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+db.sqlite3
+*.log
+media/
+staticfiles/
+.DS_Store
+*.egg-info/
+dist/
+build/
+.idea/
+.vscode/
+*.swp
+*.swo

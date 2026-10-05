@@ -1,0 +1,10 @@
+{% extends "account/email/base_message.txt" %}
+
+{% block content %}Quelqu'un a tenté de créer un compte EduBac avec l'adresse {{ email }}.
+
+Un compte existe déjà avec cette adresse. Si c'était vous, connectez-vous ou réinitialisez votre mot de passe :
+
+{{ password_reset_url }}
+
+Si ce n'était pas vous, vous pouvez ignorer cet e-mail.
+{% endblock %}

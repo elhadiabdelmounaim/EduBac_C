@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 fw-bold mb-4" style="color:var(--edubac-navy);">Mes favoris</h1>
+{% if favs %}
+<ul class="list-group shadow-sm">
+{% for f in favs %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+            <a href="{% url 'education:lesson_detail' f.lesson.pk %}">{{ f.lesson.title }}</a>
+            <div class="small text-muted">{{ f.lesson.course.get_niveau_display }}</div>
+        </div>
+        <i class="bi bi-star-fill text-warning"></i>
+    </li>
+{% endfor %}
+</ul>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">⭐</div>
+    <h3>Aucun favori</h3>
+    <p class="text-muted small">Ajoute une leçon en favori depuis sa page.</p>
+</div>
+{% endif %}
+{% endblock %}

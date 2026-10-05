@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4 fade-up">
+    <div>
+        <h1 class="h3 fw-bold mb-1" style="color:var(--edubac-navy);">Whiteboard</h1>
+        <p class="text-muted small mb-0">Tableaux de mathématiques interactifs</p>
+    </div>
+    {% if is_teacher %}
+    <button type="button" class="btn btn-edubac" data-bs-toggle="modal" data-bs-target="#newBoardModal">
+        <i class="bi bi-plus-lg"></i> Nouveau tableau
+    </button>
+    {% endif %}
+</div>
+
+<div class="row g-3">
+    {% for b in boards %}
+    <div class="col-md-6 col-lg-4 fade-up">
+        <div class="card border-0 shadow-sm h-100" style="border-radius:16px;">
+            <div class="card-body">
+                <h2 class="h6 fw-bold mb-1" style="color:var(--edubac-navy);">{{ b.title }}</h2>
+                <p class="small text-muted mb-2">
+                    {% if b.classroom %}<span class="badge me-1" style="background:var(--edubac-light);color:var(--edubac-teal);">{{ b.classroom.name }}</span>{% endif %}
+                    {% if b.lesson %}{{ b.lesson.title }}{% endif %}
+                </p>
+                <p class="small text-muted mb-3">Modifié {{ b.updated_at|date:"d/m/Y H:i" }}</p>
+                <a href="{% url 'whiteboard:room' b.pk %}" class="btn btn-sm btn-edubac">Ouvrir</a>
+                {% if is_teacher and b.created_by_id == user.id %}
+                <form method="post" action="{% url 'whiteboard:duplicate' b.pk %}" class="d-inline">{% csrf_token %}
+                    <button class="btn btn-sm btn-outline-secondary">Dupliquer</button>
+                </form>
+                <form method="post" action="{% url 'whiteboard:delete' b.pk %}" class="d-inline"
+                      onsubmit="return confirm('Archiver ce tableau ?');">{% csrf_token %}
+                    <button class="btn btn-sm btn-outline-danger">Supprimer</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="empty-state">
+            <div class="empty-icon">📐</div>
+            <h3>Aucun tableau</h3>
+            {% if is_teacher %}
+            <p class="text-muted small">Créez un whiteboard pour expliquer les maths à votre classe.</p>
+            {% else %}
+            <p class="text-muted small">Votre professeur n'a pas encore partagé de tableau.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if is_teacher %}
+<div class="modal fade" id="newBoardModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="post" action="{% url 'whiteboard:create' %}" class="modal-content border-0" style="border-radius:16px;">
+            {% csrf_token %}
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Nouveau whiteboard</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Titre</label>
+                    <input type="text" name="title" class="form-control" value="Nouveau tableau" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Classe (partage)</label>
+                    <select name="classroom" class="form-select">
+                        <option value="">— Personnel (pas de partage) —</option>
+                        {% for c in classrooms %}
+                        <option value="{{ c.pk }}">{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="students_can_edit" id="sce">
+                    <label class="form-check-label" for="sce">Autoriser les élèves à dessiner</label>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" class="btn btn-edubac">Créer</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

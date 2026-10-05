@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 fw-bold mb-3">Commentaire — {{ attempt.student.get_full_name }}</h1>
+<p class="text-muted">{{ attempt.quiz.title }} · Score {{ attempt.score }}%</p>
+<form method="post" class="card card-body shadow-sm" style="max-width:560px;">
+    {% csrf_token %}
+    <label class="form-label">Commentaire pédagogique</label>
+    <textarea name="comment" class="form-control mb-3" rows="4">{{ attempt.teacher_comment }}</textarea>
+    <button class="btn btn-edubac">Enregistrer</button>
+</form>
+{% endblock %}

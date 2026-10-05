@@ -1,0 +1,6 @@
+{% extends "account/email/base_message.html" %}
+{% block subject %}Compte social déconnecté{% endblock %}
+{% block content %}
+<p>Bonjour,</p>
+<p>Le compte <strong>{{ provider }}</strong> a été déconnecté de votre compte EduBac.</p>
+{% endblock %}

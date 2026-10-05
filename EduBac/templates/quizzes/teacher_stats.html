@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Statistiques{% endblock %}
+{% block content %}
+<h1 class="h3 fw-bold mb-1" style="color:var(--edubac-navy);">📊 Statistiques enseignant</h1>
+<p class="text-muted mb-4">Vue d'ensemble de l'activité et des difficultés de vos élèves.</p>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-pill"><div class="val">{{ quiz_count }}</div><div class="lbl">Quiz créés</div></div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-pill"><div class="val">{{ total_attempts }}</div><div class="lbl">Tentatives</div></div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-pill"><div class="val">{{ avg_score }}%</div><div class="lbl">Score moyen</div></div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-pill"><div class="val">{{ class_stats|length }}</div><div class="lbl">Classes</div></div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white fw-bold">Performance par quiz</div>
+      <div class="table-responsive">
+        <table class="table table-sm mb-0 table-to-cards">
+          <thead><tr><th>Quiz</th><th>Tentatives</th><th>Moy.</th><th>≥50%</th></tr></thead>
+          <tbody>
+          {% for row in by_quiz %}
+            <tr>
+              <td data-label="Quiz">{{ row.quiz.title|truncatechars:40 }}</td>
+              <td data-label="Tentatives">{{ row.n }}</td>
+              <td data-label="Moyenne">{{ row.avg|floatformat:0 }}%</td>
+              <td data-label="Réussite">{{ row.pass_rate|floatformat:0 }}%</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="text-muted">Aucune donnée.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white fw-bold">Élèves les plus actifs</div>
+      <ul class="list-group list-group-flush">
+        {% for s in active_students %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <span>{{ s.student__first_name }} {{ s.student__last_name }} <small class="text-muted">(@{{ s.student__username }})</small></span>
+          <span><span class="badge bg-edubac">{{ s.n }} quiz</span> <span class="badge bg-secondary">{{ s.avg|floatformat:0 }}%</span></span>
+        </li>
+        {% empty %}
+        <li class="list-group-item text-muted">Pas encore d'activité.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white fw-bold">Questions les plus ratées</div>
+      <ul class="list-group list-group-flush">
+        {% for q in hard_questions %}
+        <li class="list-group-item">
+          <div class="small text-muted">{{ q.question__quiz__title }}</div>
+          <div>{{ q.question__text|truncatechars:90 }}</div>
+          <span class="badge bg-danger">{{ q.fails }} erreur{{ q.fails|pluralize }}</span>
+        </li>
+        {% empty %}
+        <li class="list-group-item text-muted">Pas encore d'erreurs enregistrées.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white fw-bold">Par classe</div>
+      <ul class="list-group list-group-flush">
+        {% for c in class_stats %}
+        <li class="list-group-item d-flex justify-content-between">
+          <span><strong>{{ c.classroom.name }}</strong><br><small class="text-muted">{{ c.members }} élève{{ c.members|pluralize }}</small></span>
+          <span class="text-end"><strong>{{ c.avg|floatformat:0 }}%</strong><br><small class="text-muted">{{ c.attempts }} tentatives</small></span>
+        </li>
+        {% empty %}
+        <li class="list-group-item text-muted">Aucune classe.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="mt-2">
+  <a href="{% url 'quizzes:manage' %}" class="btn btn-outline-primary btn-sm">← Mes quiz</a>
+  <a href="{% url 'quizzes:export_excel' %}" class="btn btn-accent btn-sm">Exporter Excel</a>
+</div>
+{% endblock %}

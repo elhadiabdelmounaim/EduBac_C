@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-1" style="color:var(--edubac-navy);">Modifier les questions</h1>
+        <p class="text-muted mb-0">{{ quiz.title }} · {{ questions|length }} question(s)</p>
+    </div>
+    <form method="post" class="d-inline">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_q">
+        <button type="submit" class="btn btn-edubac">
+            <i class="bi bi-plus-lg"></i> Ajouter une question
+        </button>
+    </form>
+</div>
+
+<form method="post" id="editQuestionsForm">
+    {% csrf_token %}
+    <input type="hidden" name="action" id="formAction" value="save">
+    <input type="hidden" name="question_id" id="questionIdField" value="">
+    {% for q in questions %}
+    <div class="card shadow-sm mb-3 border-0" style="border-radius:14px;">
+        <div class="card-body">
+            <div class="d-flex justify-content-between mb-2">
+                <span class="fw-bold">Question {{ forloop.counter }}</span>
+            </div>
+            <div class="mb-2">
+                <label class="form-label small">Énoncé</label>
+                <textarea name="q_{{ q.pk }}_text" class="form-control" rows="2">{{ q.text }}</textarea>
+            </div>
+            <div class="mb-2">
+                <label class="form-label small">Réponse correcte (texte)</label>
+                <input type="text" name="q_{{ q.pk }}_correct" class="form-control" value="{{ q.correct_answer }}">
+            </div>
+            <div class="mb-2">
+                <label class="form-label small">Explication</label>
+                <textarea name="q_{{ q.pk }}_expl" class="form-control" rows="2">{{ q.explanation }}</textarea>
+            </div>
+            <label class="form-label small">Choix (cochez la bonne réponse)</label>
+            {% for c in q.choices.all %}
+            <div class="input-group mb-1">
+                <div class="input-group-text">
+                    <input type="checkbox" name="c_{{ c.pk }}_ok" {% if c.is_correct %}checked{% endif %} title="Correct">
+                </div>
+                <input type="text" name="c_{{ c.pk }}_text" class="form-control" value="{{ c.text }}">
+            </div>
+            {% empty %}
+            <p class="small text-muted">Aucun choix.</p>
+            {% endfor %}
+        </div>
+        <div class="card-footer bg-white d-flex flex-wrap gap-2" style="border-radius:0 0 14px 14px;">
+            <button type="submit" class="btn btn-sm btn-outline-primary"
+                    onclick="document.getElementById('formAction').value='add_choice'; document.getElementById('questionIdField').value='{{ q.pk }}';">
+                <i class="bi bi-plus"></i> Ajouter un choix
+            </button>
+            <button type="submit" class="btn btn-sm btn-outline-danger"
+                    onclick="document.getElementById('formAction').value='delete_q'; document.getElementById('questionIdField').value='{{ q.pk }}';">
+                Supprimer la question
+            </button>
+        </div>
+    </div>
+    {% empty %}
+    <div class="alert alert-info">Aucune question. Cliquez sur « Ajouter une question ».</div>
+    {% endfor %}
+    <div class="d-flex flex-wrap gap-2 mb-4">
+        <button type="submit" class="btn btn-edubac"
+                onclick="document.getElementById('formAction').value='save';">
+            <i class="bi bi-check2"></i> Enregistrer
+        </button>
+        <a href="{% url 'quizzes:teacher_ai' %}" class="btn btn-outline-primary">Retour génération</a>
+        <a href="{% url 'quizzes:manage' %}" class="btn btn-link">Mes quiz</a>
+    </div>
+</form>
+
+<form method="post" class="mb-4">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="add_q">
+    <button type="submit" class="btn btn-outline-primary">
+        <i class="bi bi-plus-lg"></i> Ajouter une question
+    </button>
+</form>
+{% endblock %}
