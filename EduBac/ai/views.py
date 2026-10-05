@@ -1,14 +1,31 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from accounts.decorators import login_required_simple
 from django.contrib import messages
+from django.db import transaction
+from django.http import Http404
+from django.urls import reverse
+import logging
 from education.models import Lesson, Course
 from quizzes.models import Quiz, Question, Choice
 from quizzes.views import _plain_math_text
 from .services import AIService
 from .models import AIConversation, AIMessage
+from .providers import AIProviderError
+
+logger = logging.getLogger(__name__)
 
 
 def _handle_assistant_post(request, lesson, question, level, style, previous, conv_id=None):
+    conversation = None
+    prior = []
+    if conv_id:
+        conversation = get_object_or_404(
+            AIConversation, pk=conv_id, user=request.user, lesson=lesson,
+        )
+        prior = list(reversed(list(
+            conversation.messages.order_by('-created_at', '-pk').values('role', 'content')[:12]
+        )))
+    previous = next((m['content'] for m in reversed(prior) if m['role'] == 'assistant'), '')
     service = AIService()
     response_text = service.generate_explanation(
         lesson,
@@ -16,29 +33,28 @@ def _handle_assistant_post(request, lesson, question, level, style, previous, co
         level=level or 'normal',
         style=style or 'standard',
         previous_answer=previous or '',
+        conversation_history=prior,
     )
-    if conv_id:
-        conversation = get_object_or_404(AIConversation, pk=conv_id, user=request.user)
-    else:
-        conversation = AIConversation.objects.create(
-            user=request.user,
-            lesson=lesson,
-            title=question[:80],
-        )
     label = {
         'autrement': '[Autrement] ',
         'etapes': '[Étapes] ',
         'exemple': '[Exemple] ',
         'erreur': '[Erreur] ',
+        'entrainement': '[Entraînement] ',
     }.get(style, '')
-    AIMessage.objects.create(
-        conversation=conversation,
-        role='user',
-        content=f"{label}{question}" if style != 'autrement' else f"{label}Explique autrement",
-    )
-    AIMessage.objects.create(
-        conversation=conversation, role='assistant', content=response_text or ''
-    )
+    with transaction.atomic():
+        if conversation is None:
+            conversation = AIConversation.objects.create(
+                user=request.user, lesson=lesson, title=question[:80],
+            )
+        AIMessage.objects.create(
+            conversation=conversation, role='user',
+            content=f"{label}{question}",
+        )
+        AIMessage.objects.create(
+            conversation=conversation, role='assistant', content=response_text,
+        )
+        conversation.save(update_fields=['updated_at'])
     return conversation, response_text
 
 
@@ -50,29 +66,52 @@ def assistant(request):
     history = AIConversation.objects.filter(user=request.user)[:10]
     level = request.POST.get('level') or request.GET.get('level') or 'normal'
     style = 'standard'
+    question = ''
+    selected_lesson = None
+    conv_id = request.POST.get('conversation_id') or request.GET.get('c')
+    if conv_id:
+        if not conv_id.isdigit():
+            raise Http404
+        conversation = get_object_or_404(AIConversation, pk=conv_id, user=request.user)
+        selected_lesson = conversation.lesson
+    lesson_id = request.POST.get('lesson_id') or request.GET.get('lesson')
+    if lesson_id:
+        if not lesson_id.isdigit():
+            raise Http404
+        selected_lesson = get_object_or_404(Lesson, pk=lesson_id)
+    if conversation and selected_lesson != conversation.lesson:
+        raise Http404
 
     if request.method == 'POST':
-        lesson_id = request.POST.get('lesson_id')
         question = request.POST.get('question', '').strip()
-        conv_id = request.POST.get('conversation_id')
         level = request.POST.get('level', 'normal')
         style = request.POST.get('style', 'standard')
         previous = request.POST.get('previous_answer', '')
         # Boutons spéciaux
         if style == 'autrement' and not question:
             question = "Peux-tu m'expliquer cela autrement, plus simplement ?"
-        if lesson_id and question:
-            lesson = get_object_or_404(Lesson, pk=lesson_id)
+        if style not in ('standard', 'etapes', 'exemple', 'erreur', 'autrement', 'entrainement'):
+            style = 'standard'
+        if level not in ('simple', 'normal', 'approfondi'):
+            level = 'normal'
+        if not selected_lesson:
+            messages.error(request, 'Choisis une leçon pour commencer.')
+        elif not question or len(question) > 4000:
+            messages.error(request, 'Écris une question de 1 à 4 000 caractères.')
+        else:
             try:
                 conversation, response_text = _handle_assistant_post(
-                    request, lesson, question, level, style, previous, conv_id
+                    request, selected_lesson, question, level, style, previous, conv_id
                 )
-            except Exception as e:
-                messages.error(request, f'Erreur IA : {e}')
-    elif request.GET.get('c'):
-        conversation = get_object_or_404(
-            AIConversation, pk=request.GET.get('c'), user=request.user
-        )
+                return redirect(f"{reverse('ai:assistant')}?c={conversation.pk}&level={level}")
+            except AIProviderError as exc:
+                if exc.code == 'missing_api_key':
+                    messages.error(request, "Le tuteur IA n'est pas encore configuré. Contacte l'administrateur.")
+                else:
+                    messages.error(request, "Le tuteur IA est momentanément indisponible. Ta question est conservée ci-dessous ; réessaie.")
+            except Exception:
+                logger.exception("Tutor request failed")
+                messages.error(request, "Impossible de répondre pour le moment. Réessaie.")
 
     return render(request, 'ai/assistant.html', {
         'courses': courses,
@@ -80,37 +119,21 @@ def assistant(request):
         'conversation': conversation,
         'history': history,
         'level': level,
+        'question': question,
+        'selected_lesson': selected_lesson,
         'page_title': 'Assistant IA',
     })
 
 
 @login_required_simple
 def assistant_lesson(request, lesson_id):
-    lesson = get_object_or_404(Lesson, pk=lesson_id)
-    response_text = None
-    conversation = None
-    level = request.POST.get('level', 'normal')
+    # Share the same conversation flow, including saved history and validation.
+    get_object_or_404(Lesson, pk=lesson_id)
     if request.method == 'POST':
-        question = request.POST.get('question', '').strip()
-        style = request.POST.get('style', 'standard')
-        previous = request.POST.get('previous_answer', '')
-        level = request.POST.get('level', 'normal')
-        if style == 'autrement' and not question:
-            question = "Peux-tu m'expliquer cela autrement ?"
-        if question:
-            try:
-                conversation, response_text = _handle_assistant_post(
-                    request, lesson, question, level, style, previous
-                )
-            except Exception as e:
-                messages.error(request, f'Erreur IA : {e}')
-    return render(request, 'ai/assistant_lesson.html', {
-        'lesson': lesson,
-        'response': response_text,
-        'conversation': conversation,
-        'level': level,
-        'page_title': f'Assistant IA — {lesson.title}',
-    })
+        request.POST = request.POST.copy()
+        request.POST['lesson_id'] = str(lesson_id)
+        return assistant(request)
+    return redirect(f"{reverse('ai:assistant')}?lesson={lesson_id}")
 
 
 @login_required_simple

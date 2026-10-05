@@ -44,3 +44,25 @@ data = ai.generate_quiz_from_lesson(lesson, question_count=10, difficulty="moyen
 2. Implémenter `chat(...)`
 3. Enregistrer dans `ai/providers/__init__.py` → `PROVIDERS`
 4. Aucune modification du Quiz Generator
+
+## Tuteur interactif
+
+Après connexion, ouvrir `/ai/assistant/` ou le lien d'aide d'une leçon.
+Choisir une leçon et un niveau d'explication, puis poser une question ou envoyer
+sa tentative de solution. « M'entraîner » propose un exercice sans solution
+immédiate ; les échanges suivants permettent de demander des indices et une
+correction. L'historique permet de reprendre une conversation ou d'en commencer
+une nouvelle.
+
+Le tuteur utilise le contenu de la leçon et les 12 derniers messages de la
+conversation. Les conversations restent privées à leur propriétaire. La
+reformulation utilise la réponse sauvegardée côté serveur, pas un texte envoyé
+par le navigateur. Aucune nouvelle migration n'est nécessaire.
+
+Le fournisseur par défaut reste Groq. Configurer `GROQ_API_KEY` dans les Secrets
+du projet (jamais dans le code ni dans le chat). Sans fournisseur configuré,
+la page affiche une erreur explicite et conserve la question sans enregistrer
+de réponse fictive.
+
+Vérification locale : `python EduBac/manage.py test ai --noinput`.
+Ces tests simulent le fournisseur ; ils ne valident pas une connexion API réelle.
