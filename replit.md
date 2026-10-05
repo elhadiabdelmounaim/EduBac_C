@@ -11,9 +11,15 @@ The imported dependency list is `EduBac/requirements.txt`.
 - System checks: `python EduBac/manage.py check`
 - Tutor tests: `python EduBac/manage.py test ai --noinput`
 
-No run workflow is configured. Current verification uses Django tests and live
-provider calls, not a browser session. Setting up a public preview requires
-appropriate host/CSRF configuration and applying the existing migrations.
+Run workflow: `cd EduBac && python manage.py runserver 0.0.0.0:5000`.
+Initialize the development database with `cd EduBac && python manage.py migrate`.
+Run the complete test suite from the application directory:
+`cd EduBac && python manage.py test --noinput`. Running unlabelled discovery from
+the workspace root does not discover the application's tests.
+
+Development preview host and CSRF origin are restricted to the current Replit
+development domain. Authentication is unchanged; signed-in pages are covered by
+integration tests, not the public screenshot tool.
 
 ## AI
 

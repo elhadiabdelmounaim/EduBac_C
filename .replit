@@ -11,3 +11,31 @@ expertMode = true
 
 [userenv.shared]
 GROQ_MODEL = "openai/gpt-oss-20b"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "EduBac"
+
+[[workflows.workflow]]
+name = "EduBac"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd EduBac && python manage.py runserver 0.0.0.0:5000"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[ports]]
+localPort = 5000
+externalPort = 80

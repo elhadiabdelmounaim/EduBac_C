@@ -987,6 +987,7 @@ def export_results_excel(request):
     return response
 
 
+@teacher_required
 def export_results_csv(request):
     """Export CSV des résultats élèves."""
     import csv
