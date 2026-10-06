@@ -32,3 +32,6 @@ Tests mock external providers and never require a key.
 
 The imported SQLite default is under `/tmp`; it is not durable storage.
 Do not silently replace the existing database backend or discard data.
+
+- Navbar browser regression gate before publishing: `python EduBac/manage.py test browser_tests --settings=browser_tests.settings --noinput`
+  See `EduBac/browser_tests/README.md` for setup and coverage.
