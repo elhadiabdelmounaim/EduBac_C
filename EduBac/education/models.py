@@ -101,6 +101,7 @@ class Lesson(models.Model):
                 '2eme_bac_svt': '2svt',
                 '2eme_bac_pc': '2pc',
                 '2eme_bac_lettres': '2let',
+                '2eme_bac_sm': '2sm',
             }
             folder = folder_map.get(self.course.niveau, '')
             level_dir = media / 'lessons' / folder if folder else None

@@ -52,6 +52,7 @@ class CurriculumAutoLoadViewTests(TestCase):
                     'tronc_commun': 15,
                     '1ere_bac_sc': 12,
                     '2eme_bac_pc': 12,
+                    '2eme_bac_sm': 12,
                 }
                 cards_by_code = {
                     level['link_code']: level
@@ -85,7 +86,18 @@ class CurriculumAutoLoadViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context['lessons']), 15)
-        self.assertEqual(Lesson.objects.count(), 79)
+        self.assertEqual(
+            Lesson.objects.count(),
+            sum(len(level['lessons']) for level in CURRICULUM),
+        )
+        sciences_math = self.client.get(
+            reverse(
+                'education:niveau_detail',
+                kwargs={'niveau': '2eme_bac_sm'},
+            )
+        )
+        self.assertEqual(sciences_math.status_code, 200)
+        self.assertEqual(len(sciences_math.context['lessons']), 12)
 
     def test_logged_in_student_keeps_access_limited_to_their_level(self):
         student = User(
@@ -95,7 +107,7 @@ class CurriculumAutoLoadViewTests(TestCase):
         )
         student.set_password('test-password')
         student.save()
-        StudentProfile.objects.create(user=student, niveau='tronc_commun')
+        StudentProfile.objects.create(user=student, niveau='2eme_bac_sm')
 
         session = self.client.session
         session['user_id'] = student.pk
@@ -106,23 +118,23 @@ class CurriculumAutoLoadViewTests(TestCase):
                 own_level = self.client.get(
                     reverse(
                         'education:niveau_detail',
-                        kwargs={'niveau': 'tronc_commun'},
+                        kwargs={'niveau': '2eme_bac_sm'},
                     )
                 )
                 other_level = self.client.get(
                     reverse(
                         'education:niveau_detail',
-                        kwargs={'niveau': '2eme_bac_pc'},
+                        kwargs={'niveau': 'tronc_commun'},
                     )
                 )
 
         self.assertEqual(own_level.status_code, 200)
-        self.assertEqual(len(own_level.context['lessons']), 15)
+        self.assertEqual(len(own_level.context['lessons']), 12)
         self.assertEqual(other_level.status_code, 302)
         self.assertEqual(
             other_level['Location'],
             reverse(
                 'education:niveau_detail',
-                kwargs={'niveau': 'tronc_commun'},
+                kwargs={'niveau': '2eme_bac_sm'},
             ),
         )

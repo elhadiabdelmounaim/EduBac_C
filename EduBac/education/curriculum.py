@@ -60,6 +60,13 @@ STUDENT_LEVELS = [
         'color': 'lc-1',
         'maps_to': '2eme_bac_lettres',
     },
+    {
+        'code': '2eme_bac_sm',
+        'label': 'Deuxième Bac Sciences Mathématiques',
+        'icon': '∑',
+        'color': 'lc-5',
+        'maps_to': '2eme_bac_sm',
+    },
 ]
 
 """
@@ -200,6 +207,26 @@ CURRICULUM = [
             'Dérivation et étude des fonctions',
             'Les fonctions logarithmes',
             'La fonction exponentielle népérienne',
+            'Calcul de probabilités',
+        ],
+    },
+    {
+        'code': '2eme_bac_sm',
+        'label': '2ème Bac Sciences Mathématiques',
+        'order': 8,
+        'color': 'purple',
+        'lessons': [
+            'Limites et continuité',
+            'Suites numériques',
+            'Dérivation et étude des fonctions',
+            'Fonctions logarithmiques',
+            'Fonctions exponentielles',
+            'Nombres complexes',
+            'Calcul intégral',
+            'Équations différentielles',
+            'Arithmétique dans ℤ',
+            'Structures algébriques',
+            'Espaces vectoriels',
             'Calcul de probabilités',
         ],
     },

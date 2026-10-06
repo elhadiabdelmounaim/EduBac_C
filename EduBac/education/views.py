@@ -58,7 +58,7 @@ def niveaux_list(request):
 
 def home(request):
     """
-    Page d'accueil : les 7 niveaux avec leurs leçons dans l'ordre académique.
+    Page d'accueil : les niveaux avec leurs leçons dans l'ordre académique.
     """
     _ensure_curriculum_loaded()
     niveaux = []
