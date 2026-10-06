@@ -52,6 +52,16 @@ Question de l'élève :
 """
 
 
+QUIZ_LATEX_RULES = r"""Format obligatoire pour les expressions mathématiques :
+- Dans les champs `text`, `choices[].text`, `correct_answer`, `explanation` et `hint`, encadre chaque expression mathématique par des délimiteurs LaTeX `$...$`.
+- Écris les expressions en LaTeX, pas en approximations ASCII (`forall`, `sqrt(`, `!=`, `->`) ni avec des glyphes mathématiques Unicode mélangés au LaTeX.
+- Reste en ligne avec `$...$`; n'utilise pas `$$...$$` pour les quiz.
+- Dans le JSON brut, double chaque antislash LaTeX pour que le JSON soit valide : `\\frac`, `\\forall`, `\\neq`, etc.
+- N'utilise pas `$` comme symbole monétaire.
+- Exemple correct de valeur JSON : "text": "Montre que $\\forall x \\in \\mathbb{R},\\ x \\neq 0 \\Rightarrow |x| > 0$."
+"""
+
+
 def build_quiz_prompt(niveau, cours, lecon, contenu, count, difficulty):
     guide = difficulty_instructions(difficulty)
     return f"""Génère un quiz de mathématiques STRICTEMENT basé sur le contenu suivant.
@@ -67,6 +77,8 @@ Nombre de questions : {count}
 Niveau de difficulté demandé : {difficulty}
 
 {guide}
+
+{QUIZ_LATEX_RULES}
 """
 
 

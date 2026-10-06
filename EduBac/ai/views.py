@@ -7,7 +7,7 @@ from django.urls import reverse
 import logging
 from education.models import Lesson, Course
 from quizzes.models import Quiz, Question, Choice
-from quizzes.views import _plain_math_text
+from quizzes.math_text import normalize_math_text
 from .services import AIService
 from .models import AIConversation, AIMessage
 from .providers import AIProviderError
@@ -159,16 +159,16 @@ def generate_quiz(request, lesson_id):
             )
             for i, qdata in enumerate(data['questions']):
                 q = Question.objects.create(
-                    text=_plain_math_text(qdata.get('text', '')),
-                    explanation=_plain_math_text(qdata.get('explanation', '')),
-                    correct_answer=_plain_math_text(qdata.get('correct_answer', '')),
-                    hint=_plain_math_text(qdata.get('hint', '')),
+                    text=normalize_math_text(qdata.get('text', '')),
+                    explanation=normalize_math_text(qdata.get('explanation', '')),
+                    correct_answer=normalize_math_text(qdata.get('correct_answer', '')),
+                    hint=normalize_math_text(qdata.get('hint', '')),
                     quiz=quiz,
                     order=i + 1,
                 )
                 for j, cdata in enumerate(qdata.get('choices', [])):
                     text = cdata['text'] if isinstance(cdata, dict) else str(cdata)
-                    text = _plain_math_text(text)
+                    text = normalize_math_text(text)
                     is_ok = cdata.get('is_correct', False) if isinstance(cdata, dict) else False
                     Choice.objects.create(text=text, is_correct=is_ok, question=q, order=j)
             messages.success(request, 'Quiz généré.')

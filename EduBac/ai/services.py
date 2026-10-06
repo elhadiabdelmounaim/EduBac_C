@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import time
 from collections import deque
 
@@ -19,6 +20,54 @@ from django.conf import settings
 from ai.providers import AIProviderError, get_provider, list_providers
 
 logger = logging.getLogger(__name__)
+
+_INVALID_JSON_BACKSLASH = re.compile(
+    r'\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})'
+)
+_CONTROL_LATEX_COMMANDS = {
+    "\x08": ("b", ("eta",)),
+    "\x09": ("t", ("imes", "ext", "o")),
+    "\x0c": ("f", ("rac", "orall")),
+    "\x0a": ("n", ("eq", "otin", "eg")),
+    "\x0d": ("r", ("ight", "ightarrow")),
+}
+
+
+def _repair_parsed_latex_controls(value):
+    if isinstance(value, str):
+        for control, (prefix, suffixes) in _CONTROL_LATEX_COMMANDS.items():
+            suffix_pattern = "|".join(
+                re.escape(suffix)
+                for suffix in sorted(suffixes, key=len, reverse=True)
+            )
+            pattern = re.compile(
+                re.escape(control)
+                + "(" + suffix_pattern + ")"
+                + r"(?=$|[^A-Za-z])"
+            )
+            value = pattern.sub(
+                lambda match: "\\" + prefix + match.group(1),
+                value,
+            )
+        return value
+    if isinstance(value, list):
+        return [_repair_parsed_latex_controls(item) for item in value]
+    if isinstance(value, dict):
+        return {
+            _repair_parsed_latex_controls(key): _repair_parsed_latex_controls(item)
+            for key, item in value.items()
+        }
+    return value
+
+
+def repair_latex_escapes(raw_json: str):
+    """Parse JSON while recovering LaTeX backslashes emitted without JSON escaping."""
+    try:
+        parsed = json.loads(raw_json)
+    except json.JSONDecodeError:
+        repaired_json = _INVALID_JSON_BACKSLASH.sub(r"\\\\", raw_json)
+        parsed = json.loads(repaired_json)
+    return _repair_parsed_latex_controls(parsed)
 
 
 class _RateLimiter:
@@ -275,7 +324,7 @@ Regles :
             self.model_name = model or self.model_name
             self._provider = None  # force reload
 
-        from ai.prompts import difficulty_instructions
+        from ai.prompts import QUIZ_LATEX_RULES, difficulty_instructions
 
         difficulty = (difficulty or "moyen").strip().lower()
         if difficulty not in ("facile", "moyen", "difficile"):
@@ -308,7 +357,7 @@ Tu DOIS répondre UNIQUEMENT avec un JSON valide (pas de markdown, pas de texte 
   "lesson": "{context['lecon']}",
   "questions": [
     {{
-      "text": "Énoncé clair SANS code LaTeX",
+      "text": "Énoncé clair avec les formules mathématiques en LaTeX",
       "choices": [
         {{"text": "Choix A", "is_correct": false}},
         {{"text": "Choix B", "is_correct": true}},
@@ -329,10 +378,7 @@ Règles STRICTES :
 - Chaque question DOIT avoir un champ "hint"
 - Questions UNIQUEMENT issues du contenu de la leçon ci-dessus
 - Respecte ABSOLUMENT le niveau de difficulté "{difficulty}" décrit plus haut
-- INTERDIT d'utiliser du code LaTeX (pas de \\frac, \\sqrt, $, $$, \\(, etc.)
-- Écris les maths en texte lisible : x², √(x+1), (a+b)/c, 2π, ≤, ≥, ≠, →, ∈
-- Exemple BON : "Calcule la dérivée de f(x) = 3x² + 2x"
-- Exemple MAUVAIS : "Calcule $f'(x)$ où $f(x)=3x^2$"
+- {QUIZ_LATEX_RULES}
 - Français uniquement
 """
         messages = [
@@ -389,7 +435,7 @@ Règles STRICTES :
             raise ValueError("Réponse LLM vide.")
 
         try:
-            data = json.loads(raw)
+            data = repair_latex_escapes(str(raw))
         except json.JSONDecodeError as e:
             cleaned = raw.strip()
             if cleaned.startswith("```"):
@@ -404,9 +450,12 @@ Règles STRICTES :
                 if end > start:
                     cleaned = cleaned[start : end + 1]
             try:
-                data = json.loads(cleaned)
+                data = repair_latex_escapes(cleaned)
             except json.JSONDecodeError:
                 raise ValueError(f"Réponse LLM non JSON valide : {e}") from e
+
+        if not isinstance(data, dict):
+            raise ValueError("Le JSON du quiz doit être un objet.")
 
         # Accepter éventuellement {"quiz": {...}}
         if "quiz" in data and isinstance(data["quiz"], dict) and "questions" not in data:
@@ -423,6 +472,8 @@ Règles STRICTES :
             data["questions"] = data["questions"][:expected_count]
 
         for i, q in enumerate(data["questions"]):
+            if not isinstance(q, dict):
+                raise ValueError(f"Question {i + 1} invalide.")
             # Alias text / question
             if "text" not in q and "question" in q:
                 q["text"] = q["question"]

@@ -11,6 +11,7 @@ from accounts.models import User
 from education.models import Lesson, Course
 from classrooms.models import Classroom, ClassroomMember
 from .models import Quiz, Question, Choice, QuizAssignment, Attempt, StudentAnswer
+from .math_text import normalize_math_text
 
 
 def _sync_excel_after_submit(attempt):
@@ -59,51 +60,6 @@ def _notify_assignments(quiz, students, deadline=None):
             obj.deadline = deadline
             obj.save(update_fields=['deadline'])
     return created
-
-
-def _plain_math_text(text: str) -> str:
-    """Convertit / nettoie le LaTeX courant en texte lisible."""
-    if not text:
-        return text
-    import re
-    s = str(text)
-    # Enlever délimiteurs
-    s = s.replace('$$', '').replace('$', '')
-    s = re.sub(r'\\\(|\\\)', '', s)
-    s = re.sub(r'\\\[|\\\]', '', s)
-    # Commandes fréquentes
-    s = re.sub(r'\\frac\{([^{}]+)\}\{([^{}]+)\}', r'(\1)/(\2)', s)
-    s = re.sub(r'\\sqrt\{([^{}]+)\}', r'√(\1)', s)
-    s = re.sub(r'\\sqrt', '√', s)
-    s = re.sub(r'\\cdot', '·', s)
-    s = re.sub(r'\\times', '×', s)
-    s = re.sub(r'\\div', '÷', s)
-    s = re.sub(r'\\leq', '≤', s)
-    s = re.sub(r'\\geq', '≥', s)
-    s = re.sub(r'\\neq', '≠', s)
-    s = re.sub(r'\\approx', '≈', s)
-    s = re.sub(r'\\infty', '∞', s)
-    s = re.sub(r'\\pi', 'π', s)
-    s = re.sub(r'\\in', '∈', s)
-    s = re.sub(r'\\rightarrow', '→', s)
-    s = re.sub(r'\\to', '→', s)
-    s = re.sub(r'\\left|\\right', '', s)
-    s = re.sub(r'\\text\{([^{}]+)\}', r'\1', s)
-    s = re.sub(r'\\mathrm\{([^{}]+)\}', r'\1', s)
-    # exposants simples x^2 -> x²
-    sup = str.maketrans('0123456789+-n', '⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻ⁿ')
-    def _pow(m):
-        base, exp = m.group(1), m.group(2)
-        try:
-            return base + exp.translate(sup)
-        except Exception:
-            return f'{base}^{exp}'
-    s = re.sub(r'([A-Za-z0-9π)])\^\{?([0-9n+-]+)\}?', _pow, s)
-    s = re.sub(r'\\[a-zA-Z]+', '', s)  # autres commandes
-    s = re.sub(r'[{}]', '', s)
-    s = re.sub(r'\s+', ' ', s).strip()
-    return s
-
 
 
 # ─── Élève ───────────────────────────────────────────────────────────────────
@@ -754,21 +710,30 @@ def teacher_ai_quiz(request):
                         created_by=request.user,
                     )
                     for i, qdata in enumerate(data.get('questions', []), start=1):
+                        correct_text = normalize_math_text(
+                            qdata.get('correct_answer', '')
+                        )
                         q = Question.objects.create(
                             quiz=quiz,
-                            text=_plain_math_text(qdata.get('text', '')),
-                            correct_answer=_plain_math_text(qdata.get('correct_answer', '')),
-                            explanation=_plain_math_text(qdata.get('explanation', '')),
-                            hint=_plain_math_text(qdata.get('hint', '')),
+                            text=normalize_math_text(qdata.get('text', '')),
+                            correct_answer=correct_text,
+                            explanation=normalize_math_text(qdata.get('explanation', '')),
+                            hint=normalize_math_text(qdata.get('hint', '')),
                             order=i,
                         )
                         for j, c in enumerate(qdata.get('choices', [])):
                             if isinstance(c, dict):
-                                ctext = _plain_math_text(c.get('text', ''))
-                                is_ok = c.get('is_correct', ctext == qdata.get('correct_answer'))
+                                ctext = normalize_math_text(c.get('text', ''))
+                                is_ok = c.get(
+                                    'is_correct',
+                                    ctext.strip().lower() == correct_text.strip().lower(),
+                                )
                             else:
-                                ctext = str(c)
-                                is_ok = (ctext == qdata.get('correct_answer'))
+                                ctext = normalize_math_text(c)
+                                is_ok = (
+                                    ctext.strip().lower()
+                                    == correct_text.strip().lower()
+                                )
                             Choice.objects.create(
                                 question=q,
                                 text=ctext,

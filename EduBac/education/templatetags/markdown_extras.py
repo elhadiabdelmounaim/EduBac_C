@@ -44,14 +44,33 @@ def _normalize_delimiters(formula: str) -> str:
     return formula
 
 
+def _escape_math_formula(formula: str) -> str:
+    """Escape HTML in formula bodies before returning the surrounding HTML safe."""
+    formula = _normalize_delimiters(formula)
+    if formula.startswith('$$') and formula.endswith('$$'):
+        return '$$' + str(escape(formula[2:-2])) + '$$'
+    if formula.startswith('$') and formula.endswith('$'):
+        return '$' + str(escape(formula[1:-1])) + '$'
+    return str(escape(formula))
+
+
 def _restore_math(html: str, blocks, inlines) -> str:
     for i, b in enumerate(blocks):
-        b = _normalize_delimiters(b)
-        html = html.replace(f'@@MATHBLOCK{i}@@', b)
-        html = html.replace(f'<p>@@MATHBLOCK{i}@@</p>', f'<div class="math-block">{b}</div>')
+        token = f'@@MATHBLOCK{i}@@'
+        formula = _escape_math_formula(b)
+        paragraph = f'<p>{token}</p>'
+        if paragraph in html:
+            html = html.replace(
+                paragraph,
+                f'<div class="math-block">{formula}</div>',
+            )
+        else:
+            html = html.replace(token, formula)
     for i, s in enumerate(inlines):
-        s = _normalize_delimiters(s)
-        html = html.replace(f'@@MATHINLINE{i}@@', s)
+        html = html.replace(
+            f'@@MATHINLINE{i}@@',
+            _escape_math_formula(s),
+        )
     return html
 
 
