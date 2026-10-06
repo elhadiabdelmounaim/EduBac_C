@@ -7,18 +7,43 @@ from .curriculum import CURRICULUM
 
 
 
+def _ensure_curriculum_loaded():
+    """Complète le catalogue depuis sa source de référence sans écraser les leçons."""
+    expected = {
+        level['code']: len(level['lessons'])
+        for level in CURRICULUM
+    }
+    existing_counts = dict(
+        Course.objects
+        .filter(name='Mathématiques', niveau__in=expected)
+        .values('niveau')
+        .annotate(lesson_count=Count('lessons'))
+        .values_list('niveau', 'lesson_count')
+    )
+    if any(
+        existing_counts.get(code, 0) < expected_count
+        for code, expected_count in expected.items()
+    ):
+        call_command('load_curriculum', verbosity=0)
+
+
+def _course_for_niveau(niveau):
+    """Privilégie le cours canonique alimenté par load_curriculum."""
+    return (
+        Course.objects.filter(niveau=niveau, name='Mathématiques').first()
+        or Course.objects.filter(niveau=niveau).first()
+    )
+
+
 def niveaux_list(request):
     """Page Niveau scolaire — cartes de tous les niveaux."""
-    from .curriculum import STUDENT_LEVELS, CURRICULUM
+    from .curriculum import STUDENT_LEVELS
+    _ensure_curriculum_loaded()
     levels = []
     for item in STUDENT_LEVELS:
         code = item.get('maps_to') or item['code']
-        course = Course.objects.filter(niveau=code).first()
+        course = _course_for_niveau(code)
         lesson_count = course.lessons.count() if course else 0
-        # fallback curriculum count
-        if lesson_count == 0:
-            meta = next((n for n in CURRICULUM if n['code'] == code), None)
-            lesson_count = len(meta['lessons']) if meta else 0
         levels.append({
             **item,
             'course': course,
