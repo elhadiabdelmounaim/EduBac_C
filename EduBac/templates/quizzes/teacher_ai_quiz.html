@@ -360,40 +360,65 @@
     var lessonSelect = document.getElementById('lessonSelect');
     if (!niveauSelect || !lessonSelect) return;
 
-    var placeholder = lessonSelect.querySelector('option:not([data-niveau])');
-    var lessonOptions = Array.from(lessonSelect.querySelectorAll('option[data-niveau]'));
+    var placeholder = lessonSelect.options[0];
+    var optionNodes = lessonSelect.getElementsByTagName('option');
+    var lessonOptions = [];
+    for (var i = 0; i < optionNodes.length; i++) {
+        if (optionNodes[i].getAttribute('data-niveau') !== null) {
+            lessonOptions.push(optionNodes[i]);
+        }
+    }
 
     function updateLessons(resetSelection) {
         var niveau = niveauSelect.value;
         var previousLesson = resetSelection ? '' : lessonSelect.value;
-        var matchingLessons = lessonOptions.filter(function(option) {
-            return option.dataset.niveau === niveau;
-        });
+        var matchingLessons = [];
+        for (var i = 0; i < lessonOptions.length; i++) {
+            if (lessonOptions[i].getAttribute('data-niveau') === niveau) {
+                matchingLessons.push(lessonOptions[i]);
+            }
+        }
 
-        lessonSelect.replaceChildren(placeholder);
-        matchingLessons.forEach(function(option) {
-            option.hidden = false;
-            option.disabled = false;
+        while (lessonSelect.firstChild) {
+            lessonSelect.removeChild(lessonSelect.firstChild);
+        }
+        lessonSelect.appendChild(placeholder);
+        for (var i = 0; i < matchingLessons.length; i++) {
+            var option = matchingLessons[i];
+            option.removeAttribute('hidden');
+            option.removeAttribute('disabled');
             lessonSelect.appendChild(option);
-        });
+        }
 
         placeholder.textContent = niveau
             ? (matchingLessons.length ? '— Choisir une leçon —' : '— Aucune leçon disponible —')
             : '— Choisir d’abord un niveau —';
         lessonSelect.disabled = !niveau || matchingLessons.length === 0;
 
-        if (previousLesson && matchingLessons.some(function(option) {
-            return option.value === previousLesson;
-        })) {
+        var previousLessonAvailable = false;
+        for (var i = 0; i < matchingLessons.length; i++) {
+            if (matchingLessons[i].value === previousLesson) {
+                previousLessonAvailable = true;
+                break;
+            }
+        }
+        if (previousLesson && previousLessonAvailable) {
             lessonSelect.value = previousLesson;
         } else {
             lessonSelect.value = '';
         }
     }
 
-    niveauSelect.addEventListener('change', function() {
+    var handleNiveauChange = function() {
         updateLessons(true);
-    });
+    };
+    if (niveauSelect.addEventListener) {
+        niveauSelect.addEventListener('change', handleNiveauChange);
+    } else if (niveauSelect.attachEvent) {
+        niveauSelect.attachEvent('onchange', handleNiveauChange);
+    } else {
+        niveauSelect.onchange = handleNiveauChange;
+    }
     updateLessons(false);
 })();
 </script>

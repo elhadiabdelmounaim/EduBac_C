@@ -41,6 +41,9 @@ class QuizLessonPickerBrowserTests(StaticLiveServerTestCase):
         )
         self.addCleanup(self.browser.close)
         self.context = self.browser.new_context()
+        self.context.add_init_script(
+            "Element.prototype.replaceChildren = undefined;"
+        )
         self.addCleanup(self.context.close)
         self.page = self.context.new_page()
         self.page.set_default_timeout(10000)
