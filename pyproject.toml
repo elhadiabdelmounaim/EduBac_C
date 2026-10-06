@@ -12,11 +12,9 @@ dependencies = [
     "markdown>=3.5",
     "openpyxl>=3.1",
     "pillow>=10.0",
-<<<<<<< HEAD
     "playwright>=1.63.0",
-=======
->>>>>>> a18874bbe6a7a8bdc1dbf29fe13969402a0220f0
     "psycopg2-binary>=2.9.13",
     "pypdf>=4.0",
+    "pylatexenc>=2.10,<3",
     "python-dotenv>=1.0",
 ]

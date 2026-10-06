@@ -1,7 +1,12 @@
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
-        onload="renderMathInElement(document.body, {
+{% load static %}
+<link rel="stylesheet" href="{% static 'vendor/katex/katex.min.css' %}">
+<script defer src="{% static 'vendor/katex/katex.min.js' %}"></script>
+<script defer src="{% static 'vendor/katex/contrib/auto-render.min.js' %}"></script>
+<script>
+(function () {
+    window.renderMath = function (root) {
+        if (typeof window.renderMathInElement !== 'function') return;
+        window.renderMathInElement(root || document.body, {
             delimiters: [
                 {left: '$$', right: '$$', display: true},
                 {left: '$', right: '$', display: false},
@@ -10,4 +15,10 @@
             ],
             throwOnError: false,
             strict: false
-        });"></script>
+        });
+    };
+    document.addEventListener('DOMContentLoaded', function () {
+        window.renderMath(document.body);
+    });
+})();
+</script>

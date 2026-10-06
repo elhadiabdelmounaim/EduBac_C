@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load markdown_extras %}
 {% block content %}
 <h1 class="h3 fw-bold mb-2" style="color:var(--edubac-navy);">Points faibles</h1>
 <p class="text-muted mb-4">Questions souvent ratées — révise ces notions en priorité.</p>
@@ -8,7 +9,7 @@
 <li class="list-group-item">
     <div class="d-flex justify-content-between align-items-start gap-2">
         <div>
-            <div class="fw-semibold">{{ w.question__text|truncatechars:120 }}</div>
+            <div class="fw-semibold">{{ w.question__text|truncatechars:120|latex }}</div>
             <div class="small text-muted">{{ w.question__quiz__title }}</div>
         </div>
         <span class="badge bg-danger">{{ w.n }}×</span>
@@ -29,3 +30,4 @@
 </div>
 {% endif %}
 {% endblock %}
+{% block extra_css %}{% include "includes/katex.html" %}{% endblock %}

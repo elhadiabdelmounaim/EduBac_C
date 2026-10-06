@@ -71,16 +71,28 @@
       var step=0;
       var h1=document.getElementById('hintBox1');
       var h2=document.getElementById('hintBox2');
-      var mid=Math.max(20, Math.floor(fullHint.length/2));
+      var mid=Math.min(fullHint.length, Math.max(20, Math.floor(fullHint.length/2)));
+      var mathRange=/\$\$[\s\S]*?\$\$|\$(?:\\.|[^$])+\$/g;
+      var match;
+      while((match=mathRange.exec(fullHint))!==null){
+        if(match.index < mid && mathRange.lastIndex > mid) mid=mathRange.lastIndex;
+      }
+      if(mid < fullHint.length){
+        var wordBoundary=fullHint.lastIndexOf(' ',mid);
+        if(wordBoundary > 0) mid=wordBoundary;
+      }
       hb.addEventListener('click',function(){
         step++;
         if(step===1){
-          h1.textContent='💡 Indice léger : '+fullHint.slice(0, mid)+'…';
+          var lightHint=fullHint.slice(0,mid).trim();
+          h1.textContent='💡 Indice léger : '+lightHint+(lightHint.length < fullHint.trim().length ? '…' : '');
           h1.classList.remove('d-none');
+          if(window.renderMath) window.renderMath(h1);
           hb.innerHTML='<i class="bi bi-lightbulb"></i> Indice plus fort (niveau 2)';
         } else {
           h2.textContent='💡 Indice complet : '+fullHint;
           h2.classList.remove('d-none');
+          if(window.renderMath) window.renderMath(h2);
           hb.disabled=true;
         }
       });

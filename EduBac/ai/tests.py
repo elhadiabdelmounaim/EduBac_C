@@ -1,13 +1,15 @@
 from unittest.mock import patch
+from types import SimpleNamespace
 
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 
 from accounts.models import User
 from education.models import Course, Lesson
 from .models import AIConversation, AIMessage
 from .providers import AIProviderError
-from .services import AIService
+from .prompts import build_quiz_prompt
+from .services import AIService, repair_latex_escapes
 
 
 @override_settings(ALLOWED_HOSTS=['testserver'])
@@ -127,3 +129,101 @@ class TutorTests(TestCase):
     def test_empty_provider_response_is_an_error(self, chat):
         with self.assertRaises(AIProviderError):
             AIService().generate_explanation(self.lesson, 'Aide-moi')
+
+
+class QuizLatexJsonTests(SimpleTestCase):
+    def setUp(self):
+        self.service = AIService.__new__(AIService)
+
+    def test_double_escaped_latex_backslashes_survive_json_parsing(self):
+        raw = r'''{
+          "questions": [{
+            "text": "Calculer $\\frac{1}{2}$",
+            "choices": [
+              {"text": "$\\frac{1}{2}$", "is_correct": true},
+              {"text": "1", "is_correct": false}
+            ],
+            "correct_answer": "$\\frac{1}{2}$",
+            "explanation": "$\\beta$",
+            "hint": "$\\sqrt{4}$"
+          }]
+        }'''
+
+        data = self.service._validate_quiz_json(raw, 1)
+
+        question = data['questions'][0]
+        self.assertEqual(question['text'], r'Calculer $\frac{1}{2}$')
+        self.assertEqual(question['choices'][0]['text'], r'$\frac{1}{2}$')
+        self.assertEqual(question['correct_answer'], r'$\frac{1}{2}$')
+        self.assertEqual(question['explanation'], r'$\beta$')
+        self.assertEqual(question['hint'], r'$\sqrt{4}$')
+
+    def test_single_backslashes_and_json_control_escapes_are_repaired(self):
+        raw = r'''{
+          "questions": [{
+            "text": "$\forall x \in \mathbb{R}$",
+            "choices": [
+              {"text": "$\frac{1}{2}$", "is_correct": true},
+              {"text": "1", "is_correct": false}
+            ],
+            "correct_answer": "$\frac{1}{2}$",
+            "explanation": "$\beta + \times$",
+            "hint": "$\right|x \neq 0$"
+          }]
+        }'''
+
+        data = self.service._validate_quiz_json(raw, 1)
+
+        question = data['questions'][0]
+        self.assertEqual(question['text'], r'$\forall x \in \mathbb{R}$')
+        self.assertEqual(question['correct_answer'], r'$\frac{1}{2}$')
+        self.assertEqual(question['choices'][0]['text'], r'$\frac{1}{2}$')
+        self.assertEqual(question['explanation'], r'$\beta + \times$')
+        self.assertEqual(question['hint'], r'$\right|x \neq 0$')
+
+    def test_repair_keeps_valid_json_escapes_and_fixes_invalid_latex_escapes(self):
+        parsed = repair_latex_escapes(r'{"text":"line 1\n\sqrt{x}"}')
+
+        self.assertEqual(parsed['text'], 'line 1\n' + r'\sqrt{x}')
+
+    def test_quiz_prompt_requires_delimited_latex_and_json_escaped_slashes(self):
+        prompt = build_quiz_prompt(
+            'Terminale', 'Mathématiques', 'Limites', 'Contenu de la leçon',
+            3, 'moyen',
+        )
+
+        self.assertIn('choices[].text', prompt)
+        self.assertIn(r'\\forall', prompt)
+        self.assertIn(r'\\frac', prompt)
+        self.assertIn('encadre chaque expression mathématique', prompt)
+        self.assertNotIn('INTERDIT d’utiliser du code LaTeX', prompt)
+
+    def test_provider_prompt_uses_the_same_latex_rules(self):
+        lesson = SimpleNamespace(get_ai_help=lambda: {
+            'niveau': 'Terminale',
+            'cours': 'Mathématiques',
+            'lecon': 'Limites',
+            'contenu': 'Cours de test',
+        })
+        provider = SimpleNamespace(name='test', model='test-model')
+        raw = r'''{"questions":[{
+          "text":"Calculer $\\frac{1}{2}$",
+          "choices":[
+            {"text":"$\\frac{1}{2}$","is_correct":true},
+            {"text":"1","is_correct":false}
+          ],
+          "correct_answer":"$\\frac{1}{2}$",
+          "explanation":"Explication",
+          "hint":"Indice"
+        }]}'''
+
+        with (
+            patch.object(AIService, '_chat', return_value=raw) as chat,
+            patch.object(AIService, '_get_provider', return_value=provider),
+        ):
+            self.service.generate_quiz_from_lesson(lesson, question_count=1)
+
+        provider_prompt = chat.call_args.args[0][-1]['content']
+        self.assertIn(r'\\forall', provider_prompt)
+        self.assertIn('encadre chaque expression mathématique', provider_prompt)
+        self.assertNotIn('INTERDIT d’utiliser du code LaTeX', provider_prompt)

@@ -192,7 +192,7 @@
                     {% if quiz_created and preview %}
                         <div class="qb-preview__questions">
                             {% for q in preview|slice:":4" %}
-                            <div class="qb-preview-q">{{ q.text|truncatechars:90 }}</div>
+                            <div class="qb-preview-q">{{ q.text|truncatechars:90|latex }}</div>
                             {% endfor %}
                             {% if preview|length > 4 %}
                             <div class="qb-preview-more">+ {{ preview|length|add:"-4" }} autres…</div>
@@ -225,19 +225,19 @@
             <ol class="qb-detail-list">
                 {% for q in preview %}
                 <li>
-                    <div class="qb-detail-q">{{ q.text }}</div>
+                    <div class="qb-detail-q">{{ q.text|latex }}</div>
                     {% if q.choices.all %}
                     <ul class="qb-option-list">
                         {% for c in q.choices.all %}
                         <li class="{% if c.is_correct %}is-selected{% endif %}">
                             {% if c.is_correct %}<i class="bi bi-check-circle-fill"></i>{% else %}<i class="bi bi-circle"></i>{% endif %}
-                            {{ c.text }}
+                            {{ c.text|latex }}
                         </li>
                         {% endfor %}
                     </ul>
                     {% endif %}
                     {% if q.explanation %}
-                    <div class="qb-detail-explain"><strong>Explication :</strong> {{ q.explanation }}</div>
+                    <div class="qb-detail-explain"><strong>Explication :</strong> {{ q.explanation|latex }}</div>
                     {% endif %}
                 </li>
                 {% endfor %}

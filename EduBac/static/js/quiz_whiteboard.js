@@ -73,6 +73,8 @@
           throwOnError: false, trust: false, strict: 'ignore', maxExpand: 100
         });
       } catch (e) { node.textContent = latex; }
+    } else {
+      node.textContent = /^\s*\$/.test(latex) ? latex : '$' + latex + '$';
     }
   }
 
@@ -196,6 +198,13 @@
         selectEl(el.id);
       });
       canvas.appendChild(div);
+      if (
+        el.type !== 'formula' &&
+        el.type !== 'calculation' &&
+        window.renderMath
+      ) {
+        window.renderMath(body);
+      }
 
       var li = document.createElement('li');
       li.className = 'list-group-item' + (state.selectedId === el.id ? ' active' : '');

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load markdown_extras %}
 {% block title %}Statistiques{% endblock %}
 {% block content %}
 <h1 class="h3 fw-bold mb-1" style="color:var(--edubac-navy);">📊 Statistiques enseignant</h1>
@@ -64,7 +65,7 @@
         {% for q in hard_questions %}
         <li class="list-group-item">
           <div class="small text-muted">{{ q.question__quiz__title }}</div>
-          <div>{{ q.question__text|truncatechars:90 }}</div>
+          <div>{{ q.question__text|truncatechars:90|latex }}</div>
           <span class="badge bg-danger">{{ q.fails }} erreur{{ q.fails|pluralize }}</span>
         </li>
         {% empty %}
@@ -95,3 +96,4 @@
   <a href="{% url 'quizzes:export_excel' %}" class="btn btn-accent btn-sm">Exporter Excel</a>
 </div>
 {% endblock %}
+{% block extra_css %}{% include "includes/katex.html" %}{% endblock %}

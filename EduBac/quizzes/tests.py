@@ -1,9 +1,13 @@
+from pathlib import Path
+from unittest.mock import patch
+
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from accounts.models import User
 from education.models import Course, Lesson
-from quizzes.models import Quiz
+from quizzes.math_text import latex_to_plain, normalize_math_text
+from quizzes.models import Choice, Question, Quiz
 
 
 @override_settings(ALLOWED_HOSTS=['testserver', 'localhost', '127.0.0.1'])
@@ -88,3 +92,104 @@ class QuizLessonSelectionTests(TestCase):
             response.content.decode(),
             rf'<option value="{self.lesson.pk}" data-niveau="{self.course.niveau}"[^>]*selected',
         )
+
+    @patch('ai.services.AIService.generate_quiz_from_lesson')
+    def test_teacher_generator_stores_latex_fields_without_plain_text_conversion(
+        self, generate_quiz,
+    ):
+        question_text = r'Calculer $\frac{1}{2}$.'
+        choice_text = r'$\frac{1}{2}$'
+        explanation = r'$\frac{1}{2} = 0.5$'
+        hint = r'Réduis $\frac{2}{4}$.'
+        generate_quiz.return_value = {
+            'title': 'Quiz LaTeX',
+            'questions': [{
+                'text': question_text,
+                'correct_answer': choice_text,
+                'explanation': explanation,
+                'hint': hint,
+                'choices': [
+                    {'text': choice_text, 'is_correct': True},
+                    {'text': '1', 'is_correct': False},
+                    {'text': '2', 'is_correct': False},
+                    {'text': '4', 'is_correct': False},
+                ],
+            }],
+        }
+
+        response = self.client.post(reverse('quizzes:teacher_ai'), {
+            'action': 'generate',
+            'niveau': self.course.niveau,
+            'lesson': self.lesson.pk,
+            'question_count': 1,
+            'seconds_per_question': 20,
+            'difficulty': 'moyen',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        quiz = Quiz.objects.get(title='Quiz LaTeX')
+        question = Question.objects.get(quiz=quiz)
+        self.assertEqual(question.text, question_text)
+        self.assertEqual(question.correct_answer, choice_text)
+        self.assertEqual(question.explanation, explanation)
+        self.assertEqual(question.hint, hint)
+        self.assertEqual(
+            question.choices.order_by('order').first().text,
+            choice_text,
+        )
+        self.assertContains(response, r'\frac')
+
+
+class MathTextNormalizationTests(TestCase):
+    def test_normalizer_preserves_latex_and_converts_supported_delimiters(self):
+        text = r'  \(\frac{1}{2}\) et \[\sqrt{x}\]  '
+
+        self.assertEqual(
+            normalize_math_text(text),
+            r'$\frac{1}{2}$ et $$\sqrt{x}$$',
+        )
+
+    def test_normalizer_escapes_unmatched_dollars_without_changing_plain_text(self):
+        self.assertEqual(normalize_math_text('  Texte simple  '), 'Texte simple')
+        self.assertEqual(normalize_math_text('Prix $5'), r'Prix \$5')
+        self.assertEqual(normalize_math_text(r'Coût \$5'), r'Coût \$5')
+
+    def test_latex_to_plain_remains_available_for_non_html_exports(self):
+        self.assertEqual(latex_to_plain('Texte simple'), 'Texte simple')
+
+
+class LocalKaTeXAssetTests(TestCase):
+    def test_math_pages_use_local_pinned_assets_only(self):
+        project_root = Path(__file__).resolve().parent.parent
+        template_root = project_root / 'templates'
+        template_paths = [
+            'quizzes/take.html',
+            'quizzes/review.html',
+            'quizzes/results.html',
+            'quizzes/feedback.html',
+            'quizzes/teacher_ai_quiz.html',
+            'quizzes/question_stats.html',
+            'quizzes/teacher_stats.html',
+            'quizzes/error_analysis.html',
+            'whiteboard/quiz_correction.html',
+            'education/lesson_detail.html',
+        ]
+
+        for template_path in template_paths:
+            with self.subTest(template=template_path):
+                source = (template_root / template_path).read_text()
+                self.assertIn('includes/katex.html', source)
+                self.assertNotIn('cdn.jsdelivr.net/npm/katex', source)
+
+        include = (template_root / 'includes/katex.html').read_text()
+        self.assertIn("vendor/katex/katex.min.css", include)
+        self.assertIn("vendor/katex/katex.min.js", include)
+        self.assertIn("vendor/katex/contrib/auto-render.min.js", include)
+        self.assertIn('window.renderMath = function', include)
+        self.assertNotIn('cdn.jsdelivr.net/npm/katex', include)
+
+        asset_root = project_root / 'static' / 'vendor' / 'katex'
+        self.assertTrue((asset_root / 'katex.min.css').is_file())
+        self.assertTrue((asset_root / 'katex.min.js').is_file())
+        self.assertTrue((asset_root / 'contrib' / 'auto-render.min.js').is_file())
+        self.assertTrue(any((asset_root / 'fonts').glob('*.woff2')))

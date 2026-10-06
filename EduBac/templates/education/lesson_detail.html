@@ -11,7 +11,7 @@
 
 {% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+{% include "includes/katex.html" %}
 <style>
 .lesson-md {
     line-height: 1.7;
@@ -166,18 +166,6 @@
 </div>
 {% endblock %}
 {% block extra_js %}
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
-        onload="renderMathInElement(document.body, {
-            delimiters: [
-                {left: '$$', right: '$$', display: true},
-                {left: '$', right: '$', display: false},
-                {left: '\\\\(', right: '\\\\)', display: false},
-                {left: '\\\\[', right: '\\\\]', display: true}
-            ],
-            throwOnError: false
-        });"></script>
-
 <script>
 (function(){
   var btn = document.getElementById('focusModeBtn');

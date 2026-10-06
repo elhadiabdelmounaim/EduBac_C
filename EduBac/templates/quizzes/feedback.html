@@ -31,7 +31,7 @@
                 {% elif answer.explanation %}
                 <div class="alert alert-light border mt-3 mb-0">
                     <strong><i class="bi bi-lightbulb"></i> Explication</strong>
-                    <div class="mt-1" style="white-space:pre-wrap;">{{ answer.explanation }}</div>
+                    <div class="mt-1" style="white-space:pre-wrap;">{{ answer.explanation|latex }}</div>
                 </div>
                 {% endif %}
                 <form method="post" class="mt-4">
