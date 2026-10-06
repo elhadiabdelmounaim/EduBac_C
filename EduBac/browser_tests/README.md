@@ -10,8 +10,8 @@ Run this check before publishing navbar/template/CSS changes. It exits nonzero
 on failure and is also registered as the `navbar-browser` validation command.
 This does not deploy the application.
 
-Dependencies are in the root `pyproject.toml` / `uv.lock`. Chromium is available
-in Replit; elsewhere install the matching browser with
+Python dependencies, including Playwright, are in `EduBac/requirements.txt`.
+Chromium is available in Replit; elsewhere install the matching browser with
 `python -m playwright install chromium` (and its OS dependencies), or set
 `CHROMIUM_EXECUTABLE` to an installed Chromium binary.
 The suite needs access to the same Bootstrap, icon and jQuery CDNs as the app.
@@ -36,3 +36,6 @@ On failure, screenshots are saved under `test-results/navbar/` relative to the
 working directory, named by role and viewport. Django subtest output identifies
 the failing role/width and assertion. The public preview screenshot tool cannot
 verify signed-in UI; these browser sessions do.
+
+For focused diagnosis, set `NAVBAR_TEST_WIDTHS=390,414` before the same command
+to run selected widths; leave it unset for the full publish gate.
