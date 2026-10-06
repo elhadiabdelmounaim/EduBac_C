@@ -58,6 +58,23 @@ class QuizLessonSelectionTests(TestCase):
         self.assertNotContains(response, 'Quiz polynômes')
         self.assertContains(response, f'?lesson={self.lesson.pk}')
 
+    def test_my_quizzes_lessons_depend_on_the_selected_level(self):
+        initial_response = self.client.get(reverse('quizzes:manage'))
+        self.assertEqual(initial_response.status_code, 200)
+        self.assertFalse(initial_response.context['lessons'].exists())
+
+        response = self.client.get(
+            reverse('quizzes:manage'),
+            {'niveau': self.course.niveau},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            list(response.context['lessons'].values_list('pk', flat=True)),
+            [self.lesson.pk, self.other_lesson.pk],
+        )
+        self.assertContains(response, f'data-niveau="{self.course.niveau}"')
+        self.assertContains(response, 'name="niveau"')
+
     def test_selected_lesson_opens_preselected_in_quiz_generator(self):
         response = self.client.get(
             reverse('quizzes:teacher_ai'),

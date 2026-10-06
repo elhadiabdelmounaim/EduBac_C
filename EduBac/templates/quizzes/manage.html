@@ -3,9 +3,9 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">Mes quiz</h1>
     <div class="d-flex gap-2">
-        <a href="{% url 'quizzes:teacher_ai' %}{% if selected_lesson %}?lesson={{ selected_lesson.pk }}{% endif %}" class="btn btn-edubac btn-sm">
+        <a href="{% url 'quizzes:teacher_ai' %}{% if selected_lesson %}?lesson={{ selected_lesson.pk }}{% elif selected_niveau %}?niveau={{ selected_niveau }}{% endif %}" class="btn btn-edubac btn-sm">
             <i class="bi bi-plus-circle"></i>
-            {% if selected_lesson %}Générer pour cette leçon{% else %}Générer (IA){% endif %}
+            {% if selected_lesson %}Générer pour cette leçon{% elif selected_niveau %}Générer pour ce niveau{% else %}Générer (IA){% endif %}
         </a>
         <a href="{% url 'quizzes:assign' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-send"></i> Affecter</a>
         <a href="{% url 'quizzes:teacher_stats' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-graph-up"></i> Statistiques</a>
@@ -13,13 +13,24 @@
 </div>
 <form method="get" class="card card-body mb-3">
     <div class="row g-2 align-items-end">
-        <div class="col-md-7">
+        <div class="col-md-5">
+            <label for="lessonLevelFilter" class="form-label mb-1">Choisir un niveau scolaire</label>
+            <select id="lessonLevelFilter" name="niveau" class="form-select">
+                <option value="">Tous les niveaux</option>
+                {% for niveau in niveaux %}
+                <option value="{{ niveau.code }}" {% if selected_niveau == niveau.code %}selected{% endif %}>
+                    {{ niveau.label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-5">
             <label for="lessonFilter" class="form-label mb-1">Choisir une leçon</label>
-            <select id="lessonFilter" name="lesson" class="form-select">
-                <option value="">Toutes les leçons</option>
-                {% for lesson in lessons %}
-                <option value="{{ lesson.pk }}" {% if selected_lesson.pk == lesson.pk %}selected{% endif %}>
-                    {{ lesson.course.get_niveau_display }} — {{ lesson.title }}
+            <select id="lessonFilter" name="lesson" class="form-select" {% if not selected_niveau %}disabled{% endif %}>
+                <option value="">Toutes les leçons du niveau</option>
+                {% for lesson in all_lessons %}
+                <option value="{{ lesson.pk }}" data-niveau="{{ lesson.course.niveau }}" {% if not selected_niveau or selected_niveau != lesson.course.niveau %}hidden disabled{% endif %} {% if selected_lesson.pk == lesson.pk %}selected{% endif %}>
+                    {{ lesson.order }}. {{ lesson.title }}
                 </option>
                 {% endfor %}
             </select>
@@ -27,7 +38,7 @@
         <div class="col-auto">
             <button type="submit" class="btn btn-outline-primary">Afficher</button>
         </div>
-        {% if selected_lesson %}
+        {% if selected_lesson or selected_niveau %}
         <div class="col-auto">
             <a href="{% url 'quizzes:manage' %}" class="btn btn-link">Réinitialiser</a>
         </div>
@@ -74,6 +85,9 @@
                 {% if selected_lesson %}
                     Aucun quiz pour « {{ selected_lesson.title }} ».
                     <a href="{% url 'quizzes:teacher_ai' %}?lesson={{ selected_lesson.pk }}">Générer un quiz pour cette leçon</a>
+                {% elif selected_niveau %}
+                    Aucun quiz pour ce niveau.
+                    <a href="{% url 'quizzes:teacher_ai' %}?niveau={{ selected_niveau }}">Générer un quiz pour ce niveau</a>
                 {% else %}
                     Aucun quiz. <a href="{% url 'quizzes:teacher_ai' %}">Générer avec l'IA</a>
                 {% endif %}
@@ -83,4 +97,47 @@
     </tbody>
 </table>
 </div>
+<script>
+(function() {
+    var niveauSelect = document.getElementById('lessonLevelFilter');
+    var lessonSelect = document.getElementById('lessonFilter');
+    if (!niveauSelect || !lessonSelect) return;
+
+    var placeholder = lessonSelect.querySelector('option:not([data-niveau])');
+    var lessonOptions = Array.from(lessonSelect.querySelectorAll('option[data-niveau]'));
+
+    function updateLessons(resetSelection) {
+        var niveau = niveauSelect.value;
+        var previousLesson = resetSelection ? '' : lessonSelect.value;
+        var matchingLessons = lessonOptions.filter(function(option) {
+            return option.dataset.niveau === niveau;
+        });
+
+        lessonSelect.replaceChildren(placeholder);
+        matchingLessons.forEach(function(option) {
+            option.hidden = false;
+            option.disabled = false;
+            lessonSelect.appendChild(option);
+        });
+
+        placeholder.textContent = niveau
+            ? (matchingLessons.length ? 'Toutes les leçons du niveau' : 'Aucune leçon disponible')
+            : 'Choisir un niveau scolaire d’abord';
+        lessonSelect.disabled = !niveau || matchingLessons.length === 0;
+
+        if (previousLesson && matchingLessons.some(function(option) {
+            return option.value === previousLesson;
+        })) {
+            lessonSelect.value = previousLesson;
+        } else {
+            lessonSelect.value = '';
+        }
+    }
+
+    niveauSelect.addEventListener('change', function() {
+        updateLessons(true);
+    });
+    updateLessons(false);
+})();
+</script>
 {% endblock %}

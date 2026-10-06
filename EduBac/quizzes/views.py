@@ -472,6 +472,8 @@ def _publish_scheduled_quizzes():
 @teacher_required
 def manage_quizzes(request):
     """Liste des quiz créés / liés à l'enseignant."""
+    from education.curriculum import CURRICULUM
+
     _publish_scheduled_quizzes()
     quizzes = (
         Quiz.objects
@@ -480,23 +482,48 @@ def manage_quizzes(request):
         .annotate(nb_questions=Count('questions'), nb_attempts=Count('attempts'))
         .order_by('-created_at')
     )
-    lessons = Lesson.objects.select_related('course').order_by(
+    niveaux = CURRICULUM
+    niveau_codes = {niveau['code'] for niveau in niveaux}
+    selected_niveau = (request.GET.get('niveau') or '').strip()
+    if selected_niveau not in niveau_codes:
+        selected_niveau = ''
+
+    all_lessons = Lesson.objects.select_related('course').order_by(
         'course__order', 'course__name', 'order', 'title'
     )
     selected_lesson_id = (request.GET.get('lesson') or '').strip()
     selected_lesson = None
     if selected_lesson_id.isdecimal():
-        selected_lesson = lessons.filter(pk=selected_lesson_id).first()
-        if selected_lesson:
-            quizzes = quizzes.filter(lesson=selected_lesson)
+        requested_lesson = all_lessons.filter(pk=selected_lesson_id).first()
+        if requested_lesson and not selected_niveau:
+            selected_niveau = requested_lesson.course.niveau
+        if (
+            requested_lesson
+            and selected_niveau in niveau_codes
+            and requested_lesson.course.niveau == selected_niveau
+        ):
+            selected_lesson = requested_lesson
         else:
             selected_lesson_id = ''
     else:
         selected_lesson_id = ''
 
+    lessons = (
+        all_lessons.filter(course__niveau=selected_niveau)
+        if selected_niveau
+        else Lesson.objects.none()
+    )
+    if selected_lesson:
+        quizzes = quizzes.filter(lesson=selected_lesson)
+    elif selected_niveau:
+        quizzes = quizzes.filter(lesson__course__niveau=selected_niveau)
+
     return render(request, 'quizzes/manage.html', {
         'quizzes': quizzes,
+        'niveaux': niveaux,
+        'selected_niveau': selected_niveau,
         'lessons': lessons,
+        'all_lessons': all_lessons,
         'selected_lesson': selected_lesson,
         'selected_lesson_id': selected_lesson_id,
         'page_title': 'Mes quiz',
