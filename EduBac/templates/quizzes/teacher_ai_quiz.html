@@ -72,8 +72,8 @@
                                 <div class="qb-card-body">
                                     <select name="lesson" id="lessonSelect" class="form-select" required>
                                         <option value="">— Choisir —</option>
-                                        {% for l in lessons %}
-                                        <option value="{{ l.pk }}" {% if selected_lesson_id == l.pk|stringformat:"s" %}selected{% endif %}>{{ l.order }}. {{ l.title }}</option>
+                                        {% for l in all_lessons %}
+                                        <option value="{{ l.pk }}" data-niveau="{{ l.course.niveau }}" {% if not selected_niveau or selected_niveau != l.course.niveau %}hidden disabled{% endif %} {% if selected_lesson_id == l.pk|stringformat:"s" %}selected{% endif %}>{{ l.order }}. {{ l.title }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -355,10 +355,47 @@
 </script>
 
 <script>
-document.getElementById('niveauSelect').addEventListener('change', function() {
-    var v = this.value;
-    if (v) window.location = '{% url "quizzes:teacher_ai" %}?niveau=' + encodeURIComponent(v);
-});
+(function() {
+    var niveauSelect = document.getElementById('niveauSelect');
+    var lessonSelect = document.getElementById('lessonSelect');
+    if (!niveauSelect || !lessonSelect) return;
+
+    var placeholder = lessonSelect.querySelector('option:not([data-niveau])');
+    var lessonOptions = Array.from(lessonSelect.querySelectorAll('option[data-niveau]'));
+
+    function updateLessons(resetSelection) {
+        var niveau = niveauSelect.value;
+        var previousLesson = resetSelection ? '' : lessonSelect.value;
+        var matchingLessons = lessonOptions.filter(function(option) {
+            return option.dataset.niveau === niveau;
+        });
+
+        lessonSelect.replaceChildren(placeholder);
+        matchingLessons.forEach(function(option) {
+            option.hidden = false;
+            option.disabled = false;
+            lessonSelect.appendChild(option);
+        });
+
+        placeholder.textContent = niveau
+            ? (matchingLessons.length ? '— Choisir une leçon —' : '— Aucune leçon disponible —')
+            : '— Choisir d’abord un niveau —';
+        lessonSelect.disabled = !niveau || matchingLessons.length === 0;
+
+        if (previousLesson && matchingLessons.some(function(option) {
+            return option.value === previousLesson;
+        })) {
+            lessonSelect.value = previousLesson;
+        } else {
+            lessonSelect.value = '';
+        }
+    }
+
+    niveauSelect.addEventListener('change', function() {
+        updateLessons(true);
+    });
+    updateLessons(false);
+})();
 </script>
 
 <script>

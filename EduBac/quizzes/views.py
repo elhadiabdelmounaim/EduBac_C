@@ -672,6 +672,9 @@ def teacher_ai_quiz(request):
         if selected_lesson and not selected_niveau:
             selected_niveau = selected_lesson.course.niveau
 
+    all_lessons = Lesson.objects.select_related('course').order_by(
+        'course__order', 'order', 'title'
+    )
     lessons = Lesson.objects.none()
     if selected_niveau:
         lessons = Lesson.objects.filter(course__niveau=selected_niveau).order_by('order')
@@ -812,6 +815,7 @@ def teacher_ai_quiz(request):
         'selected_niveau': selected_niveau,
         'selected_lesson_id': selected_lesson_id,
         'lessons': lessons,
+        'all_lessons': all_lessons,
         'preview': preview,
         'quiz_created': quiz_created,
         'classrooms': classrooms,
