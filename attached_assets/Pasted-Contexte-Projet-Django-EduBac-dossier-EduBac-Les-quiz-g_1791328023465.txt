@@ -1,0 +1,101 @@
+Contexte
+Projet Django « EduBac » (dossier EduBac/). Les quiz générés par l'IA affichent des
+maths en pseudo-texte ASCII (« forall x in R », « sqrt(7) », « != », « -> », « exists! ») au
+lieu de vraies formules. Cause : le prompt de génération interdit LaTeX, la fonction
+`_plain_math_text` (quizzes/views.py) aplatit mal ce qui reste, et rien ne convertit
+les mots comme forall/exists/sqrt(. Je veux la solution propre : l'IA écrit du LaTeX,
+on le stocke tel quel et on l'affiche partout avec KaTeX hébergé en local.
+
+Travail à faire
+
+1. Prompt de génération de quiz (ai/services.py, bloc « Règles STRICTES » autour des
+   lignes 322-340, et build_quiz_prompt dans ai/prompts.py)
+   - Supprimer la règle « INTERDIT d'utiliser du code LaTeX » et l'exemple MAUVAIS.
+   - Imposer : toute expression mathématique en LaTeX entre $...$ (inline), dans les
+     champs text, choices[].text, correct_answer, explanation et hint.
+   - Dans le JSON, doubler chaque antislash (\\frac, \\forall) pour que le JSON reste valide.
+   - Commandes attendues : \forall \exists \exists! \in \notin \mathbb{R} \mathbb{N}
+     \Rightarrow \Leftrightarrow \land \lor \neg \neq \leq \geq \sqrt{} \frac{}{} \lim
+     \sum \int \vec{} \to \infty.
+   - Interdire les approximations ASCII (forall, exists, sqrt(, !=, ->, in R) et les
+     symboles Unicode mélangés avec LaTeX. Pas de $ pour une monnaie. Formules courtes.
+   - Ajouter un exemple BON avec $\forall x \in \mathbb{R},\ x \neq 0 \Rightarrow |x| > 0$.
+
+2. Robustesse du parsing JSON (ai/services.py, autour des lignes 392-408)
+   Un modèle peut écrire un seul antislash : json.loads transforme alors \frac en
+   saut de page + « rac », \times en tabulation, \beta en backspace, \neq en saut
+   de ligne, \right en retour chariot. Ajouter une fonction `repair_latex_escapes` qui :
+   - en cas d'échec de json.loads, double les antislash isolés (hors \\, \", \/, \u)
+     puis réessaie ;
+   - après parsing, répare les caractères de contrôle \x0c, \x08, \t, \r dans les
+     chaînes (\x0c -> \frac…, \t -> \times…, \x08 -> \beta…, \r -> \right…) quand ils
+     précèdent une suite de lettres formant une commande LaTeX connue.
+   Ajouter des tests unitaires pour les deux cas.
+
+3. Remplacer l'aplatissement par une normalisation légère
+   - Dans quizzes/views.py (~lignes 759-767) et ai/views.py (~lignes 162-171), ne plus
+     appeler `_plain_math_text` pour text, choices, correct_answer, explanation, hint.
+   - Créer `normalize_math_text(text)` : strip, convertit \( \) en $ $ et \[ \] en $$ $$,
+     vérifie l'équilibre des $ (sinon échappe le $ isolé), et ne supprime AUCUNE
+     commande LaTeX.
+   - Garder l'ancienne conversion sous le nom `latex_to_plain` uniquement pour les
+     contextes texte brut (e-mails de notifications, export Excel
+     classrooms/services/excel_results.py), de préférence via la librairie pylatexenc
+     (ajoutée à requirements.txt) avec repli sur l'ancienne fonction.
+   - Les questions déjà enregistrées en texte simple continuent de s'afficher
+     normalement ; ne rien migrer et ne supprimer aucune donnée.
+
+4. Filtre de template `latex` (education/templatetags/markdown_extras.py)
+   Le contenu des formules est aujourd'hui injecté sans échappement HTML (mark_safe).
+   Échapper le corps des formules (html.escape) avant de les restaurer : KaTeX lit
+   les nœuds texte, donc $x<3$ s'affichera correctement et aucune balise HTML ne
+   passera. Ajouter des tests : $x<3$, $a<b$, <b>gras</b>, <script> dans $...$.
+
+5. KaTeX en local (plus de dépendance au CDN)
+   - Télécharger KaTeX 0.16.11 dans static/vendor/katex/ : katex.min.css,
+     katex.min.js, contrib/auto-render.min.js et le dossier fonts/ (woff2 et woff).
+   - Réécrire templates/includes/katex.html avec {% load static %} et {% static %}.
+   - Définir une fonction globale window.renderMath(el) qui appelle
+     renderMathInElement(el || document.body, {delimiters: $$ / $ / \( \) / \[ \],
+     throwOnError: false, strict: false}), appelée au chargement et réutilisable
+     après toute insertion dynamique de contenu.
+
+6. Appliquer |latex et KaTeX là où ils manquent
+   - templates/quizzes/teacher_ai_quiz.html (lignes ~195, 228, 234, 240) : utiliser
+     {{ q.text|latex }}, {{ c.text|latex }}, {{ q.explanation|latex }} ; remplacer
+     truncatechars:90 par une troncature CSS (line-clamp) pour ne pas couper une formule.
+   - templates/quizzes/feedback.html (ligne ~34) : {{ answer.explanation|latex }}.
+   - templates/quizzes/take.html : l'indice est injecté en JS via textContent
+     (data-hint). Après chaque affichage, appeler renderMath(h1) / renderMath(h2) ;
+     calculer l'indice « léger » en coupant à une limite de mot située HORS d'une
+     paire $...$ (jamais au milieu d'une formule).
+   - Vérifier avec grep tous les autres templates qui affichent question.text,
+     choice.text, hint, explanation, correct_answer (quizzes/training.html,
+     assigned.html, student_results.html, teacher_stats.html, error_analysis.html,
+     whiteboard/quiz_correction.html et static/js/quiz_whiteboard.js) et leur ajouter
+     |latex + include katex, ou renderMath() après insertion JS.
+   - templates/quizzes/edit_questions.html : garder les textarea en texte brut
+     (c'est le LaTeX source), éventuellement avec un aperçu rendu en dessous.
+
+7. Tests
+   - Quiz IA avec antislash doublés : parsé et stocké sans altération.
+   - Quiz IA avec antislash simples : réparé correctement.
+   - $\frac{1}{2}$ stocké tel quel en base, rendu par |latex.
+   - Les pages take / review / results / feedback / teacher_ai_quiz référencent
+     bien static/vendor/katex et non cdn.jsdelivr.net.
+   - Le prompt de génération ne contient plus « INTERDIT d'utiliser du code LaTeX ».
+
+Contraintes
+- Ne rien supprimer ni renommer inutilement (modèles, URLs, migrations) ; pas de
+  nouveau champ en base.
+- Conserver l'authentification existante (SimpleSessionAuthMiddleware) et la charte
+  graphique ; garder {% url %} dans les templates.
+- Ne pas casser les quiz déjà créés en texte simple.
+
+Vérification attendue
+- Générer un quiz « Notions de logique » : la page d'aperçu enseignant affiche
+  ∀ x ∈ ℝ, x ≠ 0 ⇒ |x| > 0 rendu par KaTeX, sans « forall », « sqrt( », « != » ni « -> ».
+- Une question avec \lim, \frac imbriqué, u_{n+1}, e^{x} et x<3 s'affiche correctement
+  en mode élève, en correction et dans l'indice.
+- Avec le réseau coupé (CDN inaccessible), les formules s'affichent quand même.
+- Lister les fichiers modifiés avec une phrase d'explication par changement.
