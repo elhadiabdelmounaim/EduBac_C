@@ -11,8 +11,8 @@ The imported dependency list is `EduBac/requirements.txt`.
 - System checks: `python EduBac/manage.py check`
 - Tutor tests: `python EduBac/manage.py test ai --noinput`
 
-Run workflow: `cd EduBac && python manage.py runserver 0.0.0.0:5000`.
-Initialize the development database with `cd EduBac && python manage.py migrate`.
+Run workflow: `cd EduBac && python manage.py migrate --noinput && python manage.py load_curriculum && python manage.py runserver 0.0.0.0:5000`.
+The curriculum loader adds missing courses and lessons without replacing existing records.
 Run the complete test suite from the application directory:
 `cd EduBac && python manage.py test --noinput`. Running unlabelled discovery from
 the workspace root does not discover the application's tests.
