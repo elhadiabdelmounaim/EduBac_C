@@ -2,7 +2,7 @@ modules = ["python-3.12", "web", "nodejs-20"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["freetype", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "tcl", "tk", "zlib"]
+packages = ["freetype", "gitFull", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "playwright-driver", "tcl", "tk", "zlib"]
 
 [agent]
 expertMode = true
@@ -24,6 +24,10 @@ author = "agent"
 task = "workflow.run"
 args = "EduBac"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "navbar-browser"
+
 [[workflows.workflow]]
 name = "EduBac"
 author = "agent"
@@ -35,6 +39,17 @@ outputType = "webview"
 task = "shell.exec"
 args = "cd EduBac && python manage.py migrate --noinput && python manage.py load_curriculum && python manage.py runserver 0.0.0.0:5000"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "navbar-browser"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python EduBac/manage.py test browser_tests --settings=browser_tests.settings --noinput"
+
+[workflows.workflow.metadata]
+isValidation = true
 
 [[ports]]
 localPort = 5000

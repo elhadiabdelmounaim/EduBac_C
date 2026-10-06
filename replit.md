@@ -10,6 +10,8 @@ The imported dependency list is `EduBac/requirements.txt`.
 
 - System checks: `python EduBac/manage.py check`
 - Tutor tests: `python EduBac/manage.py test ai --noinput`
+- Navbar browser gate (before publishing): `python EduBac/manage.py test browser_tests --settings=browser_tests.settings --noinput`
+  See `EduBac/browser_tests/README.md` for Chromium setup, coverage and diagnostics.
 
 Run workflow: `cd EduBac && python manage.py migrate --noinput && python manage.py load_curriculum && python manage.py runserver 0.0.0.0:5000`.
 The curriculum loader adds missing courses and lessons without replacing existing records.

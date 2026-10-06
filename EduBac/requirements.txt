@@ -11,3 +11,4 @@ Markdown>=3.5
 pypdf>=4.0
 channels>=4.0
 daphne>=4.0
+playwright>=1.63.0
