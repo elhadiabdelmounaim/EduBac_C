@@ -28,13 +28,13 @@ args = "EduBac"
 name = "EduBac"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd EduBac && python manage.py runserver 0.0.0.0:5000"
-waitForPort = 5000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd EduBac && python manage.py migrate --noinput && python manage.py load_curriculum && python manage.py runserver 0.0.0.0:5000"
+waitForPort = 5000
 
 [[ports]]
 localPort = 5000
