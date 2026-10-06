@@ -30,6 +30,15 @@ class SimpleSessionAuthTests(TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertIsNone(self.client.session.get('user_id'))
 
+    def test_login_password_toggle_has_single_accessible_toggle_handler(self):
+        response = self.client.get('/compte/connexion/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'aria-label="Afficher le mot de passe"')
+        self.assertContains(response, 'aria-pressed="false"')
+        self.assertContains(response, '/static/js/edubac-ui.js')
+        # The page-specific click listener used to cancel out the global toggle.
+        self.assertNotContains(response, "document.querySelectorAll('.password-toggle')")
+
     def test_logout_clears_session(self):
         self._login('s1')
         self.client.get('/compte/deconnexion/')
