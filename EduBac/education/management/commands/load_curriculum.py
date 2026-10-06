@@ -19,20 +19,19 @@ NIVEAU_FOLDER = {
 
 
 class Command(BaseCommand):
-    help = 'Charge le programme de mathématiques EduBac (niveaux + leçons + contenus MD/PDF).'
+    help = 'Ajoute au besoin le programme EduBac sans écraser les contenus existants.'
 
     def handle(self, *args, **options):
         media_root = Path(settings.MEDIA_ROOT)
         lessons_root = media_root / 'lessons'
 
-        Lesson.objects.all().delete()
-        Course.objects.all().delete()
-
         total_lessons = 0
         with_content = 0
+        new_courses = 0
+        new_lessons = 0
 
         for niveau in CURRICULUM:
-            course, _ = Course.objects.update_or_create(
+            course, created = Course.objects.get_or_create(
                 name='Mathématiques',
                 niveau=niveau['code'],
                 defaults={
@@ -40,6 +39,7 @@ class Command(BaseCommand):
                     'order': niveau['order'],
                 },
             )
+            new_courses += int(created)
             folder = NIVEAU_FOLDER.get(niveau['code'], niveau['code'])
             level_dir = lessons_root / folder
 
@@ -70,9 +70,8 @@ class Command(BaseCommand):
 
                 if md_path:
                     content = md_path.read_text(encoding='utf-8')
-                    with_content += 1
 
-                lesson, _ = Lesson.objects.update_or_create(
+                lesson, created = Lesson.objects.get_or_create(
                     course=course,
                     order=i,
                     defaults={
@@ -80,10 +79,18 @@ class Command(BaseCommand):
                         'content': content,
                     },
                 )
+                if created:
+                    new_lessons += 1
+                    if md_path:
+                        with_content += 1
 
                 # Lier le PDF s'il existe et n'est pas vide
                 pdf_path = level_dir / f'{i:02d}.pdf'
-                if pdf_path.is_file() and pdf_path.stat().st_size > 0:
+                if (
+                    not lesson.pdf
+                    and pdf_path.is_file()
+                    and pdf_path.stat().st_size > 0
+                ):
                     rel = f'lessons/{folder}/{i:02d}.pdf'
                     with open(pdf_path, 'rb') as f:
                         lesson.pdf.save(rel, File(f), save=True)
@@ -98,7 +105,8 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.SUCCESS(
-                f"\nProgramme chargé : {len(CURRICULUM)} niveaux, {total_lessons} leçons "
-                f"({with_content} avec contenu Markdown)."
+                f"\nCatalogue prêt : {len(CURRICULUM)} niveaux, {total_lessons} leçons "
+                f"({new_courses} niveaux et {new_lessons} leçons ajoutés ; "
+                f"{with_content} avec contenu Markdown)."
             )
         )
