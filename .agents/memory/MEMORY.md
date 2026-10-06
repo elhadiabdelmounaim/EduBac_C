@@ -1,1 +1,2 @@
 - [Groq model availability](groq-availability.md) — validate model availability with live calls; imported defaults failed during tutor verification.
+- [GitHub upload authentication](github-upload.md) — connector access does not repair shell credentials; use verified, non-force API uploads when needed.
