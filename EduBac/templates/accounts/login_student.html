@@ -23,7 +23,8 @@
                 <div class="password-field">
                     <input type="password" name="password" id="loginPassword" class="form-control" required
                            placeholder="Votre mot de passe" autocomplete="current-password">
-                    <button type="button" class="password-toggle" data-target="loginPassword" aria-label="Afficher">
+                    <button type="button" class="password-toggle" data-target="loginPassword"
+                            aria-label="Afficher le mot de passe" aria-pressed="false">
                         <i class="bi bi-eye"></i>
                     </button>
                 </div>
@@ -39,17 +40,4 @@
         </p>
     </div>
 </div>
-{% endblock %}
-{% block extra_js %}
-<script>
-document.querySelectorAll('.password-toggle').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-        var input = document.getElementById(btn.getAttribute('data-target'));
-        if (!input) return;
-        var icon = btn.querySelector('i');
-        if (input.type === 'password') { input.type = 'text'; if (icon) icon.className = 'bi bi-eye-slash'; }
-        else { input.type = 'password'; if (icon) icon.className = 'bi bi-eye'; }
-    });
-});
-</script>
 {% endblock %}

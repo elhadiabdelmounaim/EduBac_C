@@ -35,9 +35,11 @@
       if ($input.attr('type') === 'password') {
         $input.attr('type', 'text');
         $icon.removeClass('bi-eye').addClass('bi-eye-slash');
+        $(this).attr({ 'aria-label': 'Masquer le mot de passe', 'aria-pressed': 'true' });
       } else {
         $input.attr('type', 'password');
         $icon.removeClass('bi-eye-slash').addClass('bi-eye');
+        $(this).attr({ 'aria-label': 'Afficher le mot de passe', 'aria-pressed': 'false' });
       }
     });
   }
