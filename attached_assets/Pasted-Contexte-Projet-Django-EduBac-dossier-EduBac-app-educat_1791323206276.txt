@@ -1,0 +1,58 @@
+Contexte
+Projet Django « EduBac » (dossier EduBac/, app `education`, modèles Course et Lesson,
+données de référence dans education/curriculum.py, commande
+education/management/commands/load_curriculum.py).
+
+Problème
+Sur la page « Niveau scolaire » (/niveaux/), quand je clique sur un niveau, la page
+/niveau/<code>/ affiche « Aucune leçon pour ce niveau » au lieu de la liste des leçons.
+La carte du niveau, elle, affiche bien un nombre de leçons (ex. « 15 leçons »).
+
+Cause identifiée (déjà vérifiée)
+1. La vue `niveau_detail` (education/views.py) lit les leçons dans la base :
+   Course.objects.filter(niveau=niveau).first() puis course.lessons.all().
+   Les tables Course et Lesson sont vides : elles ne sont remplies que par
+   `python manage.py load_curriculum`, qui n'est lancé que dans le workflow Replit
+   « EduBac ». Un runserver manuel, Docker, Gunicorn ou scripts/post-merge.sh ne
+   chargent rien.
+2. La base SQLite est configurée sur /tmp/edubac.sqlite3 (config/settings.py), un
+   dossier temporaire : elle est effacée à chaque redémarrage, donc les leçons
+   disparaissent.
+3. La vue `niveaux_list` compte les leçons avec un repli sur CURRICULUM quand la base
+   est vide. La carte affiche donc « 15 leçons » alors que la page du niveau n'en
+   trouve aucune (deux sources de données différentes).
+4. Le niveau `2eme_bac_sm` existe dans les choix de Course et de StudentProfile mais
+   pas dans CURRICULUM, donc load_curriculum ne crée jamais de cours pour ce niveau.
+5. Dans `niveau_detail`, le bloc `try/except Exception: pass` autour de la restriction
+   de niveau de l'élève masque d'éventuelles erreurs.
+
+Ce que je veux
+- Que les leçons s'affichent toujours après la sélection d'un niveau, sans commande
+  manuelle.
+- Peuplement automatique et idempotent : si les cours/leçons manquent, ils sont créés
+  à partir de CURRICULUM (get_or_create, sans écraser le contenu existant), par exemple
+  via la logique de load_curriculum réutilisée au démarrage ou à la première visite.
+- Une base persistante : remplacer /tmp/edubac.sqlite3 par un chemin dans le projet
+  (BASE_DIR / 'db.sqlite3'), en gardant la prise en charge de DATABASE_URL (PostgreSQL).
+- Cohérence : /niveaux/ et /niveau/<code>/ doivent utiliser la même source de données
+  pour compter et lister les leçons.
+- Ajouter le niveau `2eme_bac_sm` à CURRICULUM (avec ses leçons) ou le retirer
+  proprement des choix, selon ce qui est le plus cohérent. Me demander si les leçons
+  ne sont pas connues.
+- Remplacer le `except Exception: pass` par une gestion d'erreur précise
+  (ex. AttributeError / ObjectDoesNotExist sur student_profile).
+
+Contraintes
+- Ne rien supprimer et ne pas renommer inutilement fichiers, modèles ou URLs.
+- Conserver l'authentification existante (SimpleSessionAuthMiddleware, session['user_id'])
+  et la restriction « un élève ne voit que son niveau ».
+- Utiliser {% url %} dans les templates, jamais de liens en dur.
+- Garder l'héritage de templates et la charte graphique actuelle.
+- Ne pas casser les migrations existantes.
+
+Vérification attendue
+Sur une base neuve (migrate seul, sans load_curriculum), /niveau/tronc_commun/ doit
+afficher 15 leçons, /niveau/1ere_bac_sc/ 12 leçons et /niveau/2eme_bac_pc/ 12 leçons.
+Un élève connecté doit voir les leçons de son niveau ; /niveaux/ et la page du niveau
+doivent afficher le même nombre. Lister les fichiers modifiés et expliquer chaque
+changement.
