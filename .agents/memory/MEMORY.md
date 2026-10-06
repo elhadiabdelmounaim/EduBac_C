@@ -1,0 +1,1 @@
+- [Groq model availability](groq-availability.md) — validate model availability with live calls; imported defaults failed during tutor verification.

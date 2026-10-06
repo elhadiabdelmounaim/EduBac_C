@@ -21,6 +21,13 @@ DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
+# Allow the current development preview without accepting arbitrary hosts.
+if DEBUG and os.getenv('DJANGO_PRODUCTION') != '1':
+    _preview_host = os.getenv('REPLIT_DEV_DOMAIN', '').strip()
+    if _preview_host:
+        ALLOWED_HOSTS.append(_preview_host)
+        CSRF_TRUSTED_ORIGINS = [f'https://{_preview_host}']
+
 # Application definition
 
 INSTALLED_APPS = [

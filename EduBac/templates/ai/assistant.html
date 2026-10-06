@@ -3,29 +3,49 @@
 <div class="illus-card mb-4">
     <div class="reader-illus float-soft">🤖</div>
     <div>
-        <h1 class="h4 fw-bold mb-1" style="color:var(--edubac-navy);">Assistant IA</h1>
-        <p class="text-muted small mb-0">Explications adaptées à ton niveau — étapes, exemples, reformulation.</p>
+        <h1 class="h4 fw-bold mb-1" style="color:var(--edubac-navy);">Mon tuteur IA</h1>
+        <p class="text-muted small mb-0">Comprends tes erreurs, échange pas à pas et entraîne-toi à ton niveau.</p>
     </div>
 </div>
 <div class="row g-4">
     <div class="col-lg-8">
+        {% if conversation %}
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <strong>{{ conversation.lesson.title|default:"Leçon supprimée" }}</strong>
+                <a href="{% url 'ai:assistant' %}" class="btn btn-outline-primary btn-sm">Nouvelle conversation</a>
+            </div>
+            <div class="card-body" aria-label="Conversation avec le tuteur">
+                {% for m in conversation.messages.all %}
+                <div class="mb-3">
+                    <span class="badge {% if m.role == 'user' %}bg-primary{% else %}bg-success{% endif %}">{% if m.role == 'user' %}Toi{% else %}Tuteur IA{% endif %}</span>
+                    <div class="mt-2" dir="auto" style="white-space:pre-wrap;overflow-wrap:anywhere;">{{ m.content }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
         <form method="post" class="card card-body shadow-sm mb-3" id="aiForm">
             {% csrf_token %}
             {% if conversation %}<input type="hidden" name="conversation_id" value="{{ conversation.pk }}">{% endif %}
             <input type="hidden" name="style" id="styleField" value="standard">
-            <input type="hidden" name="previous_answer" id="prevField" value="">
             <div class="mb-3">
-                <label class="form-label fw-semibold">Leçon</label>
-                <select name="lesson_id" class="form-select" required>
+                <label for="lessonSelect" class="form-label fw-semibold">Leçon</label>
+                {% if conversation %}
+                <input type="hidden" name="lesson_id" value="{{ conversation.lesson_id|default:'' }}">
+                <p class="mb-0">{{ conversation.lesson.title|default:"Cette leçon n’est plus disponible. Commence une nouvelle conversation." }}</p>
+                {% else %}
+                <select id="lessonSelect" name="lesson_id" class="form-select" required>
                     <option value="">— Choisir —</option>
                     {% for course in courses %}
                     <optgroup label="{{ course.get_niveau_display }} — {{ course.name }}">
                         {% for lesson in course.get_lessons %}
-                        <option value="{{ lesson.pk }}" {% if conversation and conversation.lesson_id == lesson.pk %}selected{% endif %}>{{ lesson.title }}</option>
+                        <option value="{{ lesson.pk }}" {% if selected_lesson.pk == lesson.pk %}selected{% endif %}>{{ lesson.title }}</option>
                         {% endfor %}
                     </optgroup>
                     {% endfor %}
                 </select>
+                {% endif %}
             </div>
             <div class="mb-3">
                 <label class="form-label fw-semibold">Niveau d'explication</label>
@@ -39,8 +59,9 @@
                 </div>
             </div>
             <div class="mb-3">
-                <label class="form-label fw-semibold">Ta question</label>
-                <textarea name="question" id="questionField" class="form-control" rows="3" required placeholder="Ex. : Explique la dérivée d'une fonction…"></textarea>
+                <label for="questionField" class="form-label fw-semibold">Ta question ou ta tentative de solution</label>
+                <textarea name="question" id="questionField" class="form-control" rows="3" maxlength="4000" required placeholder="Explique ce qui te bloque ou envoie les étapes de ton calcul…">{{ question }}</textarea>
+                <div class="form-text">Le tuteur utilise la leçon et les derniers échanges. Vérifie les réponses importantes avec ton enseignant.</div>
             </div>
             <div class="d-flex flex-wrap gap-2 mb-2">
                 <button type="submit" class="btn btn-accent" onclick="document.getElementById('styleField').value='standard'">
@@ -55,38 +76,18 @@
                 <button type="submit" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('styleField').value='erreur'">
                     J'ai fait une erreur
                 </button>
+                <button type="submit" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('styleField').value='entrainement';if(!document.getElementById('questionField').value.trim())document.getElementById('questionField').value='Propose-moi un exercice adapté pour m’entraîner.'">
+                    M'entraîner
+                </button>
+                {% if conversation %}
+                <button type="submit" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('styleField').value='autrement';if(!document.getElementById('questionField').value.trim())document.getElementById('questionField').value='Explique autrement, plus simplement.'">
+                    Explique autrement
+                </button>
+                {% endif %}
             </div>
+            <p id="tutorStatus" class="small text-muted mb-0" role="status" hidden>Le tuteur prépare sa réponse…</p>
         </form>
 
-        {% if response %}
-        <div class="ai-response mb-3" id="lastResponse">{{ response }}</div>
-        <form method="post" class="mb-4">
-            {% csrf_token %}
-            {% if conversation %}<input type="hidden" name="conversation_id" value="{{ conversation.pk }}">{% endif %}
-            <input type="hidden" name="lesson_id" value="{{ conversation.lesson_id }}">
-            <input type="hidden" name="level" value="{{ level }}">
-            <input type="hidden" name="style" value="autrement">
-            <input type="hidden" name="previous_answer" value="{{ response }}">
-            <input type="hidden" name="question" value="Explique autrement de façon plus claire">
-            <button type="submit" class="btn btn-edubac btn-sm">
-                <i class="bi bi-arrow-repeat"></i> Explique autrement
-            </button>
-        </form>
-        {% endif %}
-
-        {% if conversation %}
-        <div class="card shadow-sm">
-            <div class="card-header bg-white fw-bold">Fil de conversation</div>
-            <ul class="list-group list-group-flush">
-                {% for m in conversation.messages.all %}
-                <li class="list-group-item">
-                    <span class="badge {% if m.role == 'user' %}bg-primary{% else %}bg-success{% endif %}">{{ m.get_role_display }}</span>
-                    <div class="mt-1" style="white-space:pre-wrap;">{{ m.content }}</div>
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
     </div>
     <div class="col-lg-4">
         <div class="card shadow-sm mb-3">
@@ -98,6 +99,8 @@
                     <li><strong>Approfondi</strong> : plus de détails</li>
                     <li><strong>Par étapes</strong> : 1, 2, 3…</li>
                     <li><strong>Exemple</strong> : corrigé puis exercice</li>
+                    <li><strong>M'entraîner</strong> : exercice sans solution, puis correction de ta tentative</li>
+                    <li><strong>J'ai fait une erreur</strong> : joins ton raisonnement pour obtenir une aide ciblée</li>
                 </ul>
             </div>
         </div>
@@ -106,7 +109,7 @@
             <ul class="list-group list-group-flush">
                 {% for h in history %}
                 <li class="list-group-item">
-                    <a href="?c={{ h.pk }}">{{ h.title|default:h.created_at|date:"d/m H:i" }}</a>
+                    <a href="{% url 'ai:assistant' %}?c={{ h.pk }}">{{ h.title|default:"Conversation" }}</a>
                     <div class="small text-muted">{{ h.updated_at|date:"d/m/Y H:i" }}</div>
                 </li>
                 {% empty %}
@@ -116,4 +119,19 @@
         </div>
     </div>
 </div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.getElementById('aiForm').addEventListener('submit', function () {
+    document.getElementById('tutorStatus').hidden = false;
+    this.setAttribute('aria-busy', 'true');
+    this.querySelectorAll('button[type="submit"]').forEach(function (button) { button.disabled = true; });
+});
+window.addEventListener('pageshow', function () {
+    var form = document.getElementById('aiForm');
+    form.removeAttribute('aria-busy');
+    document.getElementById('tutorStatus').hidden = true;
+    form.querySelectorAll('button[type="submit"]').forEach(function (button) { button.disabled = false; });
+});
+</script>
 {% endblock %}

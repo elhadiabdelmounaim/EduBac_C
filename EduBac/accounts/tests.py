@@ -66,3 +66,14 @@ class SearchAndExportSmokeTests(TestCase):
         r = self.client.get('/quizzes/export-resultats/')
         self.assertEqual(r.status_code, 200)
         self.assertIn('text/csv', r['Content-Type'])
+
+    def test_student_cannot_export_results(self):
+        student = User.objects.create_user(
+            username='export_student', email='export_student@example.test', role='student',
+        )
+        session = self.client.session
+        session['user_id'] = student.pk
+        session.save()
+        response = self.client.get('/quizzes/export-resultats/')
+        self.assertEqual(response.status_code, 302)
+        self.assertNotIn('Content-Disposition', response)
