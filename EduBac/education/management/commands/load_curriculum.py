@@ -22,6 +22,7 @@ class Command(BaseCommand):
     help = 'Ajoute au besoin le programme EduBac sans écraser les contenus existants.'
 
     def handle(self, *args, **options):
+        verbosity = options.get('verbosity', 1)
         media_root = Path(settings.MEDIA_ROOT)
         lessons_root = media_root / 'lessons'
 
@@ -97,16 +98,18 @@ class Command(BaseCommand):
 
                 total_lessons += 1
 
+            if verbosity >= 1:
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f"OK {niveau['label']} — {len(niveau['lessons'])} leçon(s)"
+                    )
+                )
+
+        if verbosity >= 1:
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"OK {niveau['label']} — {len(niveau['lessons'])} leçon(s)"
+                    f"\nCatalogue prêt : {len(CURRICULUM)} niveaux, {total_lessons} leçons "
+                    f"({new_courses} niveaux et {new_lessons} leçons ajoutés ; "
+                    f"{with_content} avec contenu Markdown)."
                 )
             )
-
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"\nCatalogue prêt : {len(CURRICULUM)} niveaux, {total_lessons} leçons "
-                f"({new_courses} niveaux et {new_lessons} leçons ajoutés ; "
-                f"{with_content} avec contenu Markdown)."
-            )
-        )
