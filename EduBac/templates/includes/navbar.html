@@ -43,10 +43,10 @@
         <div class="flex-grow-1"></div>
         {% endif %}
 
-        <div class="ms-auto d-flex align-items-center gap-2">
+        <div class="navbar-actions ms-auto d-flex align-items-center gap-2">
             {# Menu mobile : Accueil / Whiteboard / À propos #}
             <div class="dropdown d-lg-none">
-                <button class="btn btn-link text-white p-2 border-0" type="button" data-bs-toggle="dropdown" aria-label="Menu pages">
+                <button class="btn btn-link text-white p-2 border-0" type="button" data-bs-toggle="dropdown" aria-label="Menu pages" aria-expanded="false">
                     <i class="bi bi-three-dots-vertical fs-5"></i>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow border-0">
@@ -62,7 +62,7 @@
             {% if user.is_authenticated %}
             <div class="dropdown" id="notifDropdown">
                 <button class="btn btn-link text-white position-relative p-2 border-0" type="button"
-                        data-bs-toggle="dropdown" data-bs-auto-close="outside" id="notifBellBtn" title="Notifications">
+                        data-bs-toggle="dropdown" data-bs-auto-close="outside" id="notifBellBtn" title="Notifications" aria-label="Notifications" aria-expanded="false">
                     <i class="bi bi-bell fs-5"></i>
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill notif-badge d-none" id="notifBadge">0</span>
                 </button>
@@ -79,7 +79,7 @@
 
             <div class="dropdown">
                 <button class="btn btn-link text-white d-flex align-items-center gap-2 p-1 px-2 border-0 text-decoration-none"
-                        type="button" data-bs-toggle="dropdown">
+                        type="button" data-bs-toggle="dropdown" aria-label="Menu du compte" aria-expanded="false">
                     <span class="user-avatar">{{ user.get_full_name|default:user.username|slice:":1"|upper }}</span>
                     <span class="d-none d-md-flex flex-column text-start lh-sm">
                         <span class="small fw-semibold">{{ user.get_full_name|default:user.username }}</span>
