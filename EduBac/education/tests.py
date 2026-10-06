@@ -5,6 +5,7 @@ from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from accounts.models import StudentProfile, User
 from education.curriculum import CURRICULUM
 from education.models import Course, Lesson
 
@@ -85,3 +86,43 @@ class CurriculumAutoLoadViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context['lessons']), 15)
         self.assertEqual(Lesson.objects.count(), 79)
+
+    def test_logged_in_student_keeps_access_limited_to_their_level(self):
+        student = User(
+            username='curriculum_student',
+            email='curriculum-student@example.test',
+            role='student',
+        )
+        student.set_password('test-password')
+        student.save()
+        StudentProfile.objects.create(user=student, niveau='tronc_commun')
+
+        session = self.client.session
+        session['user_id'] = student.pk
+        session.save()
+
+        with tempfile.TemporaryDirectory() as media_root:
+            with override_settings(MEDIA_ROOT=media_root):
+                own_level = self.client.get(
+                    reverse(
+                        'education:niveau_detail',
+                        kwargs={'niveau': 'tronc_commun'},
+                    )
+                )
+                other_level = self.client.get(
+                    reverse(
+                        'education:niveau_detail',
+                        kwargs={'niveau': '2eme_bac_pc'},
+                    )
+                )
+
+        self.assertEqual(own_level.status_code, 200)
+        self.assertEqual(len(own_level.context['lessons']), 15)
+        self.assertEqual(other_level.status_code, 302)
+        self.assertEqual(
+            other_level['Location'],
+            reverse(
+                'education:niveau_detail',
+                kwargs={'niveau': 'tronc_commun'},
+            ),
+        )
