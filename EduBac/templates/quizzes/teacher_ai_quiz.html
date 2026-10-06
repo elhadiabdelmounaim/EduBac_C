@@ -73,7 +73,7 @@
                                     <select name="lesson" id="lessonSelect" class="form-select" required>
                                         <option value="">— Choisir —</option>
                                         {% for l in lessons %}
-                                        <option value="{{ l.pk }}">{{ l.order }}. {{ l.title }}</option>
+                                        <option value="{{ l.pk }}" {% if selected_lesson_id == l.pk|stringformat:"s" %}selected{% endif %}>{{ l.order }}. {{ l.title }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>

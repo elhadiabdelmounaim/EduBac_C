@@ -3,11 +3,37 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">Mes quiz</h1>
     <div class="d-flex gap-2">
-        <a href="{% url 'quizzes:teacher_ai' %}" class="btn btn-edubac btn-sm"><i class="bi bi-plus-circle"></i> Générer (IA)</a>
+        <a href="{% url 'quizzes:teacher_ai' %}{% if selected_lesson %}?lesson={{ selected_lesson.pk }}{% endif %}" class="btn btn-edubac btn-sm">
+            <i class="bi bi-plus-circle"></i>
+            {% if selected_lesson %}Générer pour cette leçon{% else %}Générer (IA){% endif %}
+        </a>
         <a href="{% url 'quizzes:assign' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-send"></i> Affecter</a>
         <a href="{% url 'quizzes:teacher_stats' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-graph-up"></i> Statistiques</a>
     </div>
 </div>
+<form method="get" class="card card-body mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-7">
+            <label for="lessonFilter" class="form-label mb-1">Choisir une leçon</label>
+            <select id="lessonFilter" name="lesson" class="form-select">
+                <option value="">Toutes les leçons</option>
+                {% for lesson in lessons %}
+                <option value="{{ lesson.pk }}" {% if selected_lesson.pk == lesson.pk %}selected{% endif %}>
+                    {{ lesson.course.get_niveau_display }} — {{ lesson.title }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-outline-primary">Afficher</button>
+        </div>
+        {% if selected_lesson %}
+        <div class="col-auto">
+            <a href="{% url 'quizzes:manage' %}" class="btn btn-link">Réinitialiser</a>
+        </div>
+        {% endif %}
+    </div>
+</form>
 <div class="table-responsive">
 <table class="table table-hover bg-white shadow-sm">
     <thead class="table-light">
@@ -43,7 +69,16 @@
             </td>
         </tr>
     {% empty %}
-        <tr><td colspan="6" class="text-muted">Aucun quiz. <a href="{% url 'quizzes:teacher_ai' %}">Générer avec l'IA</a></td></tr>
+        <tr>
+            <td colspan="6" class="text-muted">
+                {% if selected_lesson %}
+                    Aucun quiz pour « {{ selected_lesson.title }} ».
+                    <a href="{% url 'quizzes:teacher_ai' %}?lesson={{ selected_lesson.pk }}">Générer un quiz pour cette leçon</a>
+                {% else %}
+                    Aucun quiz. <a href="{% url 'quizzes:teacher_ai' %}">Générer avec l'IA</a>
+                {% endif %}
+            </td>
+        </tr>
     {% endfor %}
     </tbody>
 </table>

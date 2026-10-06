@@ -480,8 +480,25 @@ def manage_quizzes(request):
         .annotate(nb_questions=Count('questions'), nb_attempts=Count('attempts'))
         .order_by('-created_at')
     )
+    lessons = Lesson.objects.select_related('course').order_by(
+        'course__order', 'course__name', 'order', 'title'
+    )
+    selected_lesson_id = (request.GET.get('lesson') or '').strip()
+    selected_lesson = None
+    if selected_lesson_id.isdecimal():
+        selected_lesson = lessons.filter(pk=selected_lesson_id).first()
+        if selected_lesson:
+            quizzes = quizzes.filter(lesson=selected_lesson)
+        else:
+            selected_lesson_id = ''
+    else:
+        selected_lesson_id = ''
+
     return render(request, 'quizzes/manage.html', {
         'quizzes': quizzes,
+        'lessons': lessons,
+        'selected_lesson': selected_lesson,
+        'selected_lesson_id': selected_lesson_id,
         'page_title': 'Mes quiz',
     })
 
@@ -639,9 +656,27 @@ def teacher_ai_quiz(request):
 
     niveaux = CURRICULUM
     selected_niveau = request.GET.get('niveau') or request.POST.get('niveau') or ''
+    selected_lesson_id = (
+        request.POST.get('lesson', '')
+        if request.method == 'POST'
+        else request.GET.get('lesson', '')
+    )
+    selected_lesson_id = str(selected_lesson_id).strip()
+    selected_lesson = None
+    if selected_lesson_id.isdecimal():
+        selected_lesson = (
+            Lesson.objects.select_related('course')
+            .filter(pk=selected_lesson_id)
+            .first()
+        )
+        if selected_lesson and not selected_niveau:
+            selected_niveau = selected_lesson.course.niveau
+
     lessons = Lesson.objects.none()
     if selected_niveau:
         lessons = Lesson.objects.filter(course__niveau=selected_niveau).order_by('order')
+    if selected_lesson_id and not lessons.filter(pk=selected_lesson_id).exists():
+        selected_lesson_id = ''
 
     preview = None
     quiz_created = None
@@ -659,6 +694,8 @@ def teacher_ai_quiz(request):
 
         selected_niveau = niveau
         lessons = Lesson.objects.filter(course__niveau=niveau).order_by('order') if niveau else Lesson.objects.none()
+        if selected_lesson_id and not lessons.filter(pk=selected_lesson_id).exists():
+            selected_lesson_id = ''
 
         if not lesson_id:
             error = 'Veuillez choisir une leçon.'
@@ -773,6 +810,7 @@ def teacher_ai_quiz(request):
     return render(request, 'quizzes/teacher_ai_quiz.html', {
         'niveaux': niveaux,
         'selected_niveau': selected_niveau,
+        'selected_lesson_id': selected_lesson_id,
         'lessons': lessons,
         'preview': preview,
         'quiz_created': quiz_created,
