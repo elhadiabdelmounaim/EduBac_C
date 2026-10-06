@@ -4,29 +4,8 @@
 (function ($) {
   'use strict';
 
-  function initFadeUp() {
-    var $els = $('.fade-up');
-    if (!$els.length) return;
-    function reveal() {
-      var wh = $(window).height();
-      var st = $(window).scrollTop();
-      $els.each(function () {
-        var $el = $(this);
-        if ($el.hasClass('is-visible')) return;
-        if ($el.offset().top < st + wh - 40) {
-          $el.addClass('is-visible');
-        }
-      });
-    }
-    $els.each(function (i) {
-      var $el = $(this);
-      if ($el.offset().top < $(window).height()) {
-        setTimeout(function () { $el.addClass('is-visible'); }, i * 60);
-      }
-    });
-    $(window).on('scroll.edubac resize.edubac', reveal);
-    reveal();
-  }
+  // Entrances live in edubac-motion.js; no hidden-content fallback or
+  // CSS transform reveal competing with card hover transforms.
 
   function initRipple() {
     $(document).on('click', '.btn-edubac, .btn-accent', function (e) {
@@ -56,9 +35,11 @@
       if ($input.attr('type') === 'password') {
         $input.attr('type', 'text');
         $icon.removeClass('bi-eye').addClass('bi-eye-slash');
+        $(this).attr({ 'aria-label': 'Masquer le mot de passe', 'aria-pressed': 'true' });
       } else {
         $input.attr('type', 'password');
         $icon.removeClass('bi-eye-slash').addClass('bi-eye');
+        $(this).attr({ 'aria-label': 'Afficher le mot de passe', 'aria-pressed': 'false' });
       }
     });
   }
@@ -162,7 +143,6 @@
 
   $(function () {
     initSmoothCards();
-    initFadeUp();
     initRipple();
     initPasswordToggle();
     initActiveSidebar();

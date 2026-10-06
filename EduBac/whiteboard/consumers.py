@@ -38,7 +38,9 @@ class WhiteboardConsumer(AsyncWebsocketConsumer):
             return
         msg_type = data.get('type')
         if msg_type in ('stroke', 'object', 'clear', 'undo_remote', 'content_sync'):
-            if not self.can_edit and msg_type != 'content_sync':
+            # Recheck permissions: a teacher may revoke editing during a session.
+            self.can_edit = await self._can_edit(self.scope.get('user'), self.board_id)
+            if not self.can_edit:
                 return
             data['sender'] = self.channel_name
             await self.channel_layer.group_send(

@@ -36,6 +36,7 @@
   var mediaRecorder = null;
   var voiceChunks = [];
   var recording = false;
+  var requestingMicrophone = false;
   var notifPermissionAsked = false;
 
   var EMOJIS = [
@@ -145,6 +146,7 @@
 
     row.innerHTML = html;
     messagesEl.appendChild(row);
+    if (window.EduBacVoice) window.EduBacVoice.enhance(row);
 
     row.querySelector('.chat-act-reply').addEventListener('click', function () {
       setReply(m);
@@ -268,33 +270,64 @@
   }
 
   function toggleVoice() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
       alert('Enregistrement vocal non supporté par ce navigateur.');
       return;
     }
     if (recording && mediaRecorder) {
-      mediaRecorder.stop();
+      if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
       return;
     }
+    if (requestingMicrophone) return;
+    requestingMicrophone = true;
     navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
       voiceChunks = [];
-      mediaRecorder = new MediaRecorder(stream);
+      var preferred = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4'];
+      var mime = preferred.find(function (type) { return MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(type); });
+      function releaseMicrophone() {
+        stream.getTracks().forEach(function (t) { t.stop(); });
+        recording = false;
+        requestingMicrophone = false;
+        if (voiceBtn) {
+          voiceBtn.classList.remove('recording');
+          voiceBtn.setAttribute('aria-label', 'Enregistrer un message vocal');
+          voiceBtn.setAttribute('aria-pressed', 'false');
+        }
+      }
+      try {
+        mediaRecorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+      } catch (error) {
+        releaseMicrophone();
+        throw error;
+      }
       mediaRecorder.ondataavailable = function (e) {
         if (e.data.size > 0) voiceChunks.push(e.data);
       };
       mediaRecorder.onstop = function () {
-        stream.getTracks().forEach(function (t) { t.stop(); });
-        recording = false;
-        if (voiceBtn) voiceBtn.classList.remove('recording');
-        var blob = new Blob(voiceChunks, { type: 'audio/webm' });
+        releaseMicrophone();
+        var actualType = mediaRecorder.mimeType || (voiceChunks[0] && voiceChunks[0].type) || mime || 'audio/webm';
+        var blob = new Blob(voiceChunks, { type: actualType });
         if (blob.size < 100) return;
-        var file = new File([blob], 'voice_' + Date.now() + '.webm', { type: 'audio/webm' });
+        var extension = actualType.indexOf('mp4') !== -1 ? 'm4a' : (actualType.indexOf('ogg') !== -1 ? 'ogg' : 'webm');
+        var file = new File([blob], 'voice_' + Date.now() + '.' + extension, { type: actualType });
         sendMessage(file, true);
       };
-      mediaRecorder.start();
+      mediaRecorder.onerror = function () {
+        voiceChunks = [];
+        releaseMicrophone();
+        alert('Impossible d’enregistrer ce message vocal. Réessaie.');
+      };
+      try { mediaRecorder.start(); }
+      catch (error) { releaseMicrophone(); throw error; }
+      requestingMicrophone = false;
       recording = true;
-      if (voiceBtn) voiceBtn.classList.add('recording');
+      if (voiceBtn) {
+        voiceBtn.classList.add('recording');
+        voiceBtn.setAttribute('aria-label', 'Terminer et envoyer le message vocal');
+        voiceBtn.setAttribute('aria-pressed', 'true');
+      }
     }).catch(function () {
+      requestingMicrophone = false;
       alert('Autorisez le micro pour envoyer un message vocal.');
     });
   }

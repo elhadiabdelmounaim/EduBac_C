@@ -896,7 +896,8 @@ a:hover { color: var(--edubac-navy); }
     to { opacity: 1; transform: translateY(0); }
 }
 .fade-up {
-    animation: fadeUp 0.4s ease both;
+    /* Entrances are progressively enhanced by edubac-motion.js. */
+    animation: none;
 }
 .fade-up-delay-1 { animation-delay: 0.08s; }
 .fade-up-delay-2 { animation-delay: 0.16s; }
@@ -1112,18 +1113,13 @@ body {
 
 /* Apparition progressive */
 .fade-up {
-    opacity: 0;
-    transform: translateY(18px);
-    transition: opacity 0.5s ease, transform 0.5s ease;
+    opacity: 1;
 }
 .fade-up.is-visible {
     opacity: 1;
-    transform: translateY(0);
 }
-.fade-up-delay-1 { transition-delay: 0.08s; }
-.fade-up-delay-2 { transition-delay: 0.16s; }
-.fade-up-delay-3 { transition-delay: 0.24s; }
-.fade-up-delay-4 { transition-delay: 0.32s; }
+/* Legacy fade-up-delay classes are retained in templates; jQuery entrances
+   do not delay hover transitions. */
 
 /* Level cards */
 .level-card {
@@ -1609,6 +1605,21 @@ html[data-theme="dark"] .edubac-breadcrumb .current { color: #e6e9ef; }
 /* Mobile search hidden on desktop */
 .navbar-search-mobile { display: none; }
 
+@media (max-width: 575.98px) {
+    .edubac-navbar .navbar-search-mobile {
+        flex: 0 0 100%;
+        margin: 0;
+    }
+    .edubac-navbar .notif-dropdown {
+        min-width: min(340px, calc(100vw - 2rem)) !important;
+        max-width: calc(100vw - 2rem) !important;
+        right: 1rem;
+    }
+    .edubac-navbar #notifDropdown {
+        position: static;
+    }
+}
+
 /* ---- Bottom Navigation (mobile) ---- */
 .bottom-nav {
     display: none;
@@ -1662,6 +1673,19 @@ html[data-theme="dark"] .bottom-nav .bn-item.active {
 
 @media (max-width: 991.98px) {
     body.has-sidebar .bottom-nav { display: flex; }
+    /* Bootstrap wraps the controls: the header must contain every row. */
+    .edubac-navbar {
+        height: auto;
+        min-height: var(--navbar-height);
+    }
+    .edubac-navbar > .container-fluid {
+        row-gap: 0.5rem;
+    }
+    .edubac-navbar .navbar-actions {
+        flex-shrink: 0;
+        flex-wrap: wrap;
+        max-width: 100%;
+    }
     body.has-sidebar .edubac-main {
         padding-bottom: 72px;
     }
@@ -1670,6 +1694,7 @@ html[data-theme="dark"] .bottom-nav .bn-item.active {
     .navbar-search-mobile {
         display: flex !important;
         flex: 1;
+        min-width: 0;
         max-width: none;
         margin: 0 0.5rem;
     }

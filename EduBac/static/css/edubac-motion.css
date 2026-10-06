@@ -1,0 +1,78 @@
+/* Motion is progressive enhancement: learning content stays visible without JS. */
+.fade-up,
+.fade-up.is-visible {
+    animation: none;
+    opacity: 1;
+}
+
+.edubac-main {
+    position: relative;
+}
+.edubac-motion-background {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+}
+.edubac-main > main,
+.edubac-main > footer,
+.edubac-main > .container-fluid {
+    position: relative;
+}
+.edubac-motion-symbol {
+    position: absolute;
+    color: var(--edubac-teal);
+    opacity: 0.075;
+    font-family: Georgia, serif;
+    font-size: clamp(1.6rem, 3vw, 3rem);
+    line-height: 1;
+}
+.edubac-motion-symbol:nth-child(even) {
+    color: var(--edubac-purple);
+    opacity: 0.055;
+}
+html[data-theme="dark"] .edubac-motion-symbol {
+    color: #83c9c9;
+    opacity: 0.09;
+}
+.hero-symbols,
+.hero-symbols span,
+.illus-math {
+    pointer-events: none;
+    user-select: none;
+}
+.edubac-motion-control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    margin-top: 0.5rem;
+    padding: 0.3rem 0.8rem;
+    border: 1px solid rgba(243, 230, 167, 0.5);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--edubac-cream);
+    font: inherit;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+.edubac-motion-control:hover { background: rgba(243, 230, 167, 0.1); }
+.edubac-motion-control:focus-visible { outline: 2px solid var(--edubac-cream); outline-offset: 3px; }
+.edubac-motion-control:disabled { cursor: default; }
+.edubac-motion-control[hidden] { display: none; }
+
+/* Also pause the site's existing continuously floating decorations. */
+body[data-edubac-motion="paused"] .float-soft,
+body[data-edubac-motion="paused"] .float-soft-delay,
+body[data-edubac-motion="paused"] .auth-float,
+body[data-edubac-motion="paused"] .empty-icon,
+body[data-edubac-motion="paused"] .confetti-bit {
+    animation-play-state: paused !important;
+}
+@media (prefers-reduced-motion: reduce) {
+    .float-soft, .float-soft-delay, .auth-float, .empty-icon, .confetti-bit {
+        animation: none !important;
+    }
+}

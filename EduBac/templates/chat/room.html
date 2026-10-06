@@ -2,6 +2,7 @@
 {% block title %}Prof-Étudiant Chat{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="/static/css/chat.css">
+<link rel="stylesheet" href="/static/css/chat-voice.css">
 {% endblock %}
 {% block content %}
 <div class="chat-app {% if active_classroom %}chat-room-open{% endif %}"
@@ -122,5 +123,6 @@
 </div>
 {% endblock %}
 {% block extra_js %}
+<script src="/static/js/chat-voice.js"></script>
 <script src="/static/js/chat.js"></script>
 {% endblock %}

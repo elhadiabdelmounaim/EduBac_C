@@ -1,0 +1,109 @@
+/* Inline voice controls: inherit EduBac's typography, not its composer styles. */
+.chat-bubble:has(.chat-voice) {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.chat-voice {
+  --voice-accent: #1a6b6b;
+  --voice-ink: #352347;
+  --voice-muted: #64576f;
+  --voice-surface: #e8f4f1;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 36px;
+  align-items: center;
+  gap: 2px 8px;
+  width: 240px;
+  max-width: 100%;
+  min-width: 0;
+  color: var(--voice-ink);
+  white-space: normal;
+  box-sizing: border-box;
+}
+.chat-voice audio.chat-voice-player[hidden] { display: none !important; }
+.chat-voice .chat-voice-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--voice-accent);
+  color: #f4faf8;
+  cursor: pointer;
+  box-shadow: none;
+}
+.chat-voice .chat-voice-stop {
+  width: 36px;
+  height: 36px;
+  background: var(--voice-surface);
+  color: var(--voice-accent);
+}
+.chat-voice .chat-voice-button:hover { opacity: .85; }
+.chat-voice .chat-voice-button:active { transform: scale(.96); }
+.chat-voice .chat-voice-button svg { width: 18px; height: 18px; fill: currentColor; }
+.chat-voice .chat-voice-timeline { min-width: 0; }
+.chat-voice input.chat-voice-seek {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 26px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  accent-color: var(--voice-accent);
+  cursor: pointer;
+}
+.chat-voice input.chat-voice-seek:disabled { opacity: .45; cursor: default; }
+.chat-voice .chat-voice-times {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--voice-muted);
+  font-size: .7rem;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+.chat-voice .chat-voice-status {
+  grid-column: 1 / -1;
+  color: var(--voice-muted);
+  font-size: .7rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.chat-voice .chat-voice-status:empty { display: none; }
+.chat-voice .chat-voice-button:focus-visible,
+.chat-voice input.chat-voice-seek:focus-visible {
+  outline: 2px solid var(--voice-accent);
+  outline-offset: 3px;
+}
+.chat-bubble-row.mine .chat-voice {
+  --voice-accent: #352347;
+  --voice-ink: #352347;
+  --voice-muted: #352347;
+  --voice-surface: #f6e9d6;
+}
+html[data-theme="dark"] .chat-voice {
+  --voice-accent: #8ad4c7;
+  --voice-ink: #f0ecf5;
+  --voice-muted: #c8bdd4;
+  --voice-surface: #334145;
+}
+html[data-theme="dark"] .chat-voice .chat-voice-button:not(.chat-voice-stop) { color: #203335; }
+html[data-theme="dark"] .chat-bubble-row.mine .chat-voice {
+  --voice-accent: #352347;
+  --voice-ink: #352347;
+  --voice-muted: #352347;
+  --voice-surface: #f6e9d6;
+}
+html[data-theme="dark"] .chat-bubble-row.mine .chat-voice .chat-voice-button:not(.chat-voice-stop) { color: #f4faf8; }
+@media (max-width: 380px) {
+  .chat-voice { width: 190px; gap: 2px 5px; }
+}
+@media (forced-colors: active) {
+  .chat-voice .chat-voice-button { border: 1px solid ButtonText; }
+}

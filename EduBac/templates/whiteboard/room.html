@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block extra_css %}
 <link rel="stylesheet" href="/static/css/whiteboard.css">
+<link rel="stylesheet" href="/static/css/whiteboard-tutor.css">
 {% include "includes/katex.html" %}
 {% endblock %}
 {% block content %}
@@ -8,6 +9,7 @@
      data-board-id="{{ board.pk }}"
      data-can-edit="{{ can_edit|yesno:'1,0' }}"
      data-api-url="{% url 'whiteboard:api_content' board.pk %}"
+     data-tutor-url="{% url 'whiteboard:tutor' board.pk %}"
      data-ws-path="{{ ws_path }}"
      data-csrf="{{ csrf_token }}">
 
@@ -28,53 +30,102 @@
             <form method="post" action="{% url 'whiteboard:rename' board.pk %}" class="d-flex gap-1">
                 {% csrf_token %}
                 <input type="text" name="title" class="form-control form-control-sm" style="width:140px" value="{{ board.title }}">
-                <button class="btn btn-sm btn-outline-primary" title="Renommer">💾</button>
+                <button class="btn btn-sm btn-outline-primary" title="Renommer"><i class="bi bi-check-lg" aria-hidden="true"></i><span class="visually-hidden">Renommer</span></button>
             </form>
             {% endif %}
             <button type="button" class="btn btn-sm btn-edubac" id="wbSaveBtn" {% if not can_edit %}disabled{% endif %}>
                 <i class="bi bi-cloud-upload"></i> Sauver
             </button>
             <button type="button" class="btn btn-sm btn-outline-success" id="wbExportPng">PNG</button>
+            <button type="button" class="btn btn-sm btn-edubac" id="wbTutorToggle" aria-expanded="false" aria-controls="wbTutor"><i class="bi bi-chat-square-text" aria-hidden="true"></i> Assistant IA</button>
         </div>
     </div>
 
     <div class="wb-workspace">
         <aside class="wb-toolbar" id="wbToolbar">
-            <button type="button" class="wb-tool active" data-tool="pencil" title="Crayon">✏️</button>
-            <button type="button" class="wb-tool" data-tool="pen" title="Stylo">🖊️</button>
-            <button type="button" class="wb-tool" data-tool="highlighter" title="Surligneur">🖍️</button>
-            <button type="button" class="wb-tool" data-tool="eraser" title="Gomme">🧹</button>
+            <button type="button" class="wb-tool" data-tool="select" title="Sélectionner" aria-label="Sélectionner"><i class="bi bi-cursor"></i></button>
+            <button type="button" class="wb-tool active" data-tool="pencil" title="Crayon" aria-label="Crayon"><i class="bi bi-pencil"></i></button>
+            <button type="button" class="wb-tool" data-tool="pen" title="Stylo" aria-label="Stylo"><i class="bi bi-pen"></i></button>
+            <button type="button" class="wb-tool" data-tool="highlighter" title="Surligneur" aria-label="Surligneur"><i class="bi bi-highlighter"></i></button>
+            <button type="button" class="wb-tool" data-tool="eraser" title="Gomme" aria-label="Gomme"><i class="bi bi-eraser"></i></button>
             <button type="button" class="wb-tool" data-tool="text" title="Texte">T</button>
             <button type="button" class="wb-tool" data-tool="line" title="Ligne">／</button>
             <button type="button" class="wb-tool" data-tool="arrow" title="Flèche">→</button>
             <button type="button" class="wb-tool" data-tool="rect" title="Rectangle">▭</button>
             <button type="button" class="wb-tool" data-tool="circle" title="Cercle">○</button>
             <button type="button" class="wb-tool" data-tool="triangle" title="Triangle">△</button>
+            <button type="button" class="wb-tool" data-tool="ruler" title="Règle graduée (unités du tableau)" aria-label="Règle graduée"><i class="bi bi-rulers"></i></button>
+            <button type="button" class="wb-tool" data-tool="protractor" title="Rapporteur (angle modifiable)" aria-label="Rapporteur">180°</button>
             <hr class="wb-hr">
             <button type="button" class="wb-tool" id="wbMathBtn" title="Équation">∑</button>
-            <button type="button" class="wb-tool" id="wbGraphBtn" title="Graphique">📊</button>
-            <button type="button" class="wb-tool" id="wbImageBtn" title="Image">🖼️</button>
+            <button type="button" class="wb-tool" id="wbGraphBtn" title="Graphique" aria-label="Graphique"><i class="bi bi-graph-up"></i></button>
+            <button type="button" class="wb-tool" id="wbImageBtn" title="Image" aria-label="Image"><i class="bi bi-image"></i></button>
             <input type="file" id="wbImageInput" accept="image/*" class="d-none">
             <hr class="wb-hr">
-            <button type="button" class="wb-tool" id="wbUndo" title="Annuler">↩️</button>
-            <button type="button" class="wb-tool" id="wbRedo" title="Rétablir">↪️</button>
-            <button type="button" class="wb-tool" id="wbClear" title="Tout effacer">🗑️</button>
+            <button type="button" class="wb-tool" id="wbUndo" title="Annuler" aria-label="Annuler"><i class="bi bi-arrow-counterclockwise"></i></button>
+            <button type="button" class="wb-tool" id="wbRedo" title="Rétablir" aria-label="Rétablir"><i class="bi bi-arrow-clockwise"></i></button>
+            <button type="button" class="wb-tool" id="wbClear" title="Tout effacer" aria-label="Tout effacer"><i class="bi bi-trash3"></i></button>
         </aside>
 
-        <div class="wb-canvas-wrap" id="wbCanvasWrap">
+        <div class="wb-board-column">
+          <div id="wbLoadError" class="alert alert-warning small" role="alert" hidden>Le tableau n’a pas pu être chargé. <button type="button" class="btn btn-sm btn-outline-secondary" id="wbLoadRetry">Réessayer</button></div>
+          <div class="wb-selection-bar" id="wbSelectionBar" aria-label="Actions sur la sélection" hidden>
+            <span class="wb-selection-label" id="wbSelectionLabel"></span>
+            <button type="button" data-tutor-intent="explain">Expliquer</button>
+            <button type="button" data-tutor-intent="hint">Indice</button>
+            <button type="button" data-tutor-intent="verify">Vérifier</button>
+            <button type="button" data-tutor-intent="solve">Résoudre</button>
+            <button type="button" data-tutor-intent="rule">Règle</button>
+            <button type="button" id="wbEditSelected" {% if not can_edit %}disabled{% endif %}>Modifier</button>
+            <button type="button" id="wbDeleteSelected" {% if not can_edit %}disabled{% endif %}>Supprimer</button>
+          </div>
+          <div class="wb-board-viewport">
+           <div class="wb-canvas-wrap" id="wbCanvasWrap">
             <canvas id="wbCanvas" width="1600" height="1000"></canvas>
             <div id="wbMathLayer" class="wb-math-layer"></div>
+           </div>
+          </div>
         </div>
+        <aside class="wb-tutor" id="wbTutor" aria-label="Assistant de mathématiques" hidden>
+          <header class="wb-tutor-head"><div><small>Apprendre, étape par étape</small><strong>Assistant EduBac</strong></div><button type="button" id="wbTutorClose" aria-label="Fermer l’assistant"><i class="bi bi-x-lg"></i></button></header>
+          <div class="wb-tutor-context">
+            <p id="wbTutorLesson">Niveau et leçon : fournis par EduBac.</p>
+            <p id="wbTutorSelection">Contexte : tout le tableau, sans image.</p>
+            <details><summary>Préciser l’exercice</summary><label for="wbTutorExercise" class="visually-hidden">Énoncé de l’exercice</label><textarea id="wbTutorExercise" rows="2" maxlength="4000" placeholder="Énoncé ou consigne (facultatif)"></textarea></details>
+          </div>
+          <div class="wb-tutor-modes" aria-label="Niveau d’aide">
+            <button type="button" data-mode="hint" aria-pressed="true">1 · Indice</button>
+            <button type="button" data-mode="explanation" aria-pressed="false">2 · Explication</button>
+            <button type="button" data-mode="solution" aria-pressed="false">3 · Solution</button>
+          </div>
+          <div class="wb-tutor-log" id="wbTutorLog" role="log" aria-live="polite" aria-relevant="additions">
+            <div class="wb-tutor-welcome" id="wbTutorWelcome"><strong>À toi de chercher. À nous d’aider.</strong>Sélectionne une étape sur le tableau, ou pose ta question. Commence par un indice pour avancer sans dévoiler la solution.</div>
+          </div>
+          <form class="wb-tutor-form" id="wbTutorForm">
+            <div class="wb-tutor-attachment" id="wbTutorAttachment" hidden><img id="wbTutorThumbnail" alt="Image jointe"><span id="wbTutorImageLabel">Image jointe</span><button type="button" id="wbTutorRemoveImage" aria-label="Retirer l’image">×</button></div>
+            <label for="wbTutorQuestion" class="visually-hidden">Ta question</label>
+            <textarea id="wbTutorQuestion" maxlength="4000" rows="3" placeholder="Quelle étape veux-tu comprendre ?"></textarea>
+            <div class="wb-tutor-actions">
+              <button type="button" id="wbTutorAttach" title="Joindre une image">Image</button>
+              <button type="button" id="wbTutorSnapshot" title="Joindre une capture du tableau après confirmation">Capture</button>
+              <button type="submit" id="wbTutorSend" class="wb-send">Demander</button>
+            </div>
+            <input type="file" id="wbTutorFile" accept="image/png,image/jpeg,image/webp" hidden>
+            <div id="wbTutorLoading" class="wb-tutor-loading" role="status" hidden><small>Je regarde ton raisonnement…</small><span></span><span></span></div>
+            <div class="wb-tutor-notice" id="wbTutorError" role="alert" hidden><span id="wbTutorErrorText"></span> <button type="button" id="wbTutorRetry">Réessayer</button></div>
+            <p class="small text-muted mt-2 mb-0" style="font-size:.65rem">L’IA peut se tromper. Vérifie les étapes. Les images jointes sont envoyées à l’assistant.</p>
+          </form>
+        </aside>
     </div>
 
     <div class="wb-bottombar">
         <label class="small mb-0">Couleur <input type="color" id="wbColor" value="#1e2a4a"></label>
         <label class="small mb-0">Taille <input type="range" id="wbSize" min="1" max="40" value="4"></label>
-        <button type="button" class="btn btn-sm btn-outline-secondary" id="wbGridToggle">Grid</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="wbGridToggle">Quadrillage</button>
         <button type="button" class="btn btn-sm btn-outline-secondary" id="wbZoomOut">−</button>
         <span class="small" id="wbZoomLabel">100%</span>
         <button type="button" class="btn btn-sm btn-outline-secondary" id="wbZoomIn">+</button>
-        <button type="button" class="btn btn-sm btn-outline-secondary" id="wbZoomReset">Reset</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="wbZoomReset">Réinitialiser</button>
         {% if is_teacher_owner %}
         <label class="small mb-0 form-check form-check-inline ms-2">
             <input type="checkbox" class="form-check-input" id="wbStudentsEdit" {% if board.students_can_edit %}checked{% endif %}>
@@ -83,6 +134,15 @@
         {% endif %}
     </div>
 </div>
+<dialog id="wbObjectEditor" class="wb-editor">
+  <form id="wbEditorForm">
+    <h5>Modifier l’élément</h5>
+    <p class="small text-muted">Ajuste son contenu, sa position ou ses dimensions.</p>
+    <div id="wbEditorFields" class="wb-editor-fields"></div>
+    <p id="wbEditorError" class="small text-danger" role="alert"></p>
+    <div class="wb-editor-actions"><button type="button" id="wbEditorCancel" class="btn btn-outline-secondary">Annuler</button><button type="submit" class="btn btn-edubac">Appliquer</button></div>
+  </form>
+</dialog>
 
 {# Modal Math #}
 <div class="modal fade" id="wbMathModal" tabindex="-1">
@@ -140,5 +200,7 @@
 </div>
 {% endblock %}
 {% block extra_js %}
+<script src="/static/js/whiteboard-objects.js"></script>
 <script src="/static/js/whiteboard.js"></script>
+<script src="/static/js/whiteboard-tutor.js"></script>
 {% endblock %}
