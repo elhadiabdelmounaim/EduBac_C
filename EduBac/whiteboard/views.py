@@ -6,6 +6,8 @@ from accounts.decorators import login_required_simple, teacher_required
 from classrooms.models import Classroom, ClassroomMember
 from .models import WhiteboardBoard
 from .permissions import user_can_access_board, user_can_edit_board
+from django.db.models import Q
+from education.models import Lesson
 
 
 def _user(request):
@@ -26,7 +28,7 @@ def board_list(request):
             'classroom_id', flat=True
         )
         boards = WhiteboardBoard.objects.filter(
-            classroom_id__in=class_ids, is_active=True
+            Q(classroom_id__in=class_ids) | Q(created_by=user), is_active=True
         ).select_related('classroom', 'lesson')
         classrooms = Classroom.objects.filter(id__in=class_ids)
     return render(request, 'whiteboard/list.html', {
@@ -34,10 +36,11 @@ def board_list(request):
         'classrooms': classrooms,
         'page_title': 'Whiteboard',
         'is_teacher': getattr(user, 'role', '') == 'teacher',
+        'lessons': Lesson.objects.select_related('course').order_by('course__order', 'order'),
     })
 
 
-@teacher_required
+@login_required_simple
 @require_POST
 def board_create(request):
     user = _user(request)
@@ -47,6 +50,8 @@ def board_create(request):
     classroom = None
     lesson = None
     if classroom_id:
+        if user.role != 'teacher':
+            return HttpResponseForbidden('Les élèves créent uniquement des tableaux personnels.')
         classroom = get_object_or_404(Classroom, pk=classroom_id, teacher=user)
     if lesson_id:
         from education.models import Lesson
@@ -124,7 +129,7 @@ def board_api_content(request, pk):
     return JsonResponse({'ok': True, 'updated_at': board.updated_at.isoformat()})
 
 
-@teacher_required
+@login_required_simple
 @require_POST
 def board_delete(request, pk):
     board = get_object_or_404(WhiteboardBoard, pk=pk, created_by=_user(request))
@@ -133,7 +138,7 @@ def board_delete(request, pk):
     return redirect('whiteboard:list')
 
 
-@teacher_required
+@login_required_simple
 @require_POST
 def board_duplicate(request, pk):
     board = get_object_or_404(WhiteboardBoard, pk=pk, created_by=_user(request))

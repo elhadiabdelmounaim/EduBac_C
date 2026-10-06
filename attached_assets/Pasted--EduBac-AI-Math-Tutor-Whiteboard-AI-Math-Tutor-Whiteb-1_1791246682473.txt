@@ -1,0 +1,477 @@
+# EduBac — AI Math Tutor داخل Whiteboard
+
+## الهدف
+
+أريد تطوير ميزة **AI Math Tutor** داخل الـWhiteboard في مشروع **EduBac**.
+
+الهدف هو أن يصبح الـWhiteboard مساحة تفاعلية يتعلم فيها التلميذ الرياضيات مع مساعد ذكاء اصطناعي، وليس مجرد Chatbot.
+
+يجب أن يستطيع الـAI فهم ما يوجد حالياً داخل الـWhiteboard، وفهم العنصر الذي حدده التلميذ، ثم تقديم المساعدة المناسبة وإظهار الشرح مباشرة داخل الـWhiteboard.
+
+---
+
+## 1. واجهة الـWhiteboard
+
+أنشئ Whiteboard حديثاً، احترافياً، Responsive ومناسباً للتلاميذ.
+
+يحتوي على:
+
+* ✏️ Pen
+* 🖊️ Text
+* ∑ Math Equation
+* 🔷 Shapes
+* 📐 Geometry tools
+* ↩️ Undo
+* ↪️ Redo
+* 🗑️ Delete
+* 🔍 Zoom
+* 🧹 Clear
+* 📷 Image
+* 🤖 AI Assistant
+
+كل عنصر يتم وضعه داخل الـWhiteboard يجب أن يكون **Object قابلاً للتحديد والتحريك والتعديل والحذف**.
+
+---
+
+## 2. AI Assistant
+
+أضف Assistant IA داخل الـWhiteboard.
+
+يكون هناك زر واضح:
+
+**🤖 Assistant IA**
+
+وعند فتحه يظهر Panel أو Chat صغير بجانب الـWhiteboard.
+
+يستطيع التلميذ كتابة أسئلة مثل:
+
+* "حل هذا التمرين"
+* "اشرح لي هذه الخطوة"
+* "لم أفهم"
+* "ما هي القاعدة المستعملة؟"
+* "أعطني تلميحاً"
+* "هل إجابتي صحيحة؟"
+
+---
+
+## 3. فهم محتوى الـWhiteboard
+
+هذه أهم ميزة.
+
+الـAI يجب ألا يتعامل مع السؤال كرسالة مستقلة فقط.
+
+عند إرسال سؤال، يجب أن يحصل على:
+
+* مستوى التلميذ
+* الدرس الحالي
+* محتوى الـWhiteboard
+* العناصر الموجودة في الـWhiteboard
+* العنصر المحدد Selected Object إن وجد
+* السؤال الذي كتبه التلميذ
+* المحاولات السابقة إن وجدت
+
+مثال:
+
+```json
+{
+  "niveau": "1ère Bac Sciences",
+  "lesson": "Équations",
+  "selected_object": "2x + 5 = 13",
+  "whiteboard_content": [
+    "2x + 5 = 13",
+    "2x = 8"
+  ],
+  "student_question": "Je ne comprends pas cette étape"
+}
+```
+
+ثم يرسل هذا السياق إلى AI Provider.
+
+---
+
+# 4. نظام المساعدة التربوي
+
+لا تعطِ التلميذ الحل مباشرة دائماً.
+
+أنشئ 3 مستويات للمساعدة:
+
+### 🟢 Niveau 1 — Indice
+
+يعطي تلميحاً فقط.
+
+مثال:
+
+> 💡 Indice : Que peux-tu faire pour supprimer +5 du membre gauche ?
+
+### 🟡 Niveau 2 — Explication
+
+اشرح الخطوة الحالية بالتفصيل دون القفز مباشرة إلى النهاية.
+
+### 🔴 Niveau 3 — Solution détaillée
+
+أعط الحل الكامل خطوة بخطوة مع تفسير كل خطوة.
+
+يستطيع التلميذ اختيار مستوى المساعدة.
+
+---
+
+# 5. إظهار إجابة AI داخل الـWhiteboard
+
+لا تجعل الإجابة تظهر فقط في Chat.
+
+إذا كان ذلك مناسباً، يجب أن يستطيع الـAI إضافة عناصر جديدة إلى الـWhiteboard.
+
+مثلاً إذا كان السؤال:
+
+```text
+2x + 5 = 13
+```
+
+يمكن أن يضيف:
+
+```text
+Étape 1
+2x + 5 = 13
+
+On soustrait 5 des deux côtés :
+
+2x = 8
+
+Étape 2
+On divise par 2 :
+
+x = 4
+```
+
+ثم يضيف Box:
+
+```text
+📌 Règle utilisée
+
+Si a = b, alors a - c = b - c.
+```
+
+يجب أن تكون هذه العناصر قابلة للتحريك والتعديل والحذف مثل بقية عناصر الـWhiteboard.
+
+---
+
+# 6. Selected Object
+
+عندما يحدد التلميذ عنصراً داخل الـWhiteboard، يظهر Toolbar صغير:
+
+* 🤖 Expliquer
+* 💡 Donner un indice
+* ✅ Vérifier
+* 🧠 Résoudre
+* 📚 Rappeler la règle
+* 🗑️ Supprimer
+
+مثلاً:
+
+التلميذ يحدد:
+
+```text
+f(x) = x² + 3x
+```
+
+ثم يضغط:
+
+**📚 Rappeler la règle**
+
+فيقوم الـAI بإظهار قاعدة الاشتقاق المناسبة.
+
+---
+
+# 7. Vérification de réponse
+
+يجب أن يستطيع التلميذ كتابة محاولته داخل الـWhiteboard ثم الضغط:
+
+**✅ Vérifier ma réponse**
+
+الـAI لا يقول فقط:
+
+> Correct / Incorrect
+
+بل يحدد:
+
+* هل النتيجة صحيحة؟
+* أين يوجد الخطأ؟
+* لماذا هو خطأ؟
+* ما الخطوة التي يجب مراجعتها؟
+* ما القاعدة المناسبة؟
+
+مثال:
+
+> ❌ Il y a une erreur à l'étape 2.
+>
+> Tu as changé le signe de \(+3\) sans changer celui de l'autre membre.
+>
+> 💡 Rappelle-toi : lorsque tu soustrais 3 des deux côtés...
+
+---
+
+# 8. Mathematical reasoning
+
+يجب أن يكون AI Tutor موجهاً للرياضيات.
+
+عند حل المسائل:
+
+* لا يخترع قواعد رياضية.
+* يتحقق من العمليات الحسابية.
+* يشرح الرموز الرياضية بوضوح.
+* يستخدم LaTeX للمعادلات.
+* يحافظ على مستوى التلميذ.
+* لا يعطي خطوات غير مبررة.
+* إذا كانت المسألة غير واضحة، يطلب توضيحاً.
+* إذا كانت هناك عدة طرق للحل، يمكنه عرض الطريقة الأبسط أولاً.
+
+---
+
+# 9. Context of EduBac
+
+يجب أن يعرف AI أن EduBac منصة تعليمية للرياضيات.
+
+لا ينبغي أن يعطي معلومات عشوائية خارج مستوى التلميذ.
+
+استعمل:
+
+```text
+Student Level
+Current Lesson
+Current Exercise
+Whiteboard State
+Selected Object
+Student Question
+Previous Attempts
+```
+
+لتكوين Prompt ديناميكي للـAI.
+
+---
+
+# 10. Chat داخل Whiteboard
+
+اجعل الـChat بسيطاً وغير مزعج.
+
+مثلاً:
+
+```text
+┌──────────────────────────────┐
+│ 🤖 EduBac AI Tutor           │
+├──────────────────────────────┤
+│                              │
+│ AI: Que veux-tu comprendre ? │
+│                              │
+│ Student: Je ne comprends     │
+│ pas cette étape.             │
+│                              │
+├──────────────────────────────┤
+│ Écris ta question...    ➤    │
+└──────────────────────────────┘
+```
+
+يمكن للتلميذ أيضاً إرسال:
+
+* نص
+* صورة
+* محتوى محدد من الـWhiteboard
+
+---
+
+# 11. AI → Whiteboard Actions
+
+صمم النظام بحيث يستطيع الـAI إرجاع نوعين من النتائج:
+
+### A. Text Response
+
+شرح يظهر في Chat.
+
+### B. Whiteboard Actions
+
+تعليمات يمكن للواجهة تنفيذها.
+
+مثلاً:
+
+```json
+{
+  "type": "whiteboard_action",
+  "actions": [
+    {
+      "action": "add_text",
+      "content": "2x = 8"
+    },
+    {
+      "action": "add_equation",
+      "content": "x = 4"
+    },
+    {
+      "action": "add_note",
+      "content": "On divise les deux membres par 2."
+    }
+  ]
+}
+```
+
+**مهم:** لا تسمح للـAI بتنفيذ JavaScript عشوائي أو كود مباشر داخل المتصفح.
+
+الـAI يجب أن يعيد فقط Actions منظمة ومسموحاً بها، والـfrontend هو الذي ينفذها.
+
+---
+
+# 12. Architecture
+
+حافظ على Architecture نظيفة.
+
+```text
+Frontend
+│
+├── Whiteboard
+├── Whiteboard Objects
+├── AI Chat
+├── Selected Object
+└── Math Input
+        │
+        ▼
+Django Backend
+│
+├── Whiteboard API
+├── AI Tutor API
+├── Student Context
+├── Lesson Context
+└── AI Provider Service
+        │
+        ▼
+AI Model
+```
+
+اجعل AI Provider قابلاً للتغيير.
+
+لا تربط النظام بنموذج واحد فقط.
+
+يجب أن يكون من الممكن لاحقاً دعم:
+
+* Groq
+* OpenAI
+* Gemini
+* Anthropic
+* نماذج أخرى
+
+باستخدام abstraction/service layer.
+
+---
+
+# 13. Security
+
+لا تضع API Keys في Frontend.
+
+جميع مفاتيح AI يجب أن تبقى في:
+
+```text
+.env
+```
+
+ويتم الاتصال بالـAI من خلال Django Backend.
+
+تحقق من:
+
+* Authentication
+* Authorization
+* Rate limiting
+* Input validation
+* AI response validation
+* Allowed Whiteboard actions
+
+---
+
+# 14. UX
+
+التصميم يجب أن يكون:
+
+* Modern
+* Clean
+* Professional
+* Responsive
+* Educational
+* Easy for students
+* Rounded corners
+* Smooth animations
+* Clear buttons
+* بدون ازدحام بصري
+
+لا تجعل الـAI يغطي مساحة كبيرة من الـWhiteboard.
+
+يجب أن يبقى الـWhiteboard هو العنصر الرئيسي.
+
+---
+
+# 15. مهم جداً قبل البرمجة
+
+قبل تعديل المشروع:
+
+1. افحص بنية مشروع Django الحالية.
+2. افهم التطبيقات الموجودة.
+3. افهم نظام Authentication الحالي.
+4. افهم الـWhiteboard الموجود إن كان موجوداً.
+5. لا تحذف أي Feature موجودة.
+6. لا تغير أسماء الملفات والمجلدات الموجودة بدون ضرورة.
+7. أعد استخدام المكونات الموجودة.
+8. لا تنشئ نظاماً موازياً إذا كان هناك نظام موجود يمكن تطويره.
+9. حافظ على توافق الميزة الجديدة مع Student Dashboard وTeacher Dashboard.
+
+---
+
+# 16. المطلوب منك
+
+قم بتنفيذ هذه الميزة داخل المشروع الحالي وليس كمشروع منفصل.
+
+ابدأ أولاً بتحليل المشروع، ثم حدد الملفات التي تحتاج إلى تعديل أو إنشاء.
+
+بعد ذلك نفذ:
+
+1. Whiteboard Object System
+2. Object Selection
+3. AI Assistant UI
+4. Django AI API
+5. AI Provider abstraction
+6. Context Builder
+7. AI response validation
+8. Whiteboard Actions
+9. Hint / Explanation / Full Solution modes
+10. Answer verification
+11. Math rendering باستخدام LaTeX
+12. Error handling
+13. Loading states
+14. Responsive design
+
+وفي النهاية اختبر السيناريو التالي بالكامل:
+
+```text
+Student opens Whiteboard
+        ↓
+Writes: 2x + 5 = 13
+        ↓
+Selects the equation
+        ↓
+Clicks 🤖 Assistant
+        ↓
+Chooses 💡 Indice
+        ↓
+AI gives a hint
+        ↓
+Student writes an attempt
+        ↓
+Clicks ✅ Vérifier
+        ↓
+AI detects the mistake
+        ↓
+AI explains the mistake
+        ↓
+Student asks for Solution détaillée
+        ↓
+AI generates the solution
+        ↓
+AI adds the mathematical explanation
+to the Whiteboard
+```
+
+**لا تكتفِ بإنشاء واجهة شكلية. أريد ميزة حقيقية متصلة بالـDjango backend والـAI provider، مع الحفاظ على البنية الحالية لمشروع EduBac.**

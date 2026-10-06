@@ -1,0 +1,65 @@
+/* Cahier d'étude — warm paper, aubergine ink, restrained amber. */
+.wb-app { --wb-paper:#fcfaf5; --wb-ink:#352443; --wb-line:#e5ddd2; --wb-soft:#f3ece2; --wb-accent:#a45e17; min-height:calc(100dvh - 140px); color:var(--wb-ink); }
+.wb-topbar,.wb-bottombar,.wb-toolbar { background:var(--wb-paper); box-shadow:none; border:1px solid var(--wb-line); }
+.wb-topbar { padding:12px 16px; }
+.wb-tool.active { background:var(--wb-ink); color:#fcfaf5; }
+.wb-tool:hover { background:var(--wb-soft); color:var(--wb-ink); }
+.wb-tool { transition:transform .15s; }
+.wb-tool[data-tool="protractor"] { font-size:.78rem; font-weight:600; }
+.wb-tool:active { transform:scale(.94); }
+.wb-tool:focus-visible,.wb-app button:focus-visible { outline:2px solid var(--wb-accent); outline-offset:3px; }
+.wb-board-column { flex:1; min-width:0; display:flex; flex-direction:column; gap:8px; }
+.wb-board-viewport { flex:1; overflow:auto; min-height:460px; border:1px solid var(--wb-line); border-radius:14px; background:#eae3d8; }
+.wb-canvas-wrap { min-width:700px; width:100%; height:auto; aspect-ratio:8/5; box-shadow:none; border-radius:0; flex:none; }
+#wbCanvas { height:100%; background:var(--wb-paper); }
+.wb-math-item { pointer-events:none; box-shadow:none; background:transparent; padding:0; }
+.wb-selection-bar { display:flex; align-items:center; flex-wrap:wrap; gap:5px; padding:8px 10px; border:1px solid var(--wb-line); border-radius:12px; background:var(--wb-paper); font-size:.8rem; }
+.wb-selection-bar[hidden],.wb-tutor[hidden] { display:none; }
+.wb-selection-label { max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:auto; }
+.wb-selection-bar button,.wb-tutor button { border:1px solid var(--wb-line); border-radius:8px; background:var(--wb-paper); color:var(--wb-ink); padding:6px 9px; font:inherit; }
+.wb-tutor { width:310px; flex:0 0 310px; display:flex; flex-direction:column; border:1px solid var(--wb-line); border-radius:14px; background:var(--wb-paper); max-height:740px; overflow:hidden; }
+.wb-tutor-head { display:flex; justify-content:space-between; align-items:center; padding:16px; border-bottom:1px solid var(--wb-line); }
+.wb-tutor-head small { display:block; color:var(--wb-accent); font-size:.65rem; letter-spacing:.1em; text-transform:uppercase; margin-bottom:4px; }
+.wb-tutor-context { padding:10px 14px; background:var(--wb-soft); font-size:.75rem; overflow-wrap:anywhere; }
+.wb-tutor-context p { margin:0 0 4px; }
+.wb-tutor-context details { margin-top:6px; }
+.wb-tutor-context textarea { width:100%; margin-top:6px; }
+.wb-tutor-modes { display:flex; gap:4px; padding:10px; }
+.wb-tutor-modes button { flex:1; font-size:.75rem; padding:7px 4px; }
+.wb-tutor-modes button[aria-pressed="true"] { background:var(--wb-ink); color:var(--wb-paper); border-color:var(--wb-ink); }
+.wb-tutor-log { flex:1; min-height:160px; overflow-y:auto; padding:0 14px 12px; font-size:.85rem; }
+.wb-tutor-welcome { padding:22px 4px; color:#756579; line-height:1.6; }
+.wb-tutor-welcome strong { display:block; color:var(--wb-ink); font-size:1rem; margin-bottom:8px; }
+.wb-chat-message { padding:12px 0; border-bottom:1px solid var(--wb-line); overflow-wrap:anywhere; animation:wb-arrive .2s ease-out; }
+.wb-chat-message .wb-message-body { white-space:pre-wrap; line-height:1.6; margin:7px 0; }
+.wb-chat-message.user { background:var(--wb-soft); padding:10px; border-radius:10px; margin:10px 0; border:none; }
+.wb-chat-message small { font-size:.65rem; letter-spacing:.08em; text-transform:uppercase; color:#7d6c80; }
+.wb-verification { border-left:3px solid var(--wb-accent); padding:8px; background:var(--wb-soft); margin:8px 0; }
+.wb-verification p { margin:4px 0; }
+.wb-tutor-form { padding:12px; border-top:1px solid var(--wb-line); }
+.wb-tutor-form textarea { width:100%; resize:vertical; min-height:78px; border:1px solid var(--wb-line); border-radius:9px; padding:10px; background:var(--wb-paper); color:var(--wb-ink); font:inherit; font-size:.85rem; }
+.wb-tutor-actions { display:flex; gap:5px; flex-wrap:wrap; margin-top:7px; font-size:.75rem; }
+.wb-tutor-actions .wb-send { margin-left:auto; background:var(--wb-ink); color:var(--wb-paper); }
+.wb-tutor button:disabled { opacity:.5; cursor:not-allowed; }
+.wb-tutor-notice { font-size:.75rem; color:#8c3f27; margin-top:8px; }
+.wb-tutor-attachment { display:flex; align-items:center; gap:8px; font-size:.75rem; margin-bottom:8px; }
+.wb-tutor-attachment img { width:44px; height:44px; object-fit:contain; border-radius:6px; }
+.wb-tutor-attachment[hidden],.wb-tutor-loading[hidden] { display:none; }
+.wb-tutor-loading { margin:10px 0; }
+.wb-tutor-loading span { display:block; height:9px; background:var(--wb-line); border-radius:5px; margin:8px 0; }
+.wb-tutor-loading span:last-child { width:65%; }
+.wb-editor { border:1px solid #e5ddd2; border-radius:16px; padding:22px; max-width:520px; width:calc(100% - 30px); color:#352443; background:#fcfaf5; }
+.wb-editor::backdrop { background:rgba(53,36,67,.28); }
+.wb-editor label { display:block; font-size:.8rem; margin:8px 0; }
+.wb-editor input,.wb-editor textarea { display:block; width:100%; border:1px solid #e5ddd2; border-radius:7px; padding:7px; background:#fcfaf5; }
+.wb-editor-fields { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.wb-editor-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
+html[data-theme="dark"] .wb-app { --wb-paper:#261e30; --wb-ink:#eee3d7; --wb-soft:#382c40; --wb-line:#57465f; --wb-accent:#e5ac67; }
+html[data-theme="dark"] .wb-editor,
+html[data-theme="dark"] .wb-editor input,
+html[data-theme="dark"] .wb-editor textarea { background:#261e30; color:#eee3d7; border-color:#57465f; }
+@keyframes wb-arrive { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+@media (min-width:769px) { .wb-workspace { min-height:570px; } .wb-toolbar { max-height:740px; } }
+@media (max-width:1100px) { .wb-tutor { width:275px; flex-basis:275px; } }
+@media (max-width:768px) { .wb-tutor { width:100%; flex-basis:auto; max-height:650px; } .wb-board-viewport { min-height:52dvh; } .wb-canvas-wrap { min-height:0; } .wb-app { min-height:calc(100dvh - 100px); } .wb-topbar { padding:10px; } .wb-toolbar { gap:2px; } .wb-bottombar { justify-content:flex-start; } }
+@media (prefers-reduced-motion:reduce) { .wb-app * { animation:none!important; transition:none!important; } }

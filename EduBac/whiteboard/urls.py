@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from . import correction_views
+from .tutor_views import board_tutor
 
 app_name = 'whiteboard'
 
@@ -9,6 +10,7 @@ urlpatterns = [
     path('creer/', views.board_create, name='create'),
     path('<int:pk>/', views.board_room, name='room'),
     path('<int:pk>/api/', views.board_api_content, name='api_content'),
+    path('<int:pk>/tutor/', board_tutor, name='tutor'),
     path('<int:pk>/supprimer/', views.board_delete, name='delete'),
     path('<int:pk>/dupliquer/', views.board_duplicate, name='duplicate'),
     path('<int:pk>/renommer/', views.board_rename, name='rename'),
