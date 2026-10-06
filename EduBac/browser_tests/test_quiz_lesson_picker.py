@@ -92,11 +92,17 @@ class QuizLessonPickerBrowserTests(StaticLiveServerTestCase):
         lesson_select = self.page.locator('#lessonFilter')
         expect(lesson_select).to_be_disabled()
 
+        def lesson_option_labels():
+            return [
+                label.strip()
+                for label in lesson_select.locator('option').all_text_contents()
+            ]
+
         first_level = CURRICULUM[0]['code']
         self.page.select_option('#lessonLevelFilter', first_level)
         expect(lesson_select).to_be_enabled()
         self.assertEqual(
-            lesson_select.locator('option').all_text_contents(),
+            lesson_option_labels(),
             ['Toutes les leçons du niveau']
             + [
                 f'{order}. {title}'
@@ -112,7 +118,7 @@ class QuizLessonPickerBrowserTests(StaticLiveServerTestCase):
         expect(lesson_select).to_be_enabled()
         self.assertEqual(lesson_select.input_value(), '')
         self.assertEqual(
-            lesson_select.locator('option').all_text_contents(),
+            lesson_option_labels(),
             ['Toutes les leçons du niveau']
             + [
                 f'{order}. {title}'
