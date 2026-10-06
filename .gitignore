@@ -3,3 +3,4 @@ __pycache__/
 .pythonlibs/
 .env
 *.sqlite3
+test-results/
