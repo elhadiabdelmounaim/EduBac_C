@@ -60,9 +60,10 @@ def home(request):
     """
     Page d'accueil : les 7 niveaux avec leurs leçons dans l'ordre académique.
     """
+    _ensure_curriculum_loaded()
     niveaux = []
     for n in CURRICULUM:
-        course = Course.objects.filter(niveau=n['code']).first()
+        course = _course_for_niveau(n['code'])
         lessons = []
         if course:
             lessons = list(course.lessons.all().order_by('order'))
@@ -90,31 +91,25 @@ def niveau_detail(request, niveau):
     user = getattr(request, 'edubac_user', None) or getattr(request, 'user', None)
     if user and getattr(user, 'is_authenticated', False) and getattr(user, 'role', None) == 'student':
         try:
-            student_niveau = user.student_profile.niveau
-            # Autoriser le niveau exact ; tronc_commun_lettres mappe vers tronc_commun
-            allowed = {student_niveau}
-            if student_niveau == 'tronc_commun':
-                allowed.add('tronc_commun')
-            if niveau not in allowed and niveau not in (
-                student_niveau, 
-            ):
-                # Soft map STUDENT_LEVELS maps_to
-                maps = {
-                    'tronc_commun_lettres': 'tronc_commun',
-                }
-                effective = maps.get(niveau, niveau)
-                if effective != student_niveau:
-                    messages.warning(
-                        request,
-                        "Ce niveau n'est pas associé à votre compte. "
-                        f"Votre niveau : {user.student_profile.get_niveau_display()}."
-                    )
-                    return redirect('education:niveau_detail', niveau=student_niveau)
-        except Exception:
-            pass
+            student_profile = user.student_profile
+        except (AttributeError, ObjectDoesNotExist):
+            student_profile = None
+        if student_profile:
+            student_niveau = student_profile.niveau
+            effective_niveau = {
+                'tronc_commun_lettres': 'tronc_commun',
+            }.get(niveau, niveau)
+            if effective_niveau != student_niveau:
+                messages.warning(
+                    request,
+                    "Ce niveau n'est pas associé à votre compte. "
+                    f"Votre niveau : {student_profile.get_niveau_display()}."
+                )
+                return redirect('education:niveau_detail', niveau=student_niveau)
+    _ensure_curriculum_loaded()
     meta = next((n for n in CURRICULUM if n['code'] == niveau), None)
     label = meta['label'] if meta else niveau
-    course = Course.objects.filter(niveau=niveau).first()
+    course = _course_for_niveau(niveau)
     lessons_qs = course.lessons.all().order_by('order') if course else Lesson.objects.none()
     lessons = []
     for lesson in lessons_qs:
