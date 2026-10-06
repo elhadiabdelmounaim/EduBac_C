@@ -1,0 +1,71 @@
+"""Verify that selecting a school level immediately populates the lesson list."""
+import os
+import shutil
+
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from django.urls import reverse
+from playwright.sync_api import expect, sync_playwright
+
+from accounts.models import TeacherProfile, User
+from education.models import Course, Lesson
+
+
+class QuizLessonPickerBrowserTests(StaticLiveServerTestCase):
+    def setUp(self):
+        self.teacher = User.objects.create_user(
+            username='lesson_picker_teacher',
+            email='lesson-picker@example.test',
+            password='Browser-test-only-123!',
+            role='teacher',
+        )
+        TeacherProfile.objects.get_or_create(user=self.teacher)
+        self.course = Course.objects.create(
+            name='Mathématiques',
+            niveau='tronc_commun',
+            order=1,
+        )
+        self.lesson = Lesson.objects.create(
+            course=self.course,
+            order=1,
+            title='Les nombres réels',
+            content='Contenu de test',
+        )
+
+        self.playwright = sync_playwright().start()
+        self.addCleanup(self.playwright.stop)
+        executable = os.environ.get('CHROMIUM_EXECUTABLE') or shutil.which('chromium')
+        self.browser = self.playwright.chromium.launch(
+            executable_path=executable,
+            headless=True,
+            args=['--no-sandbox'],
+        )
+        self.addCleanup(self.browser.close)
+        self.context = self.browser.new_context()
+        self.addCleanup(self.context.close)
+        self.page = self.context.new_page()
+        self.page.set_default_timeout(10000)
+
+    def test_selecting_level_shows_its_lessons_without_reloading(self):
+        response = self.page.goto(
+            self.live_server_url + reverse('accounts:login')
+        )
+        self.assertEqual(response.status, 200)
+        self.page.locator('input[name="email"]').fill(self.teacher.email)
+        self.page.locator('input[name="password"]').fill('Browser-test-only-123!')
+        self.page.get_by_role('button', name='Se connecter', exact=True).click()
+        self.page.wait_for_url(lambda url: '/connexion/' not in url)
+
+        generator_url = self.live_server_url + reverse('quizzes:teacher_ai')
+        response = self.page.goto(generator_url)
+        self.assertEqual(response.status, 200)
+        lesson_select = self.page.locator('#lessonSelect')
+        expect(lesson_select).to_be_disabled()
+
+        self.page.select_option('#niveauSelect', self.course.niveau)
+
+        expect(lesson_select).to_be_enabled()
+        self.assertEqual(
+            lesson_select.locator('option').all_text_contents(),
+            ['— Choisir une leçon —', f'{self.lesson.order}. {self.lesson.title}'],
+        )
+        self.assertEqual(self.page.url, generator_url)
