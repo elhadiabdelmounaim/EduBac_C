@@ -67,7 +67,7 @@ class QuizLessonSelectionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['selected_niveau'], self.course.niveau)
         self.assertEqual(response.context['selected_lesson_id'], str(self.lesson.pk))
-        self.assertContains(
-            response,
-            f'<option value="{self.lesson.pk}" selected>',
+        self.assertRegex(
+            response.content.decode(),
+            rf'<option value="{self.lesson.pk}" data-niveau="{self.course.niveau}"[^>]*selected',
         )
