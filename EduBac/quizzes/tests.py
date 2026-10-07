@@ -105,6 +105,31 @@ class QuizLessonSelectionTests(TestCase):
         rendered_form = response.content.decode()
         self.assertRegex(rendered_form, r'<textarea[^>]*name="description"[^>]*rows="5"')
         self.assertNotRegex(rendered_form, r'<textarea[^>]*name="description"[^>]*required')
+        self.assertContains(response, 'Generating quiz...')
+        self.assertNotContains(response, 'data-loading')
+
+    @patch('ai.services.AIService.generate_quiz_from_lesson')
+    def test_generator_shows_a_clear_failure_without_saving_a_quiz(self, generate_quiz):
+        from ai.providers import AIProviderError
+        generate_quiz.side_effect = AIProviderError(
+            'Rate limit Groq', code='rate_limit', retry_after=20,
+        )
+
+        before = Quiz.objects.count()
+        response = self.client.post(reverse('quizzes:teacher_ai'), {
+            'action': 'generate',
+            'niveau': self.course.niveau,
+            'lesson': self.lesson.pk,
+            'question_count': 1,
+            'seconds_per_question': 20,
+            'difficulty': 'moyen',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Generation failed:')
+        self.assertContains(response, 'IA atteinte')
+        self.assertContains(response, '20 secondes')
+        self.assertEqual(Quiz.objects.count(), before)
 
     @patch('ai.services.AIService.generate_quiz_from_lesson')
     def test_teacher_generator_stores_latex_fields_without_plain_text_conversion(

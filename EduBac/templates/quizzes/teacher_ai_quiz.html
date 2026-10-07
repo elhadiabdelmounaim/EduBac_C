@@ -29,9 +29,14 @@
         </div>
     </nav>
 
-    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+    {% if quiz_created %}
+    <div class="alert alert-success" role="status">Quiz generated successfully</div>
+    {% endif %}
+    {% if error %}
+    <div class="alert alert-danger" role="alert">Generation failed: {{ error }}</div>
+    {% endif %}
 
-    <form method="post" id="genForm" data-loading>
+    <form method="post" id="genForm">
         {% csrf_token %}
         <div class="qb-layout">
 
@@ -165,8 +170,8 @@
                                 <i class="bi bi-magic"></i>
                                 <span>Générer le quiz avec l’IA</span>
                             </button>
-                            <div id="genLoading" class="d-none qb-loading-status">
-                                <div class="small text-muted">Génération en cours…</div>
+                            <div id="genLoading" class="d-none qb-loading-status" role="status">
+                                <div class="small text-muted" data-gen-status>Generating quiz...</div>
                                 <div class="qb-loading-bar"><span></span></div>
                             </div>
                         </div>
@@ -364,10 +369,16 @@
   if(form && genBtn){
     form.addEventListener('submit', function(e){
       var act = (e.submitter && e.submitter.value) || 'generate';
-      if(act === 'generate' && genLoading){
-        genLoading.classList.remove('d-none');
-        genBtn.disabled = true;
-      }
+      if(act !== 'generate' || !genLoading) return;
+      genLoading.classList.remove('d-none');
+      var label = genLoading.querySelector('[data-gen-status]');
+      if(label) label.textContent = 'Generating quiz...';
+      genBtn.disabled = true;
+      window.setTimeout(function(){
+        try { window.stop(); } catch (err) {}
+        if(label) label.textContent = 'Generation failed: the server took too long. Please try again.';
+        genBtn.disabled = false;
+      }, 60000);
     });
   }
 })();

@@ -9,7 +9,9 @@ from education.models import Course, Lesson
 from .models import AIConversation, AIMessage
 from .providers import AIProviderError
 from .prompts import build_quiz_prompt
-from .services import AIService, repair_latex_escapes
+from .providers.groq import GroqProvider, _retry_after_seconds
+from .providers.base import http_error_code
+from .services import AIService, _rate_limit_delay, public_quiz_error, repair_latex_escapes
 
 
 @override_settings(ALLOWED_HOSTS=['testserver'])
@@ -185,6 +187,160 @@ class QuizLatexJsonTests(SimpleTestCase):
         parsed = repair_latex_escapes(r'{"text":"line 1\n\sqrt{x}"}')
 
         self.assertEqual(parsed['text'], 'line 1\n' + r'\sqrt{x}')
+
+    def test_already_escaped_latex_survives_an_invalid_escape_elsewhere(self):
+        raw = r'''{
+          "questions": [{
+            "text": "Aire $\\sqrt{x}$ et $\alpha$",
+            "choices": [
+              {"text": "$\\sqrt{x}$", "is_correct": true},
+              {"text": "$\frac{1}{2}$", "is_correct": false},
+              {"text": "1", "is_correct": false},
+              {"text": "0", "is_correct": false}
+            ],
+            "correct_answer": "$\\sqrt{x}$",
+            "explanation": "$\\\sin x$ et $\underbrace{x}$",
+            "hint": "$\neq 0$"
+          }]
+        }'''
+
+        data = self.service._validate_quiz_json(raw, 1)
+
+        question = data['questions'][0]
+        self.assertEqual(question['text'], r'Aire $\sqrt{x}$ et $\alpha$')
+        self.assertEqual(question['choices'][0]['text'], r'$\sqrt{x}$')
+        self.assertEqual(question['choices'][1]['text'], r'$\frac{1}{2}$')
+        self.assertEqual(question['explanation'], r'$\sin x$ et $\underbrace{x}$')
+        self.assertEqual(question['hint'], r'$\neq 0$')
+
+    def test_groq_rate_limit_returns_immediately_without_blocking_the_request(self):
+        lesson = SimpleNamespace(pk=None, get_ai_help=lambda: {
+            'niveau': 'Terminale',
+            'cours': 'Mathématiques',
+            'lecon': 'Racines',
+            'contenu': 'Racine carrée et identités.',
+        })
+        provider = SimpleNamespace(name='groq', model='openai/gpt-oss-120b')
+        rate_limit = AIProviderError(
+            "Rate limit Groq : Error code: 429 - {'error': {'message': "
+            "'Rate limit reached for model `openai/gpt-oss-120b` on tokens per minute (TPM): "
+            "Limit 8000, Used 5024, Requested 5729. Please try again in 20.6475s.', "
+            "'code': 'rate_limit_exceeded'}}",
+            code='rate_limit',
+            retry_after=20.6475,
+        )
+
+        with (
+            patch.object(AIService, '_chat', side_effect=[rate_limit, 'unused']) as chat,
+            patch.object(AIService, '_get_provider', return_value=provider),
+            patch('ai.services.time.sleep') as sleep,
+        ):
+            with self.assertRaises(AIProviderError) as error:
+                self.service.generate_quiz_from_lesson(lesson, question_count=1)
+
+        self.assertEqual(error.exception.code, 'rate_limit')
+        self.assertEqual(chat.call_count, 1)
+        sleep.assert_not_called()
+        self.assertIn('21 secondes', public_quiz_error(error.exception))
+
+    def test_timeout_bad_request_and_not_found_do_not_regenerate_the_quiz(self):
+        lesson = SimpleNamespace(pk=None, get_ai_help=lambda: {
+            'niveau': 'Terminale',
+            'cours': 'Mathématiques',
+            'lecon': 'Racines',
+            'contenu': 'Racine carrée.',
+        })
+        provider = SimpleNamespace(name='groq', model='openai/gpt-oss-120b')
+        for code in ('timeout', 'bad_request', 'not_found'):
+            with self.subTest(code=code):
+                with (
+                    patch.object(
+                        AIService, '_chat',
+                        side_effect=AIProviderError('provider failed', code=code),
+                    ) as chat,
+                    patch.object(AIService, '_get_provider', return_value=provider),
+                    patch('ai.services.time.sleep'),
+                ):
+                    with self.assertRaises(AIProviderError) as error:
+                        self.service.generate_quiz_from_lesson(lesson, question_count=1)
+                self.assertEqual(error.exception.code, code)
+                self.assertEqual(chat.call_count, 1)
+
+    def test_generation_stops_when_the_deadline_is_already_spent(self):
+        lesson = SimpleNamespace(pk=None, get_ai_help=lambda: {
+            'niveau': 'Terminale',
+            'cours': 'Mathématiques',
+            'lecon': 'Racines',
+            'contenu': 'Racine carrée.',
+        })
+        provider = SimpleNamespace(name='groq', model='test-model')
+        with (
+            patch('ai.services.QUIZ_GENERATION_DEADLINE', 0),
+            patch.object(AIService, '_chat') as chat,
+            patch.object(AIService, '_get_provider', return_value=provider),
+        ):
+            with self.assertRaises(AIProviderError) as error:
+                self.service.generate_quiz_from_lesson(lesson, question_count=1)
+        self.assertEqual(error.exception.code, 'timeout')
+        chat.assert_not_called()
+        self.assertIn('trop de temps', public_quiz_error(error.exception))
+
+    def test_http_status_codes_map_to_quiz_errors(self):
+        self.assertEqual(http_error_code(400), 'bad_request')
+        self.assertEqual(http_error_code(404), 'not_found')
+        self.assertEqual(http_error_code(429), 'rate_limit')
+        self.assertEqual(public_quiz_error(AIProviderError('nope', code='bad_request')),
+                         'Le fournisseur IA a rejeté la requête (400).')
+        self.assertEqual(public_quiz_error(AIProviderError('nope', code='not_found')),
+                         'Le modèle IA est introuvable (404).')
+        self.assertEqual(public_quiz_error(AIProviderError('nope', code='invalid_json')),
+                         "La réponse de l'IA n'est pas un JSON valide.")
+
+    def test_groq_retry_after_reads_the_header_then_the_message(self):
+        header_error = SimpleNamespace(
+            response=SimpleNamespace(headers={'retry-after-ms': '20647.5'}),
+        )
+        self.assertAlmostEqual(_retry_after_seconds(header_error), 20.6475, places=3)
+        self.assertAlmostEqual(_rate_limit_delay(AIProviderError(
+            'Please try again in 20.6475s.', code='rate_limit',
+        )), 20.9975, places=3)
+        class MillisecondHint(Exception):
+            response = SimpleNamespace(headers={'retry-after': '597'})
+
+            def __str__(self):
+                return 'Please try again in 597ms'
+
+        self.assertAlmostEqual(_retry_after_seconds(MillisecondHint()), 0.597, places=3)
+        self.assertIn(
+            '10 minutes',
+            public_quiz_error(AIProviderError('wait', code='rate_limit', retry_after=597)),
+        )
+
+    def test_rate_limit_keeps_the_configured_groq_model(self):
+        import httpx
+        from groq import RateLimitError
+
+        provider = GroqProvider(api_key='test-key', model='openai/gpt-oss-120b')
+        request = httpx.Request('POST', 'https://api.groq.com/openai/v1/chat/completions')
+        response = httpx.Response(429, headers={'retry-after': '597'}, request=request)
+        limited = RateLimitError('Please try again in 597s', response=response, body=None)
+        calls = []
+
+        class Completions:
+            def create(self, **kwargs):
+                calls.append(kwargs['model'])
+                raise limited
+
+        class Client:
+            class chat:  # noqa: N801
+                completions = Completions()
+
+        with patch.object(provider, '_get_client', return_value=Client()):
+            with self.assertRaises(AIProviderError) as error:
+                provider.chat([{'role': 'user', 'content': 'quiz'}])
+
+        self.assertEqual(error.exception.code, 'rate_limit')
+        self.assertEqual(calls, ['openai/gpt-oss-120b'])
 
     def test_quiz_prompt_requires_delimited_latex_and_json_escaped_slashes(self):
         prompt = build_quiz_prompt(

@@ -22,9 +22,10 @@ from ai.providers import AIProviderError, get_provider, list_providers
 
 logger = logging.getLogger(__name__)
 
-_INVALID_JSON_BACKSLASH = re.compile(
-    r'\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})'
-)
+_JSON_SIMPLE_ESCAPES = set('"\\/bfnrt')
+_HEX_DIGITS = set("0123456789abcdefABCDEF")
+_RETRY_AFTER_SECONDS = re.compile(r"try again in\s+([0-9]+(?:\.[0-9]+)?)s", re.IGNORECASE)
+_MAX_RATE_LIMIT_WAIT = 65.0
 _CONTROL_LATEX_COMMANDS = {
     "\x08": ("b", ("eta",)),
     "\x09": ("t", ("imes", "ext", "o")),
@@ -61,12 +62,138 @@ def _repair_parsed_latex_controls(value):
     return value
 
 
+def _valid_json_escape_end(raw: str, index: int) -> int | None:
+    """Index after a valid JSON escape whose introducer sits just before `index`."""
+    if index >= len(raw):
+        return None
+    nxt = raw[index]
+    if nxt in _JSON_SIMPLE_ESCAPES:
+        return index + 1
+    if (
+        nxt == "u"
+        and index + 5 <= len(raw)
+        and all(char in _HEX_DIGITS for char in raw[index + 1 : index + 5])
+    ):
+        return index + 5
+    return None
+
+
+def _repair_invalid_json_backslashes(raw: str) -> str:
+    """Repair invalid JSON escapes without touching an already escaped backslash.
+
+    The character after a doubled backslash is literal. Treating that second
+    backslash as a new escape introducer corrupts valid LaTeX and makes
+    json.loads raise Invalid \\escape.
+    """
+    out = []
+    i = 0
+    n = len(raw)
+    in_string = False
+    while i < n:
+        char = raw[i]
+        if not in_string:
+            out.append(char)
+            if char == '"':
+                in_string = True
+            i += 1
+            continue
+        if char == '"':
+            out.append(char)
+            in_string = False
+            i += 1
+            continue
+        if char != "\\":
+            out.append(char)
+            i += 1
+            continue
+        j = i + 1
+        while j < n and raw[j] == "\\":
+            j += 1
+        count = j - i
+        if count % 2 == 0:
+            out.append("\\" * count)
+            i = j
+            continue
+        end = _valid_json_escape_end(raw, j)
+        if end is None:
+            out.append("\\\\")
+            i = j
+            continue
+        out.append("\\" * count)
+        out.append(raw[j:end])
+        i = end
+    return "".join(out)
+
+
+# One quiz HTTP request must finish even when the model is slow or a question is invalid.
+QUIZ_GENERATION_DEADLINE = 50
+QUIZ_CALL_TIMEOUT = 30
+QUESTION_MAX_ATTEMPTS = 2
+_QUIZ_DEADLINE_MARGIN = 5
+_FATAL_QUIZ_API_CODES = frozenset({
+    "timeout", "rate_limit", "bad_request", "not_found", "missing_api_key",
+})
+
+
+def _retry_after_value(exc):
+    delay = getattr(exc, "retry_after", None)
+    if delay is None:
+        match = _RETRY_AFTER_SECONDS.search(str(exc))
+        if match:
+            delay = match.group(1)
+    try:
+        delay = float(delay)
+    except (TypeError, ValueError):
+        return None
+    if delay <= 0:
+        return None
+    return delay
+
+
+def _rate_limit_delay(exc) -> float:
+    """Seconds hinted by the provider. Quiz generation does not block the HTTP request on it."""
+    delay = _retry_after_value(exc)
+    if delay is None:
+        delay = 21.0
+    return min(_MAX_RATE_LIMIT_WAIT, delay + 0.35)
+
+
+def public_quiz_error(exc) -> str:
+    """Short cause shown after « Generation failed »."""
+    code = getattr(exc, "code", "")
+    if code == "timeout":
+        return "Le fournisseur IA a mis trop de temps à répondre."
+    if code == "rate_limit":
+        delay = _retry_after_value(exc)
+        if delay and delay >= 90:
+            return (
+                "Limite de l'API IA atteinte. Réessayez dans "
+                f"{max(1, round(delay / 60))} minutes."
+            )
+        if delay:
+            return (
+                "Limite de l'API IA atteinte. Réessayez dans "
+                f"{max(1, round(delay))} secondes."
+            )
+        return "Limite de l'API IA atteinte. Réessayez dans un instant."
+    if code == "bad_request":
+        return "Le fournisseur IA a rejeté la requête (400)."
+    if code == "not_found":
+        return "Le modèle IA est introuvable (404)."
+    if code == "invalid_json":
+        return "La réponse de l'IA n'est pas un JSON valide."
+    if code == "missing_api_key":
+        return "La clé API du fournisseur IA est absente ou refusée."
+    text = str(exc).strip()
+    return text or "Le quiz n'a pas pu être généré."
+
+
 def repair_latex_escapes(raw_json: str):
     """Parse JSON while recovering LaTeX backslashes emitted without JSON escaping."""
     try:
         parsed = json.loads(raw_json)
     except json.JSONDecodeError:
-        repaired_json = _INVALID_JSON_BACKSLASH.sub(r"\\\\", raw_json)
+        repaired_json = _repair_invalid_json_backslashes(raw_json)
         parsed = json.loads(repaired_json)
     return _repair_parsed_latex_controls(parsed)
 
@@ -177,6 +304,7 @@ Regles :
         self.provider_name = provider
         self.model_name = model
         self._provider = None
+        self._quiz_deadline = None
         # Compat : self.api utilisé encore par d'éventuels appels internes
         self.api = GroqAPI() if not provider or provider == "groq" else None
 
@@ -185,13 +313,32 @@ Regles :
             self._provider = get_provider(self.provider_name, model=self.model_name)
         return self._provider
 
-    def _chat(self, messages, *, temperature=0.3, max_tokens=4096, json_mode=False) -> str:
+    def _raise_if_quiz_deadline(self):
+        deadline = self._quiz_deadline
+        if deadline is None:
+            return
+        if deadline - time.monotonic() < _QUIZ_DEADLINE_MARGIN:
+            raise AIProviderError(
+                "La génération du quiz a dépassé le temps maximum. "
+                "Aucun quiz incomplet n'a été enregistré.",
+                code="timeout",
+            )
+
+    def _chat(self, messages, *, temperature=0.3, max_tokens=4096, json_mode=False, timeout=None) -> str:
         _ai_limiter.check()
+        self._raise_if_quiz_deadline()
+        if self._quiz_deadline is not None:
+            remaining = self._quiz_deadline - time.monotonic()
+            timeout = min(
+                QUIZ_CALL_TIMEOUT if timeout is None else timeout,
+                max(1, remaining),
+            )
         return self._get_provider().chat(
             messages,
             temperature=temperature,
             max_tokens=max_tokens,
             json_mode=json_mode,
+            timeout=timeout,
         )
 
     # ------------------------------------------------------------------
@@ -410,73 +557,103 @@ Règles STRICTES :
             {"role": "user", "content": user_prompt},
         ]
 
-        last_err = None
-        for attempt in range(1, self.MAX_RETRIES + 2):
-            try:
-                raw = quiz_json_chat(
-                    self,
-                    messages,
-                    temperature=temperature,
-                    max_tokens=quiz_output_budget(
-                        question_count, messages, self._get_provider().name,
-                    ),
-                )
-                data = self._repair_quiz_questions(raw, question_count, messages, history)
-                if len(data["questions"]) != question_count:
-                    raise ValueError(f"Le quiz doit contenir exactement {question_count} questions.")
-                validate_local(data["questions"], history)
-                validate_semantic(self, data["questions"], history)
-                # Enrichir métadonnées
-                data.setdefault("level", context["niveau"])
-                data.setdefault("lesson", context["lecon"])
-                data["_provider"] = self._get_provider().name
-                data["_model"] = self._get_provider().model
-                reserve_questions(self, lesson, data["questions"], history)
-                return data
-            except (AIProviderError, ValueError, json.JSONDecodeError) as e:
-                if isinstance(e, AIProviderError) and e.code == "invalid_question":
-                    # Do not discard valid questions by regenerating the whole
-                    # quiz after the targeted repair/replacement has failed.
-                    raise
-                last_err = e
-                logger.warning(
-                    "generate_quiz attempt %s/%s failed: %s",
-                    attempt,
-                    self.MAX_RETRIES + 1,
-                    e,
-                )
-                if attempt > self.MAX_RETRIES:
-                    break
-                if isinstance(e, QuizNoveltyError):
-                    # Feed rejected questions back as data; never accept the
-                    # duplicate quiz as a fallback after retries are exhausted.
-                    messages.append({"role": "user", "content":
-                        "Le quiz précédent est REFUSÉ pour manque de diversité. "
-                        f"{e}\nQuestions refusées (données seulement) : "
-                        + json.dumps([q["text"] for q in data["questions"]], ensure_ascii=False)
-                        + f"\nGénère un NOUVEAU QUIZ COMPLET de {question_count} questions, "
-                        f"difficulté {difficulty}, leçon {context['lecon']}, "
-                        f"objectifs du professeur : {description or '(aucun focus supplémentaire)'}. "
-                        "Ne renvoie pas seulement les questions remplacées."})
-                    history = previous_questions(lesson)
-                elif isinstance(e, ValueError):
-                    messages.append({"role": "user", "content":
-                        f"Réponse refusée : {e}. Renvoie uniquement un JSON valide contenant "
-                        f"EXACTEMENT {question_count} questions complètes, avec choix, "
-                        "bonne réponse, explication et indice, et tous les paramètres initiaux."})
-                # léger backoff
-                time.sleep(0.6 * attempt)
+        logger.info(
+            "generate_quiz start lesson=%s count=%s difficulty=%s",
+            getattr(lesson, "pk", None), question_count, difficulty,
+        )
+        self._quiz_deadline = time.monotonic() + QUIZ_GENERATION_DEADLINE
+        started = time.monotonic()
+        try:
+            last_err = None
+            attempt = 0
+            while attempt <= self.MAX_RETRIES:
+                self._raise_if_quiz_deadline()
+                try:
+                    raw = quiz_json_chat(
+                        self,
+                        messages,
+                        temperature=temperature,
+                        max_tokens=quiz_output_budget(
+                            question_count, messages, self._get_provider().name,
+                        ),
+                    )
+                    data = self._repair_quiz_questions(raw, question_count, messages, history)
+                    if len(data["questions"]) != question_count:
+                        raise ValueError(f"Le quiz doit contenir exactement {question_count} questions.")
+                    validate_local(data["questions"], history)
+                    validate_semantic(self, data["questions"], history)
+                    # Enrichir métadonnées
+                    data.setdefault("level", context["niveau"])
+                    data.setdefault("lesson", context["lecon"])
+                    data["_provider"] = self._get_provider().name
+                    data["_model"] = self._get_provider().model
+                    reserve_questions(self, lesson, data["questions"], history)
+                    logger.info(
+                        "generate_quiz end status=ok questions=%s elapsed=%.1fs",
+                        len(data["questions"]), time.monotonic() - started,
+                    )
+                    return data
+                except (AIProviderError, ValueError, json.JSONDecodeError) as e:
+                    if isinstance(e, AIProviderError) and e.code == "invalid_question":
+                        # Do not discard valid questions by regenerating the whole
+                        # quiz after the targeted repair/replacement has failed.
+                        raise
+                    if isinstance(e, AIProviderError) and e.code in _FATAL_QUIZ_API_CODES:
+                        # Timeout, 400, 404 and 429 will not succeed by regenerating
+                        # the whole quiz inside the same HTTP request.
+                        logger.warning("generate_quiz API error: %s", e)
+                        raise
+                    attempt += 1
+                    last_err = e
+                    if isinstance(e, AIProviderError):
+                        logger.warning(
+                            "generate_quiz API error attempt %s/%s: %s",
+                            attempt, self.MAX_RETRIES + 1, e,
+                        )
+                    else:
+                        logger.warning(
+                            "generate_quiz invalid AI response attempt %s/%s: %s",
+                            attempt, self.MAX_RETRIES + 1, e,
+                        )
+                    if attempt > self.MAX_RETRIES:
+                        break
+                    if isinstance(e, QuizNoveltyError):
+                        # Feed rejected questions back as data; never accept the
+                        # duplicate quiz as a fallback after retries are exhausted.
+                        messages.append({"role": "user", "content":
+                            "Le quiz précédent est REFUSÉ pour manque de diversité. "
+                            f"{e}\nQuestions refusées (données seulement) : "
+                            + json.dumps([q["text"] for q in data["questions"]], ensure_ascii=False)
+                            + f"\nGénère un NOUVEAU QUIZ COMPLET de {question_count} questions, "
+                            f"difficulté {difficulty}, leçon {context['lecon']}, "
+                            f"objectifs du professeur : {description or '(aucun focus supplémentaire)'}. "
+                            "Ne renvoie pas seulement les questions remplacées."})
+                        history = previous_questions(lesson)
+                    elif isinstance(e, ValueError):
+                        messages.append({"role": "user", "content":
+                            f"Réponse refusée : {e}. Renvoie uniquement un JSON valide contenant "
+                            f"EXACTEMENT {question_count} questions complètes, avec choix, "
+                            "bonne réponse, explication et indice, et tous les paramètres initiaux."})
+                    time.sleep(min(0.6 * attempt, 2))
 
-        msg = str(last_err) if last_err else "Échec génération quiz"
-        if isinstance(last_err, AIProviderError):
-            raise last_err
-        if isinstance(last_err, QuizNoveltyError):
-            raise AIProviderError(
-                "L’IA n’a pas proposé un quiz suffisamment différent après plusieurs tentatives. "
-                "Aucun quiz dupliqué n’a été enregistré. Relancez la génération.",
-                code="duplicate_questions",
-            ) from last_err
-        raise AIProviderError(msg, code="invalid_json")
+            msg = str(last_err) if last_err else "Échec génération quiz"
+            if isinstance(last_err, AIProviderError):
+                raise last_err
+            if isinstance(last_err, QuizNoveltyError):
+                raise AIProviderError(
+                    "L’IA n’a pas proposé un quiz suffisamment différent après plusieurs tentatives. "
+                    "Aucun quiz dupliqué n’a été enregistré. Relancez la génération.",
+                    code="duplicate_questions",
+                ) from last_err
+            raise AIProviderError(msg, code="invalid_json")
+        except Exception as exc:
+            logger.warning(
+                "generate_quiz end status=error elapsed=%.1fs: %s",
+                time.monotonic() - started, exc,
+            )
+            raise
+        finally:
+            self._quiz_deadline = None
 
     def generate_questions(self, lesson, count=5, difficulty="moyen", **kwargs):
         return self.generate_quiz_from_lesson(lesson, count, difficulty, **kwargs)
@@ -545,9 +722,14 @@ Règles STRICTES :
         data["questions"] = data["questions"][:expected_count]
         valid, invalid = {}, {}
         for index, question in enumerate(data["questions"]):
+            logger.info("generate_quiz question %s", index + 1)
             try:
                 valid[index] = validate_question(question, index + 1)
             except ValueError as exc:
+                logger.warning(
+                    "generate_quiz invalid AI response question %s: %s",
+                    index + 1, exc,
+                )
                 invalid[index] = str(exc)
         for index, error in invalid.items():
             valid[index] = self._repair_quiz_question(
@@ -562,7 +744,11 @@ Règles STRICTES :
         from .quiz_novelty import quiz_json_chat, quiz_output_budget, validate_local
         from .quiz_validation import validate_question
         last_error = error
-        for replace in (False, True):
+        for attempt_index, replace in enumerate((False, True), start=1):
+            logger.info(
+                "generate_quiz question %s attempt %s/%s",
+                number, attempt_index, QUESTION_MAX_ATTEMPTS,
+            )
             instruction = (
                 "La correction a échoué. REMPLACE uniquement cette question par une "
                 "NOUVELLE question valide sur les mêmes objectifs."
@@ -597,8 +783,18 @@ Règles STRICTES :
                 return candidate
             except (ValueError, AIProviderError) as exc:
                 last_error = str(exc)
-                logger.warning("Question %s %s failed: %s", number,
-                               "replacement" if replace else "repair", exc)
+                if isinstance(exc, AIProviderError):
+                    logger.warning(
+                        "generate_quiz API error question %s attempt %s/%s: %s",
+                        number, attempt_index, QUESTION_MAX_ATTEMPTS, exc,
+                    )
+                    if exc.code in _FATAL_QUIZ_API_CODES:
+                        raise
+                else:
+                    logger.warning(
+                        "generate_quiz invalid AI response question %s attempt %s/%s: %s",
+                        number, attempt_index, QUESTION_MAX_ATTEMPTS, exc,
+                    )
         raise AIProviderError(
             f"La question {number} n’a pas pu être corrigée ou remplacée par un QCM valide. "
             "Aucun quiz invalide n’a été enregistré. Réessayez.",

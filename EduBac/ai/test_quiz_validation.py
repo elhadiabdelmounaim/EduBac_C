@@ -148,6 +148,18 @@ class QuizQuestionValidationTests(TestCase):
         self.assertEqual(result["questions"], [self.good, self.fixed])
 
     @patch.object(AIService, "_chat")
+    def test_rate_limit_during_repair_stops_without_another_question_attempt(self, chat):
+        chat.side_effect = [
+            response(self.good, self.broken),
+            AIProviderError("Rate limit", code="rate_limit", retry_after=20),
+        ]
+        with self.assertRaises(AIProviderError) as error:
+            self.service.generate_quiz_from_lesson(self.lesson, 2)
+        self.assertEqual(error.exception.code, "rate_limit")
+        self.assertEqual(chat.call_count, 2)
+        self.assertFalse(QuizGenerationQuestion.objects.exists())
+
+    @patch.object(AIService, "_chat")
     def test_provider_failure_during_repair_still_attempts_replacement(self, chat):
         chat.side_effect = [response(self.good, self.broken),
                             AIProviderError("Temporary issue", code="connection"),

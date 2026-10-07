@@ -14,9 +14,23 @@ logger = logging.getLogger(__name__)
 class AIProviderError(Exception):
     """Erreur métier provider (clé manquante, rate limit, timeout, etc.)."""
 
-    def __init__(self, message: str, code: str = "provider_error"):
+    def __init__(self, message: str, code: str = "provider_error", retry_after: float | None = None):
         super().__init__(message)
         self.code = code
+        self.retry_after = retry_after
+
+
+def http_error_code(status: int) -> str:
+    """Map a provider HTTP status to a stable error code."""
+    if status == 429:
+        return "rate_limit"
+    if status == 400:
+        return "bad_request"
+    if status == 404:
+        return "not_found"
+    if status in (401, 403):
+        return "missing_api_key"
+    return "api_error"
 
 
 class BaseProvider(abc.ABC):
@@ -51,6 +65,7 @@ class BaseProvider(abc.ABC):
         temperature: float = 0.3,
         max_tokens: int = 4096,
         json_mode: bool = False,
+        timeout: float | None = None,
     ) -> str:
         """
         Envoie une conversation chat et retourne le contenu texte de la réponse.

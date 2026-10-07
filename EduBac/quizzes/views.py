@@ -751,9 +751,10 @@ def teacher_ai_quiz(request):
                     quiz.save(update_fields=['question_count'])
                     quiz_created = quiz
                     preview = quiz.get_questions().prefetch_related('choices')
-                    messages.success(request, f'Quiz généré : {quiz.question_count} question(s). Vérifiez puis envoyez.')
+                    messages.success(request, 'Quiz generated successfully')
                 except Exception as e:
-                    error = f'Erreur IA : {e}'
+                    from ai.services import public_quiz_error
+                    error = public_quiz_error(e)
 
             elif action == 'send':
                 quiz_id = request.POST.get('quiz_id')

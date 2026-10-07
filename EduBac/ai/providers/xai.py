@@ -8,7 +8,7 @@ import urllib.request
 
 from django.conf import settings
 
-from .base import AIProviderError, BaseProvider
+from .base import AIProviderError, BaseProvider, http_error_code
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +39,7 @@ class XAIProvider(BaseProvider):
         temperature: float = 0.3,
         max_tokens: int = 4096,
         json_mode: bool = False,
+        timeout: float | None = None,
     ) -> str:
         self.ensure_configured()
         payload = {
@@ -60,19 +61,19 @@ class XAIProvider(BaseProvider):
                 "Content-Type": "application/json",
             },
         )
+        call_timeout = self.timeout if timeout is None else timeout
         try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+            with urllib.request.urlopen(req, timeout=call_timeout) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
         except urllib.error.HTTPError as e:
             raw = e.read().decode("utf-8", errors="replace") if e.fp else str(e)
-            code = "rate_limit" if e.code == 429 else "api_error"
-            if e.code in (401, 403):
-                code = "missing_api_key"
             raise AIProviderError(
                 f"xAI Grok HTTP {e.code} : {raw[:300]}",
-                code=code,
+                code=http_error_code(e.code),
             ) from e
         except urllib.error.URLError as e:
+            if isinstance(getattr(e, "reason", None), TimeoutError):
+                raise AIProviderError("Timeout xAI Grok.", code="timeout") from e
             raise AIProviderError(
                 f"Connexion xAI impossible : {e.reason}",
                 code="connection",

@@ -8,7 +8,7 @@ import logging
 from education.models import Lesson, Course
 from quizzes.models import Quiz, Question, Choice
 from quizzes.math_text import normalize_math_text
-from .services import AIService
+from .services import AIService, public_quiz_error
 from .models import AIConversation, AIMessage
 from .providers import AIProviderError
 
@@ -171,8 +171,9 @@ def generate_quiz(request, lesson_id):
                     text = normalize_math_text(text)
                     is_ok = cdata.get('is_correct', False) if isinstance(cdata, dict) else False
                     Choice.objects.create(text=text, is_correct=is_ok, question=q, order=j)
-            messages.success(request, 'Quiz généré.')
+            messages.success(request, 'Quiz generated successfully')
             return redirect('quizzes:edit_questions', pk=quiz.pk)
         except Exception as e:
-            messages.error(request, f'Erreur IA : {e}')
+            logger.warning("generate_quiz API error: %s", e)
+            messages.error(request, f'Generation failed: {public_quiz_error(e)}')
     return redirect('quizzes:teacher_ai')

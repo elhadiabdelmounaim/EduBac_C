@@ -17,8 +17,27 @@
         </select>
         <div class="form-text">La difficulté change réellement le type de questions générées.</div>
     </div>
-    <button type="submit" class="btn btn-accent">
+    <button type="submit" class="btn btn-accent" id="genBtn">
         <i class="bi bi-stars"></i> Générer avec l'IA
     </button>
+    <div id="genLoading" class="d-none form-text mt-2" role="status" data-gen-status>Generating quiz...</div>
 </form>
+<script>
+(function(){
+  var form = document.querySelector('form');
+  var genBtn = document.getElementById('genBtn');
+  var genLoading = document.getElementById('genLoading');
+  if(!form || !genBtn || !genLoading) return;
+  form.addEventListener('submit', function(){
+    genLoading.classList.remove('d-none');
+    genLoading.textContent = 'Generating quiz...';
+    genBtn.disabled = true;
+    window.setTimeout(function(){
+      try { window.stop(); } catch (err) {}
+      genLoading.textContent = 'Generation failed: the server took too long. Please try again.';
+      genBtn.disabled = false;
+    }, 60000);
+  });
+})();
+</script>
 {% endblock %}
