@@ -16,10 +16,11 @@ def generate_rule_document(context: dict) -> tuple[dict, bool, str]:
     system = (
         "Tu identifies la règle mathématique générale utilisée pour une question de quiz. "
         "Réponds en français, uniquement en JSON : "
-        '{"name":"Nom court de la règle","statement":"Propriété générale courte, facultative",'
+        '{"name":"Nom court de la règle","statement":"Courte explication générale de la règle",'
         '"latex":"Une formule générale en LaTeX, sans délimiteurs"}. '
         "Utilise des variables abstraites, jamais les valeurs particulières de la question. "
-        "Si latex est renseigné, statement doit être vide : ne répète pas la formule en texte brut. "
+        "statement est une phrase pédagogique obligatoire expliquant à quoi sert la règle, "
+        "pas une répétition de la formule en texte brut. "
         "Ne donne ni calcul détaillé, ni substitution numérique, ni étapes, ni réponse au quiz, "
         "ni résolution complète. Une seule règle, celle réellement utilisée dans l'explication. "
         "LaTeX standard compatible KaTeX. Si la règle ne peut pas être identifiée, "
@@ -45,15 +46,17 @@ def generate_rule_document(context: dict) -> tuple[dict, bool, str]:
             if not isinstance(value, str) or len(value) > maximum or "\n" in value.strip():
                 raise SchemaError("La règle doit être courte et sans étapes")
         name, statement, formula = (data[key].strip() for key in ("name", "statement", "latex"))
-        if not name or not (statement or formula):
+        if not name or not statement:
             raise SchemaError("Aucune règle identifiée")
         # Preserve TeX commands; reuse quiz normalization, not a new math renderer.
         for left, right in (("$$", "$$"), (r"\[", r"\]"), ("$", "$"), (r"\(", r"\)")):
             if formula.startswith(left) and formula.endswith(right):
                 formula = formula[len(left):-len(right)].strip()
                 break
+        if formula and "".join(statement.split()) == "".join(formula.split()):
+            raise SchemaError("L’explication ne doit pas répéter la formule")
         text = "\n".join(part for part in (
-            name, statement if not formula else "", f"$${formula}$$" if formula else "",
+            name, f"$${formula}$$" if formula else "", statement,
         ) if part)
         document = validate_document({
             "version": 1, "title": "Règle utilisée", "connections": [],

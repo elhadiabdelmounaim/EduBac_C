@@ -68,3 +68,89 @@
   border: 1px dashed rgba(42,12,61,0.2); border-radius: 10px;
   padding: 0.45rem 0.55rem; margin-bottom: 0.35rem; background: #fff;
 }
+
+/* Completed quiz: a single, centered teaching card. Hint-mode keeps the
+   ordinary whiteboard layout and its existing canvas interactions. */
+.qwb-main--rule-only { grid-template-columns: minmax(0, 1fr) 240px; }
+.qwb-canvas-wrap--rule-only {
+  min-width: 0;
+  min-height: 520px;
+  background: #f1f6f0;
+  border-color: #d8e6d5;
+  touch-action: pan-y;
+}
+.qwb-shell--rule-only .qwb-el--rule-card {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  max-width: calc(100vw - 2rem);
+  max-height: calc(100% - 2rem);
+  overflow: auto;
+  padding: clamp(1.2rem, 3vw, 2.2rem);
+  white-space: normal;
+  cursor: grab;
+  background: #e8f4e5;
+  border: 2px solid #83ad7d;
+  border-radius: 22px;
+  box-shadow: 0 14px 34px rgba(55, 92, 54, 0.11);
+  color: #233b2a;
+  user-select: text;
+}
+.qwb-shell--rule-only .qwb-el--rule-card.is-selected {
+  border-color: #689b62;
+  box-shadow: 0 0 0 3px rgba(104, 155, 98, 0.16), 0 14px 34px rgba(55, 92, 54, 0.11);
+}
+.qwb-el--rule-card .qwb-rule-card__heading {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0 0 1.15rem;
+  color: #2c633a;
+  font-size: clamp(1.2rem, 2.3vw, 1.55rem);
+  font-weight: 750;
+  line-height: 1.25;
+}
+.qwb-el--rule-card .qwb-rule-card__heading i {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 2.15rem;
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 50%;
+  background: #d4e9d0;
+  color: #477e4c;
+  font-size: 1.05rem;
+}
+.qwb-shell--rule-only .qwb-el--rule-card .qwb-el__body {
+  color: #2a3c2e;
+  font-size: clamp(1.05rem, 1.75vw, 1.3rem);
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+.qwb-rule-card__name { font-weight: 700; }
+.qwb-shell--rule-only .qwb-el--rule-card .qwb-el__body > :first-child { margin-top: 0; }
+.qwb-shell--rule-only .qwb-el--rule-card .qwb-el__body > :last-child { margin-bottom: 0; }
+.qwb-shell--rule-only .qwb-el--rule-card .qwb-el__body p { margin-bottom: 0.85rem; }
+.qwb-shell--rule-only .qwb-el--rule-card .qwb-el__body .katex-display {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.4rem 0;
+  margin: 1rem 0;
+}
+.qwb-shell--rule-only .qwb-el--rule-card .qwb-el__body .katex { font-size: 1.15em; }
+.qwb-main--rule-only .qwb-sidebar { min-width: 0; }
+
+@media (max-width: 767.98px) {
+  .qwb-main--rule-only { grid-template-columns: minmax(0, 1fr); }
+  .qwb-canvas-wrap--rule-only { min-height: 62vh; }
+  .qwb-shell--rule-only .qwb-el--rule-card {
+    max-width: calc(100vw - 2rem);
+    max-height: calc(62vh - 2rem);
+    padding: 1.15rem;
+    border-radius: 18px;
+  }
+  .qwb-main--rule-only .qwb-sidebar { max-height: 220px; }
+  .qwb-shell--rule-only .qwb-el--rule-card .qwb-el__body { font-size: 1.05rem; }
+}

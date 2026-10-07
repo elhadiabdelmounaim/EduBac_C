@@ -1,0 +1,81 @@
+### Modification du Whiteboard – Affichage de la règle utilisée
+
+Modifier le comportement du bouton **« Whiteboard »** lorsqu’un élève termine un Quiz et clique dessus.
+
+#### 1. Nettoyage du Whiteboard
+
+* Vider complètement le Whiteboard avant d’afficher le résultat.
+* Supprimer toutes les anciennes étapes de résolution, notamment les **5 étapes précédentes**.
+* Ne conserver aucun ancien élément, texte, calcul ou graphique.
+
+#### 2. Affichage de la règle
+
+Afficher uniquement **la règle mathématique utilisée pour résoudre la question du Quiz**.
+
+La règle doit être affichée dans une **Color Box vert clair (Light Green)**.
+
+#### 3. Design de la Color Box
+
+Reproduire le style de la maquette validée :
+
+* Box **centrée horizontalement et verticalement** dans la zone du Whiteboard.
+* Largeur importante, mais avec des marges confortables autour.
+* Fond **vert clair / pastel**.
+* Bordure verte légèrement plus foncée.
+* Coins bien arrondis.
+* Design moderne, propre et pédagogique.
+* Ajouter éventuellement une petite icône 💡/ampoule à gauche du titre.
+* Titre : **« Règle utilisée »**
+* Le texte doit être **grand et facilement lisible**.
+
+#### 4. Contenu de la Box
+
+La structure doit être :
+
+**Règle utilisée**
+
+**[Nom de la règle]**
+
+**[Formule mathématique]**
+
+**[Courte explication de la règle]**
+
+Exemple :
+
+**Règle utilisée**
+
+**Identité remarquable :**
+
+$$
+(a+b)^2 = a^2 + 2ab + b^2
+$$
+
+Cette identité permet de développer le carré d’une somme de deux termes.
+
+#### 5. Rendu mathématique
+
+IMPORTANT :
+
+Ne pas créer un nouveau système de rendu.
+
+Réutiliser **exactement le même renderer / composant / système mathématique déjà utilisé dans :**
+
+**Generate → Explanation**
+
+afin que les formules, fractions, puissances, racines, intégrales, etc. soient affichées avec exactement le même rendu.
+
+#### 6. Contenu dynamique
+
+La règle affichée doit correspondre **automatiquement à la règle réellement utilisée pour la question du Quiz**.
+
+Il ne faut donc pas afficher une règle fixe.
+
+Le système doit récupérer l’explication/règle générée pour la question et l'afficher dans cette Color Box.
+
+#### 7. Résultat attendu
+
+Le comportement final doit être :
+
+**Quiz terminé → Cliquer sur « Whiteboard » → Vider le Whiteboard → Afficher une seule Color Box vert clair centrée → Afficher uniquement la règle utilisée et son explication.**
+
+Aucune des 5 anciennes étapes ne doit rester visible.

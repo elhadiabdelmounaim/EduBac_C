@@ -14,7 +14,7 @@ from .rule_service import generate_rule_document
 
 RULE = {
     "name": "Identité remarquable",
-    "statement": "",
+    "statement": "Cette identité permet de développer le carré d’une somme de deux termes.",
     "latex": r"(a+b)^2 = a^2 + 2ab + b^2",
 }
 
@@ -78,7 +78,8 @@ class QuizRuleBoardTests(TestCase):
         self.assertEqual(document["elements"][0]["type"], "rule")
         self.assertEqual(document["connections"], [])
         text = document["elements"][0]["text"]
-        self.assertEqual(text, "Identité remarquable\n$$(a+b)^2 = a^2 + 2ab + b^2$$")
+        self.assertEqual(text, "Identité remarquable\n$$(a+b)^2 = a^2 + 2ab + b^2$$\n"
+                              + RULE["statement"])
         self.assertEqual(response["rendered_rules"]["rule1"]["html"], str(latex_only(text)))
         self.assertNotIn("Étape", json.dumps(document, ensure_ascii=False))
         self.assertNotIn("x^2+6x+9", json.dumps(document))
@@ -179,5 +180,30 @@ class QuizRuleBoardTests(TestCase):
     def test_formula_is_not_duplicated_in_plain_text(self, chat):
         chat.return_value = json.dumps(dict(RULE, statement=RULE["latex"]))
         document, by_ai, warning = generate_rule_document({})
+        self.assertFalse(by_ai)
+        self.assertEqual(document["elements"], [])
+        self.assertTrue(warning)
+
+    @patch("ai.services.AIService._chat")
+    def test_rule_includes_short_explanation_after_formula(self, chat):
+        chat.return_value = json.dumps(RULE)
+        document, by_ai, warning = generate_rule_document({})
         self.assertTrue(by_ai)
-        self.assertEqual(document["elements"][0]["text"].count(RULE["latex"]), 1)
+        text = document["elements"][0]["text"]
+        self.assertTrue(text.endswith(RULE["statement"]))
+        self.assertLess(text.index("$$"), text.index(RULE["statement"]))
+
+    @patch("ai.services.AIService._chat")
+    def test_rule_is_dynamic_for_a_different_question(self, chat):
+        rule = {"name": "Théorème de Pythagore", "latex": "c^2 = a^2 + b^2",
+                "statement": "Dans un triangle rectangle, cette relation permet de calculer une longueur."}
+        chat.return_value = json.dumps(rule)
+        document, by_ai, warning = generate_rule_document({
+            "question_text": "Calculer l’hypoténuse d’un triangle rectangle.",
+            "explanation": "Appliquer le théorème de Pythagore.",
+        })
+        self.assertTrue(by_ai)
+        text = document["elements"][0]["text"]
+        self.assertIn("Pythagore", text)
+        self.assertIn("$$c^2 = a^2 + b^2$$", text)
+        self.assertNotIn("Identité remarquable", text)

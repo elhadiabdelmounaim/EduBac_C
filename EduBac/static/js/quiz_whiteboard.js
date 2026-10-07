@@ -37,6 +37,7 @@
     saveTimer: null,
     dirty: false,
     renderedRules: {},
+    centeredRuleId: null,
   };
 
   function setStatus(t) { if (statusEl) statusEl.textContent = t; }
@@ -144,7 +145,7 @@
     });
     els.forEach(function (el) {
       var div = document.createElement('div');
-      div.className = 'qwb-el';
+      div.className = 'qwb-el' + (ruleOnly && el.type === 'rule' ? ' qwb-el--rule-card' : '');
       div.dataset.id = el.id;
       div.setAttribute('data-emphasis', (el.style && el.style.emphasis) || 'normal');
       if (el.locked) div.classList.add('is-locked');
@@ -152,15 +153,32 @@
       div.style.left = ((el.position && el.position.x) || 0) + 'px';
       div.style.top = ((el.position && el.position.y) || 0) + 'px';
       var width = (el.size && el.size.width) || 220;
-      if (ruleOnly) width = Math.max(200, Math.min(width, wrap.clientWidth - 80));
+      if (ruleOnly && el.type === 'rule') {
+        width = Math.max(0, Math.min(900, wrap.clientWidth - (window.innerWidth < 768 ? 32 : 72)));
+      } else if (ruleOnly) width = Math.max(200, Math.min(width, wrap.clientWidth - 80));
       div.style.width = width + 'px';
-      div.style.height = ((el.size && el.size.height) || 80) + 'px';
+      if (ruleOnly && el.type === 'rule') {
+        div.style.maxHeight = Math.max(180, wrap.clientHeight - 32) + 'px';
+      } else div.style.height = ((el.size && el.size.height) || 80) + 'px';
       div.style.zIndex = el.zIndex || 0;
 
-      var typeLabel = document.createElement('div');
-      typeLabel.className = 'qwb-el__type';
-      typeLabel.textContent = (ruleOnly ? 'Règle utilisée' : el.type) + (el.locked ? ' 🔒' : '');
-      div.appendChild(typeLabel);
+      if (ruleOnly && el.type === 'rule') {
+        var heading = document.createElement('h2');
+        heading.className = 'qwb-rule-card__heading';
+        var bulb = document.createElement('i');
+        bulb.className = 'bi bi-lightbulb';
+        bulb.setAttribute('aria-hidden', 'true');
+        heading.appendChild(bulb);
+        var headingText = document.createElement('span');
+        headingText.textContent = 'Règle utilisée';
+        heading.appendChild(headingText);
+        div.appendChild(heading);
+      } else {
+        var typeLabel = document.createElement('div');
+        typeLabel.className = 'qwb-el__type';
+        typeLabel.textContent = el.type + (el.locked ? ' (verrouillé)' : '');
+        div.appendChild(typeLabel);
+      }
 
       var body = document.createElement('div');
       body.className = 'qwb-el__body';
@@ -170,6 +188,13 @@
         // HTML comes only from the server's existing |latex filter, never from
         // a board object or the model. The shared renderMath handles KaTeX.
         body.innerHTML = renderedRule.html;
+        if (ruleOnly && body.firstChild && body.firstChild.nodeType === 3) {
+          var nameText = body.firstChild;
+          var nameLabel = document.createElement('strong');
+          nameLabel.className = 'qwb-rule-card__name';
+          body.replaceChild(nameLabel, nameText);
+          nameLabel.appendChild(nameText);
+        }
       } else if (el.type === 'formula' || el.type === 'calculation') {
         renderKatex(body, el.latex || '');
       } else if (el.type === 'table') {
@@ -202,10 +227,10 @@
         body.textContent = escapeText(contentOf(el));
       }
       div.appendChild(body);
-      bindDrag(div, el);
+      if (!(ruleOnly && el.type === 'rule' && state.centeredRuleId !== el.id)) bindDrag(div, el);
       div.addEventListener('pointerdown', function (ev) {
         if (ev.button !== 0) return;
-        selectEl(el.id);
+        selectEl(el.id, ruleOnly);
       });
       canvas.appendChild(div);
       if (
@@ -215,8 +240,19 @@
       ) {
         window.renderMath(body);
       }
+      if (ruleOnly && el.type === 'rule' && state.centeredRuleId !== el.id) {
+        // Measure after the shared math renderer has set the formula height.
+        el.position = el.position || { x: 0, y: 0 };
+        el.position.x = Math.round((wrap.clientWidth - div.offsetWidth) / 2);
+        el.position.y = Math.round((wrap.clientHeight - div.offsetHeight) / 2);
+        div.style.left = el.position.x + 'px';
+        div.style.top = el.position.y + 'px';
+        state.centeredRuleId = el.id;
+        bindDrag(div, el);
+      }
 
       var li = document.createElement('li');
+      li.dataset.id = el.id;
       li.className = 'list-group-item' + (state.selectedId === el.id ? ' active' : '');
       li.textContent = ruleOnly ? contentOf(el).split('\n')[0] :
         el.type + ' — ' + contentOf(el).slice(0, 60);
@@ -231,7 +267,18 @@
   function findEl(id) {
     return (state.document.elements || []).find(function (e) { return e.id === id; });
   }
-  function selectEl(id) { state.selectedId = id; render(); }
+  function selectEl(id, keepNodes) {
+    state.selectedId = id;
+    if (!keepNodes) { render(); return; }
+    // Do not detach the centered card while its pointer capture is active.
+    canvas.querySelectorAll('.qwb-el').forEach(function (node) {
+      node.classList.toggle('is-selected', node.dataset.id === id);
+    });
+    linear.querySelectorAll('li').forEach(function (node) {
+      node.classList.toggle('active', node.dataset.id === id);
+    });
+    updateProps();
+  }
 
   function updateProps() {
     var el = findEl(state.selectedId);
@@ -314,6 +361,7 @@
       clearTimeout(state.saveTimer);
       state.document = { version: 1, title: 'Règle utilisée', elements: [], connections: [] };
       state.renderedRules = {};
+      state.centeredRuleId = null;
       state.undo = [];
       state.redo = [];
       state.selectedId = null;
@@ -327,6 +375,7 @@
       if (res.data && res.data.document) {
         state.document = res.data.document;
         state.renderedRules = res.data.rendered_rules || {};
+        state.centeredRuleId = null;
         state.revision = res.data.revision;
         setWarning(res.data.warning || '');
         setStatus(res.data.generated_by_ai ? 'Généré par IA' : 'Tableau de base');
@@ -541,6 +590,9 @@
     svgLinks.style.transformOrigin = '0 0';
   }
 
-  if (ruleOnly) window.addEventListener('resize', render);
+  if (ruleOnly) window.addEventListener('resize', function () {
+    state.centeredRuleId = null;
+    render();
+  });
   load();
 })();

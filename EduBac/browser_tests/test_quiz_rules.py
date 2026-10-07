@@ -16,6 +16,31 @@ from whiteboard.models import QuizCorrectionBoard
 
 
 class QuizRuleBrowserTests(StaticLiveServerTestCase):
+    def assert_centered_green_rule(self, page, explanation):
+        card = page.locator("#qwbCanvas .qwb-el--rule-card")
+        expect(card).to_have_count(1)
+        expect(card.locator("h2")).to_have_text("Règle utilisée")
+        expect(card.locator(".qwb-rule-card__name")).to_have_text("Identité remarquable")
+        expect(card).to_contain_text(explanation)
+        measured = card.evaluate("""node => {
+            const card = node.getBoundingClientRect();
+            const wrap = document.getElementById('qwbCanvasWrap').getBoundingClientRect();
+            const style = getComputedStyle(node);
+            return { dx: Math.abs((card.left + card.right - wrap.left - wrap.right)/2),
+                     dy: Math.abs((card.top + card.bottom - wrap.top - wrap.bottom)/2),
+                     inside: card.left >= wrap.left && card.right <= wrap.right &&
+                             card.top >= wrap.top && card.bottom <= wrap.bottom,
+                     color: style.backgroundColor,
+                     rounded: parseFloat(style.borderTopLeftRadius),
+                     font: parseFloat(getComputedStyle(node.querySelector('.qwb-el__body')).fontSize) };
+        }""")
+        self.assertLessEqual(measured["dx"], 2)
+        self.assertLessEqual(measured["dy"], 2)
+        self.assertTrue(measured["inside"])
+        self.assertEqual(measured["color"], "rgb(232, 244, 229)")
+        self.assertGreaterEqual(measured["rounded"], 18)
+        self.assertGreaterEqual(measured["font"], 16)
+
     def test_rule_only_replaces_steps_and_matches_generate_explanation(self):
         # All ORM work precedes the synchronous Playwright runtime.
         teacher = User.objects.create_user(
@@ -30,7 +55,8 @@ class QuizRuleBrowserTests(StaticLiveServerTestCase):
         StudentProfile.objects.get_or_create(user=student, defaults={"niveau": "tronc_commun"})
         course = Course.objects.create(name="Algèbre", niveau="tronc_commun")
         lesson = Lesson.objects.create(course=course, title="Identités", content="Identités remarquables")
-        rule_text = "Identité remarquable\n$$(a+b)^2 = a^2 + 2ab + b^2$$"
+        explanation = "Cette identité permet de développer le carré d’une somme de deux termes."
+        rule_text = "Identité remarquable\n$$(a+b)^2 = a^2 + 2ab + b^2$$\n" + explanation
         quiz = Quiz.objects.create(title="Quiz de règle", lesson=lesson, created_by=teacher)
         question = Question.objects.create(
             quiz=quiz, text="Développer $(x+3)^2$", correct_answer="$x^2+6x+9$",
@@ -54,7 +80,7 @@ class QuizRuleBrowserTests(StaticLiveServerTestCase):
             "questions": [{"text": "Développer $(a+b)^2$", "explanation": rule_text,
                            "choices": [{"text": "$a^2+2ab+b^2$", "is_correct": True}]}],
         }
-        rule = {"name": "Identité remarquable", "statement": "",
+        rule = {"name": "Identité remarquable", "statement": explanation,
                 "latex": r"(a+b)^2 = a^2 + 2ab + b^2"}
         with patch("ai.services.AIService.generate_quiz_from_lesson", return_value=preview), \
                 patch("ai.services.AIService._chat", return_value=json.dumps(rule)), \
@@ -94,6 +120,7 @@ class QuizRuleBrowserTests(StaticLiveServerTestCase):
                 math = page.locator("#qwbCanvas .katex")
                 expect(math).to_have_count(1)
                 self.assertEqual(math.evaluate("(node) => node.outerHTML"), generate_math)
+                self.assert_centered_green_rule(page, explanation)
                 expect(page.locator("#qwbCanvas")).not_to_contain_text("Étape")
                 expect(page.locator("#qwbCanvas")).not_to_contain_text("Ancienne")
                 expect(page.locator("#qwbCanvas")).not_to_contain_text("x^2+6x+9")
@@ -109,6 +136,7 @@ class QuizRuleBrowserTests(StaticLiveServerTestCase):
                 page.reload()
                 expect(page.locator("#qwbCanvas .katex")).to_have_count(1)
                 expect(page.locator("#qwbCanvas")).not_to_contain_text("Ancien contenu")
+                self.assert_centered_green_rule(page, explanation)
                 screenshot_dir = os.environ.get("QUIZ_RULE_SCREENSHOT_DIR")
                 if screenshot_dir:
                     page.screenshot(path=os.path.join(screenshot_dir, "quiz-rule-desktop.png"))
@@ -117,6 +145,7 @@ class QuizRuleBrowserTests(StaticLiveServerTestCase):
                     "document.getElementById('edubacSidebar').getBoundingClientRect().right <= 1"
                 )
                 expect(page.locator("#qwbCanvas .katex")).to_be_visible()
+                self.assert_centered_green_rule(page, explanation)
                 if screenshot_dir:
                     page.screenshot(path=os.path.join(screenshot_dir, "quiz-rule-mobile.png"))
                 self.assertEqual(errors, [])

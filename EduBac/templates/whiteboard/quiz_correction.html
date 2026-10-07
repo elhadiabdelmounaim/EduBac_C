@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="/static/css/quiz_whiteboard.css">
 {% endblock %}
 {% block content %}
-<div class="qwb-shell" id="qwbShell"
+<div class="qwb-shell{% if mode == 'full' %} qwb-shell--rule-only{% endif %}" id="qwbShell"
      data-attempt="{{ attempt.pk }}"
      data-question="{{ question.pk }}"
      data-mode="{{ mode }}"
@@ -45,8 +45,8 @@
 
   <div class="qwb-warning alert alert-info py-2 px-3 mb-2 small d-none" id="qwbWarning"></div>
 
-  <div class="qwb-main">
-    <div class="qwb-canvas-wrap" id="qwbCanvasWrap">
+  <div class="qwb-main{% if mode == 'full' %} qwb-main--rule-only{% endif %}">
+    <div class="qwb-canvas-wrap{% if mode == 'full' %} qwb-canvas-wrap--rule-only{% endif %}" id="qwbCanvasWrap">
       <svg class="qwb-svg-links" id="qwbLinks" xmlns="http://www.w3.org/2000/svg"></svg>
       <div class="qwb-canvas" id="qwbCanvas" role="application" aria-label="Tableau de correction" tabindex="0"></div>
     </div>
