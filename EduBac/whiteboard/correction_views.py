@@ -9,6 +9,7 @@ import json
 import logging
 
 from django.http import JsonResponse, Http404
+from django.db.models import F
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
@@ -19,8 +20,30 @@ from .models import QuizCorrectionBoard
 from .schema import SchemaError, validate_document
 from .layout import apply_layout
 from .correction_service import generate_correction_document
+from .rule_service import generate_rule_document
+from education.templatetags.markdown_extras import latex_only
 
 logger = logging.getLogger(__name__)
+
+
+def _document_response(payload, *, status=200):
+    """Reuse Generate → Explanation's server filter and client KaTeX include."""
+    document = payload.get("document") or {}
+    payload["rendered_rules"] = {
+        element["id"]: {"text": element.get("text", ""), "html": str(latex_only(element.get("text", "")))}
+        for element in document.get("elements", [])
+        if element.get("type") == "rule"
+    }
+    return JsonResponse(payload, status=status)
+
+
+def _is_rule_document(document):
+    return bool(
+        document and document.get("title") == "Règle utilisée"
+        and not document.get("connections")
+        and len(document.get("elements", [])) == 1
+        and document["elements"][0].get("type") == "rule"
+    )
 
 
 def _owner_attempt(request, attempt_id) -> Attempt:
@@ -47,7 +70,7 @@ def _context_for_question(attempt: Attempt, question: Question, mode: str) -> di
     if mode == "full":
         ch = question.choices.filter(is_correct=True).first()
         good_answer = ch.text if ch else (question.correct_answer or "")
-        explanation = question.explanation or ""
+        explanation = question.explanation or (ans.explanation if ans else "") or ""
     level = ""
     lesson_title = ""
     lesson_excerpt = ""
@@ -88,6 +111,14 @@ def correction_page(request, attempt_id, question_id):
         question=question,
         defaults={"mode": mode, "data": {}},
     )
+    if mode == "full":
+        # A new visit is an explicit reset. Increasing the revision also rejects
+        # an autosave from an older tab containing the previous five steps.
+        QuizCorrectionBoard.objects.filter(pk=board.pk).update(
+            data={}, revision=F("revision") + 1, mode=mode,
+            warning="", generated_by_ai=False,
+        )
+        board.refresh_from_db()
     return render(request, "whiteboard/quiz_correction.html", {
         "attempt": attempt,
         "question": question,
@@ -112,7 +143,7 @@ def correction_api(request, attempt_id, question_id):
         board = QuizCorrectionBoard.objects.filter(
             attempt=attempt, question=question
         ).first()
-        if not board or not board.data:
+        if not board or not board.data or (mode == "full" and not _is_rule_document(board.data)):
             return JsonResponse({
                 "exists": False,
                 "mode": mode,
@@ -120,7 +151,7 @@ def correction_api(request, attempt_id, question_id):
                 "document": None,
                 "warning": "",
             })
-        return JsonResponse({
+        return _document_response({
             "exists": True,
             "mode": board.mode,
             "revision": board.revision,
@@ -142,8 +173,8 @@ def correction_api(request, attempt_id, question_id):
         board = QuizCorrectionBoard.objects.filter(
             attempt=attempt, question=question
         ).first()
-        if board and board.data and not force:
-            return JsonResponse({
+        if board and board.data and not force and (mode == "hint" or _is_rule_document(board.data)):
+            return _document_response({
                 "ok": True,
                 "cached": True,
                 "revision": board.revision,
@@ -154,16 +185,19 @@ def correction_api(request, attempt_id, question_id):
             })
 
         ctx = _context_for_question(attempt, question, mode)
-        doc, by_ai, warning = generate_correction_document(
-            question_text=ctx["question_text"],
-            student_answer=ctx["student_answer"],
-            good_answer=ctx["good_answer"],
-            is_correct=ctx["is_correct"],
-            level=ctx["level"],
-            lesson_title=ctx["lesson_title"],
-            lesson_excerpt=ctx["lesson_excerpt"],
-            mode=mode,
-        )
+        if mode == "full":
+            doc, by_ai, warning = generate_rule_document(ctx)
+        else:
+            doc, by_ai, warning = generate_correction_document(
+                question_text=ctx["question_text"],
+                student_answer=ctx["student_answer"],
+                good_answer=ctx["good_answer"],
+                is_correct=ctx["is_correct"],
+                level=ctx["level"],
+                lesson_title=ctx["lesson_title"],
+                lesson_excerpt=ctx["lesson_excerpt"],
+                mode=mode,
+            )
         board, _ = QuizCorrectionBoard.objects.get_or_create(
             attempt=attempt, question=question,
             defaults={"mode": mode},
@@ -175,7 +209,7 @@ def correction_api(request, attempt_id, question_id):
         board.generated_by_ai = by_ai
         board.warning = (warning or "")[:300]
         board.save()
-        return JsonResponse({
+        return _document_response({
             "ok": True,
             "cached": False,
             "revision": board.revision,
@@ -191,7 +225,7 @@ def correction_api(request, attempt_id, question_id):
         )
         client_rev = int(body.get("revision") or 0)
         if client_rev != board.revision:
-            return JsonResponse({
+            return _document_response({
                 "error": "conflict",
                 "message": "Conflit de révision. Rechargez le tableau.",
                 "revision": board.revision,
@@ -199,6 +233,11 @@ def correction_api(request, attempt_id, question_id):
             }, status=409)
         try:
             doc = validate_document(body.get("document"))
+            if mode == "full":
+                if (doc.get("connections") or len(doc["elements"]) > 1
+                        or any(el["type"] != "rule" for el in doc["elements"])):
+                    raise SchemaError("Ce tableau affiche uniquement la règle utilisée.")
+                doc["title"] = "Règle utilisée"
             # Conserver positions élève (déjà dans le document)
             doc = apply_layout(doc)  # ne touche que x=y=0
         except SchemaError as e:
@@ -206,13 +245,18 @@ def correction_api(request, attempt_id, question_id):
         board.data = doc
         board.revision = board.revision + 1
         board.save(update_fields=["data", "revision", "updated_at"])
-        return JsonResponse({
+        return _document_response({
             "ok": True,
             "revision": board.revision,
             "document": board.data,
         })
 
     if action == "chat":
+        if mode == "full":
+            return JsonResponse({
+                "error": "rule_only",
+                "message": "Ce tableau affiche uniquement la règle utilisée.",
+            }, status=400)
         message = (body.get("message") or "").strip()
         if not message or len(message) > 1000:
             return JsonResponse({"error": "message invalide (1–1000 caractères)"}, status=400)

@@ -10,6 +10,7 @@
      data-attempt="{{ attempt.pk }}"
      data-question="{{ question.pk }}"
      data-mode="{{ mode }}"
+     data-rule-only="{% if mode == 'full' %}1{% else %}0{% endif %}"
      data-api="{% url 'whiteboard:quiz_correction_api' attempt.pk question.pk %}"
      data-csrf="{{ csrf_token }}">
 
@@ -19,7 +20,7 @@
         <i class="bi bi-arrow-left"></i> Retour au quiz
       </a>
       <span class="qwb-mode badge {% if mode == 'full' %}bg-success{% else %}bg-warning text-dark{% endif %}">
-        {% if mode == 'full' %}Correction complète{% else %}Mode indice{% endif %}
+        {% if mode == 'full' %}Règle utilisée{% else %}Mode indice{% endif %}
       </span>
       <span class="qwb-status small text-muted" id="qwbStatus">Chargement…</span>
     </div>
@@ -30,7 +31,7 @@
       <button type="button" class="btn btn-sm btn-outline-primary" id="qwbUndo" aria-label="Annuler" title="Ctrl+Z">↶</button>
       <button type="button" class="btn btn-sm btn-outline-primary" id="qwbRedo" aria-label="Rétablir" title="Ctrl+Y">↷</button>
       <button type="button" class="btn btn-sm btn-edubac" id="qwbGenerate">
-        <i class="bi bi-magic"></i> Générer
+        <i class="bi bi-magic"></i> {% if mode == 'full' %}Générer la règle{% else %}Générer{% endif %}
       </button>
       <button type="button" class="btn btn-sm btn-outline-primary d-none" id="qwbRegen">Régénérer</button>
     </div>
@@ -54,7 +55,7 @@
       <ol class="qwb-linear list-group list-group-flush small" id="qwbLinear"></ol>
       <div class="mt-3" id="qwbProps">
         <h3 class="h6 fw-bold">Propriétés</h3>
-        <p class="small text-muted mb-1">Sélectionnez un objet pour le modifier ou poser une question.</p>
+        <p class="small text-muted mb-1">{% if mode == 'full' %}Sélectionnez la règle pour la modifier.{% else %}Sélectionnez un objet pour le modifier ou poser une question.{% endif %}</p>
         <textarea id="qwbEditText" class="form-control form-control-sm d-none" rows="3" maxlength="2000" aria-label="Contenu de l’objet"></textarea>
         <div class="d-flex flex-wrap gap-1 mt-2">
           <button type="button" class="btn btn-sm btn-outline-primary d-none" id="qwbDup">Dupliquer</button>
@@ -63,7 +64,7 @@
         </div>
       </div>
 
-      <div class="qwb-chat mt-3" id="qwbChat">
+      <div class="qwb-chat mt-3 {% if mode == 'full' %}d-none{% endif %}" id="qwbChat">
         <h3 class="h6 fw-bold mb-2"><i class="bi bi-chat-dots"></i> Demander à l’IA</h3>
         <div class="qwb-chat-log small" id="qwbChatLog" aria-live="polite"></div>
         <div class="input-group input-group-sm mt-2">

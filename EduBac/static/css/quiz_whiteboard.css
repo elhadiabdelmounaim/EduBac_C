@@ -31,7 +31,7 @@
   color: #8899a6; letter-spacing: 0.04em; margin-bottom: 0.25rem;
 }
 .qwb-el__body { font-size: 0.88rem; color: #2c3345; line-height: 1.35; word-break: break-word; }
-.qwb-el__body .katex { font-size: 1.05em; }
+.qwb-el__body:not(.lesson-md) .katex { font-size: 1.05em; }
 .qwb-sidebar {
   background: #fff; border-radius: 14px; padding: 0.85rem;
   box-shadow: 0 2px 12px rgba(30,42,74,0.06); overflow: auto; max-height: 70vh;

@@ -8,6 +8,7 @@
   if (!shell) return;
 
   var apiUrl = shell.getAttribute('data-api');
+  var ruleOnly = shell.getAttribute('data-rule-only') === '1';
   var csrf = shell.getAttribute('data-csrf') || '';
   var canvas = document.getElementById('qwbCanvas');
   var wrap = document.getElementById('qwbCanvasWrap');
@@ -35,6 +36,7 @@
     redo: [],
     saveTimer: null,
     dirty: false,
+    renderedRules: {},
   };
 
   function setStatus(t) { if (statusEl) statusEl.textContent = t; }
@@ -149,18 +151,26 @@
       if (state.selectedId === el.id) div.classList.add('is-selected');
       div.style.left = ((el.position && el.position.x) || 0) + 'px';
       div.style.top = ((el.position && el.position.y) || 0) + 'px';
-      div.style.width = ((el.size && el.size.width) || 220) + 'px';
+      var width = (el.size && el.size.width) || 220;
+      if (ruleOnly) width = Math.max(200, Math.min(width, wrap.clientWidth - 80));
+      div.style.width = width + 'px';
       div.style.height = ((el.size && el.size.height) || 80) + 'px';
       div.style.zIndex = el.zIndex || 0;
 
       var typeLabel = document.createElement('div');
       typeLabel.className = 'qwb-el__type';
-      typeLabel.textContent = el.type + (el.locked ? ' 🔒' : '');
+      typeLabel.textContent = (ruleOnly ? 'Règle utilisée' : el.type) + (el.locked ? ' 🔒' : '');
       div.appendChild(typeLabel);
 
       var body = document.createElement('div');
       body.className = 'qwb-el__body';
-      if (el.type === 'formula' || el.type === 'calculation') {
+      var renderedRule = state.renderedRules[el.id];
+      if (el.type === 'rule') body.classList.add('lesson-md');
+      if (el.type === 'rule' && renderedRule && renderedRule.text === el.text) {
+        // HTML comes only from the server's existing |latex filter, never from
+        // a board object or the model. The shared renderMath handles KaTeX.
+        body.innerHTML = renderedRule.html;
+      } else if (el.type === 'formula' || el.type === 'calculation') {
         renderKatex(body, el.latex || '');
       } else if (el.type === 'table') {
         var tbl = document.createElement('table');
@@ -208,7 +218,8 @@
 
       var li = document.createElement('li');
       li.className = 'list-group-item' + (state.selectedId === el.id ? ' active' : '');
-      li.textContent = el.type + ' — ' + contentOf(el).slice(0, 60);
+      li.textContent = ruleOnly ? contentOf(el).split('\n')[0] :
+        el.type + ' — ' + contentOf(el).slice(0, 60);
       li.addEventListener('click', function () { selectEl(el.id); });
       linear.appendChild(li);
     });
@@ -226,7 +237,7 @@
     var el = findEl(state.selectedId);
     var show = !!el;
     editText.classList.toggle('d-none', !show);
-    btnDup.classList.toggle('d-none', !show);
+    btnDup.classList.toggle('d-none', !show || ruleOnly);
     btnLock.classList.toggle('d-none', !show);
     btnDel.classList.toggle('d-none', !show);
     if (!el) return;
@@ -283,6 +294,7 @@
         setStatus('Conflit — rechargement');
         if (res.data.document) {
           state.document = res.data.document;
+          state.renderedRules = res.data.rendered_rules || {};
           state.revision = res.data.revision;
           render();
         }
@@ -290,6 +302,7 @@
       }
       if (res.data && res.data.ok) {
         state.revision = res.data.revision;
+        state.renderedRules = res.data.rendered_rules || {};
         state.dirty = false;
         setStatus('Enregistré');
       } else setStatus('Échec — Réessayer');
@@ -297,10 +310,23 @@
   }
 
   function generate(regenerate) {
+    if (ruleOnly) {
+      clearTimeout(state.saveTimer);
+      state.document = { version: 1, title: 'Règle utilisée', elements: [], connections: [] };
+      state.renderedRules = {};
+      state.undo = [];
+      state.redo = [];
+      state.selectedId = null;
+      state.dirty = false;
+      chatLog.innerHTML = '';
+      proposalsBox.innerHTML = '';
+      render();
+    }
     setStatus('Génération…');
     api({ action: 'generate', regenerate: !!regenerate }).then(function (res) {
       if (res.data && res.data.document) {
         state.document = res.data.document;
+        state.renderedRules = res.data.rendered_rules || {};
         state.revision = res.data.revision;
         setWarning(res.data.warning || '');
         setStatus(res.data.generated_by_ai ? 'Généré par IA' : 'Tableau de base');
@@ -314,12 +340,16 @@
   }
 
   function load() {
+    // correction_page already discarded the saved board and invalidated old
+    // revisions. Never load previous correction objects on a completed quiz.
+    if (ruleOnly) { generate(false); return; }
     setStatus('Chargement…');
     fetch(apiUrl, { credentials: 'same-origin' })
       .then(function (r) { return r.json(); })
       .then(function (data) {
         if (data.exists && data.document) {
           state.document = data.document;
+          state.renderedRules = data.rendered_rules || {};
           state.revision = data.revision;
           setWarning(data.warning || '');
           setStatus('Enregistré');
@@ -402,7 +432,7 @@
 
   document.getElementById('qwbGenerate').addEventListener('click', function () { generate(false); });
   document.getElementById('qwbRegen').addEventListener('click', function () {
-    if (confirm('Régénérer la correction ?')) generate(true);
+    if (confirm(ruleOnly ? 'Régénérer la règle ?' : 'Régénérer la correction ?')) generate(true);
   });
   document.getElementById('qwbZoomIn').addEventListener('click', function () {
     state.scale = Math.min(2.5, state.scale + 0.1); applyTransform();
@@ -435,6 +465,7 @@
     render(); scheduleSave();
   });
   btnDup.addEventListener('click', function () {
+    if (ruleOnly) return;
     var el = findEl(state.selectedId);
     if (!el) return;
     pushUndo();
@@ -510,5 +541,6 @@
     svgLinks.style.transformOrigin = '0 0';
   }
 
+  if (ruleOnly) window.addEventListener('resize', render);
   load();
 })();
