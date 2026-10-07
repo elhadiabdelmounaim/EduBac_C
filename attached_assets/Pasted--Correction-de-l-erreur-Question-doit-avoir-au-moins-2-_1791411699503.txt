@@ -1,0 +1,53 @@
+## Correction de l’erreur « Question doit avoir au moins 2 choix »
+
+Dans mon projet Django EduBac, lors de la génération automatique d’un quiz par l’IA, la génération s’arrête parfois avec l’erreur :
+
+`Erreur IA : Question 5 doit avoir au moins 2 choix.`
+
+Corrige **uniquement ce problème**, sans modifier inutilement les autres fonctionnalités du projet.
+
+### Contraintes
+
+1. Chaque question de type QCM générée par l’IA doit obligatoirement contenir **au moins 2 choix**.
+2. Idéalement, chaque question doit contenir **4 choix** : `A`, `B`, `C`, `D`.
+3. Il doit toujours y avoir **une seule bonne réponse valide**.
+4. Avant d’enregistrer ou d’afficher le quiz, vérifier automatiquement que :
+
+   * `choices` existe ;
+   * `choices` est une liste ;
+   * `len(choices) >= 2` ;
+   * la bonne réponse appartient réellement aux choix proposés.
+5. Si l’IA retourne une question avec moins de 2 choix :
+
+   * ne pas arrêter toute la génération ;
+   * essayer de corriger/régénérer cette question ;
+   * si la correction échoue, remplacer cette question par une nouvelle question valide générée par l’IA.
+6. Le quiz final ne doit contenir **aucune question invalide**.
+7. Le backend doit effectuer une validation finale avant de retourner le JSON.
+8. Rendre le parsing JSON robuste afin que l’IA respecte exactement le format attendu.
+9. Ne pas supprimer les questions valides déjà générées.
+10. Ne pas modifier le design, les pages HTML/CSS ou les autres fonctionnalités du quiz.
+
+### Format attendu
+
+Chaque question doit avoir une structure similaire à :
+
+```json
+{
+  "question": "....",
+  "choices": [
+    "Réponse A",
+    "Réponse B",
+    "Réponse C",
+    "Réponse D"
+  ],
+  "correct_answer": "Réponse B",
+  "explanation": "...."
+}
+```
+
+Ajoute également dans le prompt envoyé au modèle IA une instruction explicite :
+
+> « Chaque question doit contenir exactement 4 choix de réponse distincts. Ne génère jamais une question avec 0 ou 1 seul choix. Une seule réponse doit être correcte. »
+
+Enfin, localise la partie exacte du code responsable de l’erreur `Question 5 doit avoir au moins 2 choix`, corrige-la proprement et conserve l’architecture actuelle du projet.

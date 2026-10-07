@@ -5,3 +5,4 @@
 - [2ème Bac SM curriculum order](second-bac-sm-curriculum-order.md) — preserve AlloSchool’s shared numbered A/B sequence; other Moroccan sites present it as differently ordered course sections.
 - [Python package installation](python-package-installation.md) — resolve root pyproject TOML conflicts before using Replit’s Python package installer.
 - [Quiz diversity](quiz-diversity.md) — repeated generation must change the situation or reasoning, not just numbers, order or wording; refuse unresolved duplicates.
+- [QCM answer integrity](quiz-qcm-validity.md) — repair invalid questions in place; never invent the correct answer or discard valid questions to fix missing choices.
