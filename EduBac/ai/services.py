@@ -362,8 +362,7 @@ Contenu de la leçon (source UNIQUE autorisée) :
 Nombre de questions EXACT : {question_count}
 Niveau de difficulté demandé : {difficulty}
 
-{guide}
-{focus_instruction}
+{guide}{focus_instruction}
 
 Tu DOIS répondre UNIQUEMENT avec un JSON valide (pas de markdown, pas de texte autour) de la forme :
 {{
