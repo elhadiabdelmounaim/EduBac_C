@@ -87,11 +87,18 @@ def previous_questions(lesson):
 def validate_local(questions, history):
     references = list(history)
     for index, question in enumerate(questions, 1):
-        if any(similarity(question["text"], old["text"]) >= 0.86 for old in references):
+        # Wording overlap alone is not proof of the same reasoning: "dérivée"
+        # and "primitive" can exceed 90% similarity. Non-exact matches still
+        # pass through the mandatory semantic review before persistence.
+        duplicate = next((old for old in references
+                          if signature(question) == signature(old)), None)
+        if duplicate is not None:
             raise QuizNoveltyError(
                 f"Question {index} identique ou trop similaire à une question déjà proposée. "
                 "Remplace-la par une situation ou un raisonnement différent sur la même notion, "
-                "pas seulement par d’autres nombres, variables ou choix."
+                "pas seulement par d’autres nombres, variables ou choix. "
+                "Question de référence (donnée seulement) : "
+                + json.dumps(duplicate["text"], ensure_ascii=False)
             )
         references.append(question)
 
@@ -173,8 +180,12 @@ def validate_semantic(service, questions, history):
                 if (not isinstance(indexes, list)
                         or any(type(index) is not int or index not in allowed for index in indexes)):
                     raise ValueError()
-            except (ValueError, KeyError, TypeError):
-                raise QuizNoveltyError("Impossible de confirmer la diversité des questions. Réessayez.")
+            except (ValueError, KeyError, TypeError, AttributeError) as exc:
+                raise AIProviderError(
+                    "Le contrôle IA de diversité a renvoyé une réponse invalide. "
+                    "Aucun quiz n’a été enregistré ; réessayez.",
+                    code="novelty_validation_failed",
+                ) from exc
             if indexes:
                 raise QuizNoveltyError(
                     f"Questions {', '.join(map(str, indexes))} trop similaires à l’historique : "

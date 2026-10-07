@@ -69,6 +69,30 @@ class QuizNoveltyTests(TestCase):
         self.assertGreaterEqual(similarity("Calculer la dérivée de $x^2+3x$.",
                                           "Calculer la dérivée de $t^2+8t$."), 0.86)
 
+    @patch.object(AIService, "_chat")
+    def test_shared_wording_with_different_reasoning_reaches_semantic_review(self, chat):
+        old = "Calculer la dérivée de la fonction $f(x)=x^2+3x$."
+        new = "Calculer une primitive de la fonction $f(x)=x^2+3x$."
+        self.assertGreater(similarity(old, new), 0.86)
+        self.history([old])
+        chat.side_effect = [quiz_json([new]), '{"similar_questions":[]}']
+        result = self.service.generate_quiz_from_lesson(self.lesson, 1)
+        self.assertEqual(result["questions"][0]["text"], new)
+        self.assertEqual(chat.call_count, 2)
+        self.assertEqual(QuizGenerationQuestion.objects.count(), 1)
+
+    @patch.object(AIService, "_chat")
+    def test_similar_wording_still_rejected_by_semantic_review(self, chat):
+        old = "Calculer la dérivée de la fonction $f(x)=x^2+3x$."
+        new = "Déterminer la dérivée de la fonction $f(x)=x^2+3x$."
+        self.assertGreater(similarity(old, new), 0.86)
+        self.history([old])
+        chat.side_effect = [quiz_json([new]), '{"similar_questions":[1]}'] * 3
+        with self.assertRaises(AIProviderError) as error:
+            self.service.generate_quiz_from_lesson(self.lesson, 1)
+        self.assertEqual(error.exception.code, "duplicate_questions")
+        self.assertEqual(QuizGenerationQuestion.objects.count(), 0)
+
     def test_groq_output_budget_accounts_for_prompt_and_question_count(self):
         messages = [{"role": "user", "content": "a" * 6000}]
         self.assertEqual(quiz_output_budget(20, messages, "groq"), 5200)
@@ -155,8 +179,9 @@ class QuizNoveltyTests(TestCase):
     def test_uncertain_semantic_verdict_fails_closed(self, chat):
         self.history([OLD[0]])
         chat.side_effect = [quiz_json([NEW[0]]), '{"similar_questions":"unknown"}'] * 3
-        with self.assertRaises(AIProviderError):
+        with self.assertRaises(AIProviderError) as error:
             self.service.generate_quiz_from_lesson(self.lesson, 1)
+        self.assertEqual(error.exception.code, "novelty_validation_failed")
         self.assertEqual(QuizGenerationQuestion.objects.count(), 0)
 
     @patch.object(AIService, "_chat")
