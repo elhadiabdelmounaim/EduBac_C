@@ -19,6 +19,12 @@ class Quiz(models.Model):
     ]
 
     title = models.CharField(max_length=255, verbose_name='Titre')
+    description = models.TextField(
+        blank=True,
+        default='',
+        verbose_name='Description du quiz',
+        help_text='Notions et types de questions à privilégier lors de la génération IA.',
+    )
     duration = models.PositiveIntegerField(
         default=30,
         verbose_name='Durée totale (minutes)',

@@ -1,0 +1,89 @@
+## Objectif
+
+Dans la page/liste de création des quiz du projet EduBac, ajouter un **champ de texte "Description du quiz"** permettant au professeur de préciser les points, notions ou types de questions sur lesquels l’IA doit se concentrer lors de la génération du quiz.
+
+### Fonctionnalités demandées
+
+1. **Ajouter un champ de texte dans le formulaire de création du quiz**
+
+   * Label : `Description du quiz`
+   * Type : `textarea`
+   * Placeholder :
+     `Décrivez les notions, compétences ou types de questions sur lesquels le quiz doit se concentrer...`
+   * Le champ doit être suffisamment grand pour permettre au professeur d'écrire plusieurs lignes.
+   * Le champ doit rester optionnel.
+
+2. **Enregistrer la description**
+
+   * Ajouter la description dans le modèle Django du quiz si elle n'existe pas déjà.
+   * La description doit être sauvegardée avec le quiz en base de données.
+   * Ne pas créer un nouveau modèle si ce n'est pas nécessaire.
+   * Créer et appliquer la migration Django correspondante.
+
+3. **Utiliser la description lors de la génération IA**
+
+   * Lorsque le professeur génère un quiz avec l'IA, transmettre également la description au service de génération.
+   * La description doit être intégrée au prompt envoyé à l'IA.
+   * L'IA doit considérer cette description comme une **instruction de priorité** pour déterminer les notions et types de questions à générer.
+
+   Exemple :
+
+   ```text
+   Niveau : 2ème année Bac
+   Leçon : Puissances
+   Nombre de questions : 20
+
+   Description du quiz :
+   Se concentrer sur les propriétés des puissances, les puissances à exposant négatif,
+   l'écriture scientifique et les exercices nécessitant plusieurs étapes de calcul.
+   ```
+
+   L'IA doit alors générer les questions principalement autour de ces éléments.
+
+4. **Ne pas casser la génération actuelle**
+
+   * Si la description est vide, le comportement actuel de génération doit rester exactement le même.
+   * Ne pas supprimer les paramètres existants : niveau, leçon, nombre de questions, classe, professeur, etc.
+   * Conserver le système actuel de génération IA et modifier uniquement ce qui est nécessaire pour transmettre la description.
+
+5. **Interface**
+
+   * Intégrer le champ dans le design actuel d'EduBac.
+   * Conserver les couleurs, boutons, polices, espacements et composants existants.
+   * Ne pas créer une nouvelle page si le formulaire de création existe déjà.
+   * Le champ doit être placé logiquement près du nom du quiz, du niveau et de la leçon.
+
+6. **Validation**
+   Vérifier le fonctionnement complet :
+
+   ```text
+   Professeur
+       ↓
+   Nom du quiz
+       ↓
+   Niveau
+       ↓
+   Leçon
+       ↓
+   Nombre de questions
+       ↓
+   Description du quiz
+       ↓
+   Génération IA
+       ↓
+   Questions générées selon la description
+   ```
+
+### Contraintes importantes
+
+* Inspecter d'abord la structure actuelle du projet avant toute modification.
+* Utiliser les modèles, vues, formulaires, templates et services existants.
+* Ne pas créer un nouveau projet Django.
+* Ne pas supprimer ou réécrire des fichiers qui ne sont pas concernés.
+* Séparer correctement HTML, CSS, JavaScript et Python selon l'architecture actuelle.
+* Préserver toutes les fonctionnalités existantes.
+* Ajouter uniquement le nécessaire pour cette fonctionnalité.
+* Si une migration est nécessaire, la créer proprement.
+* Vérifier qu'un quiz sans description continue à fonctionner normalement.
+* Vérifier que la description est bien enregistrée en base de données et réellement transmise au prompt de génération IA.
+* À la fin, indiquer clairement les fichiers modifiés et résumer les changements effectués.

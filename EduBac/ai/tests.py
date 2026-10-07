@@ -227,3 +227,41 @@ class QuizLatexJsonTests(SimpleTestCase):
         self.assertIn(r'\\forall', provider_prompt)
         self.assertIn('encadre chaque expression mathématique', provider_prompt)
         self.assertNotIn('INTERDIT d’utiliser du code LaTeX', provider_prompt)
+        self.assertNotIn('Description du quiz du professeur', provider_prompt)
+
+    def test_quiz_description_has_priority_without_overriding_lesson_constraints(self):
+        lesson = SimpleNamespace(get_ai_help=lambda: {
+            'niveau': 'Terminale',
+            'cours': 'Mathématiques',
+            'lecon': 'Puissances',
+            'contenu': 'Règles des puissances à exposants entiers.',
+        })
+        provider = SimpleNamespace(name='test', model='test-model')
+        raw = r'''{"questions":[{
+          "text":"Simplifier $2^3$",
+          "choices":[
+            {"text":"8","is_correct":true},
+            {"text":"6","is_correct":false}
+          ],
+          "correct_answer":"8",
+          "explanation":"Calcul direct.",
+          "hint":"Multiplie trois facteurs."
+        }]}'''
+        description = (
+            "Prioriser les puissances négatives et les calculs en plusieurs étapes."
+        )
+
+        with (
+            patch.object(AIService, '_chat', return_value=raw) as chat,
+            patch.object(AIService, '_get_provider', return_value=provider),
+        ):
+            self.service.generate_quiz_from_lesson(
+                lesson,
+                question_count=1,
+                description=description,
+            )
+
+        provider_prompt = chat.call_args.args[0][-1]['content']
+        self.assertIn(description, provider_prompt)
+        self.assertIn('priorité principale', provider_prompt)
+        self.assertIn('strictement dans le contenu de la leçon', provider_prompt)

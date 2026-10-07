@@ -79,6 +79,25 @@
                                 </div>
                             </div>
 
+                            <div class="qb-card qb-description-card">
+                                <div class="qb-card-head">
+                                    <i class="bi bi-card-text"></i>
+                                    <label for="quizDescription" class="mb-0">Description du quiz</label>
+                                </div>
+                                <div class="qb-card-body">
+                                    <textarea
+                                        name="description"
+                                        id="quizDescription"
+                                        class="form-control"
+                                        rows="5"
+                                        placeholder="Décrivez les notions, compétences ou types de questions sur lesquels le quiz doit se concentrer..."
+                                    >{{ quiz_description }}</textarea>
+                                    <div class="form-text mt-2">
+                                        Facultatif. L’IA privilégiera ces éléments parmi ceux de la leçon.
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="qb-card">
                                 <div class="qb-card-head">
                                     <i class="bi bi-stars"></i>

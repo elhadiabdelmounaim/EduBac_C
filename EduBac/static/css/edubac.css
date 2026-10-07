@@ -2295,6 +2295,9 @@ body.has-sidebar .edubac-main {
     flex-direction: column;
     transition: box-shadow 0.2s, border-color 0.2s;
 }
+.qb-description-card {
+    grid-column: 1 / -1;
+}
 .qb-card:hover {
     box-shadow: 0 6px 20px rgba(42, 12, 61, 0.09);
     border-color: rgba(42, 12, 61, 0.12);

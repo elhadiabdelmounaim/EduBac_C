@@ -667,11 +667,13 @@ def teacher_ai_quiz(request):
     preview = None
     quiz_created = None
     error = None
+    quiz_description = ''
 
     if request.method == 'POST':
         action = request.POST.get('action', 'generate')
         niveau = request.POST.get('niveau', '').strip()
         lesson_id = request.POST.get('lesson')
+        quiz_description = (request.POST.get('description') or '').strip()
         n_questions = int(request.POST.get('question_count') or 5)
         sec = int(request.POST.get('seconds_per_question') or 20)
         difficulty = request.POST.get('difficulty', 'moyen')
@@ -697,10 +699,12 @@ def teacher_ai_quiz(request):
                     data = ai.generate_quiz_from_lesson(
                         lesson, n_questions, difficulty,
                         provider=provider, model=model,
+                        description=quiz_description,
                     )
                     # Créer le quiz + questions
                     quiz = Quiz.objects.create(
                         title=data.get('title') or f'Quiz — {lesson.title}',
+                        description=quiz_description,
                         lesson=lesson,
                         duration=max(1, (n_questions * sec) // 60 + 1),
                         seconds_per_question=sec,
@@ -810,6 +814,7 @@ def teacher_ai_quiz(request):
         'all_lessons': all_lessons,
         'preview': preview,
         'quiz_created': quiz_created,
+        'quiz_description': quiz_description,
         'classrooms': classrooms,
         'error': error,
         'ai_providers': available_providers(),
@@ -1121,6 +1126,7 @@ def duplicate_quiz(request, pk):
         seconds_per_question=quiz.seconds_per_question,
         question_count=quiz.question_count,
         difficulty=quiz.difficulty,
+        description=quiz.description,
         status='draft',
         lesson=quiz.lesson,
         created_by=request.user,

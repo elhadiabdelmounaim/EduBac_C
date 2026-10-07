@@ -93,6 +93,19 @@ class QuizLessonSelectionTests(TestCase):
             rf'<option value="{self.lesson.pk}" data-niveau="{self.course.niveau}"[^>]*selected',
         )
 
+    def test_generator_form_has_optional_description_textarea(self):
+        response = self.client.get(reverse('quizzes:teacher_ai'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<label for="quizDescription" class="mb-0">Description du quiz</label>', html=True)
+        self.assertContains(
+            response,
+            'Décrivez les notions, compétences ou types de questions sur lesquels le quiz doit se concentrer...',
+        )
+        rendered_form = response.content.decode()
+        self.assertRegex(rendered_form, r'<textarea[^>]*name="description"[^>]*rows="5"')
+        self.assertNotRegex(rendered_form, r'<textarea[^>]*name="description"[^>]*required')
+
     @patch('ai.services.AIService.generate_quiz_from_lesson')
     def test_teacher_generator_stores_latex_fields_without_plain_text_conversion(
         self, generate_quiz,
@@ -128,6 +141,7 @@ class QuizLessonSelectionTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         quiz = Quiz.objects.get(title='Quiz LaTeX')
+        self.assertEqual(quiz.description, '')
         question = Question.objects.get(quiz=quiz)
         self.assertEqual(question.text, question_text)
         self.assertEqual(question.correct_answer, choice_text)
@@ -138,6 +152,47 @@ class QuizLessonSelectionTests(TestCase):
             choice_text,
         )
         self.assertContains(response, r'\frac')
+
+    @patch('ai.services.AIService.generate_quiz_from_lesson')
+    def test_teacher_generator_saves_and_forwards_description(self, generate_quiz):
+        generate_quiz.return_value = {
+            'title': 'Quiz ciblé',
+            'questions': [{
+                'text': 'Calculer 2 + 2',
+                'correct_answer': '4',
+                'explanation': 'Addition directe.',
+                'hint': 'Additionne les deux termes.',
+                'choices': [
+                    {'text': '4', 'is_correct': True},
+                    {'text': '3', 'is_correct': False},
+                ],
+            }],
+        }
+        description = 'Prioriser les additions avec plusieurs étapes.'
+
+        response = self.client.post(reverse('quizzes:teacher_ai'), {
+            'action': 'generate',
+            'niveau': self.course.niveau,
+            'lesson': self.lesson.pk,
+            'question_count': 1,
+            'seconds_per_question': 20,
+            'difficulty': 'moyen',
+            'description': description,
+        })
+
+        self.assertEqual(response.status_code, 200)
+        quiz = Quiz.objects.get(title='Quiz ciblé')
+        self.assertEqual(quiz.description, description)
+        self.assertEqual(response.context['quiz_description'], description)
+        self.assertContains(response, description)
+        generate_quiz.assert_called_once_with(
+            self.lesson,
+            1,
+            'moyen',
+            provider=None,
+            model=None,
+            description=description,
+        )
 
 
 class MathTextNormalizationTests(TestCase):
