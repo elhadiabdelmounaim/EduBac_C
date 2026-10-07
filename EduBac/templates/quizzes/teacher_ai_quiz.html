@@ -105,9 +105,9 @@
                                 </div>
                                 <div class="qb-card-body">
                                     <select name="difficulty" id="difficultySelect" class="form-select">
-                                        <option value="facile">Facile — application directe</option>
-                                        <option value="moyen" selected>Moyen — 2–3 étapes</option>
-                                        <option value="difficile">Difficile — type examen</option>
+                                        <option value="facile" {% if selected_difficulty == 'facile' %}selected{% endif %}>Facile — application directe</option>
+                                        <option value="moyen" {% if selected_difficulty == 'moyen' %}selected{% endif %}>Moyen — 2–3 étapes</option>
+                                        <option value="difficile" {% if selected_difficulty == 'difficile' %}selected{% endif %}>Difficile — type examen</option>
                                     </select>
                                     <div class="form-text mt-1" id="difficultyHint">Questions avec raisonnement standard du cours (2–3 étapes).</div>
                                 </div>
@@ -120,7 +120,7 @@
                                 </div>
                                 <div class="qb-card-body">
                                     <div class="input-group">
-                                        <input type="number" name="seconds_per_question" id="secondsPerQ" class="form-control" value="20" min="5" max="120">
+                                        <input type="number" name="seconds_per_question" id="secondsPerQ" class="form-control" value="{{ selected_seconds_per_question }}" min="5" max="120" {% if generation_submitted %}data-manual="1"{% endif %}>
                                         <span class="input-group-text">sec</span>
                                     </div>
                                     <div class="form-text">Durée allouée à chaque question.</div>
@@ -133,7 +133,7 @@
                                     <span>Nombre de questions</span>
                                 </div>
                                 <div class="qb-card-body">
-                                    <input type="number" name="question_count" id="questionCount" class="form-control" value="5" min="1" max="20">
+                                    <input type="number" name="question_count" id="questionCount" class="form-control" value="{{ selected_question_count }}" min="1" max="20">
                                 </div>
                             </div>
 
@@ -145,14 +145,14 @@
                                 <div class="qb-card-body">
                                     <select name="ai_provider" id="aiProviderSelect" class="form-select mb-2">
                                         {% for p in ai_providers %}
-                                        <option value="{{ p.id }}" {% if not p.configured %}disabled{% endif %}>
+                                        <option value="{{ p.id }}" {% if p.id == selected_ai_provider %}selected{% endif %} {% if not p.configured %}disabled{% endif %}>
                                             {{ p.label }}{% if not p.configured %} (clé non configurée){% endif %}
                                         </option>
                                         {% empty %}
                                         <option value="groq">Groq</option>
                                         {% endfor %}
                                     </select>
-                                    <select name="ai_model" id="aiModelSelect" class="form-select">
+                                    <select name="ai_model" id="aiModelSelect" class="form-select" data-selected-model="{{ selected_ai_model }}">
                                         <option value="">— Défaut du provider —</option>
                                     </select>
                                 </div>
@@ -196,15 +196,15 @@
                         </div>
                         <div class="qb-preview-row">
                             <span class="qb-preview-label">Difficulté</span>
-                            <strong id="pvDiff">Moyen</strong>
+                            <strong id="pvDiff">{{ selected_difficulty|capfirst }}</strong>
                         </div>
                         <div class="qb-preview-row">
                             <span class="qb-preview-label">Temps / question</span>
-                            <strong><span id="pvSec">20</span> s</strong>
+                            <strong><span id="pvSec">{{ selected_seconds_per_question }}</span> s</strong>
                         </div>
                         <div class="qb-preview-row">
                             <span class="qb-preview-label">Questions</span>
-                            <strong id="pvCount">5</strong>
+                            <strong id="pvCount">{{ selected_question_count }}</strong>
                         </div>
                     </div>
 
@@ -451,7 +451,7 @@
   };
   var prov = document.getElementById('aiProviderSelect');
   var model = document.getElementById('aiModelSelect');
-  function fill(){
+  function fill(selected){
     if(!prov || !model) return;
     var list = providers[prov.value] || [];
     model.innerHTML = '<option value="">— Défaut du provider —</option>';
@@ -460,8 +460,12 @@
       o.value = m.id; o.textContent = m.label;
       model.appendChild(o);
     });
+    if(selected) model.value = selected;
   }
-  if(prov){ prov.addEventListener('change', fill); fill(); }
+  if(prov){
+    prov.addEventListener('change', function(){ fill(''); });
+    fill(model ? model.dataset.selectedModel : '');
+  }
 })();
 </script>
 {% endblock %}

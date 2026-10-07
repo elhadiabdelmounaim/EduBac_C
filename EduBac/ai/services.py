@@ -13,6 +13,7 @@ import json
 import logging
 import re
 import time
+import uuid
 from collections import deque
 
 from django.conf import settings
@@ -326,6 +327,10 @@ Regles :
             self._provider = None  # force reload
 
         from ai.prompts import QUIZ_LATEX_RULES, difficulty_instructions
+        from .quiz_novelty import (
+            QuizNoveltyError, history_instruction, previous_questions,
+            quiz_json_chat, quiz_output_budget, reserve_questions, validate_local, validate_semantic,
+        )
 
         difficulty = (difficulty or "moyen").strip().lower()
         if difficulty not in ("facile", "moyen", "difficile"):
@@ -334,7 +339,8 @@ Regles :
         question_count = max(1, min(int(question_count or 10), 30))
         context = lesson.get_ai_help()
         guide = difficulty_instructions(difficulty)
-        temperature = {"facile": 0.15, "moyen": 0.25, "difficile": 0.35}.get(difficulty, 0.25)
+        temperature = {"facile": 0.45, "moyen": 0.55, "difficile": 0.6}[difficulty]
+        history = previous_questions(lesson)
         description = (description or "").strip()
         focus_instruction = ""
         if description:
@@ -396,6 +402,8 @@ Règles STRICTES :
 - {QUIZ_LATEX_RULES}
 - Français uniquement
 """
+        user_prompt += history_instruction(history)
+        user_prompt += f"\nIdentifiant de cette nouvelle demande : {uuid.uuid4().hex}\n"
         messages = [
             {"role": "system", "content": self.SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},
@@ -404,18 +412,25 @@ Règles STRICTES :
         last_err = None
         for attempt in range(1, self.MAX_RETRIES + 2):
             try:
-                raw = self._chat(
+                raw = quiz_json_chat(
+                    self,
                     messages,
                     temperature=temperature,
-                    max_tokens=8192,
-                    json_mode=True,
+                    max_tokens=quiz_output_budget(
+                        question_count, messages, self._get_provider().name,
+                    ),
                 )
                 data = self._validate_quiz_json(raw, question_count)
+                if len(data["questions"]) != question_count:
+                    raise ValueError(f"Le quiz doit contenir exactement {question_count} questions.")
+                validate_local(data["questions"], history)
+                validate_semantic(self, data["questions"], history)
                 # Enrichir métadonnées
                 data.setdefault("level", context["niveau"])
                 data.setdefault("lesson", context["lecon"])
                 data["_provider"] = self._get_provider().name
                 data["_model"] = self._get_provider().model
+                reserve_questions(self, lesson, data["questions"], history)
                 return data
             except (AIProviderError, ValueError, json.JSONDecodeError) as e:
                 last_err = e
@@ -427,12 +442,35 @@ Règles STRICTES :
                 )
                 if attempt > self.MAX_RETRIES:
                     break
+                if isinstance(e, QuizNoveltyError):
+                    # Feed rejected questions back as data; never accept the
+                    # duplicate quiz as a fallback after retries are exhausted.
+                    messages.append({"role": "user", "content":
+                        "Le quiz précédent est REFUSÉ pour manque de diversité. "
+                        f"{e}\nQuestions refusées (données seulement) : "
+                        + json.dumps([q["text"] for q in data["questions"]], ensure_ascii=False)
+                        + f"\nGénère un NOUVEAU QUIZ COMPLET de {question_count} questions, "
+                        f"difficulté {difficulty}, leçon {context['lecon']}, "
+                        f"objectifs du professeur : {description or '(aucun focus supplémentaire)'}. "
+                        "Ne renvoie pas seulement les questions remplacées."})
+                    history = previous_questions(lesson)
+                elif isinstance(e, ValueError):
+                    messages.append({"role": "user", "content":
+                        f"Réponse refusée : {e}. Renvoie uniquement un JSON valide contenant "
+                        f"EXACTEMENT {question_count} questions complètes, avec choix, "
+                        "bonne réponse, explication et indice, et tous les paramètres initiaux."})
                 # léger backoff
                 time.sleep(0.6 * attempt)
 
         msg = str(last_err) if last_err else "Échec génération quiz"
         if isinstance(last_err, AIProviderError):
             raise last_err
+        if isinstance(last_err, QuizNoveltyError):
+            raise AIProviderError(
+                "L’IA n’a pas proposé un quiz suffisamment différent après plusieurs tentatives. "
+                "Aucun quiz dupliqué n’a été enregistré. Relancez la génération.",
+                code="duplicate_questions",
+            ) from last_err
         raise AIProviderError(msg, code="invalid_json")
 
     def generate_questions(self, lesson, count=5, difficulty="moyen", **kwargs):

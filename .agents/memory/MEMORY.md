@@ -4,3 +4,4 @@
 - [Browser regressions](browser-regression.md) — real login sessions; scope Playwright runtime to avoid Django ORM async-safety failures.
 - [2ème Bac SM curriculum order](second-bac-sm-curriculum-order.md) — preserve AlloSchool’s shared numbered A/B sequence; other Moroccan sites present it as differently ordered course sections.
 - [Python package installation](python-package-installation.md) — resolve root pyproject TOML conflicts before using Replit’s Python package installer.
+- [Quiz diversity](quiz-diversity.md) — repeated generation must change the situation or reasoning, not just numbers, order or wording; refuse unresolved duplicates.

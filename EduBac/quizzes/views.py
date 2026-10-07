@@ -668,6 +668,9 @@ def teacher_ai_quiz(request):
     quiz_created = None
     error = None
     quiz_description = ''
+    n_questions = 5
+    sec = 20
+    difficulty = 'moyen'
 
     if request.method == 'POST':
         action = request.POST.get('action', 'generate')
@@ -815,6 +818,12 @@ def teacher_ai_quiz(request):
         'preview': preview,
         'quiz_created': quiz_created,
         'quiz_description': quiz_description,
+        'selected_question_count': n_questions,
+        'selected_seconds_per_question': sec,
+        'selected_difficulty': difficulty,
+        'generation_submitted': request.method == 'POST',
+        'selected_ai_provider': request.POST.get('ai_provider', ''),
+        'selected_ai_model': request.POST.get('ai_model', ''),
         'classrooms': classrooms,
         'error': error,
         'ai_providers': available_providers(),

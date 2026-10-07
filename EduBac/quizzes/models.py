@@ -105,6 +105,24 @@ class Quiz(models.Model):
         return self.assignments.filter(student=student).exists()
 
 
+class QuizGenerationQuestion(models.Model):
+    """Persistent novelty history, including generated but not yet saved previews."""
+    lesson = models.ForeignKey(
+        'education.Lesson', on_delete=models.CASCADE,
+        related_name='generated_question_history',
+    )
+    signature = models.CharField(max_length=64)
+    data = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['lesson', 'signature'], name='unique_generated_question_per_lesson',
+            ),
+        ]
+
+
 class Question(models.Model):
     """
     Question d'un quiz.

@@ -1,6 +1,8 @@
 """Verify that selecting a school level immediately populates the lesson list."""
 import os
 import shutil
+from types import SimpleNamespace
+from unittest.mock import patch
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.management import call_command
@@ -57,6 +59,50 @@ class QuizLessonPickerBrowserTests(StaticLiveServerTestCase):
         self.page.locator('input[name="password"]').fill('Browser-test-only-123!')
         self.page.get_by_role('button', name='Se connecter', exact=True).click()
         self.page.wait_for_url(lambda url: '/connexion/' not in url)
+
+    def test_repeated_generation_preserves_parameters_and_replaces_duplicates(self):
+        from ai.services import AIService
+        from ai.test_quiz_novelty import OLD, NEW, quiz_json
+
+        self.log_in_teacher()
+        self.page.goto(self.live_server_url + reverse('quizzes:teacher_ai'))
+        level = CURRICULUM[0]['code']
+        self.page.select_option('#niveauSelect', level)
+        lessons = self.page.locator('#lessonSelect')
+        expect(lessons).to_be_enabled()
+        lesson_id = lessons.locator('option').nth(1).get_attribute('value')
+        self.page.select_option('#lessonSelect', lesson_id)
+        self.page.select_option('#difficultySelect', 'difficile')
+        self.page.locator('#secondsPerQ').fill('35')
+        self.page.locator('#questionCount').fill('2')
+        description = 'Varier les situations et les raisonnements.'
+        self.page.locator('textarea[name="description"]').fill(description)
+        self.page.select_option('#aiProviderSelect', 'groq')
+        self.page.select_option('#aiModelSelect', 'openai/gpt-oss-20b')
+
+        with (
+            patch.object(AIService, '_get_provider', return_value=SimpleNamespace(
+                name='groq', model='test-model',
+            )),
+            patch.object(AIService, '_chat', side_effect=[
+                quiz_json(OLD), '{"similar_questions":[]}',
+                quiz_json(list(reversed(OLD))), quiz_json(NEW), '{"similar_questions":[]}',
+            ]) as chat,
+        ):
+            for index in range(2):
+                with self.page.expect_navigation(wait_until='domcontentloaded'):
+                    self.page.locator('#genBtn').click()
+                expect(self.page.locator('#niveauSelect')).to_have_value(level)
+                expect(self.page.locator('#lessonSelect')).to_have_value(lesson_id)
+                expect(self.page.locator('#questionCount')).to_have_value('2')
+                expect(self.page.locator('#secondsPerQ')).to_have_value('35')
+                expect(self.page.locator('#difficultySelect')).to_have_value('difficile')
+                expect(self.page.locator('textarea[name="description"]')).to_have_value(description)
+                expect(self.page.locator('#aiProviderSelect')).to_have_value('groq')
+                expect(self.page.locator('#aiModelSelect')).to_have_value('openai/gpt-oss-20b')
+                question_label = 'Développer et réduire' if index == 0 else 'Une parcelle rectangulaire'
+                expect(self.page.get_by_text(question_label, exact=False).first).to_be_visible()
+            self.assertEqual(chat.call_count, 5)
 
     def test_new_quiz_shows_real_lessons_for_each_selected_level(self):
         self.log_in_teacher()
