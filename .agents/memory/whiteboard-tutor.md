@@ -27,3 +27,9 @@ Keep a “Retour aux résultats” navigation button above the student correctio
 **Why:** The user explicitly requested removing student Whiteboard editing and displaying only the inner frame, question result and existing rule.
 
 **How to apply:** Enforce read-only access server-side as well as in the interface, including student-owned and classroom boards. Reveal the question result only after submission; preserve the existing rule rendering.
+
+Use Mathpix as the selected handwriting/math recognition provider for the existing Whiteboard.
+
+**Why:** The user chose Mathpix after comparing it with general-purpose AI.
+
+**How to apply:** Keep recognition separate from tutoring. Provider selection alone does not authorize buying a subscription. Preserve original strokes until the teacher previews and confirms the recognition result; do not promise Arabic handwriting support.
