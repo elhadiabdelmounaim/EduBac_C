@@ -1,0 +1,165 @@
+Prompt : Développement d'un Whiteboard intelligent pour EduBac
+0. Contexte et principes directeurs
+EduBac est une application Django existante. Ce travail consiste à faire évoluer le Whiteboard actuel, et non à créer un nouveau projet.
+Principes à respecter pendant toute la réalisation :
+• Ne rien casser : les fonctionnalités, modules et données existants doivent continuer à fonctionner.
+• Modifier de manière ciblée : privilégier des modifications localisées plutôt que le remplacement de fichiers entiers.
+• Ne déclarer une fonctionnalité terminée qu'après son implémentation réelle et son test.
+• Signaler explicitement toute limitation technique, dépendance externe ou coût potentiel plutôt que de simuler une fonctionnalité.
+1. Objectif général
+Transformer le Whiteboard existant en tableau blanc interactif et intelligent, destiné à l'enseignement des mathématiques au lycée marocain.
+L'enseignant doit pouvoir écrire au stylet, à la souris ou sur écran tactile, convertir son écriture manuscrite en texte numérique et en formules mathématiques bien formatées, puis partager le tableau avec les élèves de la classe sélectionnée.
+Priorités de réalisation :
+1. Outils de dessin fiables et sauvegarde (base indispensable).
+2. Partage sécurisé avec la classe.
+3. Reconnaissance de texte et de formules mathématiques.
+4. Régularisation géométrique (fonctionnalité optionnelle).
+Phase 0 obligatoire : avant toute modification, analyser l'architecture actuelle : applications Django, modèles, vues, URLs, templates, fichiers CSS/JS, système de partage existant, relations enseignant-classe-élève et système de messagerie. Réutiliser les composants existants.
+2. Outils de dessin et d'écriture
+Conserver les outils existants et ajouter ou améliorer :
+• Stylo avec plusieurs couleurs et épaisseurs.
+• Gomme permettant d'effacer les traits (par trait ou par zone).
+• Sélecteur permettant de déplacer, redimensionner ou supprimer un élément.
+• Outils de tracé : lignes, flèches, rectangles, cercles, triangles et autres figures géométriques.
+• Ajout de texte au clavier.
+• Zoom avant/arrière et déplacement du tableau (pan).
+• Annulation et rétablissement (undo/redo) des actions.
+• Effacement du tableau avec demande de confirmation.
+• Sauvegarde automatique et manuelle de l'état du tableau.
+• Prise en charge de la souris, du stylet et des écrans tactiles, y compris la distinction entre doigt et stylet si la bibliothèque le permet (le stylet doit rester prioritaire pour le dessin, le toucher pouvant servir au déplacement de la vue).
+3. Reconnaissance intelligente de l'écriture manuscrite
+L'enseignant écrit naturellement, sélectionne les traits concernés, puis clique sur « Convertir en texte ».
+Le système doit :
+1. Analyser uniquement les traits sélectionnés.
+2. Reconnaître lettres, chiffres, mots et symboles.
+3. Produire un texte numérique propre et modifiable.
+4. Préserver autant que possible la disposition et l'ordre de l'écriture (position et taille approximatives).
+5. Afficher un aperçu avant de remplacer l'écriture originale.
+6. Permettre de confirmer, modifier ou annuler la conversion.
+7. Conserver l'écriture originale tant que la conversion n'est pas validée.
+Une option de conversion automatique, activable et désactivable, peut être proposée. Elle ne doit jamais interrompre l'écriture en cours (déclenchement après une pause de l'écriture, par exemple).
+Contrainte : ne pas présenter la reconnaissance comme fonctionnelle sans intégration réelle d'une bibliothèque ou d'un service compatible. Documenter le choix retenu.
+4. Reconnaissance des mathématiques
+Priorité absolue.
+Prise en charge souhaitée, selon les capacités réelles du moteur choisi :
+• Fractions simples et complexes.
+• Puissances et exposants.
+• Racines carrées et autres racines.
+• Indices.
+• Parenthèses et crochets.
+• Équations et inéquations.
+• Sommes, produits et systèmes d'équations.
+• Fonctions, limites, dérivées et intégrales.
+• Vecteurs, coordonnées et géométrie analytique.
+• Symboles : ∈, ∉, ⊂, ∪, ∩, ≤, ≥, ≠, ⇒, ⇔.
+• Expressions algébriques et polynômes.
+• Notations du programme de mathématiques du lycée marocain.
+Exemple de référence : l'enseignant écrit à la main x² + 2x + 1 = 0. Le système propose une formule propre, modifiable et correctement affichée.
+Démarche technique :
+• Rechercher et comparer les solutions spécialisées (bibliothèques ou API de reconnaissance de formules), en vérifiant leur disponibilité, leur coût, leurs limites, leur licence et leur compatibilité avec Django.
+• Utiliser MathJax ou KaTeX pour l'affichage.
+• Conserver une représentation éditable, idéalement en LaTeX, et la rendre modifiable au clavier.
+Garde-fou : une formule reconnue n'est jamais considérée comme correcte d'office. L'enseignant doit pouvoir vérifier et corriger le résultat avant validation.
+5. Langues et sens d'écriture
+Selon les capacités réelles du moteur retenu :
+• Français.
+• Arabe.
+• Chiffres arabes et occidentaux.
+• Notations mathématiques internationales.
+Exigences d'interface :
+• Arabe : écriture de droite à gauche (dir="rtl" sur les éléments concernés).
+• Français et formules mathématiques : gauche à droite.
+• Éviter le mélange incorrect des directions dans une même ligne (utiliser les isolats Unicode ou des conteneurs séparés).
+Si le moteur ne prend pas en charge une langue, le signaler clairement à l'utilisateur et proposer une alternative compatible (saisie clavier, autre moteur, etc.).
+6. Régularisation des figures géométriques (optionnel)
+Option permettant de transformer des tracés à main levée en formes régulières :
+• Cercle approximatif → cercle régulier.
+• Triangle approximatif → triangle aux côtés nets.
+• Ligne irrégulière → segment droit.
+• Tracés proches de l'horizontale ou de la verticale → axes alignés.
+• Flèches et points géométriques repositionnables.
+• Ajout de lettres aux sommets et aux points.
+Règles :
+• La conversion est facultative et toujours annulable.
+• L'enseignant garde le contrôle final de la figure (possibilité de revenir au tracé original).
+7. Édition du contenu converti
+Chaque élément converti doit pouvoir être :
+• Sélectionné indépendamment.
+• Modifié au clavier.
+• Déplacé, redimensionné et supprimé.
+• Reconverti si nécessaire.
+• Affiché en texte ou en formule mathématique, au choix.
+Ne jamais aplatir définitivement les éléments en image si cela empêche leur modification individuelle.
+8. Partage du Whiteboard avec une classe
+Intégrer au système existant de classes et de messagerie.
+Côté enseignant :
+1. Sélectionner une classe parmi ses classes.
+2. Préparer le contenu.
+3. Cliquer sur « Partager avec la classe ».
+4. Le contenu est envoyé uniquement aux élèves autorisés de cette classe.
+Côté élève :
+• Le tableau apparaît dans leur espace Whiteboard ou la vue existante.
+• Zoom, dézoom et déplacement de la vue autorisés.
+• Aucune modification, effacement ou déplacement des éléments de l'enseignant.
+• Lisibilité garantie sur ordinateur, tablette et téléphone.
+• Mises à jour en temps réel si le système actuel le permet (sinon, rafraîchissement explicite).
+Sécurité (critique) : toutes les permissions doivent être vérifiées côté serveur (rôle, appartenance à la classe, propriétaire du tableau). Désactiver des boutons dans le navigateur ne suffit pas. Un élève ne doit pas pouvoir accéder à un tableau non partagé avec lui en modifiant un identifiant dans l'URL ou dans une requête.
+9. Architecture technique
+• Réutiliser les applications, modèles et relations existants lorsqu'ils conviennent. Ajouter des modèles uniquement si nécessaire (par exemple : historique de versions, partage avec une classe).
+• Séparer proprement HTML, CSS et JavaScript.
+• Réutiliser le système d'authentification et de rôles.
+• Choisir une bibliothèque de dessin compatible avec le projet et la documenter.
+• Utiliser WebSocket (Django Channels, si déjà présent) ou une solution existante pour le temps réel, uniquement si pertinent.
+• Prévoir la sauvegarde et la restauration du contenu (format JSON versionné).
+• Ne jamais exposer de clés API dans le JavaScript client : tout appel à un service externe de reconnaissance passe par le backend Django.
+• Éviter toute dépendance payante non validée ou tout service présenté comme gratuit sans vérification.
+• Prévoir des migrations Django propres et réversibles.
+10. Interface utilisateur
+Interface moderne, claire et professionnelle, cohérente avec le design existant d'EduBac.
+Éléments attendus :
+• Barre d'outils compacte avec icônes explicites (stylo, gomme, texte, figures, reconnaissance).
+• Boutons « Convertir en texte » et « Convertir en formule mathématique ».
+• Bouton « Reconnaissance automatique » avec état activé/désactivé visible.
+• Zone d'aperçu des conversions.
+• Boutons « Confirmer », « Modifier » et « Annuler ».
+• Bouton « Partager avec la classe ».
+• Indicateurs visuels discrets pendant le traitement.
+L'interface doit rester utilisable sur petit écran (barre d'outils repliable ou défilante).
+11. Gestion des erreurs et performances
+• Messages d'erreur clairs et compréhensibles par un enseignant non technicien.
+• Ne jamais supprimer le dessin original avant validation.
+• État de chargement visible pendant la reconnaissance.
+• Gestion des erreurs réseau et des indisponibilités de l'API, avec possibilité de réessayer.
+• Envoyer au service de reconnaissance uniquement la sélection, jamais la totalité du tableau.
+• Traitement asynchrone : les outils de dessin restent utilisables pendant la reconnaissance.
+• Limiter la taille des images envoyées (redimensionnement et compression côté client).
+12. Tests obligatoires
+Tester au minimum :
+1. Écriture manuscrite à la souris et au stylet.
+2. Conversion d'un texte manuscrit en texte numérique.
+3. Conversion d'une équation mathématique (exemple : x² + 2x + 1 = 0).
+4. Correction manuelle d'une formule mal reconnue.
+5. Annulation d'une conversion.
+6. Dessin et régularisation d'une figure géométrique, avec retour possible au tracé original.
+7. Sauvegarde et rechargement du tableau.
+8. Partage avec la classe correcte uniquement.
+9. Impossibilité pour un élève de modifier le tableau de l'enseignant (test côté serveur, y compris par requête directe).
+10. Impossibilité pour un élève d'accéder à un tableau non partagé avec lui.
+11. Fonctionnement sur ordinateur, tablette et téléphone.
+12. Non-régression des fonctionnalités existantes d'EduBac.
+13. Méthode de réalisation
+Travailler par phases, en validant chacune avant de passer à la suivante :
+• Phase 1 : inspecter le projet existant et identifier les composants concernés.
+• Phase 2 : présenter les fichiers qui seront modifiés, les nouvelles dépendances et les choix techniques (bibliothèque de dessin, moteur de reconnaissance, coût éventuel).
+• Phase 3 : outils de dessin, sauvegarde et reconnaissance de texte.
+• Phase 4 : reconnaissance mathématique et rendu des formules.
+• Phase 5 : régularisation géométrique.
+• Phase 6 : partage sécurisé et affichage côté élève.
+• Phase 7 : tests, corrections des régressions et vérification de la sécurité.
+Livrable final :
+• Résumé des fichiers créés et modifiés.
+• Dépendances ajoutées (avec versions et licences).
+• Configuration nécessaire (variables d'environnement, clés, services externes).
+• Migrations à appliquer.
+• Résultats des tests effectués, et liste claire des fonctionnalités non réalisées ou partiellement réalisées.
+Règle essentielle : conserver les fonctionnalités actuelles d'EduBac, ne supprimer aucun module existant sans nécessité démontrée, et ne déclarer une fonctionnalité terminée que lorsqu'elle a été réellement implémentée et testée.
