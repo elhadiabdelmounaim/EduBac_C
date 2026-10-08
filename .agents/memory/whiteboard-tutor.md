@@ -22,6 +22,7 @@ The post-quiz Whiteboard is rule-only, unlike the ordinary tutor's solution mode
 **How to apply:** Preserve the rule-only scope when extending quiz correction flows. Never use a worked solution as a fallback; if rule identification fails, leave the board empty and show an explicit error.
 
 Students must see read-only whiteboards with only the board frame, the question result and the existing rule, without editing controls. Teacher editing remains unchanged.
+Keep a “Retour aux résultats” navigation button above the student correction board, aligned right.
 
 **Why:** The user explicitly requested removing student Whiteboard editing and displaying only the inner frame, question result and existing rule.
 

@@ -128,6 +128,18 @@ class QuizRuleBrowserTests(StaticLiveServerTestCase):
                 page.keyboard.press("Control+y")
                 expect(page.locator("#qwbCanvas .qwb-el")).to_have_count(1)
                 expect(page.locator(".qwb-result")).to_contain_text("Réponse correcte")
+                back = page.locator("#qwbResultsBack")
+                expect(back).to_be_visible()
+                expect(back).to_have_text("Retour aux résultats")
+                expect(back).to_have_attribute("href", reverse("quizzes:results", args=[attempt.pk]))
+                position = back.evaluate("""node => {
+                    const button = node.getBoundingClientRect();
+                    const board = document.getElementById('qwbCanvasWrap').getBoundingClientRect();
+                    return {above: button.bottom <= board.top,
+                            right: Math.abs(button.right - board.right) < 2};
+                }""")
+                self.assertTrue(position["above"])
+                self.assertTrue(position["right"])
                 expect(page.locator(".qwb-toolbar")).not_to_be_visible()
                 expect(page.locator(".qwb-sidebar")).not_to_be_visible()
                 page.locator("#qwbCanvas .qwb-el").click()
@@ -150,5 +162,8 @@ class QuizRuleBrowserTests(StaticLiveServerTestCase):
                 if screenshot_dir:
                     page.screenshot(path=os.path.join(screenshot_dir, "quiz-rule-mobile.png"))
                 self.assertEqual(errors, [])
+                expect(back).to_be_visible()
+                back.click()
+                expect(page).to_have_url(self.live_server_url + reverse("quizzes:results", args=[attempt.pk]))
             finally:
                 browser.close()

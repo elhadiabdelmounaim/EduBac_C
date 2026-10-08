@@ -15,6 +15,14 @@
      data-api="{% url 'whiteboard:quiz_correction_api' attempt.pk question.pk %}"
      data-csrf="{{ csrf_token }}">
 
+  {% if student_readonly %}
+  <nav class="d-flex justify-content-end" aria-label="Retour aux résultats">
+    <a href="{% url 'quizzes:results' attempt.pk %}" class="btn btn-sm btn-outline-primary" id="qwbResultsBack">
+      <i class="bi bi-arrow-left" aria-hidden="true"></i> Retour aux résultats
+    </a>
+  </nav>
+  {% endif %}
+
   <header class="qwb-toolbar"{% if student_readonly %} hidden inert{% endif %}>
     <div class="qwb-toolbar__left">
       <a href="/quizzes/tentative/{{ attempt.pk }}/resultats/" class="btn btn-sm btn-outline-primary" id="qwbBack">
