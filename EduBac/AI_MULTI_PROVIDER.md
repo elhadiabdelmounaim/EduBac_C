@@ -20,7 +20,7 @@ Le Quiz Generator (`generate_quiz_from_lesson`) ne dépend jamais d’un fournis
 AI_DEFAULT_PROVIDER=groq
 
 GROQ_API_KEY=
-GROQ_MODEL=llama-3.1-8b-instant
+GROQ_MODEL=openai/gpt-oss-20b
 
 OPENROUTER_API_KEY=
 OPENROUTER_MODEL=openrouter/free

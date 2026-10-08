@@ -155,10 +155,29 @@ class Lesson(models.Model):
             return ''
 
     def get_ai_help(self):
-        """Contexte pedagogique pour le service IA."""
-        contenu = self.get_full_pedagogical_text()
-        if len(contenu) > 14000:
-            contenu = contenu[:14000] + "\n\n[... contenu tronque ...]"
+        """Contexte pedagogique pour le service IA.
+
+        Le résumé et la FAQ passent avant le cours, puis le texte est coupé
+        à QUIZ_LESSON_CONTEXT_CHARS (défaut 5000).
+        """
+        from django.conf import settings
+        limit = int(getattr(settings, "QUIZ_LESSON_CONTEXT_CHARS", 5000))
+        summary = (self.summary or "").strip()
+        faq = (self.faq or "").strip()
+        content = (self.content or "").strip()
+        parts = []
+        if summary:
+            parts.append("## Resume\n" + summary)
+        if faq:
+            parts.append("## FAQ\n" + faq)
+        if content:
+            parts.append(content)
+        contenu = "\n\n".join(parts).strip()
+        if not contenu:
+            contenu = self.get_full_pedagogical_text()
+        suffix = "\n\n[... contenu tronque ...]"
+        if len(contenu) > limit:
+            contenu = contenu[: max(0, limit - len(suffix))].rstrip() + suffix
         return {
             'niveau': self.course.get_niveau_display(),
             'cours': self.course.name,

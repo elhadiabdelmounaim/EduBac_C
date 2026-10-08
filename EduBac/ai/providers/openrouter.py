@@ -3,16 +3,18 @@ from __future__ import annotations
 
 import json
 import logging
-import urllib.error
-import urllib.request
+import time
 
 from django.conf import settings
 
 from .base import AIProviderError, BaseProvider, http_error_code
+from .http_json import post_json
 
 logger = logging.getLogger(__name__)
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+# The free auto-router often stalls when forced onto a JSON-mode endpoint.
+_ROUTER_MODELS = frozenset({"openrouter/free", "openrouter/auto"})
 
 
 class OpenRouterProvider(BaseProvider):
@@ -38,6 +40,44 @@ class OpenRouterProvider(BaseProvider):
             {"id": "deepseek/deepseek-r1-distill-llama-70b:free", "label": "DeepSeek R1 Distill Free"},
         ]
 
+    def _router_model(self) -> bool:
+        return self.model.strip().lower() in _ROUTER_MODELS
+
+    def _exchange(self, payload: dict, deadline: float) -> tuple[int, str]:
+        remaining = deadline - time.monotonic()
+        if remaining < 0.5:
+            raise TimeoutError("timed out")
+        return post_json(
+            OPENROUTER_URL,
+            json.dumps(payload).encode("utf-8"),
+            {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": self.site_url,
+                "X-Title": self.app_name,
+            },
+            remaining,
+        )
+
+    @staticmethod
+    def _without_rejected_options(payload: dict, raw: str) -> dict | None:
+        """Drop optional fields OpenRouter refused, so the quiz can still be generated."""
+        text = raw.lower()
+        trimmed = dict(payload)
+        changed = False
+        if "response_format" in trimmed and any(
+            token in text for token in ("response_format", "json_object", "json mode", "structured")
+        ):
+            trimmed.pop("response_format")
+            changed = True
+        if "reasoning" in trimmed and "reasoning" in text:
+            trimmed.pop("reasoning")
+            changed = True
+        if "provider" in trimmed and any(token in text for token in ("provider", "sort", "throughput")):
+            trimmed.pop("provider")
+            changed = True
+        return trimmed if changed else None
+
     def chat(
         self,
         messages: list[dict[str, str]],
@@ -48,51 +88,71 @@ class OpenRouterProvider(BaseProvider):
         timeout: float | None = None,
     ) -> str:
         self.ensure_configured()
+        call_timeout = self.timeout if timeout is None else timeout
+        deadline = time.monotonic() + call_timeout
         payload = {
             "model": self.model,
             "messages": messages,
             "temperature": temperature,
             "max_tokens": max_tokens,
         }
-        if json_mode:
+        # A bounded quiz call must spend its tokens on the answer. The free
+        # router otherwise queues a reasoning model and outlives the page.
+        if timeout is not None:
+            payload["reasoning"] = {"effort": "none"}
+            payload["provider"] = {"sort": "throughput"}
+        if json_mode and not self._router_model():
             payload["response_format"] = {"type": "json_object"}
 
-        body = json.dumps(payload).encode("utf-8")
-        req = urllib.request.Request(
-            OPENROUTER_URL,
-            data=body,
-            method="POST",
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-                "HTTP-Referer": self.site_url,
-                "X-Title": self.app_name,
-            },
-        )
-        call_timeout = self.timeout if timeout is None else timeout
         try:
-            with urllib.request.urlopen(req, timeout=call_timeout) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-        except urllib.error.HTTPError as e:
-            raw = e.read().decode("utf-8", errors="replace") if e.fp else str(e)
+            status, raw = self._exchange(payload, deadline)
+            if status == 400:
+                trimmed = self._without_rejected_options(payload, raw)
+                if trimmed is not None:
+                    logger.warning(
+                        "generate_quiz API error: OpenRouter rejected optional fields, retrying model=%s",
+                        self.model,
+                    )
+                    status, raw = self._exchange(trimmed, deadline)
+            if status in (408, 504):
+                raise AIProviderError(
+                    f"Timeout OpenRouter ({status}).",
+                    code="timeout",
+                )
+            if status >= 400:
+                raise AIProviderError(
+                    f"OpenRouter HTTP {status} : {raw[:300]}",
+                    code=http_error_code(status),
+                )
+            data = json.loads(raw)
+        except AIProviderError:
+            raise
+        except TimeoutError as e:
+            logger.warning(
+                "generate_quiz API error: OpenRouter timeout model=%s", self.model,
+            )
+            raise AIProviderError("Timeout OpenRouter.", code="timeout") from e
+        except OSError as e:
             raise AIProviderError(
-                f"OpenRouter HTTP {e.code} : {raw[:300]}",
-                code=http_error_code(e.code),
-            ) from e
-        except urllib.error.URLError as e:
-            if isinstance(getattr(e, "reason", None), TimeoutError):
-                raise AIProviderError("Timeout OpenRouter.", code="timeout") from e
-            raise AIProviderError(
-                f"Connexion OpenRouter impossible : {e.reason}",
+                f"Connexion OpenRouter impossible : {e}",
                 code="connection",
             ) from e
-        except TimeoutError as e:
-            raise AIProviderError("Timeout OpenRouter.", code="timeout") from e
+        except json.JSONDecodeError as e:
+            raise AIProviderError(
+                f"Réponse OpenRouter invalide : {raw[:300]!r}",
+                code="invalid_response",
+            ) from e
         except Exception as e:
             raise AIProviderError(f"Erreur OpenRouter : {e}", code="unknown") from e
 
         try:
-            return data["choices"][0]["message"]["content"] or ""
+            message = data["choices"][0]["message"] or {}
+            content = message.get("content") or ""
+            if not str(content).strip():
+                content = message.get("reasoning") or message.get("reasoning_content") or ""
+            if not str(content).strip():
+                raise KeyError("content")
+            return str(content)
         except (KeyError, IndexError, TypeError) as e:
             raise AIProviderError(
                 f"Réponse OpenRouter invalide : {data!r}"[:400],

@@ -122,7 +122,17 @@ AUTH_USER_MODEL = 'accounts.User'
 AI_DEFAULT_PROVIDER = os.getenv('AI_DEFAULT_PROVIDER', 'groq')
 
 GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
-GROQ_MODEL = os.getenv('GROQ_MODEL', 'llama-3.1-8b-instant')
+# Llama 3.1 8B Instant and Llama 3.3 70B are gone from Groq free and developer
+# tiers. gpt-oss-20b is the replacement. The provider asks for low reasoning
+# effort because those tokens count against the TPM limit.
+# Quality alternative: openai/gpt-oss-120b or qwen/qwen3.8-27b.
+GROQ_MODEL = os.getenv('GROQ_MODEL', 'openai/gpt-oss-20b')
+QUIZ_SEMANTIC_CHECK_ENABLED = os.getenv(
+    'QUIZ_SEMANTIC_CHECK_ENABLED', 'false',
+).strip().lower() in ('1', 'true', 'yes', 'on')
+QUIZ_LESSON_CONTEXT_CHARS = int(os.getenv('QUIZ_LESSON_CONTEXT_CHARS', '5000'))
+QUIZ_GROQ_REQUEST_TOKEN_BUDGET = int(os.getenv('QUIZ_GROQ_REQUEST_TOKEN_BUDGET', '7500'))
+QUIZ_MAX_QUESTIONS = int(os.getenv('QUIZ_MAX_QUESTIONS', '10'))
 
 OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY', '')
 OPENROUTER_MODEL = os.getenv('OPENROUTER_MODEL', 'openrouter/free')

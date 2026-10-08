@@ -10,7 +10,7 @@ from education.models import Course, Lesson
 from quizzes.models import Question, Quiz, QuizGenerationQuestion
 from .providers import AIProviderError
 from .quiz_novelty import (
-    QuizNoveltyError, canonical_question, previous_questions,
+    QuizNoveltyError, canonical_question, history_instruction, previous_questions,
     quiz_output_budget, reserve_questions, similarity, validate_local, validate_semantic,
 )
 from .services import AIService
@@ -39,7 +39,7 @@ def quiz_json(texts):
     })
 
 
-@override_settings(ALLOWED_HOSTS=["testserver"])
+@override_settings(ALLOWED_HOSTS=["testserver"], QUIZ_SEMANTIC_CHECK_ENABLED=True)
 class QuizNoveltyTests(TestCase):
     def setUp(self):
         self.course = Course.objects.create(name="Algèbre", niveau="tronc_commun")
@@ -93,11 +93,50 @@ class QuizNoveltyTests(TestCase):
         self.assertEqual(error.exception.code, "duplicate_questions")
         self.assertEqual(QuizGenerationQuestion.objects.count(), 0)
 
+    def test_history_prompt_keeps_three_short_examples(self):
+        history = [{"text": f"Question numéro {i} " + ("x" * 200)} for i in range(6)]
+        sample = json.loads(history_instruction(history).split("données) :\n", 1)[1])
+        self.assertEqual([item["text"][:18] for item in sample], [
+            "Question numéro 3 ", "Question numéro 4 ", "Question numéro 5 ",
+        ])
+        self.assertTrue(all(len(item["text"]) == 150 for item in sample))
+
+    @override_settings(QUIZ_SEMANTIC_CHECK_ENABLED=False)
+    @patch.object(AIService, "_chat")
+    def test_semantic_model_call_stays_off_unless_enabled(self, chat):
+        self.history([OLD[0]])
+        chat.return_value = quiz_json([NEW[0]])
+        data = self.service.generate_quiz_from_lesson(self.lesson, 1)
+        self.assertEqual(data["questions"][0]["text"], NEW[0])
+        self.assertEqual(chat.call_count, 1)
+
+    @patch.object(AIService, "_chat")
+    def test_generation_caps_the_question_count_at_ten(self, chat):
+        chat.return_value = quiz_json([NEW[0]])
+        with self.assertRaises(AIProviderError):
+            self.service.generate_quiz_from_lesson(self.lesson, 25)
+        prompt = chat.call_args_list[0].args[0][1]["content"]
+        self.assertIn("Nombre de questions EXACT : 10", prompt)
+
+    def test_ai_help_prefers_the_summary_inside_the_character_budget(self):
+        lesson = Lesson.objects.create(
+            title="Longue leçon",
+            content="C" * 8000,
+            summary="RESUME IMPORTANT",
+            course=self.course,
+        )
+        contenu = lesson.get_ai_help()["contenu"]
+        self.assertLessEqual(len(contenu), 5000)
+        self.assertTrue(contenu.startswith("## Resume"))
+        self.assertIn("RESUME IMPORTANT", contenu)
+        self.assertTrue(contenu.endswith("[... contenu tronque ...]"))
+
     def test_groq_output_budget_accounts_for_prompt_and_question_count(self):
         messages = [{"role": "user", "content": "a" * 6000}]
         self.assertEqual(quiz_output_budget(20, messages, "groq"), 5200)
-        self.assertEqual(quiz_output_budget(2, messages, "groq"), 3072)
-        self.assertEqual(quiz_output_budget(20, messages, "other-provider"), 8192)
+        self.assertEqual(quiz_output_budget(2, messages, "groq"), 800)
+        self.assertEqual(quiz_output_budget(20, messages, "other-provider"), 8000)
+        self.assertLessEqual(quiz_output_budget(20, messages, "groq"), 5200)
 
     @patch.object(AIService, "_chat")
     def test_reordered_quiz_is_rejected_then_replaced(self, chat):
@@ -223,6 +262,27 @@ class QuizNoveltyTests(TestCase):
         self.assertTrue(chat.call_args_list[0].kwargs["json_mode"])
         self.assertFalse(chat.call_args_list[1].kwargs["json_mode"])
         self.assertLess(chat.call_args_list[0].kwargs["max_tokens"], 8000)
+
+    @patch.object(AIService, "_chat")
+    def test_openrouter_json_mode_rejection_retries_plain_json(self, chat):
+        chat.side_effect = [
+            AIProviderError(
+                "OpenRouter HTTP 404 : No endpoints found that support response_format json_object",
+                code="not_found",
+            ),
+            quiz_json([OLD[0]]),
+        ]
+        data = self.service.generate_quiz_from_lesson(self.lesson, 1)
+        self.assertEqual(data["questions"][0]["text"], OLD[0])
+        self.assertFalse(chat.call_args_list[1].kwargs["json_mode"])
+
+    @patch.object(AIService, "_chat")
+    def test_rate_limit_is_not_retried_as_plain_json(self, chat):
+        chat.side_effect = AIProviderError("Limite atteinte", code="rate_limit")
+        with self.assertRaises(AIProviderError) as error:
+            self.service.generate_quiz_from_lesson(self.lesson, 1)
+        self.assertEqual(error.exception.code, "rate_limit")
+        self.assertEqual(chat.call_count, 1)
 
     @patch.object(AIService, "_chat")
     def test_semantic_plain_json_fallback_is_still_checked(self, chat):

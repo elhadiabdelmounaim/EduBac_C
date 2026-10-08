@@ -680,7 +680,8 @@ def teacher_ai_quiz(request):
         n_questions = int(request.POST.get('question_count') or 5)
         sec = int(request.POST.get('seconds_per_question') or 20)
         difficulty = request.POST.get('difficulty', 'moyen')
-        n_questions = max(1, min(n_questions, 20))
+        from ai.services import QUIZ_MAX_QUESTIONS
+        n_questions = max(1, min(n_questions, QUIZ_MAX_QUESTIONS))
         sec = max(5, min(sec, 120))
 
         selected_niveau = niveau

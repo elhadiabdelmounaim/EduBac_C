@@ -33,7 +33,7 @@ def response(*questions):
     return json.dumps({"title": "Quiz à conserver", "questions": questions}, ensure_ascii=False)
 
 
-@override_settings(ALLOWED_HOSTS=["testserver"])
+@override_settings(ALLOWED_HOSTS=["testserver"], QUIZ_SEMANTIC_CHECK_ENABLED=True)
 class QuizQuestionValidationTests(TestCase):
     def setUp(self):
         self.lesson = Lesson.objects.create(
@@ -151,7 +151,7 @@ class QuizQuestionValidationTests(TestCase):
     def test_rate_limit_during_repair_stops_without_another_question_attempt(self, chat):
         chat.side_effect = [
             response(self.good, self.broken),
-            AIProviderError("Rate limit", code="rate_limit", retry_after=20),
+            AIProviderError("Rate limit", code="rate_limit", retry_after=90),
         ]
         with self.assertRaises(AIProviderError) as error:
             self.service.generate_quiz_from_lesson(self.lesson, 2)

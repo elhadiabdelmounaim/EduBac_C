@@ -1,3 +1,4 @@
+import json
 from unittest.mock import patch
 from types import SimpleNamespace
 
@@ -9,7 +10,7 @@ from education.models import Course, Lesson
 from .models import AIConversation, AIMessage
 from .providers import AIProviderError
 from .prompts import build_quiz_prompt
-from .providers.groq import GroqProvider, _retry_after_seconds
+from .providers.groq import GroqProvider, _retry_after_seconds, bounded_retry_after
 from .providers.base import http_error_code
 from .services import AIService, _rate_limit_delay, public_quiz_error, repair_latex_escapes
 
@@ -213,35 +214,92 @@ class QuizLatexJsonTests(SimpleTestCase):
         self.assertEqual(question['explanation'], r'$\sin x$ et $\underbrace{x}$')
         self.assertEqual(question['hint'], r'$\neq 0$')
 
-    def test_groq_rate_limit_returns_immediately_without_blocking_the_request(self):
-        lesson = SimpleNamespace(pk=None, get_ai_help=lambda: {
+    def _lesson(self):
+        return SimpleNamespace(pk=None, get_ai_help=lambda: {
             'niveau': 'Terminale',
             'cours': 'Mathématiques',
             'lecon': 'Racines',
             'contenu': 'Racine carrée et identités.',
         })
-        provider = SimpleNamespace(name='groq', model='openai/gpt-oss-120b')
+
+    def _one_question(self, text='Calculer $2+2$'):
+        return json.dumps({
+            'questions': [{
+                'text': text,
+                'choices': [
+                    {'text': '4', 'is_correct': True},
+                    {'text': '3', 'is_correct': False},
+                ],
+                'explanation': 'Somme des deux nombres.',
+                'hint': 'Addition',
+            }],
+        })
+
+    def test_short_rate_limit_waits_once_then_retries(self):
+        provider = SimpleNamespace(name='groq', model='llama-3.1-8b-instant')
         rate_limit = AIProviderError(
-            "Rate limit Groq : Error code: 429 - {'error': {'message': "
-            "'Rate limit reached for model `openai/gpt-oss-120b` on tokens per minute (TPM): "
-            "Limit 8000, Used 5024, Requested 5729. Please try again in 20.6475s.', "
-            "'code': 'rate_limit_exceeded'}}",
+            'Please try again in 20.6475s.',
             code='rate_limit',
             retry_after=20.6475,
         )
-
         with (
-            patch.object(AIService, '_chat', side_effect=[rate_limit, 'unused']) as chat,
+            patch.object(AIService, '_chat', side_effect=[rate_limit, self._one_question()]) as chat,
+            patch.object(AIService, '_get_provider', return_value=provider),
+            patch('ai.services.time.sleep') as sleep,
+        ):
+            data = self.service.generate_quiz_from_lesson(self._lesson(), question_count=1)
+
+        self.assertEqual(data['questions'][0]['correct_answer'], '4')
+        self.assertEqual(chat.call_count, 2)
+        sleep.assert_called_once()
+        self.assertAlmostEqual(sleep.call_args.args[0], 20.6475, places=3)
+
+    def test_long_rate_limit_returns_the_existing_error_without_waiting(self):
+        provider = SimpleNamespace(name='groq', model='llama-3.1-8b-instant')
+        rate_limit = AIProviderError('wait', code='rate_limit', retry_after=597)
+        with (
+            patch.object(AIService, '_chat', side_effect=[rate_limit, self._one_question()]) as chat,
             patch.object(AIService, '_get_provider', return_value=provider),
             patch('ai.services.time.sleep') as sleep,
         ):
             with self.assertRaises(AIProviderError) as error:
-                self.service.generate_quiz_from_lesson(lesson, question_count=1)
+                self.service.generate_quiz_from_lesson(self._lesson(), question_count=1)
 
         self.assertEqual(error.exception.code, 'rate_limit')
         self.assertEqual(chat.call_count, 1)
         sleep.assert_not_called()
-        self.assertIn('21 secondes', public_quiz_error(error.exception))
+        self.assertIn('10 minutes', public_quiz_error(error.exception))
+        self.assertIsNone(bounded_retry_after(597))
+        self.assertAlmostEqual(bounded_retry_after(20.6475), 20.6475, places=3)
+
+    def test_broken_json_regenerates_only_the_missing_question(self):
+        provider = SimpleNamespace(name='groq', model='llama-3.1-8b-instant')
+        kept = json.dumps({
+            'text': 'Question valide à conserver.',
+            'choices': [
+                {'text': 'oui', 'is_correct': True},
+                {'text': 'non', 'is_correct': False},
+            ],
+            'explanation': 'Déjà correcte.',
+            'hint': 'Lis le cours.',
+        })
+        broken = 'avant ' + kept + ' { "text": "cassée", "choices": [ '
+        with (
+            patch.object(
+                AIService, '_chat',
+                side_effect=[broken, self._one_question('Question de remplacement.')],
+            ) as chat,
+            patch.object(AIService, '_get_provider', return_value=provider),
+            patch('ai.services.time.sleep'),
+        ):
+            data = self.service.generate_quiz_from_lesson(self._lesson(), question_count=2)
+
+        self.assertEqual(
+            [question['text'] for question in data['questions']],
+            ['Question valide à conserver.', 'Question de remplacement.'],
+        )
+        self.assertEqual(chat.call_count, 2)
+        self.assertIn('CORRIGE uniquement', chat.call_args_list[1].args[0][-1]['content'])
 
     def test_timeout_bad_request_and_not_found_do_not_regenerate_the_quiz(self):
         lesson = SimpleNamespace(pk=None, get_ai_help=lambda: {
@@ -341,6 +399,142 @@ class QuizLatexJsonTests(SimpleTestCase):
 
         self.assertEqual(error.exception.code, 'rate_limit')
         self.assertEqual(calls, ['openai/gpt-oss-120b'])
+
+    def _groq_client(self, create):
+        class Completions:
+            def create(self, **kwargs):
+                return create(kwargs)
+
+        class Client:
+            class chat:  # noqa: N801
+                completions = Completions()
+
+        return Client()
+
+    def test_decommissioned_llama_uses_gpt_oss_reasoning_when_content_is_empty(self):
+        import httpx
+        from groq import APIStatusError
+
+        provider = GroqProvider(api_key='test-key', model='llama-3.1-8b-instant')
+        request = httpx.Request('POST', 'https://api.groq.com/openai/v1/chat/completions')
+        missing = APIStatusError(
+            'The model does not exist',
+            response=httpx.Response(404, request=request),
+            body=None,
+        )
+        calls = []
+
+        class Message:
+            content = ''
+            reasoning = self._one_question('Depuis le raisonnement')
+
+        class Choice:
+            message = Message()
+
+        class Response:
+            choices = [Choice()]
+
+        def create(kwargs):
+            calls.append(kwargs)
+            if kwargs['model'] == 'llama-3.1-8b-instant':
+                raise missing
+            return Response()
+
+        with patch.object(provider, '_get_client', return_value=self._groq_client(create)):
+            text = provider.chat([{'role': 'user', 'content': 'quiz'}], json_mode=True)
+
+        self.assertIn('Depuis le raisonnement', text)
+        self.assertEqual(
+            [call['model'] for call in calls],
+            ['llama-3.1-8b-instant', 'openai/gpt-oss-20b'],
+        )
+        self.assertEqual(calls[1]['reasoning_effort'], 'low')
+        self.assertEqual(calls[1]['response_format'], {'type': 'json_object'})
+        data = self.service._parse_quiz_json(text)
+        self.assertEqual(data['questions'][0]['text'], 'Depuis le raisonnement')
+
+    def test_json_validate_failed_returns_the_rejected_generation(self):
+        import httpx
+        from groq import APIStatusError
+
+        provider = GroqProvider(api_key='test-key', model='openai/gpt-oss-20b')
+        request = httpx.Request('POST', 'https://api.groq.com/openai/v1/chat/completions')
+        rejected = (
+            r'{"questions":[{"text":"Aire $\sqrt{x}$","choices":['
+            r'{"text":"1","is_correct":true},{"text":"2","is_correct":false}]}]}'
+        )
+        error = APIStatusError(
+            'json_validate_failed',
+            response=httpx.Response(400, request=request),
+            body={'error': {
+                'message': 'Failed to validate JSON',
+                'code': 'json_validate_failed',
+                'failed_generation': rejected,
+            }},
+        )
+        calls = []
+
+        def create(kwargs):
+            calls.append(kwargs['model'])
+            raise error
+
+        with patch.object(provider, '_get_client', return_value=self._groq_client(create)):
+            text = provider.chat([{'role': 'user', 'content': 'quiz'}], json_mode=True)
+
+        self.assertEqual(calls, ['openai/gpt-oss-20b'])
+        self.assertIn('questions', text)
+        questions = self.service._load_quiz_for_repair(text, 1)['questions']
+        self.assertEqual(questions[0]['text'], r'Aire $\sqrt{x}$')
+
+    def test_rejected_reasoning_effort_retries_the_same_model(self):
+        import httpx
+        from groq import APIStatusError
+
+        provider = GroqProvider(api_key='test-key', model='openai/gpt-oss-20b')
+        request = httpx.Request('POST', 'https://api.groq.com/openai/v1/chat/completions')
+        rejected = APIStatusError(
+            'reasoning_effort is not supported',
+            response=httpx.Response(400, request=request),
+            body={'error': {'message': 'reasoning_effort is not supported'}},
+        )
+        calls = []
+
+        class Message:
+            content = self._one_question()
+            reasoning = ''
+
+        class Choice:
+            message = Message()
+
+        class Response:
+            choices = [Choice()]
+
+        def create(kwargs):
+            calls.append(dict(kwargs))
+            if 'reasoning_effort' in kwargs:
+                raise rejected
+            return Response()
+
+        with patch.object(provider, '_get_client', return_value=self._groq_client(create)):
+            text = provider.chat([{'role': 'user', 'content': 'quiz'}])
+
+        self.assertEqual([call['model'] for call in calls], ['openai/gpt-oss-20b', 'openai/gpt-oss-20b'])
+        self.assertNotIn('reasoning_effort', calls[1])
+        self.assertIn('questions', text)
+
+    def test_harmony_final_channel_is_the_quiz_json(self):
+        payload = self._one_question('Question finale')
+        raw = (
+            '<|channel|>analysis<|message|>plan {not json<|end|>'
+            '<|start|>assistant<|channel|>final<|message|>' + payload
+        )
+        data = self.service._parse_quiz_json(raw)
+        self.assertEqual(data['questions'][0]['text'], 'Question finale')
+
+    def test_think_block_is_removed_before_json_parse(self):
+        raw = '<think>Je calcule {presque} le JSON.</think>\n' + self._one_question('Après think')
+        data = self.service._parse_quiz_json(raw)
+        self.assertEqual(data['questions'][0]['text'], 'Après think')
 
     def test_quiz_prompt_requires_delimited_latex_and_json_escaped_slashes(self):
         prompt = build_quiz_prompt(

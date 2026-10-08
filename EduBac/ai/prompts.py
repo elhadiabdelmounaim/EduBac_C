@@ -3,31 +3,21 @@ Templates de prompts pour l'assistant IA EduBac.
 """
 
 DIFFICULTY_GUIDE = {
-    "facile": """DIFFICULTÉ FACILE — règles obligatoires :
-- Questions directes d'application immédiate du cours
-- Une seule notion simple par question
-- Calculs courts (1 à 2 étapes maximum)
-- Distractors (mauvaises réponses) évidents ou erreurs de signe/calcul basiques
-- Pas de pièges, pas de cas particuliers, pas de démonstration
-- Formules utilisées telles quelles, sans manipulation complexe
-- Niveau : vérification que l'élève a lu/retenu le cours""",
-
-    "moyen": """DIFFICULTÉ MOYENNE — règles obligatoires :
-- Application du cours avec 2 à 3 étapes de raisonnement
-- Combinaison possible de deux notions de la leçon
-- Calculs standard du programme (factorisation, équation simple, dérivée directe…)
-- Distractors plausibles (erreurs classiques d'élèves)
-- Peut inclure un cas un peu moins direct, mais toujours dans le cours
-- Pas de démonstration longue ni d'exercice type bac complet""",
-
-    "difficile": """DIFFICULTÉ DIFFICILE — règles obligatoires :
-- Raisonnement multi-étapes (3 étapes ou plus)
-- Synthèse de plusieurs notions de la leçon (voire leçon liée si dans le contenu)
-- Pièges classiques du bac (domaine de définition, cas particuliers, conditions)
-- Distractors très proches de la bonne réponse (erreurs subtiles)
-- Peut demander justification, choix de méthode, ou interprétation
-- Niveau proche d'un exercice d'examen / bac, tout en restant STRICTEMENT sur le contenu fourni
-- Énoncés plus riches, mais clairs et en français""",
+    "facile": (
+        "DIFFICULTÉ FACILE : application directe d'une notion, calcul en 1 ou 2 étapes, "
+        "formules utilisées telles quelles, distracteurs évidents. Pas de piège, "
+        "de cas particulier ni de démonstration."
+    ),
+    "moyen": (
+        "DIFFICULTÉ MOYENNE : 2 ou 3 étapes, une ou deux notions de la leçon, "
+        "calculs habituels du programme, distracteurs plausibles. "
+        "Pas de démonstration longue ni d'exercice de bac complet."
+    ),
+    "difficile": (
+        "DIFFICULTÉ DIFFICILE : 3 étapes ou plus, synthèse des notions présentes "
+        "dans le contenu, pièges du bac, distracteurs proches, justification possible. "
+        "Niveau examen, énoncé clair, strictement sur le contenu fourni."
+    ),
 }
 
 
@@ -52,13 +42,7 @@ Question de l'élève :
 """
 
 
-QUIZ_LATEX_RULES = r"""Format obligatoire pour les expressions mathématiques :
-- Dans les champs `text`, `choices[].text`, `correct_answer`, `explanation` et `hint`, encadre chaque expression mathématique par des délimiteurs LaTeX `$...$`.
-- Écris les expressions en LaTeX, pas en approximations ASCII (`forall`, `sqrt(`, `!=`, `->`) ni avec des glyphes mathématiques Unicode mélangés au LaTeX.
-- Reste en ligne avec `$...$`; n'utilise pas `$$...$$` pour les quiz.
-- Dans le JSON brut, double chaque antislash LaTeX pour que le JSON soit valide : `\\frac`, `\\forall`, `\\neq`, etc.
-- N'utilise pas `$` comme symbole monétaire.
-- Exemple correct de valeur JSON : "text": "Montre que $\\forall x \\in \\mathbb{R},\\ x \\neq 0 \\Rightarrow |x| > 0$."
+QUIZ_LATEX_RULES = r"""LaTeX : dans `text`, `choices[].text`, `explanation` et `hint`, encadre chaque expression mathématique par `$...$` (pas `$$`, pas de `$` monétaire, pas d'ASCII du type `sqrt(` ni de glyphes Unicode). Dans le JSON, double chaque antislash : `\\frac`, `\\forall`, `\\neq`. Exemple : "text": "Montre que $\\forall x \\in \\mathbb{R},\\ x \\neq 0 \\Rightarrow |x| > 0$."
 """
 
 
