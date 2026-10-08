@@ -1,0 +1,54 @@
+/* Aperçu lecture seule d'un whiteboard partagé. */
+.wb-share-dialog {
+  border: none;
+  border-radius: 16px;
+  padding: 1.25rem;
+  max-width: 28rem;
+  width: calc(100% - 2rem);
+  box-shadow: 0 8px 32px rgba(42, 12, 61, 0.18);
+}
+.wb-share-dialog::backdrop { background: rgba(42, 12, 61, 0.35); }
+.wb-share-head {
+  color: var(--edubac-navy, #2A0C3D);
+}
+.wb-share-viewport {
+  width: 100%;
+  height: min(70vh, 720px);
+  overflow: hidden;
+  touch-action: none;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(42, 12, 61, 0.1);
+  cursor: grab;
+  position: relative;
+}
+.wb-share-viewport.is-panning { cursor: grabbing; }
+.wb-share-viewport:fullscreen {
+  height: 100%;
+  border-radius: 0;
+  background: #111;
+}
+.wb-share-stage {
+  transform-origin: 0 0;
+  width: max-content;
+  height: max-content;
+}
+.wb-share-canvas {
+  display: block;
+  background: #fff;
+  pointer-events: none;
+}
+.wb-share-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+.wb-share-history .list-group-item { border-left: 0; border-right: 0; }
+@media (max-width: 768px) {
+  .wb-share-viewport { height: 58vh; }
+}
+html[data-theme="dark"] .wb-share-viewport,
+html[data-theme="dark"] .wb-share-canvas {
+  background: #1a1228;
+}

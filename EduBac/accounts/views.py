@@ -256,6 +256,16 @@ def student_dashboard(request):
     active_challenge = WeeklyChallenge.objects.filter(
         active=True, start_date__lte=timezone.localdate(), end_date__gte=timezone.localdate()
     ).first()
+    from classrooms.models import ClassroomMember
+    from whiteboard.models import WhiteboardShare
+    membership = ClassroomMember.objects.filter(user=user).select_related('classroom').first()
+    latest_share = None
+    if membership:
+        latest_share = (
+            WhiteboardShare.objects.filter(classroom=membership.classroom)
+            .select_related('classroom')
+            .first()
+        )
 
     return render(request, 'accounts/dashboard_student.html', {
         'page_title': 'Tableau de bord élève',
@@ -270,6 +280,7 @@ def student_dashboard(request):
         'weekly': weekly,
         'recent_badges': recent_badges,
         'active_challenge': active_challenge,
+        'latest_share': latest_share,
     })
 
 

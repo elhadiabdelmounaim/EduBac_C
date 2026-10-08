@@ -2,6 +2,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="/static/css/whiteboard.css">
 <link rel="stylesheet" href="/static/css/whiteboard-tutor.css">
+<link rel="stylesheet" href="/static/css/whiteboard-share.css">
 {% include "includes/katex.html" %}
 {% endblock %}
 {% block content %}
@@ -38,6 +39,9 @@
                 <i class="bi bi-cloud-upload"></i> Sauver
             </button>
             <button type="button" class="btn btn-sm btn-outline-success" id="wbExportPng">PNG</button>
+            {% if is_teacher_owner %}
+            <button type="button" class="btn btn-sm btn-edubac" id="wbShare" data-share-url="{% url 'whiteboard:share_create' %}">📤 Partager</button>
+            {% endif %}
             <button type="button" class="btn btn-sm btn-edubac" id="wbTutorToggle" aria-expanded="false" aria-controls="wbTutor"><i class="bi bi-chat-square-text" aria-hidden="true"></i> Assistant IA</button>
         </div>
     </div>
@@ -199,9 +203,35 @@
         </div>
     </div>
 </div>
+{% if is_teacher_owner %}
+{{ share_classrooms|json_script:"wbShareClasses" }}
+<dialog id="wbShareDialog" class="wb-share-dialog" aria-labelledby="wbShareHeading">
+    <form id="wbShareForm">
+        <h5 id="wbShareHeading" class="fw-bold wb-share-head">📤 Partager</h5>
+        <div data-step="choose">
+            <p class="small text-muted">Choisis une seule classe. Le tableau n’est pas envoyé aux autres classes.</p>
+            <label class="form-label fw-semibold" for="wbShareClass">Classe</label>
+            <select id="wbShareClass" class="form-select mb-3"></select>
+            <label class="form-label fw-semibold" for="wbShareName">Titre</label>
+            <input id="wbShareName" class="form-control" maxlength="200" required>
+        </div>
+        <div data-step="confirm" hidden>
+            <p id="wbShareConfirmText" class="mb-2"></p>
+        </div>
+        <p id="wbShareError" class="small text-danger" role="alert"></p>
+        <div class="d-flex gap-2 justify-content-end">
+            <button type="button" class="btn btn-outline-secondary" data-share-cancel>Annuler</button>
+            <button type="button" class="btn btn-outline-secondary" data-share-back hidden>Retour</button>
+            <button type="button" class="btn btn-edubac" data-share-next>Continuer</button>
+            <button type="submit" class="btn btn-edubac" id="wbShareSend" hidden>Confirmer l’envoi</button>
+        </div>
+    </form>
+</dialog>
+{% endif %}
 {% endblock %}
 {% block extra_js %}
 <script src="/static/js/whiteboard-objects.js"></script>
 <script src="/static/js/whiteboard.js"></script>
 {% if not is_student %}<script src="/static/js/whiteboard-tutor.js"></script>{% endif %}
+{% if is_teacher_owner %}<script src="/static/js/whiteboard-share-publish.js"></script>{% endif %}
 {% endblock %}

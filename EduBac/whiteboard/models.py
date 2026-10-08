@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 
 class WhiteboardBoard(models.Model):
@@ -45,6 +48,51 @@ class WhiteboardBoard(models.Model):
 
     def __str__(self):
         return f'{self.title} (#{self.pk})'
+
+
+class WhiteboardShare(models.Model):
+    """Image PNG d'un tableau, envoyée à une seule classe."""
+
+    teacher = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='whiteboard_shares',
+        verbose_name='Enseignant',
+    )
+    classroom = models.ForeignKey(
+        'classrooms.Classroom',
+        on_delete=models.CASCADE,
+        related_name='whiteboard_shares',
+        verbose_name='Classe',
+    )
+    image = models.ImageField(
+        upload_to='whiteboards/shares/%Y/%m/',
+        verbose_name='Image',
+    )
+    title = models.CharField(max_length=200, default='Whiteboard', verbose_name='Titre')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Partagé le')
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Whiteboard partagé'
+        verbose_name_plural = 'Whiteboards partagés'
+        indexes = [
+            models.Index(fields=['classroom', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f'{self.title} → {self.classroom_id}'
+
+    def when_label(self):
+        local = timezone.localtime(self.created_at)
+        today = timezone.localdate()
+        if local.date() == today:
+            day = 'Aujourd’hui'
+        elif local.date() == today - timedelta(days=1):
+            day = 'Hier'
+        else:
+            day = local.strftime('%d/%m/%Y')
+        return f'{day} {local.strftime("%H:%M")}'
 
 
 class QuizCorrectionBoard(models.Model):

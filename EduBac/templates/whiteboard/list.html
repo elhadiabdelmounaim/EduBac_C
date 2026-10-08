@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/whiteboard-share.css">
+{% endblock %}
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4 fade-up">
     <div>
@@ -9,6 +12,31 @@
         <i class="bi bi-plus-lg"></i> {% if is_teacher %}Nouveau tableau{% else %}Mon tableau d’entraînement{% endif %}
     </button>{% endif %}
 </div>
+
+{% if is_teacher %}
+<p class="small text-muted">Depuis un tableau, le bouton Partager envoie l’image à une seule classe.</p>
+{% include "whiteboard/includes/share_history.html" %}
+{% else %}
+<section class="mb-4">
+    {% if latest_share %}
+    {% include "whiteboard/includes/share_viewer.html" with share=latest_share follow=1 %}
+    {% else %}
+    <div class="card border-0 shadow-sm mb-3" style="border-radius:16px;">
+        <div class="card-body">
+            <h2 class="h5 fw-bold wb-share-head">🔒 Whiteboard partagé — Lecture seule</h2>
+            <p class="text-muted small mb-0">Aucun whiteboard n’a encore été partagé avec ta classe.</p>
+        </div>
+    </div>
+    {% if student_classroom_id %}
+    <div id="wbShareWatch" hidden
+         data-classroom-id="{{ student_classroom_id }}"
+         data-api="{% url 'whiteboard:share_api' %}"></div>
+    <script src="/static/js/whiteboard-share-view.js"></script>
+    {% endif %}
+    {% endif %}
+    {% include "whiteboard/includes/share_history.html" %}
+</section>
+{% endif %}
 
 <div class="row g-3">
     {% for b in boards %}

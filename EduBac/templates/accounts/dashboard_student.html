@@ -19,6 +19,12 @@
     </div>
 </div>
 
+{% if latest_share %}
+<div class="mb-4">
+    {% include "whiteboard/includes/share_viewer.html" with share=latest_share follow=1 %}
+    <a href="{% url 'whiteboard:list' %}" class="small">Historique des whiteboards</a>
+</div>
+{% endif %}
 
 {% if continue_lesson %}
 <div class="continue-card fade-up">

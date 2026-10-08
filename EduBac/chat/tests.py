@@ -64,8 +64,35 @@ class VoiceMessageTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '/static/css/chat-voice.css')
         self.assertContains(response, 'id="chatVoiceBtn"')
+        self.assertContains(response, 'chat-mic-icon')
+        self.assertNotContains(response, 'bi-mic')
         html = response.content.decode()
         self.assertLess(html.index('/static/js/chat-voice.js'), html.index('/static/js/chat.js'))
+
+    def test_voice_preview_requires_an_explicit_send(self):
+        from pathlib import Path
+
+        response = self.client.get(f'/chat/classe/{self.room.pk}/')
+        html = response.content.decode()
+        self.assertContains(response, 'id="chatVoiceCancel"')
+        self.assertContains(response, 'id="chatVoiceStop"')
+        self.assertContains(response, 'Annuler')
+        self.assertContains(response, 'id="chatVoiceDelete"')
+        self.assertContains(response, '>Supprimer<')
+        self.assertContains(response, 'id="chatVoiceSend"')
+        self.assertContains(response, '>Envoyer<')
+        self.assertContains(response, 'id="chatVoicePreviewAudio"')
+        self.assertContains(response, 'Enregistrement')
+        preview = html.split('id="chatVoicePreviewAudio"', 1)[0].rsplit('<audio', 1)[-1]
+        self.assertNotIn('chat-voice-player', preview)
+        root = Path(__file__).resolve().parents[1]
+        chat_js = (root / 'static' / 'js' / 'chat.js').read_text(encoding='utf-8')
+        voice_js = (root / 'static' / 'js' / 'chat-voice.js').read_text(encoding='utf-8')
+        self.assertNotIn('sendMessage(file, true)', chat_js)
+        self.assertIn("addEventListener('edubac:voice-send'", chat_js)
+        self.assertIn('sendMessage(detail.file, true)', chat_js)
+        self.assertNotIn('sendMessage', voice_js)
+        self.assertIn("new CustomEvent('edubac:voice-send'", voice_js)
 
     def test_nonmember_cannot_send_or_list_voice_messages(self):
         outsider = User.objects.create_user(username='outsider', email='outsider@example.test')

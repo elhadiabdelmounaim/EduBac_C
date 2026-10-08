@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import share_views, views
 from . import correction_views
 from .tutor_views import board_tutor
 
@@ -7,6 +7,10 @@ app_name = 'whiteboard'
 
 urlpatterns = [
     path('', views.board_list, name='list'),
+    path('partager/', share_views.share_create, name='share_create'),
+    path('partages/api/', share_views.share_api, name='share_api'),
+    path('partages/<int:pk>/', share_views.share_view, name='share_view'),
+    path('partages/<int:pk>/image/', share_views.share_image, name='share_image'),
     path('creer/', views.board_create, name='create'),
     path('<int:pk>/', views.board_room, name='room'),
     path('<int:pk>/api/', views.board_api_content, name='api_content'),

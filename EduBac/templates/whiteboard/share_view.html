@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/whiteboard-share.css">
+{% endblock %}
+{% block content %}
+<div class="mb-3">
+    <a href="{% url 'whiteboard:list' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i> Whiteboard</a>
+</div>
+{% include "whiteboard/includes/share_viewer.html" with share=share follow=0 %}
+{% include "whiteboard/includes/share_history.html" %}
+{% endblock %}

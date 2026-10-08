@@ -5,7 +5,7 @@ from django.views.decorators.http import require_POST, require_GET, require_http
 from accounts.decorators import login_required_simple, teacher_required
 from classrooms.models import Classroom, ClassroomMember
 from .models import WhiteboardBoard
-from .permissions import user_can_access_board, user_can_edit_board
+from .permissions import user_can_access_board, user_can_edit_board, visible_shares
 from django.db.models import Q
 from education.models import Lesson
 
@@ -31,9 +31,20 @@ def board_list(request):
             Q(classroom_id__in=class_ids) | Q(created_by=user), is_active=True
         ).select_related('classroom', 'lesson')
         classrooms = Classroom.objects.filter(id__in=class_ids)
+    shares = list(visible_shares(user).select_related('classroom', 'teacher')[:30])
+    is_student = getattr(user, 'role', '') == 'student'
+    latest_share = shares[0] if is_student and shares else None
+    student_classroom_id = None
+    if is_student and not latest_share:
+        student_classroom_id = ClassroomMember.objects.filter(user=user).values_list(
+            'classroom_id', flat=True,
+        ).first()
     return render(request, 'whiteboard/list.html', {
         'boards': boards,
         'classrooms': classrooms,
+        'shares': shares,
+        'latest_share': latest_share,
+        'student_classroom_id': student_classroom_id,
         'page_title': 'Whiteboard',
         'is_teacher': getattr(user, 'role', '') == 'teacher',
         'lessons': Lesson.objects.select_related('course').order_by('course__order', 'order'),
@@ -83,15 +94,22 @@ def board_room(request, pk):
             'Accès refusé : vous n\'êtes pas membre de cette classe.'
         )
     can_edit = user_can_edit_board(user, board)
+    is_teacher_owner = (
+        getattr(user, 'role', '') == 'teacher'
+        and (board.created_by_id == user.id
+             or (board.classroom_id and board.classroom.teacher_id == user.id))
+    )
+    share_classrooms = []
+    if is_teacher_owner:
+        share_classrooms = list(
+            Classroom.objects.filter(teacher=user, is_active=True).order_by('name').values('id', 'name')
+        )
     return render(request, 'whiteboard/room.html', {
         'board': board,
         'can_edit': can_edit,
         'is_student': getattr(user, 'role', '') == 'student',
-        'is_teacher_owner': (
-            getattr(user, 'role', '') == 'teacher'
-            and (board.created_by_id == user.id
-                 or (board.classroom_id and board.classroom.teacher_id == user.id))
-        ),
+        'is_teacher_owner': is_teacher_owner,
+        'share_classrooms': share_classrooms,
         'page_title': board.title,
         'ws_path': f'/ws/whiteboard/{board.pk}/',
     })

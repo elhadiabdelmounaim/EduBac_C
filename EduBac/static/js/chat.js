@@ -23,7 +23,6 @@
   var filePreview = document.getElementById('chatFilePreview');
   var filePreviewName = document.getElementById('chatFilePreviewName');
   var fileClear = document.getElementById('chatFileClear');
-  var voiceBtn = document.getElementById('chatVoiceBtn');
   var replyBar = document.getElementById('chatReplyBar');
   var replyName = document.getElementById('chatReplyName');
   var replyText = document.getElementById('chatReplyText');
@@ -33,10 +32,6 @@
   var pollTimer = null;
   var selectedFile = null;
   var replyToId = null;
-  var mediaRecorder = null;
-  var voiceChunks = [];
-  var recording = false;
-  var requestingMicrophone = false;
   var notifPermissionAsked = false;
 
   var EMOJIS = [
@@ -228,10 +223,10 @@
   }
 
   function sendMessage(extraFile, isVoice) {
-    if (!classroomId || !input) return;
-    var body = (input.value || '').trim();
+    if (!classroomId || !input) return Promise.resolve(false);
+    var body = isVoice ? '' : (input.value || '').trim();
     var file = extraFile || selectedFile;
-    if (!body && !file) return;
+    if (!body && !file) return Promise.resolve(false);
 
     var btn = form && form.querySelector('.chat-send-btn');
     if (btn) btn.disabled = true;
@@ -255,81 +250,28 @@
       });
     }
 
-    req.then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+    return req.then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
       .then(function (res) {
-        if (!res.ok) { alert(res.d.error || 'Erreur'); return; }
-        input.value = ''; input.style.height = 'auto';
-        clearFile(); clearReply(); closeEmoji();
+        if (!res.ok) { alert(res.d.error || 'Erreur'); return false; }
+        if (!isVoice) {
+          input.value = '';
+          input.style.height = 'auto';
+          clearFile();
+          closeEmoji();
+        }
+        clearReply();
         var empty = messagesEl && messagesEl.querySelector('.text-muted');
         if (empty && empty.parentElement === messagesEl) empty.remove();
         renderMessage(res.d.message, true, false);
-        scrollBottom(); updatePinnedBar();
+        scrollBottom();
+        updatePinnedBar();
+        return true;
       })
-      .catch(function () { alert('Erreur réseau'); })
-      .finally(function () { if (btn) btn.disabled = false; input && input.focus(); });
-  }
-
-  function toggleVoice() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
-      alert('Enregistrement vocal non supporté par ce navigateur.');
-      return;
-    }
-    if (recording && mediaRecorder) {
-      if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-      return;
-    }
-    if (requestingMicrophone) return;
-    requestingMicrophone = true;
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
-      voiceChunks = [];
-      var preferred = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4'];
-      var mime = preferred.find(function (type) { return MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(type); });
-      function releaseMicrophone() {
-        stream.getTracks().forEach(function (t) { t.stop(); });
-        recording = false;
-        requestingMicrophone = false;
-        if (voiceBtn) {
-          voiceBtn.classList.remove('recording');
-          voiceBtn.setAttribute('aria-label', 'Enregistrer un message vocal');
-          voiceBtn.setAttribute('aria-pressed', 'false');
-        }
-      }
-      try {
-        mediaRecorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
-      } catch (error) {
-        releaseMicrophone();
-        throw error;
-      }
-      mediaRecorder.ondataavailable = function (e) {
-        if (e.data.size > 0) voiceChunks.push(e.data);
-      };
-      mediaRecorder.onstop = function () {
-        releaseMicrophone();
-        var actualType = mediaRecorder.mimeType || (voiceChunks[0] && voiceChunks[0].type) || mime || 'audio/webm';
-        var blob = new Blob(voiceChunks, { type: actualType });
-        if (blob.size < 100) return;
-        var extension = actualType.indexOf('mp4') !== -1 ? 'm4a' : (actualType.indexOf('ogg') !== -1 ? 'ogg' : 'webm');
-        var file = new File([blob], 'voice_' + Date.now() + '.' + extension, { type: actualType });
-        sendMessage(file, true);
-      };
-      mediaRecorder.onerror = function () {
-        voiceChunks = [];
-        releaseMicrophone();
-        alert('Impossible d’enregistrer ce message vocal. Réessaie.');
-      };
-      try { mediaRecorder.start(); }
-      catch (error) { releaseMicrophone(); throw error; }
-      requestingMicrophone = false;
-      recording = true;
-      if (voiceBtn) {
-        voiceBtn.classList.add('recording');
-        voiceBtn.setAttribute('aria-label', 'Terminer et envoyer le message vocal');
-        voiceBtn.setAttribute('aria-pressed', 'true');
-      }
-    }).catch(function () {
-      requestingMicrophone = false;
-      alert('Autorisez le micro pour envoyer un message vocal.');
-    });
+      .catch(function () { alert('Erreur réseau'); return false; })
+      .finally(function () {
+        if (btn) btn.disabled = false;
+        if (!isVoice && input) input.focus();
+      });
   }
 
   function openEmoji() {
@@ -385,7 +327,15 @@
   }
   if (fileClear) fileClear.addEventListener('click', clearFile);
   if (replyCancel) replyCancel.addEventListener('click', clearReply);
-  if (voiceBtn) voiceBtn.addEventListener('click', toggleVoice);
+  document.addEventListener('edubac:voice-send', function (event) {
+    if (event && event.preventDefault) event.preventDefault();
+    var detail = (event && event.detail) || {};
+    var done = typeof detail.done === 'function' ? detail.done : function () {};
+    if (!detail.file) { done(false); return; }
+    Promise.resolve(sendMessage(detail.file, true)).then(function (ok) {
+      done(!!ok);
+    }, function () { done(false); });
+  });
 
   var search = document.getElementById('chatRoomSearch');
   if (search) {

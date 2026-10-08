@@ -87,3 +87,40 @@ class WhiteboardConsumer(AsyncWebsocketConsumer):
             return
         from .models import WhiteboardBoard
         WhiteboardBoard.objects.filter(pk=self.board_id).update(content=content)
+
+
+class WhiteboardShareConsumer(AsyncWebsocketConsumer):
+    """Annonce un nouveau partage. Les clients ne peuvent pas publier."""
+
+    async def connect(self):
+        self.classroom_id = self.scope['url_route']['kwargs']['classroom_id']
+        user = self.scope.get('user')
+        if not user or not getattr(user, 'is_authenticated', False):
+            await self.close()
+            return
+        if not await self._can_access(user, self.classroom_id):
+            await self.close()
+            return
+        self.group_name = f'whiteboard_share_{self.classroom_id}'
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        if hasattr(self, 'group_name'):
+            await self.channel_layer.group_discard(self.group_name, self.channel_name)
+
+    async def receive(self, text_data=None, bytes_data=None):
+        return
+
+    async def share_event(self, event):
+        await self.send(text_data=json.dumps(event.get('payload') or {}))
+
+    @database_sync_to_async
+    def _can_access(self, user, classroom_id):
+        from classrooms.models import Classroom
+        from .permissions import user_can_access_classroom
+        try:
+            classroom = Classroom.objects.get(pk=classroom_id)
+        except Classroom.DoesNotExist:
+            return False
+        return user_can_access_classroom(user, classroom)

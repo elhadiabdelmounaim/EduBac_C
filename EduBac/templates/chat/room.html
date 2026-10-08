@@ -99,8 +99,10 @@
           <button type="button" class="chat-tool-btn" id="chatAttachBtn" title="Image ou fichier" aria-label="Pièce jointe">
             <i class="bi bi-paperclip"></i>
           </button>
-          <button type="button" class="chat-tool-btn" id="chatVoiceBtn" title="Message vocal" aria-label="Vocal">
-            <i class="bi bi-mic"></i>
+          <button type="button" class="chat-tool-btn" id="chatVoiceBtn" title="Message vocal" aria-label="Enregistrer un message vocal" aria-pressed="false">
+            <svg class="chat-mic-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path fill="currentColor" d="M12 14.6a3.1 3.1 0 0 0 3.1-3.1V6.2a3.1 3.1 0 0 0-6.2 0v5.3a3.1 3.1 0 0 0 3.1 3.1zm5.5-3.1a.8.8 0 0 0-1.6.1 3.9 3.9 0 0 1-7.8 0 .8.8 0 1 0-1.6.1 5.5 5.5 0 0 0 4.7 5.2V19H9.4a.8.8 0 0 0 0 1.6h5.2a.8.8 0 0 0 0-1.6h-1.8v-2.2a5.5 5.5 0 0 0 4.7-5.3z"/>
+            </svg>
           </button>
           <input type="file" id="chatFileInput" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,audio/*" hidden>
         </div>
@@ -111,6 +113,39 @@
           <i class="bi bi-send-fill"></i>
         </button>
       </form>
+      <div class="chat-voice-recorder" id="chatVoiceRecorder" hidden data-state="idle">
+        <div class="chat-voice-rec" id="chatVoiceRec" hidden role="group" aria-label="Enregistrement en cours">
+          <button type="button" class="chat-voice-text-btn chat-voice-rec-cancel" id="chatVoiceCancel">Annuler</button>
+          <div class="chat-voice-rec-live">
+            <span class="chat-voice-rec-dot" aria-hidden="true"></span>
+            <span class="chat-voice-rec-time" id="chatVoiceRecTime">0:00</span>
+            <div class="chat-voice-wave is-fallback" id="chatVoiceWave" aria-hidden="true"></div>
+            <span class="chat-voice-state" id="chatVoiceRecLabel">Enregistrement</span>
+          </div>
+          <button type="button" class="chat-voice-rec-stop" id="chatVoiceStop" aria-label="Arrêter l'enregistrement">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M7 7h10v10H7z"/></svg>
+          </button>
+        </div>
+        <div class="chat-voice-preview" id="chatVoicePreview" hidden data-playback="paused" role="group" aria-label="Aperçu du message vocal">
+          <button type="button" class="chat-voice-text-btn chat-voice-delete" id="chatVoiceDelete">Supprimer</button>
+          <div class="chat-voice-preview-main">
+            <button type="button" class="chat-voice-play" id="chatVoicePlay" aria-label="Lecture"></button>
+            <div class="chat-voice-preview-timeline">
+              <input type="range" id="chatVoiceSeek" min="0" max="1" step="0.01" value="0" disabled aria-label="Position de lecture">
+              <div class="chat-voice-preview-meta">
+                <span class="chat-voice-preview-times">
+                  <span id="chatVoiceElapsed">0:00</span>
+                  <span aria-hidden="true">/</span>
+                  <span id="chatVoiceDuration">0:00</span>
+                </span>
+                <span class="chat-voice-state" id="chatVoicePreviewState" role="status">Aperçu</span>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="chat-voice-send" id="chatVoiceSend">Envoyer</button>
+          <audio id="chatVoicePreviewAudio" preload="auto" playsinline hidden></audio>
+        </div>
+      </div>
     </footer>
     {% else %}
     <div class="chat-placeholder">

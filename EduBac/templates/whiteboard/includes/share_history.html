@@ -1,0 +1,17 @@
+<div class="card border-0 shadow-sm mb-4" style="border-radius:16px;">
+    <div class="card-header bg-white border-0 pt-3 fw-bold">
+        {% if is_teacher %}Mes whiteboards partagés{% else %}Whiteboard partagé{% endif %}
+    </div>
+    <ul class="list-group list-group-flush wb-share-history" id="wbShareHistory">
+        {% for item in shares %}
+        <li class="list-group-item" data-share-id="{{ item.pk }}">
+            <a href="{% url 'whiteboard:share_view' item.pk %}" class="text-decoration-none d-block">
+                <div class="small text-muted">{{ item.when_label }}</div>
+                <div class="fw-semibold" style="color:var(--edubac-navy);">{{ item.classroom.name }} — {{ item.title }}</div>
+            </a>
+        </li>
+        {% empty %}
+        <li class="list-group-item text-muted" data-empty>Aucun partage pour le moment.</li>
+        {% endfor %}
+    </ul>
+</div>
