@@ -11,6 +11,24 @@
     return copy;
   }
   function state(objects) { return JSON.stringify(objects.map(serialize)); }
+  // One bounded corner-cutting pass. Endpoints and deliberate sharp corners
+  // stay put. Persist the resulting ordinary v1 points, never re-smooth on load.
+  function smoothPoints(points) {
+    if (points.length < 3) return points.map(function(p){return {x:p.x,y:p.y};});
+    var result=[{x:points[0].x,y:points[0].y}];
+    for(var i=1;i<points.length-1;i++) {
+      var a=points[i-1], b=points[i], c=points[i+1];
+      var incoming=Math.hypot(b.x-a.x,b.y-a.y), outgoing=Math.hypot(c.x-b.x,c.y-b.y);
+      var cosine=incoming && outgoing ? ((b.x-a.x)*(c.x-b.x)+(b.y-a.y)*(c.y-b.y))/(incoming*outgoing) : -1;
+      if(cosine<.35) {result.push({x:b.x,y:b.y});continue;}
+      var trim=Math.min(2,incoming*.2,outgoing*.2);
+      result.push({x:b.x+(a.x-b.x)*trim/incoming,y:b.y+(a.y-b.y)*trim/incoming});
+      result.push({x:b.x+(c.x-b.x)*trim/outgoing,y:b.y+(c.y-b.y)*trim/outgoing});
+    }
+    var last=points[points.length-1];
+    result.push({x:last.x,y:last.y});
+    return result;
+  }
   function tutorObject(o) {
     // Tutor transport is deliberately distinct from persistence: images travel
     // separately, and drawing samples must not exhaust Django's request limit.
@@ -94,7 +112,7 @@
     }
     if (o.type === 'text' || o.type === 'note') {
       var font = (o.size || 4)*4+12, lines = String(o.text || '').split('\n');
-      return { x:o.x, y:o.y-font, w:o.w || Math.max.apply(null, lines.map(function (s) { return s.length*font*.62; })), h:lines.length*font*1.3+8 };
+      return { x:o.x, y:o.y-font, w:o._width != null ? o._width : (o.w || Math.max.apply(null, lines.map(function (s) { return s.length*font*.62; }))), h:o._height || lines.length*font*1.3+8 };
     }
     return { x:o.x || 0, y:o.y || 0, w:o._width || o.w || Math.max(80, String(o.latex || '').length*16), h:o._height || o.h || 40 };
   }
@@ -150,5 +168,5 @@
     });
     return result;
   }
-  return { serialize:serialize, state:state, id:id, normalize:normalize, bounds:bounds, hit:hit, move:move, actions:actions, tutorObject:tutorObject, tutorPayload:tutorPayload, bytes:bytes };
+   return { serialize:serialize, state:state, id:id, normalize:normalize, bounds:bounds, hit:hit, move:move, actions:actions, tutorObject:tutorObject, tutorPayload:tutorPayload, bytes:bytes, smoothPoints:smoothPoints };
 });

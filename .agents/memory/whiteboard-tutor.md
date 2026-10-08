@@ -28,8 +28,8 @@ Keep a “Retour aux résultats” navigation button above the student correctio
 
 **How to apply:** Enforce read-only access server-side as well as in the interface, including student-owned and classroom boards. Reveal the question result only after submission; preserve the existing rule rendering.
 
-Use Mathpix as the selected handwriting/math recognition provider for the existing Whiteboard.
+Improve the existing Whiteboard using local drawing tools only: smoother, elegant pen strokes, text insertion and moving elements. Do not add Mathpix, AI recognition or subscriptions.
 
-**Why:** The user chose Mathpix after comparing it with general-purpose AI.
+**Why:** The user explicitly withdrew the Mathpix choice and clarified that they want practical drawing improvements, not handwriting recognition/conversion or a paid AI service.
 
-**How to apply:** Keep recognition separate from tutoring. Provider selection alone does not authorize buying a subscription. Preserve original strokes until the teacher previews and confirms the recognition result; do not promise Arabic handwriting support.
+**How to apply:** Preserve the user's handwriting and mathematical meaning; smooth stroke rendering locally without interpreting it. Extend current tools rather than replacing the board. Existing unrelated AI features are outside this change.

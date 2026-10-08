@@ -91,6 +91,7 @@ class Element {
   addEventListener(name,fn){(this.events[name] ||= []).push(fn);}
   emit(name,event={}){for(const fn of this.events[name] || [])fn({target:this,preventDefault(){},...event});}
   setAttribute(name,value){this.attrs[name]=String(value);}
+  getAttribute(name){return this.attrs[name] || null;}
   removeAttribute(name){delete this.attrs[name];}
   appendChild(child){this.children.push(child);child.parentNode=this;return child;}
   replaceChildren(){this.children=[];}
@@ -99,10 +100,13 @@ class Element {
   click(){this.emit('click');}
   showModal(){this.open=true;}
   close(){this.open=false;}
+  setPointerCapture(id){this.captured=id;}
+  hasPointerCapture(id){return this.captured===id;}
+  releasePointerCapture(){this.captured=null;}
   getBoundingClientRect(){return {left:0,top:0,width:1600,height:1000};}
   toDataURL(){return 'data:image/png;base64,aGVsbG8=';}
 }
-function harness({edit=true,objects=samples(),tutor=false,saveStatus=200}={}) {
+function harness({edit=true,objects=samples(),tutor=false,saveStatus=200,pointer=false,student=false}={}) {
   const elements=new Map();
   function get(id){
     if(!elements.has(id)){
@@ -112,7 +116,7 @@ function harness({edit=true,objects=samples(),tutor=false,saveStatus=200}={}) {
     }
     return elements.get(id);
   }
-  get('wbApp').dataset={boardId:'7',canEdit:edit?'1':'0',apiUrl:'/tableau/7/api/',tutorUrl:'/tableau/7/tutor/',csrf:'csrf-test',wsPath:'/ws/7/'};
+  get('wbApp').dataset={boardId:'7',canEdit:edit?'1':'0',isStudent:student?'1':'0',apiUrl:'/tableau/7/api/',tutorUrl:'/tableau/7/tutor/',csrf:'csrf-test',wsPath:'/ws/7/'};
   const tools=['select','pencil','pen','highlighter','eraser','text','line','arrow','rect','circle','triangle','ruler','protractor'].map(tool=>{const e=new Element('button');e.dataset.tool=tool;return e;});
   const modes=['hint','explanation','solution'].map(mode=>{const e=new Element('button');e.dataset.mode=mode;return e;});
   const intents=['explain','hint','verify','solve','rule'].map(intent=>{const e=new Element('button');e.dataset.tutorIntent=intent;return e;});
@@ -131,7 +135,13 @@ function harness({edit=true,objects=samples(),tutor=false,saveStatus=200}={}) {
     }
   };
   const noop=()=>{};
-  get('wbCanvas').getContext=()=>new Proxy({getImageData:()=>({})},{get:(obj,key)=>obj[key] || noop,set:(obj,key,value)=>{obj[key]=value;return true;}});
+  const strokes=[], drawnText=[];
+  let trace=[];
+  get('wbCanvas').getContext=()=>new Proxy({
+    getImageData:()=>({}),measureText:text=>({width:text.length*17}),
+    beginPath:()=>{trace=[];},moveTo:(x,y)=>trace.push({x,y}),lineTo:(x,y)=>trace.push({x,y}),
+    stroke:()=>strokes.push(trace.slice()),fillText:(text,x,y)=>drawnText.push({text,x,y})
+  },{get:(obj,key)=>obj[key] || noop,set:(obj,key,value)=>{obj[key]=value;return true;}});
   let savedObjects;
   const context={
     document,console,EduBacObjects:model,CustomEvent:class {constructor(type,options){this.type=type;this.detail=options?.detail;}},
@@ -156,9 +166,11 @@ function harness({edit=true,objects=samples(),tutor=false,saveStatus=200}={}) {
     dispatchEvent(e){for(const fn of globalEvents[e.type] || [])fn(e);}
   };
   context.window=context;
+  if(pointer)context.PointerEvent=class {};
   vm.createContext(context);vm.runInContext(source('whiteboard.js'),context);
   if(tutor)vm.runInContext(source('whiteboard-tutor.js'),context);
-  return {get,tools,modes,intents,context,requests,answers,saved:()=>savedObjects};
+  return {get,tools,modes,intents,context,requests,answers,strokes,drawnText,saved:()=>savedObjects,
+    emit:(type,event={})=>{for(const fn of globalEvents[type] || [])fn({preventDefault(){},...event});}};
 }
 test('board selects, drags, edits and deletes objects; undo/redo restore images; actions are one batch and persist',async()=>{
   const h=harness();await flush();
@@ -368,4 +380,147 @@ test('markdown image syntax and HTML in assistant replies remain literal text, n
   assert.match(textOf(article),/!\[diagram\]\(javascript:alert\(1\)\)/);
   function descendants(node){return (node.children || []).flatMap(c=>[c,...descendants(c)]);}
   assert.equal(descendants(article).some(c=>['IMG','SCRIPT','IFRAME'].includes(c.tagName)),false);
+});
+
+test('local smoothing keeps endpoints, corners, loops and bounded deviations without mutating raw points',()=>{
+  const raw=[{x:0,y:0},{x:10,y:1},{x:20,y:-1},{x:30,y:0}];
+  const before=JSON.stringify(raw), smoothed=model.smoothPoints(raw);
+  assert.equal(JSON.stringify(raw),before);
+  assert.deepEqual(smoothed[0],raw[0]);assert.deepEqual(smoothed.at(-1),raw.at(-1));
+  assert.equal(smoothed.length,6);
+  for(let i=1;i<raw.length-1;i++){
+    for(const p of smoothed.slice(2*i-1,2*i+1))assert.ok(Math.hypot(p.x-raw[i].x,p.y-raw[i].y)<=2.000001);
+  }
+  const corner=[{x:0,y:0},{x:30,y:0},{x:30,y:40}];
+  assert.deepEqual(model.smoothPoints(corner),corner,'right angles remain exact');
+  const loop=[{x:0,y:0},{x:15,y:20},{x:30,y:0},{x:0,y:0}];
+  assert.deepEqual(model.smoothPoints(loop)[0],model.smoothPoints(loop).at(-1));
+  assert.deepEqual(model.smoothPoints([{x:8,y:9}]),[{x:8,y:9}]);
+  assert.deepEqual(model.smoothPoints([{x:0,y:0},{x:0,y:0},{x:4,y:4}]),[{x:0,y:0},{x:0,y:0},{x:4,y:4}]);
+});
+
+test('pointer capture collects coalesced samples, ignores other pointers, finishes outside and saves the rendered points',async()=>{
+  const h=harness({objects:[],pointer:true});await flush();
+  const canvas=h.get('wbCanvas');
+  canvas.emit('pointerdown',{pointerId:1,button:2,clientX:10,clientY:10});
+  assert.equal(canvas.captured,undefined);
+  canvas.emit('pointerdown',{pointerId:1,button:0,clientX:10,clientY:10});
+  assert.equal(canvas.captured,1);
+  canvas.emit('pointerdown',{pointerId:2,button:0,clientX:600,clientY:600});
+  h.emit('pointermove',{pointerId:2,clientX:600,clientY:600});
+  h.emit('pointermove',{pointerId:1,clientX:40,clientY:11,getCoalescedEvents:()=>[
+    {clientX:20,clientY:11},{clientX:30,clientY:9},{clientX:40,clientY:11}
+  ]});
+  h.emit('pointerup',{pointerId:1,clientX:1650,clientY:14});
+  h.emit('pointerup',{pointerId:1,clientX:1700,clientY:14});
+  const objects=h.context.EduBacBoard.getObjects();
+  assert.equal(objects.length,1);
+  assert.equal(objects[0].points[0].x,10);
+  assert.equal(objects[0].points.at(-1).x,1650,'outside release is retained');
+  assert.equal(objects[0].points.length,8,'coalesced samples retained and smoothed once');
+  assert.equal(canvas.captured,null);
+  h.get('wbSaveBtn').click();await flush();
+  const saved=h.saved()[0];
+  assert.deepEqual(saved.points,JSON.parse(JSON.stringify(objects[0].points)));
+  const restored=harness({objects:h.saved()});await flush();
+  assert.deepEqual(JSON.parse(JSON.stringify(restored.context.EduBacBoard.getObjects()[0].points)),saved.points);
+  assert.ok(restored.strokes.some(points=>JSON.stringify(points)===JSON.stringify(saved.points)));
+  h.get('wbUndo').click();assert.equal(h.context.EduBacBoard.getObjects().length,0);
+  h.get('wbRedo').click();assert.equal(h.context.EduBacBoard.getObjects()[0].points.at(-1).x,1650);
+});
+
+test('pointer cancellation, capture loss and blur finish once at the last valid sample; taps persist',async()=>{
+  for(const end of ['pointercancel','lostpointercapture','blur']){
+    const h=harness({objects:[],pointer:true});await flush();
+    h.get('wbCanvas').emit('pointerdown',{pointerId:4,button:0,clientX:45,clientY:60});
+    h.emit('pointermove',{pointerId:4,clientX:50,clientY:62});
+    if(end==='lostpointercapture')h.get('wbCanvas').emit(end,{pointerId:4});
+    else h.emit(end,{pointerId:4,clientX:0,clientY:0});
+    h.emit('pointerup',{pointerId:4,clientX:0,clientY:0});
+    const objects=h.context.EduBacBoard.getObjects();
+    assert.equal(objects.length,1,end);
+    assert.equal(objects[0].points.at(-1).x,50,end);
+  }
+  const h=harness({objects:[],pointer:true});await flush();
+  h.get('wbCanvas').emit('pointerdown',{pointerId:1,button:0,clientX:45,clientY:60});
+  h.emit('pointerup',{pointerId:1,clientX:45,clientY:60});
+  assert.equal(h.context.EduBacBoard.getObjects()[0].points.length,1);
+});
+
+test('text uses the existing dialog for creation, cancellation and Arabic multiline editing; moves are one undo step',async()=>{
+  const h=harness({objects:[],pointer:true});await flush();
+  h.tools.find(t=>t.dataset.tool==='text').click();
+  h.get('wbCanvas').emit('pointerdown',{pointerId:1,button:0,clientX:200,clientY:150});
+  assert.equal(h.get('wbObjectEditor').open,true);
+  assert.equal(h.context.EduBacBoard.getObjects().length,0);
+  h.get('wbEditorCancel').click();
+  assert.equal(h.get('wbUndo').disabled,true,'cancel creates no history');
+  h.get('wbCanvas').emit('pointerdown',{pointerId:2,button:0,clientX:200,clientY:150});
+  const input=h.get('wbEditorFields').children.flatMap(c=>c.children).find(c=>c.name==='text');
+  assert.equal(input.dir,'auto');assert.equal(input.focused,true);
+  input.value=' ';h.get('wbEditorForm').emit('submit');
+  assert.equal(h.get('wbObjectEditor').open,true);
+  input.value='رياضيات\nx = 7';h.get('wbEditorForm').emit('submit');
+  assert.equal(h.context.EduBacBoard.getSelected().text,'رياضيات\nx = 7');
+  assert.equal(h.tools[0].attrs['aria-pressed'],'true');
+  assert.equal(h.tools.find(t=>t.dataset.tool==='text').attrs['aria-pressed'],'false');
+  assert.ok(h.drawnText.some(line=>line.text==='رياضيات'));
+  assert.equal('_width' in h.context.EduBacBoard.getSelected(),false);
+  h.get('wbCanvas').emit('pointerdown',{pointerId:3,button:0,clientX:210,clientY:140});
+  h.emit('pointerup',{pointerId:3,clientX:250,clientY:160});
+  assert.equal(h.context.EduBacBoard.getSelected().x,240,'release-only movement retained');
+  h.get('wbUndo').click();assert.equal(h.context.EduBacBoard.getSelected().x,200);
+  h.get('wbRedo').click();assert.equal(h.context.EduBacBoard.getSelected().x,240);
+  h.emit('keydown',{key:'Enter',target:h.get('wbCanvas')});
+  assert.equal(h.get('wbObjectEditor').open,true);
+  const edit=h.get('wbEditorFields').children.flatMap(c=>c.children).find(c=>c.name==='text');
+  edit.value='نص جديد';h.get('wbEditorForm').emit('submit');
+  assert.equal(h.context.EduBacBoard.getObjects().length,1);
+  h.get('wbUndo').click();assert.equal(h.context.EduBacBoard.getSelected().text,'رياضيات\nx = 7');
+  h.get('wbSaveBtn').click();await flush();
+  assert.equal(h.saved()[0].text,'رياضيات\nx = 7');
+});
+
+test('legacy mouse fallback can release outside and read-only/student pointer paths remain inert',async()=>{
+  const h=harness({objects:[]});await flush();
+  h.get('wbCanvas').emit('mousedown',{clientX:20,clientY:30});
+  h.emit('mousemove',{clientX:90,clientY:70});
+  h.emit('mouseup',{clientX:130,clientY:95});
+  assert.equal(h.context.EduBacBoard.getObjects()[0].points.at(-1).x,130);
+  for(const options of [{edit:false},{edit:true,student:true}]){
+    const locked=harness({...options,pointer:true});await flush();
+    const before=JSON.stringify(locked.context.EduBacBoard.getObjects());
+    locked.get('wbCanvas').emit('pointerdown',{pointerId:1,button:0,clientX:620,clientY:120});
+    locked.emit('pointermove',{pointerId:1,clientX:650,clientY:160});
+    locked.emit('pointerup',{pointerId:1,clientX:650,clientY:160});
+    assert.equal(JSON.stringify(locked.context.EduBacBoard.getObjects()),before);
+  }
+});
+
+test('preview work is frame-batched without dropping input; pending frames cannot redraw after release',async()=>{
+  const h=harness({objects:[],pointer:true});await flush();
+  const frames=new Map();let next=0;
+  h.context.requestAnimationFrame=fn=>{frames.set(++next,fn);return next;};
+  h.context.cancelAnimationFrame=id=>frames.delete(id);
+  h.get('wbCanvas').emit('pointerdown',{pointerId:1,button:0,clientX:10,clientY:10});
+  for(let i=1;i<=4;i++)h.emit('pointermove',{pointerId:1,clientX:10+i*10,clientY:10+i});
+  assert.equal(frames.size,1);
+  const raw=Array.from({length:5},(_,i)=>({x:10+i*10,y:10+i}));
+  h.emit('pointerup',{pointerId:1,clientX:50,clientY:14});
+  assert.equal(frames.size,0);
+  assert.deepEqual(JSON.parse(JSON.stringify(h.context.EduBacBoard.getObjects()[0].points)),model.smoothPoints(raw));
+});
+
+test('legacy strokes remain unchanged and pointer shape endpoints honor canvas scaling',async()=>{
+  const original={type:'stroke',points:[{x:10,y:10},{x:20,y:11},{x:30,y:9}],size:4,color:'#352443'};
+  const h=harness({objects:[original],pointer:true});await flush();
+  h.get('wbSaveBtn').click();await flush();
+  assert.deepEqual(h.saved()[0].points,original.points,'saved boards are not re-smoothed');
+  h.get('wbCanvas').getBoundingClientRect=()=>({left:100,top:40,width:800,height:500});
+  h.tools.find(t=>t.dataset.tool==='line').click();
+  h.get('wbCanvas').emit('pointerdown',{pointerId:1,button:0,clientX:150,clientY:90});
+  h.emit('pointerup',{pointerId:1,clientX:1000,clientY:140});
+  const line=h.context.EduBacBoard.getObjects()[1];
+  assert.equal(line.x1,100);assert.equal(line.y1,100);
+  assert.equal(line.x2,1800);assert.equal(line.y2,200);
 });

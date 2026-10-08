@@ -40,7 +40,7 @@
             </button>
             <button type="button" class="btn btn-sm btn-outline-success" id="wbExportPng">PNG</button>
             {% if is_teacher_owner %}
-            <button type="button" class="btn btn-sm btn-edubac" id="wbShare" data-share-url="{% url 'whiteboard:share_create' %}">📤 Partager</button>
+            <button type="button" class="btn btn-sm btn-edubac" id="wbShare" data-share-url="{% url 'whiteboard:share_create' %}">Partager</button>
             {% endif %}
             <button type="button" class="btn btn-sm btn-edubac" id="wbTutorToggle" aria-expanded="false" aria-controls="wbTutor"><i class="bi bi-chat-square-text" aria-hidden="true"></i> Assistant IA</button>
         </div>
@@ -73,6 +73,7 @@
         </aside>
 
         <div class="wb-board-column">
+          <p class="wb-hint" id="wbToolHint"{% if is_student %} hidden{% endif %} role="status">Crayon : trace librement. Le trait est lissé localement, sans conversion en texte.</p>
           <div id="wbLoadError" class="alert alert-warning small" role="alert" hidden>Le tableau n’a pas pu être chargé. <button type="button" class="btn btn-sm btn-outline-secondary" id="wbLoadRetry">Réessayer</button></div>
           <div class="wb-selection-bar" id="wbSelectionBar" aria-label="Actions sur la sélection" hidden{% if is_student %} inert{% endif %}>
             <span class="wb-selection-label" id="wbSelectionLabel"></span>
@@ -126,7 +127,13 @@
     <div class="wb-bottombar"{% if is_student %} hidden inert{% endif %}>
         <label class="small mb-0">Couleur <input type="color" id="wbColor" value="#1e2a4a"></label>
         <label class="small mb-0">Taille <input type="range" id="wbSize" min="1" max="40" value="4"></label>
-        <button type="button" class="btn btn-sm btn-outline-secondary" id="wbGridToggle">Quadrillage</button>
+        <label for="wbBackground" class="small mb-0">Fond du tableau</label>
+        <select id="wbBackground" class="form-select form-select-sm w-auto" {% if not can_edit %}disabled{% endif %}>
+            <option value="plain">Page blanche</option>
+            <option value="grid" selected>Petits carreaux</option>
+            <option value="ruled">Papier ligné</option>
+            <option value="dots">Points</option>
+        </select>
         <button type="button" class="btn btn-sm btn-outline-secondary" id="wbZoomOut">−</button>
         <span class="small" id="wbZoomLabel">100%</span>
         <button type="button" class="btn btn-sm btn-outline-secondary" id="wbZoomIn">+</button>
@@ -141,7 +148,7 @@
 </div>
 <dialog id="wbObjectEditor" class="wb-editor">
   <form id="wbEditorForm">
-    <h5>Modifier l’élément</h5>
+    <h5 id="wbEditorTitle">Modifier l’élément</h5>
     <p class="small text-muted">Ajuste son contenu, sa position ou ses dimensions.</p>
     <div id="wbEditorFields" class="wb-editor-fields"></div>
     <p id="wbEditorError" class="small text-danger" role="alert"></p>
@@ -207,7 +214,7 @@
 {{ share_classrooms|json_script:"wbShareClasses" }}
 <dialog id="wbShareDialog" class="wb-share-dialog" aria-labelledby="wbShareHeading">
     <form id="wbShareForm">
-        <h5 id="wbShareHeading" class="fw-bold wb-share-head">📤 Partager</h5>
+        <h5 id="wbShareHeading" class="fw-bold wb-share-head">Partager</h5>
         <div data-step="choose">
             <p class="small text-muted">Choisis une seule classe. Le tableau n’est pas envoyé aux autres classes.</p>
             <label class="form-label fw-semibold" for="wbShareClass">Classe</label>
