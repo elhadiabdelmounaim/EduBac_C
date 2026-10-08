@@ -1,4 +1,13 @@
 /* EduBac Whiteboard */
+.wb-app--student .wb-topbar,
+.wb-app--student .wb-toolbar,
+.wb-app--student .wb-bottombar,
+.wb-app--student .wb-selection-bar,
+.wb-app--student .wb-tutor { display: none !important; }
+.wb-app--student #wbCanvas,
+.wb-app--student .wb-math-item { cursor: default; }
+.wb-app--student .wb-canvas-wrap { touch-action: pan-y; }
+.wb-app--student .wb-math-item { pointer-events: none; }
 .wb-app {
   display: flex;
   flex-direction: column;

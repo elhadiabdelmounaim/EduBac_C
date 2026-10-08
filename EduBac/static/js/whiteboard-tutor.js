@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var app=document.getElementById('wbApp'), board=window.EduBacBoard;
-  if(!app || !board) return;
+  if(!app || !board || app.dataset.isStudent==='1') return;
   function el(id){return document.getElementById(id);}
   var panel=el('wbTutor'), log=el('wbTutorLog'), question=el('wbTutorQuestion');
   var mode='hint', history=[], attempts=[], image=null, busy=false, lastRequest=null;

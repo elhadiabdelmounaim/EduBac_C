@@ -5,9 +5,9 @@
         <h1 class="h3 fw-bold mb-1" style="color:var(--edubac-navy);">Whiteboard</h1>
         <p class="text-muted small mb-0">Tableaux de mathématiques interactifs</p>
     </div>
-    <button type="button" class="btn btn-edubac" data-bs-toggle="modal" data-bs-target="#newBoardModal">
+    {% if is_teacher %}<button type="button" class="btn btn-edubac" data-bs-toggle="modal" data-bs-target="#newBoardModal">
         <i class="bi bi-plus-lg"></i> {% if is_teacher %}Nouveau tableau{% else %}Mon tableau d’entraînement{% endif %}
-    </button>
+    </button>{% endif %}
 </div>
 
 <div class="row g-3">
@@ -22,7 +22,7 @@
                 </p>
                 <p class="small text-muted mb-3">Modifié {{ b.updated_at|date:"d/m/Y H:i" }}</p>
                 <a href="{% url 'whiteboard:room' b.pk %}" class="btn btn-sm btn-edubac">Ouvrir</a>
-                {% if b.created_by_id == user.id %}
+                {% if is_teacher and b.created_by_id == user.id %}
                 <form method="post" action="{% url 'whiteboard:duplicate' b.pk %}" class="d-inline">{% csrf_token %}
                     <button class="btn btn-sm btn-outline-secondary">Dupliquer</button>
                 </form>
@@ -37,19 +37,19 @@
     {% empty %}
     <div class="col-12">
         <div class="empty-state">
-            <div class="empty-icon">📐</div>
+            <div class="empty-icon"><i class="bi bi-easel" aria-hidden="true"></i></div>
             <h3>Aucun tableau</h3>
             {% if is_teacher %}
             <p class="text-muted small">Créez un whiteboard pour expliquer les maths à votre classe.</p>
             {% else %}
-            <p class="text-muted small">Crée ton tableau personnel pour t’entraîner avec le tuteur IA, ou ouvre un tableau partagé par ton professeur.</p>
+            <p class="text-muted small">Les tableaux partagés par ton professeur apparaîtront ici.</p>
             {% endif %}
         </div>
     </div>
     {% endfor %}
 </div>
 
-<div class="modal fade" id="newBoardModal" tabindex="-1">
+{% if is_teacher %}<div class="modal fade" id="newBoardModal" tabindex="-1">
     <div class="modal-dialog">
         <form method="post" action="{% url 'whiteboard:create' %}" class="modal-content border-0" style="border-radius:16px;">
             {% csrf_token %}
@@ -94,4 +94,5 @@
         </form>
     </div>
 </div>
+{% endif %}
 {% endblock %}

@@ -21,6 +21,8 @@ def user_can_access_classroom(user, classroom) -> bool:
 def user_can_edit_board(user, board) -> bool:
     if not user or not getattr(user, 'is_authenticated', False):
         return False
+    if getattr(user, 'role', '') == 'student':
+        return False
     if getattr(user, 'is_superuser', False):
         return True
     if board.created_by_id == user.id:

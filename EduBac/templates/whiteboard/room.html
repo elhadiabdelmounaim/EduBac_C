@@ -5,7 +5,8 @@
 {% include "includes/katex.html" %}
 {% endblock %}
 {% block content %}
-<div class="wb-app" id="wbApp"
+<div class="wb-app{% if is_student %} wb-app--student{% endif %}" id="wbApp"
+     data-is-student="{{ is_student|yesno:'1,0' }}"
      data-board-id="{{ board.pk }}"
      data-can-edit="{{ can_edit|yesno:'1,0' }}"
      data-api-url="{% url 'whiteboard:api_content' board.pk %}"
@@ -13,7 +14,7 @@
      data-ws-path="{{ ws_path }}"
      data-csrf="{{ csrf_token }}">
 
-    <div class="wb-topbar">
+    <div class="wb-topbar"{% if is_student %} hidden inert{% endif %}>
         <div class="d-flex align-items-center gap-2 flex-wrap min-width-0">
             <a href="{% url 'whiteboard:list' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
             <strong class="text-truncate" id="wbTitleLabel">{{ board.title }}</strong>
@@ -42,7 +43,7 @@
     </div>
 
     <div class="wb-workspace">
-        <aside class="wb-toolbar" id="wbToolbar">
+        <aside class="wb-toolbar" id="wbToolbar"{% if is_student %} hidden inert{% endif %}>
             <button type="button" class="wb-tool" data-tool="select" title="Sélectionner" aria-label="Sélectionner"><i class="bi bi-cursor"></i></button>
             <button type="button" class="wb-tool active" data-tool="pencil" title="Crayon" aria-label="Crayon"><i class="bi bi-pencil"></i></button>
             <button type="button" class="wb-tool" data-tool="pen" title="Stylo" aria-label="Stylo"><i class="bi bi-pen"></i></button>
@@ -69,7 +70,7 @@
 
         <div class="wb-board-column">
           <div id="wbLoadError" class="alert alert-warning small" role="alert" hidden>Le tableau n’a pas pu être chargé. <button type="button" class="btn btn-sm btn-outline-secondary" id="wbLoadRetry">Réessayer</button></div>
-          <div class="wb-selection-bar" id="wbSelectionBar" aria-label="Actions sur la sélection" hidden>
+          <div class="wb-selection-bar" id="wbSelectionBar" aria-label="Actions sur la sélection" hidden{% if is_student %} inert{% endif %}>
             <span class="wb-selection-label" id="wbSelectionLabel"></span>
             <button type="button" data-tutor-intent="explain">Expliquer</button>
             <button type="button" data-tutor-intent="hint">Indice</button>
@@ -86,7 +87,7 @@
            </div>
           </div>
         </div>
-        <aside class="wb-tutor" id="wbTutor" aria-label="Assistant de mathématiques" hidden>
+        <aside class="wb-tutor" id="wbTutor" aria-label="Assistant de mathématiques" hidden{% if is_student %} inert{% endif %}>
           <header class="wb-tutor-head"><div><small>Apprendre, étape par étape</small><strong>Assistant EduBac</strong></div><button type="button" id="wbTutorClose" aria-label="Fermer l’assistant"><i class="bi bi-x-lg"></i></button></header>
           <div class="wb-tutor-context">
             <p id="wbTutorLesson">Niveau et leçon : fournis par EduBac.</p>
@@ -118,7 +119,7 @@
         </aside>
     </div>
 
-    <div class="wb-bottombar">
+    <div class="wb-bottombar"{% if is_student %} hidden inert{% endif %}>
         <label class="small mb-0">Couleur <input type="color" id="wbColor" value="#1e2a4a"></label>
         <label class="small mb-0">Taille <input type="range" id="wbSize" min="1" max="40" value="4"></label>
         <button type="button" class="btn btn-sm btn-outline-secondary" id="wbGridToggle">Quadrillage</button>
@@ -202,5 +203,5 @@
 {% block extra_js %}
 <script src="/static/js/whiteboard-objects.js"></script>
 <script src="/static/js/whiteboard.js"></script>
-<script src="/static/js/whiteboard-tutor.js"></script>
+{% if not is_student %}<script src="/static/js/whiteboard-tutor.js"></script>{% endif %}
 {% endblock %}

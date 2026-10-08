@@ -9,6 +9,8 @@
 
   var apiUrl = shell.getAttribute('data-api');
   var ruleOnly = shell.getAttribute('data-rule-only') === '1';
+  var readOnly = shell.getAttribute('data-readonly') === '1';
+  var generating = false;
   var csrf = shell.getAttribute('data-csrf') || '';
   var canvas = document.getElementById('qwbCanvas');
   var wrap = document.getElementById('qwbCanvasWrap');
@@ -143,6 +145,7 @@
     var els = (state.document.elements || []).slice().sort(function (a, b) {
       return (a.zIndex || 0) - (b.zIndex || 0);
     });
+    if (readOnly && ruleOnly) els = els.filter(function (el) { return el.type === 'rule'; });
     els.forEach(function (el) {
       var div = document.createElement('div');
       div.className = 'qwb-el' + (ruleOnly && el.type === 'rule' ? ' qwb-el--rule-card' : '');
@@ -227,8 +230,8 @@
         body.textContent = escapeText(contentOf(el));
       }
       div.appendChild(body);
-      if (!(ruleOnly && el.type === 'rule' && state.centeredRuleId !== el.id)) bindDrag(div, el);
-      div.addEventListener('pointerdown', function (ev) {
+      if (!readOnly && !(ruleOnly && el.type === 'rule' && state.centeredRuleId !== el.id)) bindDrag(div, el);
+      if (!readOnly) div.addEventListener('pointerdown', function (ev) {
         if (ev.button !== 0) return;
         selectEl(el.id, ruleOnly);
       });
@@ -240,7 +243,7 @@
       ) {
         window.renderMath(body);
       }
-      if (ruleOnly && el.type === 'rule' && state.centeredRuleId !== el.id) {
+      if (!readOnly && ruleOnly && el.type === 'rule' && state.centeredRuleId !== el.id) {
         // Measure after the shared math renderer has set the formula height.
         el.position = el.position || { x: 0, y: 0 };
         el.position.x = Math.round((wrap.clientWidth - div.offsetWidth) / 2);
@@ -256,7 +259,7 @@
       li.className = 'list-group-item' + (state.selectedId === el.id ? ' active' : '');
       li.textContent = ruleOnly ? contentOf(el).split('\n')[0] :
         el.type + ' — ' + contentOf(el).slice(0, 60);
-      li.addEventListener('click', function () { selectEl(el.id); });
+      if (!readOnly) li.addEventListener('click', function () { selectEl(el.id); });
       linear.appendChild(li);
     });
     renderConnections();
@@ -268,6 +271,7 @@
     return (state.document.elements || []).find(function (e) { return e.id === id; });
   }
   function selectEl(id, keepNodes) {
+    if (readOnly) return;
     state.selectedId = id;
     if (!keepNodes) { render(); return; }
     // Do not detach the centered card while its pointer capture is active.
@@ -281,6 +285,7 @@
   }
 
   function updateProps() {
+    if (readOnly) return;
     var el = findEl(state.selectedId);
     var show = !!el;
     editText.classList.toggle('d-none', !show);
@@ -293,6 +298,7 @@
   }
 
   function bindDrag(div, el) {
+    if (readOnly) return;
     var startX, startY, origX, origY, dragging = false;
     div.addEventListener('pointerdown', function (ev) {
       if (el.locked || ev.button !== 0) return;
@@ -318,6 +324,7 @@
   }
 
   function scheduleSave() {
+    if (readOnly) return;
     state.dirty = true;
     setStatus('Enregistrement…');
     clearTimeout(state.saveTimer);
@@ -325,6 +332,9 @@
   }
 
   function api(body) {
+    if (readOnly && (body.action !== 'generate' || body.regenerate)) {
+      return Promise.reject(new Error('Lecture seule'));
+    }
     return fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
@@ -336,6 +346,7 @@
   }
 
   function save() {
+    if (readOnly) return;
     api({ action: 'save', revision: state.revision, document: state.document }).then(function (res) {
       if (res.status === 409) {
         setStatus('Conflit — rechargement');
@@ -357,6 +368,8 @@
   }
 
   function generate(regenerate) {
+    if (generating || (readOnly && regenerate)) return;
+    generating = true;
     if (ruleOnly) {
       clearTimeout(state.saveTimer);
       state.document = { version: 1, title: 'Règle utilisée', elements: [], connections: [] };
@@ -379,34 +392,44 @@
         state.revision = res.data.revision;
         setWarning(res.data.warning || '');
         setStatus(res.data.generated_by_ai ? 'Généré par IA' : 'Tableau de base');
-        document.getElementById('qwbRegen').classList.remove('d-none');
+        if (!readOnly) document.getElementById('qwbRegen').classList.remove('d-none');
         render();
       } else {
         setStatus('Erreur de génération');
         setWarning((res.data && res.data.message) || 'Impossible de générer.');
       }
-    }).catch(function () { setStatus('Erreur réseau'); });
+    }).catch(function () {
+      setStatus('Erreur réseau');
+      setWarning('Impossible de charger le tableau. Rechargez la page pour réessayer.');
+    }).then(function () { generating = false; });
   }
 
   function load() {
     // correction_page already discarded the saved board and invalidated old
     // revisions. Never load previous correction objects on a completed quiz.
-    if (ruleOnly) { generate(false); return; }
+    if (ruleOnly && !readOnly) { generate(false); return; }
     setStatus('Chargement…');
     fetch(apiUrl, { credentials: 'same-origin' })
-      .then(function (r) { return r.json(); })
+      .then(function (r) {
+        if (!r.ok) throw new Error('Erreur de chargement');
+        return r.json();
+      })
       .then(function (data) {
-        if (data.exists && data.document) {
+        if (data.exists && data.document && (!readOnly || (data.document.elements || []).length)) {
           state.document = data.document;
           state.renderedRules = data.rendered_rules || {};
           state.revision = data.revision;
           setWarning(data.warning || '');
           setStatus('Enregistré');
-          document.getElementById('qwbRegen').classList.remove('d-none');
+          if (!readOnly) document.getElementById('qwbRegen').classList.remove('d-none');
           render();
-        } else setStatus('Prêt — cliquez sur Générer');
+        } else if (readOnly) generate(false);
+        else setStatus('Prêt — cliquez sur Générer');
       })
-      .catch(function () { setStatus('Erreur de chargement'); });
+      .catch(function () {
+        setStatus('Erreur de chargement');
+        setWarning('Impossible de charger le tableau. Rechargez la page pour réessayer.');
+      });
   }
 
   function appendChat(role, text) {
@@ -447,6 +470,7 @@
   }
 
   function sendChat() {
+    if (readOnly) return;
     var msg = (chatInput.value || '').trim();
     if (!msg) return;
     appendChat('user', msg);
@@ -479,6 +503,7 @@
     });
   }
 
+  if (!readOnly) {
   document.getElementById('qwbGenerate').addEventListener('click', function () { generate(false); });
   document.getElementById('qwbRegen').addEventListener('click', function () {
     if (confirm(ruleOnly ? 'Régénérer la règle ?' : 'Régénérer la correction ?')) generate(true);
@@ -580,6 +605,7 @@
     }
     if (ev.key === 'Delete' || ev.key === 'Backspace') btnDel.click();
   });
+  }
 
   if (svgLinks) {
     svgLinks.setAttribute('width', '2400');
@@ -590,9 +616,11 @@
     svgLinks.style.transformOrigin = '0 0';
   }
 
-  if (ruleOnly) window.addEventListener('resize', function () {
+  if (ruleOnly && !readOnly) window.addEventListener('resize', function () {
     state.centeredRuleId = null;
     render();
   });
+  var result = shell.querySelector('.qwb-result');
+  if (result && window.renderMath) window.renderMath(result);
   load();
 })();

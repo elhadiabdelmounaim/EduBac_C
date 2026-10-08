@@ -125,6 +125,8 @@ def correction_page(request, attempt_id, question_id):
         "board": board,
         "mode": mode,
         "page_title": "Tableau de correction",
+        "student_readonly": True,
+        "question_result": _context_for_question(attempt, question, mode) if mode == "full" else None,
     })
 
 
@@ -167,6 +169,14 @@ def correction_api(request, attempt_id, question_id):
         return JsonResponse({"error": "JSON invalide"}, status=400)
 
     action = (body.get("action") or "generate").strip()
+    user = getattr(request, "edubac_user", None) or request.user
+    if getattr(user, "role", "") == "student" and (
+        action != "generate" or body.get("regenerate")
+    ):
+        return JsonResponse({
+            "error": "read_only",
+            "message": "Ce tableau est en lecture seule.",
+        }, status=403)
 
     if action == "generate":
         force = bool(body.get("regenerate"))

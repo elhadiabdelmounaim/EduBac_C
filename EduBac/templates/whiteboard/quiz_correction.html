@@ -6,7 +6,8 @@
 <link rel="stylesheet" href="/static/css/quiz_whiteboard.css">
 {% endblock %}
 {% block content %}
-<div class="qwb-shell{% if mode == 'full' %} qwb-shell--rule-only{% endif %}" id="qwbShell"
+<div class="qwb-shell{% if mode == 'full' %} qwb-shell--rule-only{% endif %}{% if student_readonly %} qwb-shell--readonly{% endif %}" id="qwbShell"
+     data-readonly="{{ student_readonly|yesno:'1,0' }}"
      data-attempt="{{ attempt.pk }}"
      data-question="{{ question.pk }}"
      data-mode="{{ mode }}"
@@ -14,7 +15,7 @@
      data-api="{% url 'whiteboard:quiz_correction_api' attempt.pk question.pk %}"
      data-csrf="{{ csrf_token }}">
 
-  <header class="qwb-toolbar">
+  <header class="qwb-toolbar"{% if student_readonly %} hidden inert{% endif %}>
     <div class="qwb-toolbar__left">
       <a href="/quizzes/tentative/{{ attempt.pk }}/resultats/" class="btn btn-sm btn-outline-primary" id="qwbBack">
         <i class="bi bi-arrow-left"></i> Retour au quiz
@@ -22,7 +23,7 @@
       <span class="qwb-mode badge {% if mode == 'full' %}bg-success{% else %}bg-warning text-dark{% endif %}">
         {% if mode == 'full' %}Règle utilisée{% else %}Mode indice{% endif %}
       </span>
-      <span class="qwb-status small text-muted" id="qwbStatus">Chargement…</span>
+      {% if not student_readonly %}<span class="qwb-status small text-muted" id="qwbStatus">Chargement…</span>{% endif %}
     </div>
     <div class="qwb-toolbar__right">
       <button type="button" class="btn btn-sm btn-outline-primary" id="qwbZoomOut" aria-label="Zoom arrière">−</button>
@@ -37,20 +38,39 @@
     </div>
   </header>
 
-  {% if mode == 'hint' %}
+  {% if mode == 'hint' and not student_readonly %}
   <div class="alert alert-warning py-2 px-3 mb-2 small">
     Mode indice : la bonne réponse n’est pas révélée tant que le quiz n’est pas terminé.
   </div>
   {% endif %}
 
-  <div class="qwb-warning alert alert-info py-2 px-3 mb-2 small d-none" id="qwbWarning"></div>
+  {% if not student_readonly %}<div class="qwb-warning alert alert-info py-2 px-3 mb-2 small d-none" id="qwbWarning" role="alert"></div>{% endif %}
 
   <div class="qwb-main{% if mode == 'full' %} qwb-main--rule-only{% endif %}">
     <div class="qwb-canvas-wrap{% if mode == 'full' %} qwb-canvas-wrap--rule-only{% endif %}" id="qwbCanvasWrap">
+      {% if student_readonly %}
+      {% if mode == 'full' and question_result %}
+      <section class="qwb-result lesson-md" aria-label="Résultat de la question">
+        <div class="qwb-result__question">{{ question_result.question_text|latex }}</div>
+        <p class="{% if question_result.is_correct %}text-success{% else %}text-danger{% endif %} fw-semibold">
+          {% if question_result.is_correct %}Réponse correcte{% else %}Réponse incorrecte{% endif %}
+        </p>
+        <dl>
+          <dt>Votre réponse</dt>
+          <dd>{% if question_result.student_answer %}{{ question_result.student_answer|latex }}{% else %}<em class="text-muted">Aucune réponse</em>{% endif %}</dd>
+          <dt>Bonne réponse</dt>
+          <dd class="text-success">{{ question_result.good_answer|latex }}</dd>
+        </dl>
+      </section>
+      {% endif %}
+      {% if mode == 'hint' %}<p class="qwb-readonly-status small text-muted">Mode indice : la bonne réponse n’est pas révélée tant que le quiz n’est pas terminé.</p>{% endif %}
+      <p class="qwb-readonly-status small text-muted" id="qwbStatus" role="status" aria-live="polite">Chargement…</p>
+      <div class="qwb-warning alert alert-info py-2 px-3 mb-2 small d-none" id="qwbWarning" role="alert"></div>
+      {% endif %}
       <svg class="qwb-svg-links" id="qwbLinks" xmlns="http://www.w3.org/2000/svg"></svg>
-      <div class="qwb-canvas" id="qwbCanvas" role="application" aria-label="Tableau de correction" tabindex="0"></div>
+      <div class="qwb-canvas" id="qwbCanvas" role="{% if student_readonly %}region{% else %}application{% endif %}" aria-label="Tableau de correction"{% if not student_readonly %} tabindex="0"{% endif %}></div>
     </div>
-    <aside class="qwb-sidebar" aria-label="Panneau latéral">
+    <aside class="qwb-sidebar" aria-label="Panneau latéral"{% if student_readonly %} hidden inert{% endif %}>
       <h3 class="h6 fw-bold mb-2">Objets</h3>
       <ol class="qwb-linear list-group list-group-flush small" id="qwbLinear"></ol>
       <div class="mt-3" id="qwbProps">

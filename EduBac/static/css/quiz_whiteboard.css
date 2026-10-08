@@ -1,4 +1,22 @@
 /* Quiz correction whiteboard — palette EduBac inchangée */
+.qwb-shell--readonly .qwb-toolbar,
+.qwb-shell--readonly .qwb-sidebar { display: none; }
+.qwb-shell--readonly .qwb-main { grid-template-columns: minmax(0, 1fr); }
+.qwb-shell--readonly .qwb-canvas-wrap { padding: clamp(1rem, 3vw, 2rem); touch-action: pan-y; overflow: auto; }
+.qwb-shell--readonly .qwb-canvas { position: relative; width: 100%; height: auto; transform: none !important; }
+.qwb-shell--readonly .qwb-svg-links { display: none; }
+.qwb-shell--readonly .qwb-el,
+.qwb-shell.qwb-shell--readonly .qwb-el--rule-card {
+  position: relative; left: auto !important; top: auto !important;
+  width: 100% !important; height: auto !important; max-height: none !important;
+  max-width: 900px; margin: 0 auto 1rem; cursor: default; user-select: text;
+}
+.qwb-shell--readonly .qwb-el__type { display: none; }
+.qwb-result { max-width: 900px; margin: 0 auto 1.5rem; color: var(--edubac-navy, #1e2a4a); }
+.qwb-result__question { font-weight: 600; margin-bottom: 1rem; }
+.qwb-result dt { font-size: .85rem; }
+.qwb-result dd { margin-bottom: .75rem; overflow-wrap: anywhere; }
+.qwb-readonly-status { max-width: 900px; margin: 0 auto .75rem; }
 .qwb-shell { display: flex; flex-direction: column; gap: 0.5rem; min-height: 70vh; }
 .qwb-toolbar {
   display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;

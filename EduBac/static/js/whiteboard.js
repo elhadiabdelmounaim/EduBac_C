@@ -8,6 +8,7 @@
 
   var boardId = app.dataset.boardId;
   var canEdit = app.dataset.canEdit === '1';
+  var isStudent = app.dataset.isStudent === '1';
   var apiUrl = app.dataset.apiUrl;
   var wsPath = app.dataset.wsPath;
   var csrf = app.dataset.csrf;
@@ -450,6 +451,7 @@
 
   // --- events ---
   function onStart(e) {
+    if (isStudent) return;
     var p = getPos(e);
     lastPointer=p;
     if(tool==='select') {
@@ -576,6 +578,7 @@
   canvas.addEventListener('touchcancel',onEnd);
   canvas.addEventListener('dblclick',function(){if(tool==='select') editSelected();});
   document.addEventListener('keydown',function(e){
+    if (isStudent) return;
     if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || e.target.isContentEditable || editor.open) return;
     if(e.key==='Delete' || e.key==='Backspace') {if(selected()){e.preventDefault();deleteSelected();}}
     if(e.key==='Escape') {selectedId=null;notifySelection();redraw();}

@@ -65,7 +65,7 @@ class QuizRuleBoardTests(TestCase):
         self.assertEqual(self.board.data, {})
         self.assertEqual(self.board.revision, 9)
         stale = self.post({"action": "save", "revision": 8, "document": self.legacy})
-        self.assertEqual(stale.status_code, 409)
+        self.assertEqual(stale.status_code, 403)
         self.board.refresh_from_db()
         self.assertEqual(self.board.data, {})
 
@@ -129,11 +129,13 @@ class QuizRuleBoardTests(TestCase):
         self.client.get(self.page)
         data = self.post({"action": "generate"}).json()
         response = self.post({"action": "save", "revision": data["revision"], "document": self.legacy})
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 403)
         saved = self.post({"action": "save", "revision": data["revision"], "document": data["document"]})
-        self.assertEqual(saved.status_code, 200)
-        self.assertIn("rule1", saved.json()["rendered_rules"])
-        self.assertEqual(self.post({"action": "chat", "message": "Donne cinq étapes"}).status_code, 400)
+        self.assertEqual(saved.status_code, 403)
+        self.assertEqual(self.post({"action": "chat", "message": "Donne cinq étapes"}).status_code, 403)
+        self.assertEqual(self.post({"action": "generate", "regenerate": True}).status_code, 403)
+        self.board.refresh_from_db()
+        self.assertEqual(self.board.data, data["document"])
 
     def test_other_student_cannot_clear_the_board(self):
         other = User.objects.create_user(username="other-rule", email="other@test.local", role="student")
@@ -154,7 +156,9 @@ class QuizRuleBoardTests(TestCase):
         self.assertEqual(self.board.data, self.legacy)
         generate.return_value = ({"version": 1, "title": "Indice", "elements": [], "connections": []},
                                  False, "")
-        self.post({"action": "generate", "regenerate": True})
+        self.board.data = {}
+        self.board.save(update_fields=["data"])
+        self.post({"action": "generate"})
         self.assertEqual(generate.call_args.kwargs["mode"], "hint")
         self.assertIsNone(generate.call_args.kwargs["good_answer"])
 

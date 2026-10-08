@@ -58,7 +58,7 @@ class WhiteboardTutorTests(TestCase):
         provider.chat.return_value = self.answer()
         first = self.post()
         self.assertEqual(first.status_code, 200)
-        self.assertTrue(first.json()['can_edit'])
+        self.assertFalse(first.json()['can_edit'])
         context = json.loads(provider.chat.call_args.args[0][1]['content'])
         self.assertEqual(context['niveau'], '1ère Bac Sciences')
         self.assertEqual(context['lesson'], 'Équations')
@@ -91,6 +91,11 @@ class WhiteboardTutorTests(TestCase):
             for i, a in enumerate(actions)]}
         url = f'/tableau/{self.board.pk}/api/'
         saved = self.client.post(url, json.dumps({'content': content}), content_type='application/json')
+        self.assertEqual(saved.status_code, 403)
+        self.board.refresh_from_db()
+        self.assertEqual(self.client.get(url).json()['content'], self.board.content)
+        self.login(self.teacher)
+        saved = self.client.post(url, json.dumps({'content': content}), content_type='application/json')
         self.assertEqual(saved.status_code, 200)
         self.assertEqual(self.client.get(url).json()['content'], content)
         self.assertContains(self.client.get(f'/tableau/{self.board.pk}/'), self.url)
@@ -117,12 +122,20 @@ class WhiteboardTutorTests(TestCase):
         self.assertEqual(self.client.post('/tableau/creer/', {'title': 'Mon travail',
             'classroom': self.classroom.pk}).status_code, 403)
         created = self.client.post('/tableau/creer/', {'title': 'Mon travail', 'lesson': self.lesson.pk})
-        self.assertEqual(created.status_code, 302)
-        board = WhiteboardBoard.objects.get(created_by=self.student)
-        self.assertIsNone(board.classroom_id)
-        self.assertEqual(board.lesson_id, self.lesson.pk)
+        self.assertEqual(created.status_code, 403)
+        board = WhiteboardBoard.objects.create(
+            title='Mon travail', created_by=self.student, lesson=self.lesson,
+            content={'version': 1, 'objects': []})
         self.assertContains(self.client.get('/tableau/'), 'Mon travail')
-        self.assertContains(self.client.get(created.url), 'data-can-edit="1"')
+        self.assertContains(self.client.get(f'/tableau/{board.pk}/'), 'data-can-edit="0"')
+        for suffix in ('supprimer/', 'dupliquer/', 'api/'):
+            self.assertEqual(self.client.post(f'/tableau/{board.pk}/{suffix}',
+                json.dumps({'content': {}}), content_type='application/json').status_code, 403)
+        self.assertEqual(self.client.post(f'/tableau/{board.pk}/renommer/',
+                                         {'title': 'Changed'}).status_code, 302)
+        board.refresh_from_db()
+        self.assertTrue(board.is_active)
+        self.assertEqual(board.title, 'Mon travail')
 
     @patch('whiteboard.tutor_service.get_provider')
     def test_invalid_input_action_and_rate_limit(self, factory):

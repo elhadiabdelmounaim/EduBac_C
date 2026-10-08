@@ -44,6 +44,8 @@ def board_list(request):
 @require_POST
 def board_create(request):
     user = _user(request)
+    if getattr(user, 'role', '') == 'student':
+        return HttpResponseForbidden('Lecture seule.')
     title = (request.POST.get('title') or 'Nouveau tableau').strip()[:200]
     classroom_id = request.POST.get('classroom') or ''
     lesson_id = request.POST.get('lesson') or ''
@@ -84,6 +86,7 @@ def board_room(request, pk):
     return render(request, 'whiteboard/room.html', {
         'board': board,
         'can_edit': can_edit,
+        'is_student': getattr(user, 'role', '') == 'student',
         'is_teacher_owner': (
             getattr(user, 'role', '') == 'teacher'
             and (board.created_by_id == user.id
@@ -132,6 +135,8 @@ def board_api_content(request, pk):
 @login_required_simple
 @require_POST
 def board_delete(request, pk):
+    if getattr(_user(request), 'role', '') == 'student':
+        return HttpResponseForbidden('Lecture seule.')
     board = get_object_or_404(WhiteboardBoard, pk=pk, created_by=_user(request))
     board.is_active = False
     board.save(update_fields=['is_active'])
@@ -141,6 +146,8 @@ def board_delete(request, pk):
 @login_required_simple
 @require_POST
 def board_duplicate(request, pk):
+    if getattr(_user(request), 'role', '') == 'student':
+        return HttpResponseForbidden('Lecture seule.')
     board = get_object_or_404(WhiteboardBoard, pk=pk, created_by=_user(request))
     clone = WhiteboardBoard.objects.create(
         title=f'{board.title} (copie)',
