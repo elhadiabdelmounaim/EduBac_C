@@ -1,0 +1,30 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "Gxsv1MnnHHeFwm_NPI2AZ"
+uri = "file://attached_assets/image_search/handwriting_sample_1.jpg"
+type = "image"
+title = "عينة واضحة: ثلاث عبارات رياضية مكتوبة باليد"
+description = "صورة منشورة لعينات CALCULATOR وWIKIEM وWIKIEM-EXT. المصدر: https://figures.academia-assets.com/49691973/figure_003.jpg"
+logical_id = "c479b0d7-938b-4994-9c52-c9f7a9fb767c"
+content_hash = "sha256:e36e003972fc64a2baced575653d9c4a7c902f06fb900108fa86aa3bfe0bf89b"
+size = 18403
+mtime_ms = 1791502750422
+storage_uri = "gcs://replit-rams-assets-reed/rams/assets/repl:5ed16b6e-938c-4494-bd84-1df591cabb5c/c479b0d7-938b-4994-9c52-c9f7a9fb767c/5d7ddd60-32ff-482d-922e-1abd7f9db941"
+storage_version_token = "1791502764667836"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "LEdhPTxsrsG22zhudCyey"
+uri = "file://attached_assets/image_search/handwriting_sample_2.jpg"
+type = "image"
+title = "عينة صعبة: صورة صفحة حسابات بخط اليد"
+description = "عينة منخفضة الوضوح ضمن لقطة شاشة منشورة على Reddit؛ لا تكفي لنسخ الصفحة كاملة بثقة. المصدر: https://preview.redd.it/tool-to-convert-handwritten-math-into-latex-works-with-v0-kqaf3alk01if1.png?width=1224&format=png&auto=webp&s=ce2345bca701fee892b8d59502cd67440a221062"
+logical_id = "0eaf8391-e3d8-4c09-a4c9-74d7f9e47e86"
+content_hash = "sha256:cd420b803656fd979638a154adb795664b8fd8995e4e298adb4d7a67d07d1b8c"
+size = 88971
+mtime_ms = 1791502750718
+storage_uri = "gcs://replit-rams-assets-reed/rams/assets/repl:5ed16b6e-938c-4494-bd84-1df591cabb5c/0eaf8391-e3d8-4c09-a4c9-74d7f9e47e86/93562d74-2648-4865-8b50-a212aa7915b1"
+storage_version_token = "1791502765195041"
+content_type = "image/jpeg"
