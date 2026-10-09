@@ -86,6 +86,25 @@
 
                             <div class="qb-card">
                                 <div class="qb-card-head">
+                                    <label for="generationMode">Mode de génération</label>
+                                </div>
+                                <div class="qb-card-body">
+                                    <select name="generation_mode" id="generationMode" class="form-select">
+                                        <option value="resources" {% if generation_mode != 'topic' %}selected{% endif %}>À partir des ressources de la leçon</option>
+                                        <option value="topic" {% if generation_mode == 'topic' %}selected{% endif %}>Sujet et consignes — sans fichier source</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="qb-card" id="topicCard" {% if generation_mode != 'topic' %}hidden{% endif %}>
+                                <div class="qb-card-head"><label for="quizSubject">Sujet du quiz</label></div>
+                                <div class="qb-card-body">
+                                    <input type="text" name="subject" id="quizSubject" class="form-control"
+                                           maxlength="200" value="{{ quiz_subject }}" placeholder="Ex. : résoudre des équations du second degré">
+                                    <div class="form-text">Facultatif : le titre de la leçon choisie sera utilisé si ce champ est vide. La leçon sert à classer le quiz ; aucun de ses fichiers ou contenus ne sera lu.</div>
+                                </div>
+                            </div>
+                            <div class="qb-card">
+                                <div class="qb-card-head">
                                     <label for="sourceFileSelect">Fichier source</label>
                                 </div>
                                 <div class="qb-card-body">
@@ -346,6 +365,8 @@
   var pvCount = document.getElementById('pvCount');
   var pvNiveau = document.getElementById('pvNiveau');
   var pvTitle = document.getElementById('pvTitle');
+  var mode = document.getElementById('generationMode');
+  var subject = document.getElementById('quizSubject');
 
   function syncPreview(){
     if(pvDiff && sel) {
@@ -362,6 +383,7 @@
       var lo = lesson.options[lesson.selectedIndex];
       if(lo && lo.value) pvTitle.textContent = lo.text.replace(/^\d+\.\s*/, '');
       else pvTitle.textContent = '—';
+      if(mode && mode.value === 'topic' && subject && subject.value.trim()) pvTitle.textContent = subject.value.trim();
     }
   }
 
@@ -377,6 +399,8 @@
     if(count) count.addEventListener('input', syncPreview);
     if(niveau) niveau.addEventListener('change', syncPreview);
     if(lesson) lesson.addEventListener('change', syncPreview);
+    if(subject) subject.addEventListener('input', syncPreview);
+    if(mode) mode.addEventListener('change', syncPreview);
     syncDiff();
   }
 
@@ -408,8 +432,19 @@
     if (!niveauSelect || !lessonSelect) return;
     var sourceSelect = document.getElementById('sourceFileSelect');
     var sourceHint = document.getElementById('sourceFileHint');
+    var generationMode = document.getElementById('generationMode');
+    var topicCard = document.getElementById('topicCard');
     var sourceFiles = JSON.parse(document.getElementById('source-files-data').textContent);
     function updateSources(selected) {
+        var topicMode = generationMode.value === 'topic';
+        topicCard.hidden = !topicMode;
+        if (topicMode) {
+            sourceSelect.innerHTML = '';
+            sourceSelect.add(new Option('Sans fichier source', ''));
+            sourceSelect.disabled = true;
+            sourceHint.textContent = 'Seuls le sujet, le niveau et vos consignes seront utilisés. Ajoutez vos consignes dans la description du quiz.';
+            return;
+        }
         var files = sourceFiles[lessonSelect.value] || [];
         sourceSelect.innerHTML = '';
         sourceSelect.add(new Option(lessonSelect.value
@@ -425,6 +460,7 @@
                 : 'Aucun fichier TXT dans Sources_IA. Le contenu existant de la leçon sera utilisé.';
     }
     lessonSelect.addEventListener('change', function() { updateSources(''); });
+    generationMode.addEventListener('change', function() { updateSources(''); });
 
     var placeholder = lessonSelect.options[0];
     var optionNodes = lessonSelect.getElementsByTagName('option');

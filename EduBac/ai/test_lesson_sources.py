@@ -71,6 +71,60 @@ class LessonSourceTransportTests(TestCase):
         with self.assertRaisesMessage(ValueError, "UTF-8"):
             self.lesson.get_ai_help(source_file=self.source.name)
 
+    @patch.object(AIService, "_get_provider", return_value=SimpleNamespace(name="test", model="test"))
+    @patch.object(AIService, "_chat")
+    def test_topic_mode_never_reads_lesson_resources(self, chat, provider):
+        chat.return_value = json.dumps({
+            "title": "Équations",
+            "questions": [{
+                "text": "Quelle est la solution de $2x=6$ ?",
+                "choices": [{"text": str(n), "is_correct": n == 3} for n in (1, 2, 3, 4)],
+                "explanation": "Diviser les deux membres par 2.",
+                "hint": "Isoler x.",
+            }],
+        })
+        self.source.write_bytes(b"\xff")
+        with patch.object(Lesson, "get_ai_help", side_effect=AssertionError("Les ressources ne doivent pas être lues")) as read:
+            data = AIService().generate_quiz_from_lesson(
+                self.lesson, 1, use_resources=False, subject="Équations linéaires",
+                description="Une étape de raisonnement.", source_file="missing.txt",
+            )
+            read.assert_not_called()
+        self.assertEqual(len(data["questions"]), 1)
+        prompt = chat.call_args_list[0].args[0][1]["content"]
+        self.assertIn("Équations linéaires", prompt)
+        self.assertIn("Une étape de raisonnement.", prompt)
+        self.assertIn("Mode sans ressources", prompt)
+        self.assertNotIn("Contenu de secours", prompt)
+        self.assertNotIn("Règles.txt", prompt)
+        self.assertNotIn("Contenu (seule source)", prompt)
+
+    @patch.object(AIService, "generate_quiz_from_lesson", side_effect=ValueError("Test interrompu"))
+    def test_topic_form_preserves_parameters_and_ignores_source(self, generate):
+        from accounts.models import User, TeacherProfile
+        from django.urls import reverse
+        teacher = User.objects.create_user(username="topic_teacher", role="teacher")
+        TeacherProfile.objects.get_or_create(user=teacher)
+        session = self.client.session
+        session["user_id"] = teacher.pk
+        session.save()
+        payload = {
+            "niveau": self.lesson.course.niveau, "lesson": self.lesson.pk,
+            "generation_mode": "topic", "subject": "Équations", "description": "Deux étapes",
+            "source_file": "missing.txt",
+        }
+        response = self.client.post(reverse("quizzes:teacher_ai"), payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(generate.call_args.kwargs["use_resources"])
+        self.assertIsNone(generate.call_args.kwargs["source_file"])
+        self.assertEqual(generate.call_args.kwargs["subject"], "Équations")
+        self.assertEqual(response.context["generation_mode"], "topic")
+        self.assertEqual(response.context["quiz_subject"], "Équations")
+        generate.reset_mock()
+        payload["generation_mode"] = "invalid"
+        self.client.post(reverse("quizzes:teacher_ai"), payload)
+        generate.assert_not_called()
+
     @patch.object(AIService, "generate_quiz_from_lesson")
     def test_form_passes_selection_and_rejects_level_mismatch(self, generate):
         from accounts.models import User, TeacherProfile

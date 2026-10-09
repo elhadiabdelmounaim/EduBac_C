@@ -78,6 +78,44 @@ class QuizLessonPickerBrowserTests(StaticLiveServerTestCase):
         self.page.get_by_role('button', name='Se connecter', exact=True).click()
         self.page.wait_for_url(lambda url: '/connexion/' not in url)
 
+    def test_topic_mode_reaches_ai_without_reading_sources(self):
+        from ai.services import AIService
+        from ai.test_quiz_novelty import NEW, quiz_json
+        from education.models import Lesson
+        self.log_in_teacher()
+        self.page.goto(self.live_server_url + reverse('quizzes:teacher_ai'))
+        self.page.select_option('#niveauSelect', CURRICULUM[0]['code'])
+        self.page.select_option('#lessonSelect', self.source_lesson_id)
+        self.page.select_option('#generationMode', 'topic')
+        expect(self.page.locator('#sourceFileSelect')).to_be_disabled()
+        expect(self.page.locator('#topicCard')).to_be_visible()
+        self.page.locator('#quizSubject').fill('Équations linéaires')
+        self.page.locator('#quizDescription').fill('Une étape de raisonnement.')
+        self.page.locator('#questionCount').fill('1')
+        with (
+            patch.object(Lesson, 'get_ai_help', side_effect=AssertionError('Lecture interdite')) as read,
+            patch.object(AIService, '_get_provider', return_value=SimpleNamespace(name='test', model='test')),
+            patch.object(AIService, '_chat', return_value=quiz_json([NEW[0]])) as chat,
+        ):
+            with self.page.expect_navigation(wait_until='domcontentloaded'):
+                self.page.locator('#genBtn').click()
+            read.assert_not_called()
+            prompt = chat.call_args_list[0].args[0][1]['content']
+            self.assertIn('Équations linéaires', prompt)
+            self.assertIn('Une étape de raisonnement.', prompt)
+            self.assertNotIn('SOURCE_CHOISIE', prompt)
+        expect(self.page.locator('#generationMode')).to_have_value('topic')
+        expect(self.page.locator('#quizSubject')).to_have_value('Équations linéaires')
+        expect(self.page.get_by_text('Une parcelle rectangulaire', exact=False).first).to_be_visible()
+        for width in (390, 1280):
+            self.page.set_viewport_size({"width": width, "height": 900})
+            self.assertTrue(self.page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"))
+            if width == 1280:
+                self.page.screenshot(path="/tmp/quiz-topic-mode.jpg")
+        self.page.select_option('#generationMode', 'resources')
+        expect(self.page.locator('#sourceFileSelect')).to_be_enabled()
+        expect(self.page.locator('#topicCard')).to_be_hidden()
+
     def test_source_picker_changes_resets_and_reaches_ai(self):
         from ai.services import AIService
         from ai.test_quiz_novelty import NEW, quiz_json

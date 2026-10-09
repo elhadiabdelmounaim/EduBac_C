@@ -669,6 +669,10 @@ def teacher_ai_quiz(request):
     error = None
     quiz_description = ''
     selected_source_file = request.POST.get('source_file', '')
+    generation_mode = request.POST.get('generation_mode', 'resources')
+    quiz_subject = (request.POST.get('subject') or '').strip()[:200]
+    if generation_mode == 'topic':
+        selected_source_file = ''
     n_questions = 5
     sec = 20
     difficulty = 'moyen'
@@ -690,7 +694,9 @@ def teacher_ai_quiz(request):
         if selected_lesson_id and not lessons.filter(pk=selected_lesson_id).exists():
             selected_lesson_id = ''
 
-        if not lesson_id:
+        if generation_mode not in ('resources', 'topic'):
+            error = 'Veuillez choisir un mode de génération valide.'
+        elif not lesson_id:
             error = 'Veuillez choisir une leçon.'
         elif not lessons.filter(pk=lesson_id).exists():
             error = 'Veuillez choisir une leçon appartenant au niveau sélectionné.'
@@ -708,6 +714,8 @@ def teacher_ai_quiz(request):
                         provider=provider, model=model,
                         description=quiz_description,
                         source_file=selected_source_file or None,
+                        use_resources=generation_mode != 'topic',
+                        subject=quiz_subject,
                     )
                     # Créer le quiz + questions
                     quiz = Quiz.objects.create(
@@ -826,6 +834,8 @@ def teacher_ai_quiz(request):
         'selected_lesson_id': selected_lesson_id,
         'source_files_by_lesson': source_files_by_lesson,
         'selected_source_file': selected_source_file,
+        'generation_mode': generation_mode,
+        'quiz_subject': quiz_subject,
         'lessons': lessons,
         'all_lessons': all_lessons,
         'preview': preview,
