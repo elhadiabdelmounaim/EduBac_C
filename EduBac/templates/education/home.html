@@ -1,77 +1,78 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}?v=notebook-1">
+{% endblock %}
+
 {% block content %}
-<div class="hero text-center mb-4 fade-up">
-    <div class="hero-symbols" aria-hidden="true">
-        <span class="hs1">∑</span>
-        <span class="hs2">π</span>
-        <span class="hs3">√</span>
-        <span class="hs4">∞</span>
-    </div>
-    <div class="position-relative" style="z-index:1;">
-        <div class="display-5 mb-2">📐</div>
-        <h1 class="display-5 fw-bold"><i class="bi bi-mortarboard-fill"></i> EduBac</h1>
-        <p class="lead mb-1">Les mathématiques, plus proches de toi</p>
-        <p class="mt-1 opacity-75 small">Apprendre aujourd'hui, réussir demain</p>
-    </div>
-</div>
+<div class="home-page">
+    <section class="home-hero home-panel fade-up" aria-labelledby="home-title">
+        <div>
+            <p class="home-kicker">Mathématiques · Lycée marocain</p>
+            <h1 id="home-title" class="home-wordmark"><span class="home-wordmark-etudes">ETUDES</span><span class="home-wordmark-bac">BAC</span></h1>
+            <p class="home-lead">Les mathématiques, plus proches de toi.</p>
+            <p class="home-intro">Du Tronc Commun au 2<sup>ème</sup> Bac, retrouve les leçons de ton niveau et avance à ton rythme. Une notion après l'autre.</p>
+            <a class="home-button" href="#home-niveaux">Choisir mon niveau <i class="bi bi-arrow-down" aria-hidden="true"></i></a>
+        </div>
+        <figure class="home-notebook">
+            <div class="home-notebook-top"><span><i class="bi bi-journal-text" aria-hidden="true"></i> Mon cahier de maths</span><span>f(x)</span></div>
+            <div class="home-equation" aria-hidden="true">Δ = b² − 4ac</div>
+            <figcaption>Comprendre aujourd'hui.<br>Réussir demain.<span>Le cours d'abord. La confiance, pas à pas.</span></figcaption>
+        </figure>
+    </section>
 
-<div class="illus-card mb-4 fade-up fade-up-delay-1">
-    <div class="reader-illus float-soft">📖</div>
-    <div class="flex-grow-1">
-        <h2 class="h5 fw-bold mb-1" style="color:var(--edubac-navy);">Explore les niveaux scolaires</h2>
-        <p class="mb-0 text-muted small">Du Tronc Commun au 2<sup>ème</sup> Bac — leçons, quiz et assistant IA pour progresser en maths.</p>
-    </div>
-    <span class="illus-math im1" aria-hidden="true">∫</span>
-    <span class="illus-math im2" aria-hidden="true">Δ</span>
-    <span class="illus-math im3" aria-hidden="true">≈</span>
-</div>
+    <section class="home-guide home-panel fade-up" aria-labelledby="home-guide-title">
+        <div>
+            <p class="home-kicker">Ton point de départ</p>
+            <h2 id="home-guide-title">Explore les niveaux scolaires.</h2>
+        </div>
+        <p>Choisis ton niveau pour retrouver tes leçons de mathématiques. Les quiz et l'assistant IA t'accompagnent pour vérifier tes acquis et approfondir ta compréhension.</p>
+    </section>
 
-<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
-    <div>
-        <h2 class="h4 fw-bold mb-1" style="color:var(--edubac-navy);">Tous les niveaux</h2>
-        <p class="text-muted mb-0 small">Choisissez votre niveau pour accéder aux leçons.</p>
-    </div>
-</div>
-
-<div class="edubac-grid mb-4">
-{% for n in niveaux %}
-    <div class="fade-up">
-        <a href="{% url 'education:niveau_detail' n.code %}" class="level-card lc-{{ n.order }}">
+    <section id="home-niveaux" class="home-levels" aria-labelledby="home-levels-title">
+        <div class="home-section-heading">
             <div>
-                <div class="level-icon">
-                    {% if n.order == 1 %}🔢
-                    {% elif n.order == 2 %}🧪
-                    {% elif n.order == 3 %}📊
-                    {% elif n.order == 4 %}📚
-                    {% elif n.order == 5 %}🧬
-                    {% elif n.order == 6 %}⚡
-                    {% else %}✍️{% endif %}
+                <p class="home-kicker">Le programme, à portée de main</p>
+                <h2 id="home-levels-title">Tous les niveaux</h2>
+                <p>Choisis ton niveau pour accéder aux leçons.</p>
+            </div>
+            <i class="bi bi-book home-section-icon" aria-hidden="true"></i>
+        </div>
+        <div class="home-level-grid">
+        {% for n in niveaux %}
+            <a href="{% url 'education:niveau_detail' n.code %}" class="home-level-card fade-up">
+                <div class="home-level-top">
+                    <span class="home-level-icon"><i class="bi bi-journal-bookmark" aria-hidden="true"></i></span>
+                    <span class="home-level-symbol" aria-hidden="true">
+                        {% if n.order == 1 %}ℕ
+                        {% elif n.order == 2 %}f(x)
+                        {% elif n.order == 3 %}∇
+                        {% elif n.order == 4 %}Σ
+                        {% elif n.order == 5 %}∫
+                        {% elif n.order == 6 %}ℂ
+                        {% else %}P{% endif %}
+                    </span>
                 </div>
                 <h3>{{ n.label }}</h3>
-                <p>{{ n.count }} leçon{{ n.count|pluralize }}</p>
+                <div class="home-level-bottom">
+                    <span class="home-level-count">{{ n.count }} leçon{{ n.count|pluralize }}</span>
+                    <span class="home-level-link">Voir les leçons <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
+                </div>
+            </a>
+        {% empty %}
+            <div class="home-empty home-panel" role="status">
+                <i class="bi bi-journal-text" aria-hidden="true"></i>
+                <h3>Les cours seront bientôt disponibles.</h3>
+                <p>Reviens ici pour découvrir les leçons de ton niveau.</p>
             </div>
-            <span class="lc-symbol">
-                {% if n.order == 1 %}ℕ
-                {% elif n.order == 2 %}f(x)
-                {% elif n.order == 3 %}∇
-                {% elif n.order == 4 %}Σ
-                {% elif n.order == 5 %}∫
-                {% elif n.order == 6 %}ℂ
-                {% else %}P{% endif %}
-            </span>
-            <div class="text-end mt-2">
-                <i class="bi bi-chevron-right opacity-50"></i>
-            </div>
-        </a>
-    </div>
-{% empty %}
-    <div class="full-width"><div class="alert alert-info">Les cours seront bientôt disponibles.</div></div>
-{% endfor %}
-</div>
+        {% endfor %}
+        </div>
+    </section>
 
-<div class="math-quote">
-    <div class="quote-mark">“</div>
-    <p>Les mathématiques sont le langage avec lequel Dieu a écrit l'univers.</p>
-    <div class="quote-author">— Galilée</div>
+    <blockquote class="home-quote home-panel">
+        <p>« Les mathématiques sont le langage avec lequel Dieu a écrit l'univers. »</p>
+        <footer>— Galilée</footer>
+    </blockquote>
 </div>
 {% endblock %}

@@ -1,0 +1,175 @@
+/* Accueil only — a warm, bold study notebook. */
+.home-page {
+    --home-paper: #f7f3e8;
+    --home-surface: #fcfaf4;
+    --home-ink: #263449;
+    --home-muted: #566268;
+    --home-teal: #185f60;
+    --home-tint: #e7eeea;
+    --home-line: #d9d9cb;
+    --home-ochre: #975815;
+    max-width: 1180px;
+    margin: 0 auto;
+    color: var(--home-ink);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-weight: 700;
+    line-height: 1.65;
+}
+html[data-theme="dark"] .home-page {
+    --home-paper: #242c2d;
+    --home-surface: #1c252b;
+    --home-ink: #f1eee3;
+    --home-muted: #c0ceca;
+    --home-teal: #9bd9cd;
+    --home-tint: #2d3d3a;
+    --home-line: #465650;
+    --home-ochre: #efbc78;
+}
+.home-page :where(p, a, span, small, figcaption, blockquote, h1, h2, h3) { font-weight: 700; }
+.home-page h1, .home-page h2, .home-page h3 {
+    font-family: Georgia, 'Times New Roman', serif;
+    color: var(--home-ink);
+    text-wrap: balance;
+    line-height: 1.2;
+}
+.home-page p { margin: 0; }
+.home-page .home-kicker {
+    color: var(--home-ochre);
+    font-size: .72rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+}
+.home-page .home-panel {
+    background: var(--home-paper);
+    border: 1px solid var(--home-line);
+    border-left: 4px solid var(--home-ochre);
+    border-radius: 5px 24px 24px 5px;
+}
+.home-page .home-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, .8fr);
+    align-items: center;
+    gap: 2.5rem;
+    padding: clamp(1.5rem, 4vw, 3.5rem);
+}
+.home-page .home-wordmark {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 .16em;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(2.6rem, 5.7vw, 5rem);
+    font-weight: 900;
+    letter-spacing: -.055em;
+    margin: .65rem 0 1.1rem;
+    line-height: 1.05;
+}
+.home-page .home-wordmark span { font-weight: 900; }
+.home-page .home-wordmark .home-wordmark-etudes { color: var(--home-teal); }
+.home-page .home-wordmark .home-wordmark-bac { color: var(--home-ochre); }
+.home-page .home-lead { font-size: clamp(1.1rem, 2vw, 1.4rem); color: var(--home-ink); }
+.home-page .home-intro { color: var(--home-muted); max-width: 36rem; margin-top: .65rem; font-size: .94rem; }
+.home-page .home-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    background: var(--home-teal);
+    color: var(--home-surface);
+    border-radius: 12px;
+    text-decoration: none;
+    padding: .8rem 1.25rem;
+    margin-top: 1.7rem;
+    min-height: 48px;
+    transition: transform 180ms ease;
+}
+.home-page .home-button:hover { transform: translateY(-2px); }
+.home-page a:focus-visible { outline: 3px solid var(--home-ochre); outline-offset: 5px; }
+.home-page .home-notebook {
+    background: var(--home-surface);
+    border: 1px solid var(--home-line);
+    border-radius: 16px;
+    padding: 1.4rem;
+    margin: 0;
+    box-shadow: 6px 6px 0 var(--home-tint);
+}
+.home-page .home-notebook-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    color: var(--home-muted);
+    border-bottom: 1px solid var(--home-line);
+    padding-bottom: .75rem;
+    font-size: .75rem;
+}
+.home-page .home-equation {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(1.9rem, 3vw, 2.8rem);
+    color: var(--home-teal);
+    text-align: center;
+    padding: 1.25rem .25rem;
+    background: repeating-linear-gradient(transparent, transparent 31px, var(--home-line) 31px, var(--home-line) 32px);
+    margin: .5rem 0 1rem;
+}
+.home-page .home-notebook figcaption { font-family: Georgia, 'Times New Roman', serif; font-size: 1.2rem; line-height: 1.4; }
+.home-page .home-notebook figcaption span { display: block; margin-top: .5rem; font-family: 'Segoe UI', system-ui, sans-serif; font-size: .76rem; color: var(--home-muted); }
+.home-page .home-guide {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 1.5rem 3rem;
+    padding: 1.6rem clamp(1.4rem, 3vw, 2.5rem);
+    margin-top: 1.25rem;
+}
+.home-page .home-guide h2 { font-size: clamp(1.45rem, 2.4vw, 1.9rem); margin: .5rem 0 0; }
+.home-page .home-guide > p { color: var(--home-muted); font-size: .92rem; }
+.home-page .home-levels { margin-top: 2.6rem; scroll-margin-top: 90px; }
+.home-page .home-section-heading { display: flex; justify-content: space-between; align-items: end; gap: 1rem; margin: 0 .2rem 1.25rem; }
+.home-page .home-section-heading h2 { font-size: clamp(1.7rem, 3vw, 2.3rem); margin: .45rem 0 .35rem; }
+.home-page .home-section-heading p:not(.home-kicker) { color: var(--home-muted); font-size: .9rem; }
+.home-page .home-section-icon { color: var(--home-teal); font-size: 1.8rem; }
+.home-page .home-level-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.home-page .home-level-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--home-surface);
+    color: var(--home-ink);
+    border: 1px solid var(--home-line);
+    border-left: 4px solid var(--home-ochre);
+    border-radius: 5px 20px 20px 5px;
+    padding: 1.35rem 1.5rem;
+    text-decoration: none;
+    transition: transform 180ms ease;
+}
+.home-page .home-level-card:hover { transform: translateY(-3px); background: var(--home-paper); color: var(--home-ink); }
+.home-page .home-level-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .85rem; }
+.home-page .home-level-icon { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; background: var(--home-tint); color: var(--home-teal); font-size: 1.15rem; }
+.home-page .home-level-symbol { font-family: Georgia, 'Times New Roman', serif; color: var(--home-ochre); font-size: 1.4rem; line-height: 1; }
+.home-page .home-level-card h3 { font-size: 1.3rem; margin: 0 0 .45rem; }
+.home-page .home-level-bottom { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin-top: auto; padding-top: .9rem; border-top: 1px solid var(--home-line); }
+.home-page .home-level-count { color: var(--home-muted); font-size: .82rem; }
+.home-page .home-level-link { color: var(--home-teal); font-size: .82rem; display: inline-flex; gap: .6rem; align-items: center; }
+.home-page .home-empty { grid-column: 1 / -1; padding: 2.5rem 1.5rem; text-align: center; }
+.home-page .home-empty i { display: block; font-size: 2rem; color: var(--home-teal); margin-bottom: .65rem; }
+.home-page .home-empty h3 { font-size: 1.4rem; }
+.home-page .home-empty p { color: var(--home-muted); }
+.home-page .home-quote { margin: 1.5rem 0 0; padding: 1.5rem clamp(1.4rem, 3vw, 2.5rem); }
+.home-page .home-quote p { font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.1rem, 2vw, 1.45rem); line-height: 1.5; }
+.home-page .home-quote footer { color: var(--home-ochre); font-size: .8rem; margin-top: .7rem; }
+/* This stylesheet is loaded on Accueil only. Keep the shared shell's
+   appearance and behavior, but make its text meet the bold-text request. */
+body :is(.edubac-navbar, .edubac-sidebar, .footer, .bottom-nav, .breadcrumb, .alert) :where(p, a, span, small, strong, button, input, li, div) { font-weight: 700 !important; }
+@media (max-width: 767.98px) {
+    .home-page .home-hero, .home-page .home-guide, .home-page .home-level-grid { grid-template-columns: 1fr; }
+    .home-page .home-hero { gap: 1.8rem; }
+    .home-page .home-notebook { max-width: 420px; width: 100%; }
+    .home-page .home-guide { gap: .85rem; }
+    .home-page .home-levels { margin-top: 2rem; }
+    .home-page .home-level-card { padding: 1.15rem 1.25rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .home-page .home-button, .home-page .home-level-card { transition: none; }
+    .home-page .home-button:hover, .home-page .home-level-card:hover { transform: none; }
+}
+body[data-edubac-motion="paused"] .home-page a { transition: none; }
