@@ -29,6 +29,7 @@
   var redoStack = [];
   var background = 'grid';
   var backgroundTypes = ['plain', 'grid', 'ruled', 'dots'];
+  var backgroundControl = document.getElementById('wbBackground');
   var zoom = 1;
   var snapshot = null;
   var saveTimer = null;
@@ -65,7 +66,7 @@
   }
   function loadBackground(content) {
     background = content && backgroundTypes.includes(content.background) ? content.background : 'grid';
-    document.getElementById('wbBackground').value = background;
+    if (backgroundControl) backgroundControl.value = background;
   }
   function deleteSelected() {
     if (!canEdit || !contentReady || !selected()) return;
@@ -736,7 +737,7 @@
     scheduleSave();
     broadcast({ type: 'clear' });
   });
-  document.getElementById('wbBackground').addEventListener('change', function (e) {
+  if (backgroundControl) backgroundControl.addEventListener('change', function (e) {
     if (!canEdit || !contentReady || !backgroundTypes.includes(e.target.value)) {
       e.target.value = background;
       return;

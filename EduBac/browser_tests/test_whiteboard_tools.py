@@ -32,6 +32,9 @@ class WhiteboardToolsBrowserTests(StaticLiveServerTestCase):
             )
             try:
                 page = browser.new_page(viewport={"width": 1440, "height": 1050})
+                # An old unversioned asset must never be requested after a UI update.
+                page.route("**/static/js/whiteboard.js", lambda route: route.abort())
+                page.route("**/static/js/whiteboard-objects.js", lambda route: route.abort())
                 errors, external_recognition = [], []
                 page.on("pageerror", lambda error: errors.append(str(error)))
                 page.on("request", lambda request: external_recognition.append(request.url)
@@ -105,6 +108,25 @@ class WhiteboardToolsBrowserTests(StaticLiveServerTestCase):
                 page.locator('#wbEditorForm button[type="submit"]').click()
                 page.wait_for_function("EduBacBoard.getObjects().length === 3")
                 self.assertEqual(page.evaluate("EduBacBoard.getSelected().text"), "f(x) = x² + 1")
+                for tool in ("pen", "highlighter", "eraser", "line", "arrow",
+                             "rect", "circle", "triangle", "ruler", "protractor"):
+                    count = page.evaluate("EduBacBoard.getObjects().length")
+                    page.locator(f'[data-tool="{tool}"]').click()
+                    expect(page.locator(f'[data-tool="{tool}"]')).to_have_attribute("aria-pressed", "true")
+                    page.mouse.move(*point(350, 250))
+                    page.mouse.down()
+                    page.mouse.move(*point(425, 280), steps=6)
+                    page.mouse.up()
+                    page.wait_for_function(
+                        "n => EduBacBoard.getObjects().length === n + 1", arg=count
+                    )
+                    if tool == "eraser":
+                        self.assertTrue(page.evaluate("EduBacBoard.getObjects().at(-1).erase"))
+                page.locator("#wbMathBtn").click()
+                page.locator("#wbMathInput").fill("x^2 + 1")
+                page.locator("#wbMathPlace").click()
+                expect(page.locator("#wbMathModal")).not_to_be_visible()
+                self.assertEqual(page.evaluate("EduBacBoard.getObjects().at(-1).type"), "math")
                 self.assertEqual(external_recognition, [])
                 self.assertEqual(errors, [])
                 for width in (390, 1440):

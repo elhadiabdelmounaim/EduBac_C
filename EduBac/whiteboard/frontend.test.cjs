@@ -106,7 +106,7 @@ class Element {
   getBoundingClientRect(){return {left:0,top:0,width:1600,height:1000};}
   toDataURL(){return 'data:image/png;base64,aGVsbG8=';}
 }
-function harness({edit=true,objects=samples(),tutor=false,saveStatus=200,pointer=false,student=false}={}) {
+function harness({edit=true,objects=samples(),tutor=false,saveStatus=200,pointer=false,student=false,missingBackground=false}={}) {
   const elements=new Map();
   function get(id){
     if(!elements.has(id)){
@@ -122,7 +122,7 @@ function harness({edit=true,objects=samples(),tutor=false,saveStatus=200,pointer
   const intents=['explain','hint','verify','solve','rule'].map(intent=>{const e=new Element('button');e.dataset.tutorIntent=intent;return e;});
   const globalEvents={}, requests=[], answers=[];
   const document={
-    getElementById:get,
+    getElementById:id => missingBackground && id === 'wbBackground' ? null : get(id),
     createElement:tag=>new Element(tag),
     createTextNode:text=>Object.assign(new Element('#text'),{textContent:text}),
     addEventListener(name,fn){(globalEvents[name] ||= []).push(fn);},
@@ -172,6 +172,16 @@ function harness({edit=true,objects=samples(),tutor=false,saveStatus=200,pointer
   return {get,tools,modes,intents,context,requests,answers,strokes,drawnText,saved:()=>savedObjects,
     emit:(type,event={})=>{for(const fn of globalEvents[type] || [])fn({preventDefault(){},...event});}};
 }
+test('missing optional paper control cannot disable board initialization or drawing',async()=>{
+  const h=harness({missingBackground:true,objects:[]});
+  await flush();
+  assert.ok(h.context.EduBacBoard);
+  h.tools.find(t=>t.dataset.tool==='pencil').click();
+  h.get('wbCanvas').emit('mousedown',{clientX:100,clientY:100});
+  h.get('wbCanvas').emit('mousemove',{clientX:120,clientY:110});
+  h.get('wbCanvas').emit('mouseup',{clientX:140,clientY:120});
+  assert.equal(h.context.EduBacBoard.getObjects().length,1);
+});
 test('board selects, drags, edits and deletes objects; undo/redo restore images; actions are one batch and persist',async()=>{
   const h=harness();await flush();
   h.tools[0].click();

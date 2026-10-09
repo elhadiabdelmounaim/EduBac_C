@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block extra_css %}
-<link rel="stylesheet" href="/static/css/whiteboard.css">
+<link rel="stylesheet" href="/static/css/whiteboard.css?v=20261009-tools2">
 <link rel="stylesheet" href="/static/css/whiteboard-tutor.css">
 <link rel="stylesheet" href="/static/css/whiteboard-share.css">
 {% include "includes/katex.html" %}
@@ -237,8 +237,8 @@
 {% endif %}
 {% endblock %}
 {% block extra_js %}
-<script src="/static/js/whiteboard-objects.js"></script>
-<script src="/static/js/whiteboard.js"></script>
+<script src="/static/js/whiteboard-objects.js?v=20261009-tools2"></script>
+<script src="/static/js/whiteboard.js?v=20261009-tools2"></script>
 {% if not is_student %}<script src="/static/js/whiteboard-tutor.js"></script>{% endif %}
 {% if is_teacher_owner %}<script src="/static/js/whiteboard-share-publish.js"></script>{% endif %}
 {% endblock %}
