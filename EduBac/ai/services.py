@@ -133,7 +133,7 @@ def _repair_invalid_json_backslashes(raw: str) -> str:
 
 
 # One quiz HTTP request must finish even when the model is slow or a question is invalid.
-QUIZ_MAX_QUESTIONS = int(getattr(settings, "QUIZ_MAX_QUESTIONS", 10))
+QUIZ_MAX_QUESTIONS = int(getattr(settings, "QUIZ_MAX_QUESTIONS", 20))
 QUIZ_GENERATION_DEADLINE = 50
 QUIZ_CALL_TIMEOUT = 30
 QUESTION_MAX_ATTEMPTS = 2

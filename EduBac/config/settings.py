@@ -132,7 +132,7 @@ QUIZ_SEMANTIC_CHECK_ENABLED = os.getenv(
 ).strip().lower() in ('1', 'true', 'yes', 'on')
 QUIZ_LESSON_CONTEXT_CHARS = int(os.getenv('QUIZ_LESSON_CONTEXT_CHARS', '5000'))
 QUIZ_GROQ_REQUEST_TOKEN_BUDGET = int(os.getenv('QUIZ_GROQ_REQUEST_TOKEN_BUDGET', '7500'))
-QUIZ_MAX_QUESTIONS = int(os.getenv('QUIZ_MAX_QUESTIONS', '10'))
+QUIZ_MAX_QUESTIONS = int(os.getenv('QUIZ_MAX_QUESTIONS', '20'))
 
 OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY', '')
 OPENROUTER_MODEL = os.getenv('OPENROUTER_MODEL', 'openrouter/free')

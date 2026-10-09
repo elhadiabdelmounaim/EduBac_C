@@ -111,12 +111,12 @@ class QuizNoveltyTests(TestCase):
         self.assertEqual(chat.call_count, 1)
 
     @patch.object(AIService, "_chat")
-    def test_generation_caps_the_question_count_at_ten(self, chat):
+    def test_generation_caps_the_question_count_at_twenty(self, chat):
         chat.return_value = quiz_json([NEW[0]])
         with self.assertRaises(AIProviderError):
             self.service.generate_quiz_from_lesson(self.lesson, 25)
         prompt = chat.call_args_list[0].args[0][1]["content"]
-        self.assertIn("Nombre de questions EXACT : 10", prompt)
+        self.assertIn("Nombre de questions EXACT : 20", prompt)
 
     def test_ai_help_prefers_the_summary_inside_the_character_budget(self):
         lesson = Lesson.objects.create(
