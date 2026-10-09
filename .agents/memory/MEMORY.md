@@ -2,6 +2,7 @@
 - [GitHub upload authentication](github-upload.md) — connector access does not repair shell credentials; use verified, non-force API uploads when needed.
 - [Whiteboard tutor](whiteboard-tutor.md) — extend existing board; contextual, data-only actions and honest mathematical verification boundaries.
 - [Whiteboard asset caching](whiteboard-assets.md) — version coupled assets together; stale scripts referencing removed controls can disable every tool.
+- [Curriculum media organization](media-organization.md) — level → chapter → Cours/Exercices; use database lessons and preserve existing uploads.
 - [Browser regressions](browser-regression.md) — real login sessions; scope Playwright runtime to avoid Django ORM async-safety failures.
 - [2ème Bac SM curriculum order](second-bac-sm-curriculum-order.md) — preserve AlloSchool’s shared numbered A/B sequence; other Moroccan sites present it as differently ordered course sections.
 - [Python package installation](python-package-installation.md) — resolve root pyproject TOML conflicts before using Replit’s Python package installer.
