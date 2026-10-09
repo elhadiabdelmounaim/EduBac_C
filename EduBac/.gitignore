@@ -8,7 +8,11 @@ __pycache__/
 .Python
 db.sqlite3
 *.log
-media/
+media/*
+!media/lessons/
+media/lessons/**
+!media/lessons/**/
+!media/lessons/**/.gitkeep
 staticfiles/
 .DS_Store
 *.egg-info/
