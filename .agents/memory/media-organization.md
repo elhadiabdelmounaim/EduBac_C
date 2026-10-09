@@ -7,3 +7,9 @@ Organize educational media by school level, then chapter, then separate Cours, E
 **Why:** The user approved this hierarchy, automatic PDF discovery and the faster TXT/LaTeX approach for AI sources.
 
 **How to apply:** Use the actual lessons of each level, not a fixed ten-chapter limit. Preserve existing files and linked paths; do not reorganize unrelated chat or results media. Creating folders does not mean course or exercise documents have been supplied.
+
+For the requested folder naming, use the user's TXT curriculum list as the reference rather than assuming the database titles match.
+
+**Why:** The user clarified that a TXT file in Media contains the intended lesson titles for each level and asked to build the hierarchy from it.
+
+**How to apply:** Locate and read that file first; if absent in the current workspace, ask for its path or upload rather than claiming to have applied its titles.
