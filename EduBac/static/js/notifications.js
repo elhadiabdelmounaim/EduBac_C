@@ -12,6 +12,23 @@
     const bellBtn = document.getElementById('notifBellBtn');
 
     let lastUnread = -1;
+    let revision = 0;
+    let busy = false;
+    function jsonResponse(r) {
+        if (!r.ok) throw new Error('Notification request failed');
+        return r.json();
+    }
+    function showError() {
+        let error = document.getElementById('notifError');
+        if (!error) {
+            error = document.createElement('div');
+            error.id = 'notifError';
+            error.className = 'px-3 py-2 text-danger small';
+            error.setAttribute('role', 'alert');
+            listEl.parentNode.insertBefore(error, listEl);
+        }
+        error.textContent = 'Impossible de marquer les notifications comme lues. Réessayez.';
+    }
 
     function getCookie(name) {
         const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
@@ -32,6 +49,7 @@
             setTimeout(function () { bellBtn.classList.remove('notif-pulse'); }, 800);
         }
         lastUnread = count;
+        if (bellBtn) bellBtn.setAttribute('aria-label', 'Notifications : ' + count + ' non lues');
     }
 
     function iconForType(type) {
@@ -55,9 +73,9 @@
         }
         listEl.innerHTML = notifications.map(function (n) {
             const unreadClass = n.is_read ? '' : ' notif-unread';
-            const href = n.link || '#';
+            const href = n.link && n.link.startsWith('/') && !n.link.startsWith('//') ? n.link : '#';
             return (
-                '<a href="' + href + '" class="notif-item d-flex gap-2 px-3 py-2 text-decoration-none text-dark' + unreadClass + '" data-id="' + n.id + '">' +
+                '<a href="' + escapeHtml(href).replace(/"/g, '&quot;') + '" class="notif-item d-flex gap-2 px-3 py-2 text-decoration-none text-dark' + unreadClass + '" data-id="' + n.id + '">' +
                     '<div class="notif-icon"><i class="bi ' + iconForType(n.type) + '"></i></div>' +
                     '<div class="flex-grow-1 min-width-0">' +
                         '<div class="fw-semibold small text-truncate">' + escapeHtml(n.title) + '</div>' +
@@ -70,9 +88,14 @@
         }).join('');
 
         listEl.querySelectorAll('.notif-item').forEach(function (el) {
-            el.addEventListener('click', function () {
+            el.addEventListener('click', async function (event) {
+                event.preventDefault();
                 const id = el.getAttribute('data-id');
-                if (id) markRead(id);
+                if (busy || !id) return;
+                if (await markRead(id)) {
+                    const href = el.getAttribute('href');
+                    if (href !== '#') window.location.assign(href);
+                }
             });
         });
     }
@@ -84,12 +107,15 @@
     }
 
     function fetchList() {
+        if (busy) return Promise.resolve();
+        const version = revision;
         return fetch(cfg.listUrl + '?limit=15', {
             credentials: 'same-origin',
             headers: { 'Accept': 'application/json' },
         })
-            .then(function (r) { return r.json(); })
+            .then(jsonResponse)
             .then(function (data) {
+                if (version !== revision || busy) return;
                 updateBadge(data.unread_count || 0);
                 renderList(data.notifications || []);
             })
@@ -102,12 +128,15 @@
     }
 
     function fetchCount() {
+        if (busy) return Promise.resolve();
+        const version = revision;
         return fetch(cfg.countUrl, {
             credentials: 'same-origin',
             headers: { 'Accept': 'application/json' },
         })
-            .then(function (r) { return r.json(); })
+            .then(jsonResponse)
             .then(function (data) {
+                if (version !== revision || busy) return;
                 updateBadge(data.unread_count || 0);
             })
             .catch(function () { /* silencieux */ });
@@ -125,7 +154,10 @@
 
     function markRead(id) {
         const url = cfg.markReadUrlTemplate.replace('{id}', id);
-        removeNotifFromList(id);
+        busy = true;
+        revision++;
+        const error = document.getElementById('notifError');
+        if (error) error.remove();
         return fetch(url, {
             method: 'POST',
             credentials: 'same-origin',
@@ -134,18 +166,28 @@
                 'Accept': 'application/json',
             },
         })
-            .then(function (r) { return r.json(); })
+            .then(jsonResponse)
             .then(function (data) {
+                if (!data.ok) throw new Error('Not marked');
+                removeNotifFromList(id);
                 if (typeof data.unread_count === 'number') {
                     updateBadge(data.unread_count);
                 } else {
-                    fetchCount();
+                    updateBadge(Math.max(0, lastUnread - 1));
                 }
+                return true;
             })
-            .catch(function () { fetchList(); });
+            .catch(function () { showError(); return false; })
+            .finally(function () { busy = false; revision++; });
     }
 
     function markAllRead() {
+        if (busy) return;
+        busy = true;
+        revision++;
+        markAllBtn.disabled = true;
+        const error = document.getElementById('notifError');
+        if (error) error.remove();
         return fetch(cfg.markAllUrl, {
             method: 'POST',
             credentials: 'same-origin',
@@ -154,14 +196,17 @@
                 'Accept': 'application/json',
             },
         })
-            .then(function (r) { return r.json(); })
-            .then(function () {
-                updateBadge(0);
+            .then(jsonResponse)
+            .then(function (data) {
+                if (!data.ok) throw new Error('Not marked');
+                updateBadge(data.unread_count);
                 if (listEl) {
                     listEl.innerHTML =
                         '<div class="px-3 py-4 text-center text-muted small">Aucune notification pour le moment.</div>';
                 }
-            });
+            })
+            .catch(showError)
+            .finally(function () { busy = false; revision++; markAllBtn.disabled = false; });
     }
 
     if (markAllBtn) {

@@ -2135,7 +2135,32 @@ html[data-theme="dark"] .understand-bar {
     box-shadow: 0 1px 6px rgba(0,0,0,0.15);
 }
 .edubac-navbar .notif-badge {
-    background: #DD8826 !important;
+    background: #b91c1c !important;
+    color: #fff !important;
+    font-size: 0.75rem;
+    font-weight: 800;
+    line-height: 1;
+    min-width: 1.4rem;
+    padding: 0.25rem 0.35rem;
+    border: 2px solid #241335;
+    top: 2px !important;
+    left: auto !important;
+    right: -5px;
+    transform: none !important;
+    pointer-events: none;
+}
+.edubac-navbar #notifBellBtn {
+    min-width: 44px;
+    min-height: 44px;
+    overflow: visible;
+}
+.edubac-navbar #notifMarkAllRead {
+    color: #155e63 !important;
+    font-weight: 600;
+    min-height: 36px;
+}
+.edubac-navbar #notifMarkAllRead:disabled {
+    opacity: 0.6;
 }
 .edubac-navbar .user-avatar {
     background: #DD8826 !important;
