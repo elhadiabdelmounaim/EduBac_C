@@ -81,7 +81,9 @@ class Lesson(models.Model):
 
     def get_full_pedagogical_text(self) -> str:
         """Texte complet pour l'IA : content DB + resume + fichiers media."""
-        parts = []
+        from .media_library import ai_source_text
+        source_text = ai_source_text(self)
+        parts = [source_text] if source_text else []
         if self.content and self.content.strip():
             parts.append(self.content.strip())
         if self.summary and self.summary.strip():
@@ -165,7 +167,9 @@ class Lesson(models.Model):
         summary = (self.summary or "").strip()
         faq = (self.faq or "").strip()
         content = (self.content or "").strip()
-        parts = []
+        from .media_library import ai_source_text
+        source_text = ai_source_text(self)
+        parts = [source_text] if source_text else []
         if summary:
             parts.append("## Resume\n" + summary)
         if faq:

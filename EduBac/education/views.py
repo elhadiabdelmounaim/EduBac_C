@@ -139,6 +139,7 @@ def course_detail(request, pk):
 
 def lesson_detail(request, pk):
     lesson = get_object_or_404(Lesson, pk=pk)
+    from .media_library import documents
     course = lesson.course
     # Leçon suivante / précédente
     next_lesson = Lesson.objects.filter(course=course, order__gt=lesson.order).order_by('order').first()
@@ -173,9 +174,32 @@ def lesson_detail(request, pk):
         'prev_lesson': prev_lesson,
         'is_fav': is_fav,
         'faq_items': faq_items,
+        'document_groups': [
+            {'kind': kind, 'files': [p.name for p in documents(lesson, kind)]}
+            for kind in ('Cours', 'Exercices')
+        ],
         'page_title': lesson.title,
     })
 
+
+
+def lesson_document(request, pk, kind, filename):
+    from django.http import FileResponse, Http404
+    from .media_library import documents
+    lesson = get_object_or_404(Lesson, pk=pk)
+    if kind not in ('Cours', 'Exercices'):
+        raise Http404
+    path = next((p for p in documents(lesson, kind) if p.name == filename), None)
+    if path is None:
+        raise Http404
+    try:
+        response = FileResponse(path.open('rb'), content_type='application/pdf',
+                                as_attachment=request.GET.get('download') == '1',
+                                filename=path.name)
+    except FileNotFoundError:
+        raise Http404
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response
 
 
 def search(request):

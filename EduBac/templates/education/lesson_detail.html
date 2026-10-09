@@ -104,6 +104,26 @@
         {% else %}
         <p class="text-muted mb-0">Contenu à venir. Tu pourras coller du Markdown + LaTeX ici, et joindre un PDF.</p>
         {% endif %}
+        {% for group in document_groups %}
+        <section class="mt-4" aria-label="{{ group.kind }}">
+            <h3 class="h5">{{ group.kind }} — PDF</h3>
+            <ul class="list-group">
+                {% for filename in group.files %}
+                <li class="list-group-item d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <span class="text-break">{{ filename }}</span>
+                    <span class="d-flex gap-2">
+                        <a class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener"
+                           href="{% url 'education:lesson_document' lesson.pk group.kind filename %}">Ouvrir</a>
+                        <a class="btn btn-sm btn-outline-secondary"
+                           href="{% url 'education:lesson_document' lesson.pk group.kind filename %}?download=1">Télécharger</a>
+                    </span>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">Aucun PDF disponible pour le moment.</li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endfor %}
         {% if lesson.pdf %}
         <div class="mt-3 d-flex gap-2">
             <a href="{{ lesson.pdf.url }}" class="btn btn-edubac btn-sm" target="_blank">Ouvrir le PDF</a>

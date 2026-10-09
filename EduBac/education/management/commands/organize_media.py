@@ -7,6 +7,7 @@ from django.utils.text import slugify
 
 from education.models import Lesson
 from education.management.commands.load_curriculum import NIVEAU_FOLDER
+from education.media_library import chapter_relative
 
 
 class Command(BaseCommand):
@@ -20,13 +21,10 @@ class Command(BaseCommand):
         targets, seen, levels = [], set(), set()
         for lesson in lessons:
             level = NIVEAU_FOLDER.get(lesson.course.niveau, slugify(lesson.course.niveau))
-            chapter = f"{lesson.order:02d}_{slugify(lesson.title)[:160] or 'lecon'}"
-            relative = Path('lessons') / level / chapter
-            if relative in seen:
-                relative = relative.with_name(f"{chapter}_lecon-{lesson.pk}")
+            relative = chapter_relative(lesson)
             seen.add(relative)
             levels.add(level)
-            for kind in ('Cours', 'Exercices'):
+            for kind in ('Cours', 'Exercices', 'Sources_IA'):
                 folder = root / relative / kind
                 if not folder.resolve().is_relative_to(root):
                     raise CommandError(f"Chemin hors du dossier media : {folder}")
