@@ -1,12 +1,15 @@
 """Verify that selecting a school level immediately populates the lesson list."""
 import os
 import shutil
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.management import call_command
 from django.urls import reverse
+from django.test import override_settings
 from playwright.sync_api import expect, sync_playwright
 
 from accounts.models import TeacherProfile, User
@@ -32,6 +35,21 @@ class QuizLessonPickerBrowserTests(StaticLiveServerTestCase):
             )
             for level in CURRICULUM
         }
+
+        from education.media_library import chapter_relative
+        self.source_temp = TemporaryDirectory()
+        self.addCleanup(self.source_temp.cleanup)
+        media_settings = override_settings(MEDIA_ROOT=self.source_temp.name)
+        media_settings.enable()
+        self.addCleanup(media_settings.disable)
+        source_lesson = Lesson.objects.filter(
+            course__niveau=CURRICULUM[0]['code'],
+        ).order_by('order').first()
+        self.source_lesson_id = str(source_lesson.pk)
+        self.source_folder = Path(self.source_temp.name) / chapter_relative(source_lesson) / 'Sources_IA'
+        self.source_folder.mkdir(parents=True)
+        (self.source_folder / 'Règles été.txt').write_text('SOURCE_CHOISIE $x^2$', encoding='utf-8')
+        (self.source_folder / 'Autre.txt').write_text('AUTRE_SOURCE', encoding='utf-8')
 
         self.playwright = sync_playwright().start()
         self.addCleanup(self.playwright.stop)
@@ -59,6 +77,46 @@ class QuizLessonPickerBrowserTests(StaticLiveServerTestCase):
         self.page.locator('input[name="password"]').fill('Browser-test-only-123!')
         self.page.get_by_role('button', name='Se connecter', exact=True).click()
         self.page.wait_for_url(lambda url: '/connexion/' not in url)
+
+    def test_source_picker_changes_resets_and_reaches_ai(self):
+        from ai.services import AIService
+        from ai.test_quiz_novelty import NEW, quiz_json
+        self.log_in_teacher()
+        self.page.goto(self.live_server_url + reverse('quizzes:teacher_ai'))
+        source = self.page.locator('#sourceFileSelect')
+        expect(source).to_be_disabled()
+        level = CURRICULUM[0]['code']
+        self.page.select_option('#niveauSelect', level)
+        self.page.select_option('#lessonSelect', self.source_lesson_id)
+        expect(source).to_be_enabled()
+        self.assertEqual(source.locator('option').all_text_contents(), [
+            'Tous les fichiers de la leçon', 'Autre.txt', 'Règles été.txt',
+        ])
+        source.select_option('Règles été.txt')
+        self.page.select_option('#niveauSelect', CURRICULUM[1]['code'])
+        expect(source).to_be_disabled()
+        expect(source).to_have_value('')
+        self.page.select_option('#niveauSelect', level)
+        self.page.select_option('#lessonSelect', self.source_lesson_id)
+        source.select_option('Règles été.txt')
+        self.page.locator('#questionCount').fill('1')
+        with (
+            patch.object(AIService, '_get_provider', return_value=SimpleNamespace(name='test', model='test')),
+            patch.object(AIService, '_chat', return_value=quiz_json([NEW[0]])) as chat,
+        ):
+            with self.page.expect_navigation(wait_until='domcontentloaded'):
+                self.page.locator('#genBtn').click()
+            expect(source).to_have_value('Règles été.txt')
+            prompt = chat.call_args_list[0].args[0][1]['content']
+            self.assertIn('SOURCE_CHOISIE $x^2$', prompt)
+            self.assertNotIn('AUTRE_SOURCE', prompt)
+        (self.source_folder / 'Règles été.txt').unlink()
+        with patch.object(AIService, '_chat') as chat:
+            with self.page.expect_navigation(wait_until='domcontentloaded'):
+                self.page.locator('#genBtn').click()
+            chat.assert_not_called()
+            expect(self.page.get_by_text('Le fichier source sélectionné est introuvable', exact=False)).to_be_visible()
+            expect(source).to_have_value('')
 
     def test_repeated_generation_preserves_parameters_and_replaces_duplicates(self):
         from ai.services import AIService

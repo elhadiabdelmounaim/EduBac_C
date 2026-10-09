@@ -84,6 +84,22 @@
                                 </div>
                             </div>
 
+                            <div class="qb-card">
+                                <div class="qb-card-head">
+                                    <label for="sourceFileSelect">Fichier source</label>
+                                </div>
+                                <div class="qb-card-body">
+                                    <select name="source_file" id="sourceFileSelect" class="form-select"
+                                            aria-describedby="sourceFileHint" disabled
+                                            data-selected="{{ selected_source_file }}">
+                                        <option value="">— Choisir d’abord une leçon —</option>
+                                    </select>
+                                    <div class="form-text mt-1" id="sourceFileHint" aria-live="polite">
+                                        Fichiers TXT du dossier Sources_IA de la leçon.
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="qb-card qb-description-card">
                                 <div class="qb-card-head">
                                     <i class="bi bi-card-text"></i>
@@ -310,6 +326,7 @@
 
 </div>{# /.quiz-builder #}
 
+{{ source_files_by_lesson|json_script:"source-files-data" }}
 <script>
 (function(){
   var hints = {
@@ -389,6 +406,25 @@
     var niveauSelect = document.getElementById('niveauSelect');
     var lessonSelect = document.getElementById('lessonSelect');
     if (!niveauSelect || !lessonSelect) return;
+    var sourceSelect = document.getElementById('sourceFileSelect');
+    var sourceHint = document.getElementById('sourceFileHint');
+    var sourceFiles = JSON.parse(document.getElementById('source-files-data').textContent);
+    function updateSources(selected) {
+        var files = sourceFiles[lessonSelect.value] || [];
+        sourceSelect.innerHTML = '';
+        sourceSelect.add(new Option(lessonSelect.value
+            ? 'Tous les fichiers de la leçon'
+            : '— Choisir d’abord une leçon —', ''));
+        files.forEach(function(name) { sourceSelect.add(new Option(name, name)); });
+        sourceSelect.disabled = !lessonSelect.value || !files.length;
+        sourceSelect.value = files.indexOf(selected) >= 0 ? selected : '';
+        sourceHint.textContent = !lessonSelect.value
+            ? 'Choisissez une leçon pour afficher ses fichiers TXT.'
+            : files.length
+                ? 'Sources_IA : choisissez un fichier précis ou tous les fichiers (texte limité au budget IA).'
+                : 'Aucun fichier TXT dans Sources_IA. Le contenu existant de la leçon sera utilisé.';
+    }
+    lessonSelect.addEventListener('change', function() { updateSources(''); });
 
     var placeholder = lessonSelect.options[0];
     var optionNodes = lessonSelect.getElementsByTagName('option');
@@ -441,6 +477,7 @@
 
     var handleNiveauChange = function() {
         updateLessons(true);
+        updateSources('');
     };
     if (niveauSelect.addEventListener) {
         niveauSelect.addEventListener('change', handleNiveauChange);
@@ -450,6 +487,7 @@
         niveauSelect.onchange = handleNiveauChange;
     }
     updateLessons(false);
+    updateSources(sourceSelect.getAttribute('data-selected'));
 })();
 </script>
 

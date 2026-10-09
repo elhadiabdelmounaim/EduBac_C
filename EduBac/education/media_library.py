@@ -42,16 +42,28 @@ def documents(lesson, kind):
     )
 
 
-def ai_source_text(lesson):
+def ai_source_text(lesson, source_file=None):
     """Read only UTF-8 text, bounded before decoding; preserve LaTeX literally."""
     limit = max(1, int(getattr(settings, 'QUIZ_LESSON_CONTEXT_CHARS', 5000)))
     chunks, remaining = [], limit * 4
-    for path in documents(lesson, 'Sources_IA'):
+    paths = documents(lesson, 'Sources_IA')
+    if source_file:
+        paths = [p for p in paths if p.name == source_file]
+        if not paths:
+            raise ValueError("Le fichier source sélectionné est introuvable pour cette leçon. Actualisez la page.")
+    for path in paths:
         if remaining <= 0:
             break
-        with path.open('r', encoding='utf-8-sig') as source:
-            text = source.read(remaining).strip()
+        try:
+            with path.open('r', encoding='utf-8-sig') as source:
+                text = source.read(remaining).strip()
+        except (OSError, UnicodeError) as exc:
+            raise ValueError(
+                f"Impossible de lire le fichier source « {path.name} ». Vérifiez son encodage UTF-8 et sa disponibilité."
+            ) from exc
         if text:
             chunks.append(f"## Source : {path.name}\n{text}")
             remaining -= len(text)
+    if source_file and not chunks:
+        raise ValueError("Le fichier source sélectionné est vide. Choisissez un autre fichier.")
     return '\n\n'.join(chunks)

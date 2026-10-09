@@ -527,6 +527,7 @@ Regles :
         provider: str | None = None,
         model: str | None = None,
         description: str = "",
+        source_file: str | None = None,
     ) -> dict:
         """
         Génère un quiz JSON strict à partir du contenu de la leçon.
@@ -549,7 +550,7 @@ Regles :
             difficulty = "moyen"
 
         question_count = max(1, min(int(question_count or 10), QUIZ_MAX_QUESTIONS))
-        context = lesson.get_ai_help()
+        context = lesson.get_ai_help(source_file=source_file) if source_file else lesson.get_ai_help()
         guide = difficulty_instructions(difficulty)
         temperature = {"facile": 0.45, "moyen": 0.55, "difficile": 0.6}[difficulty]
         history = previous_questions(lesson)

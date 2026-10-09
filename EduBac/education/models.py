@@ -156,7 +156,7 @@ class Lesson(models.Model):
         except Exception:
             return ''
 
-    def get_ai_help(self):
+    def get_ai_help(self, source_file=None):
         """Contexte pedagogique pour le service IA.
 
         Les TXT de Sources_IA sont relus à chaque appel et passent avant
@@ -169,13 +169,13 @@ class Lesson(models.Model):
         faq = (self.faq or "").strip()
         content = (self.content or "").strip()
         from .media_library import ai_source_text
-        source_text = ai_source_text(self)
+        source_text = ai_source_text(self, source_file=source_file)
         parts = [source_text] if source_text else []
-        if summary:
+        if summary and not source_file:
             parts.append("## Resume\n" + summary)
-        if faq:
+        if faq and not source_file:
             parts.append("## FAQ\n" + faq)
-        if content:
+        if content and not source_file:
             parts.append(content)
         contenu = "\n\n".join(parts).strip()
         if not contenu:

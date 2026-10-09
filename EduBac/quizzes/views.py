@@ -668,6 +668,7 @@ def teacher_ai_quiz(request):
     quiz_created = None
     error = None
     quiz_description = ''
+    selected_source_file = request.POST.get('source_file', '')
     n_questions = 5
     sec = 20
     difficulty = 'moyen'
@@ -691,6 +692,8 @@ def teacher_ai_quiz(request):
 
         if not lesson_id:
             error = 'Veuillez choisir une leçon.'
+        elif not lessons.filter(pk=lesson_id).exists():
+            error = 'Veuillez choisir une leçon appartenant au niveau sélectionné.'
         else:
             lesson = get_object_or_404(Lesson, pk=lesson_id)
 
@@ -704,6 +707,7 @@ def teacher_ai_quiz(request):
                         lesson, n_questions, difficulty,
                         provider=provider, model=model,
                         description=quiz_description,
+                        source_file=selected_source_file or None,
                     )
                     # Créer le quiz + questions
                     quiz = Quiz.objects.create(
@@ -810,11 +814,18 @@ def teacher_ai_quiz(request):
                 return redirect('quizzes:manage')
 
     from ai.services import available_providers
+    from education.media_library import documents
+    source_files_by_lesson = {
+        str(item.pk): [p.name for p in documents(item, 'Sources_IA')]
+        for item in all_lessons
+    }
     classrooms = Classroom.objects.filter(teacher=request.user, is_active=True)
     return render(request, 'quizzes/teacher_ai_quiz.html', {
         'niveaux': niveaux,
         'selected_niveau': selected_niveau,
         'selected_lesson_id': selected_lesson_id,
+        'source_files_by_lesson': source_files_by_lesson,
+        'selected_source_file': selected_source_file,
         'lessons': lessons,
         'all_lessons': all_lessons,
         'preview': preview,
