@@ -159,8 +159,9 @@ class Lesson(models.Model):
     def get_ai_help(self):
         """Contexte pedagogique pour le service IA.
 
-        Le résumé et la FAQ passent avant le cours, puis le texte est coupé
-        à QUIZ_LESSON_CONTEXT_CHARS (défaut 5000).
+        Les TXT de Sources_IA sont relus à chaque appel et passent avant
+        le résumé, la FAQ et le cours. Le contexte final est limité à
+        QUIZ_LESSON_CONTEXT_CHARS (défaut 5000).
         """
         from django.conf import settings
         limit = int(getattr(settings, "QUIZ_LESSON_CONTEXT_CHARS", 5000))
