@@ -1,35 +1,156 @@
 {% extends "base.html" %}
+{% load static %}
+{% block title %}À propos{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/about.css' %}?v=1">
+{% endblock %}
 {% block content %}
-<div class="fade-up" style="max-width:720px;">
-    <h1 class="h3 fw-bold mb-3" style="color:var(--edubac-navy);">À propos d'EduBac</h1>
-    <div class="card border-0 shadow-sm" style="border-radius:16px;">
-        <div class="card-body p-4">
-            <p class="lead mb-3" style="color:var(--edubac-teal);">
-                EduBac — la plateforme de mathématiques pour le lycée marocain.
+<div class="about-page">
+    <section class="about-hero" aria-labelledby="about-title">
+        <div>
+            <p class="about-kicker">À propos d’EduBac · Lycée marocain</p>
+            <h1 id="about-title">Les maths, <em>un raisonnement</em> à la fois.</h1>
+            <p class="about-lead">
+                Comprendre une notion, oser une question, reprendre un exercice.
+                EduBac accompagne ces étapes avec des cours structurés et des outils
+                qui rapprochent l’élève de son apprentissage — et de son enseignant.
             </p>
+            <div class="about-actions">
+                <a class="about-button" href="{% url 'education:niveaux' %}">
+                    Explorer les cours <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                </a>
+                <a class="about-link" href="#about-accompagnement">Notre approche</a>
+            </div>
+        </div>
+        <figure class="about-notebook">
+            <div class="about-notebook-label">
+                <span>Le goût de comprendre</span>
+                <i class="bi bi-pencil" aria-hidden="true"></i>
+            </div>
+            <svg class="about-diagram" viewBox="0 0 320 205" fill="none" aria-hidden="true" focusable="false">
+                <g class="about-diagram-grid" stroke-width="0.7">
+                    <path d="M20 35H300M20 65H300M20 95H300M20 125H300M20 155H300M20 185H300"/>
+                    <path d="M40 20V190M80 20V190M120 20V190M160 20V190M200 20V190M240 20V190M280 20V190"/>
+                </g>
+                <g stroke="currentColor" stroke-width="1.5">
+                    <path d="M24 158H298M63 188V20"/>
+                    <path d="m290 153 8 5-8 5M58 28l5-8 5 8"/>
+                </g>
+                <path d="M32 50Q156 252 282 40" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                <g class="about-diagram-accent" stroke-width="1.5" stroke-dasharray="4 5">
+                    <path d="M221 116V158M63 116H221"/>
+                </g>
+                <circle cx="221" cy="116" r="5" fill="currentColor"/>
+                <circle cx="157" cy="151" r="5" fill="currentColor"/>
+            </svg>
+            <figcaption>
+                Pas seulement le résultat.<br>Le chemin pour y arriver.
+                <span>Lire. Essayer. Questionner. Comprendre.</span>
+            </figcaption>
+        </figure>
+    </section>
+
+    <div class="about-path" aria-label="Niveaux accompagnés">
+        <strong>Un fil conducteur, du Tronc commun au Bac</strong>
+        <span>Tronc commun · 1re année Bac · 2e année Bac</span>
+    </div>
+
+    <section class="about-section" id="about-accompagnement" aria-labelledby="about-accompagnement-title">
+        <div class="about-section-heading">
+            <div>
+                <p class="about-kicker">Apprendre et transmettre</p>
+                <h2 id="about-accompagnement-title">Deux regards.<br>Un même apprentissage.</h2>
+            </div>
             <p>
-                EduBac aide les élèves et les enseignants à progresser en mathématiques
-                grâce à des cours structurés par niveau, des quiz intelligents générés par IA,
-                un suivi des résultats et des outils collaboratifs (classes, chat, whiteboard).
-            </p>
-            <h2 class="h6 fw-bold mt-4 mb-2">Pour les élèves</h2>
-            <ul class="mb-3">
-                <li>Leçons du Tronc commun au Bac (SM, PC, SVT…)</li>
-                <li>Quiz chronométrés et entraînement libre</li>
-                <li>Assistant IA pour expliquer le cours</li>
-                <li>Suivi de progression, badges et classements</li>
-            </ul>
-            <h2 class="h6 fw-bold mt-4 mb-2">Pour les enseignants</h2>
-            <ul class="mb-3">
-                <li>Création de classes et invitation par code</li>
-                <li>Génération de quiz par IA (plusieurs providers)</li>
-                <li>Résultats et export Excel par classe</li>
-                <li>Envoi de quiz aux classes ou au niveau</li>
-            </ul>
-            <p class="text-muted small mb-0">
-                © EduBac — Mathématiques · Plateforme éducative
+                Le travail personnel et l’accompagnement en classe se complètent.
+                EduBac réunit leurs outils dans un même espace, en gardant
+                la relation pédagogique au centre.
             </p>
         </div>
-    </div>
+        <div class="about-audiences">
+            <article class="about-audience">
+                <p class="about-kicker">Pour les élèves</p>
+                <h3>Avancer sans brûler les étapes.</h3>
+                <p>
+                    Retrouver le cours de son niveau, s’entraîner, puis revenir
+                    sur ce qui résiste : une façon de travailler qui laisse
+                    toute sa place à la réflexion.
+                </p>
+                <ul class="about-list">
+                    <li><i class="bi bi-book" aria-hidden="true"></i><span>Des leçons organisées par niveau et par filière pour retrouver ses repères.</span></li>
+                    <li><i class="bi bi-pencil-square" aria-hidden="true"></i><span>Des quiz pour mettre ses connaissances à l’épreuve et repérer les notions à revoir.</span></li>
+                    <li><i class="bi bi-bar-chart" aria-hidden="true"></i><span>Des résultats et un suivi de progression pour orienter ses prochaines révisions.</span></li>
+                </ul>
+            </article>
+            <article class="about-audience about-audience-teacher">
+                <p class="about-kicker">Pour les enseignants</p>
+                <h3>Accompagner avec des repères.</h3>
+                <p>
+                    Organiser une classe, proposer un quiz, lire les résultats :
+                    des outils pour suivre le travail des élèves et décider
+                    des points à reprendre avec eux.
+                </p>
+                <ul class="about-list">
+                    <li><i class="bi bi-people" aria-hidden="true"></i><span>Des classes accessibles par code d’invitation pour réunir ses élèves.</span></li>
+                    <li><i class="bi bi-send" aria-hidden="true"></i><span>Des quiz à préparer et à partager avec une classe ou un niveau.</span></li>
+                    <li><i class="bi bi-table" aria-hidden="true"></i><span>Des résultats par classe et un export Excel pour poursuivre l’analyse.</span></li>
+                </ul>
+            </article>
+        </div>
+    </section>
+
+    <section class="about-section about-workspace" aria-labelledby="about-workspace-title">
+        <div>
+            <p class="about-kicker">Réfléchir ensemble</p>
+            <h2 id="about-workspace-title">Une question mérite<br>de la place.</h2>
+        </div>
+        <div class="about-workspace-copy">
+            <p>
+                Une difficulté ne se résout pas toujours en relisant une formule.
+                Il faut parfois en parler, dessiner une figure ou poser le raisonnement
+                autrement. Le chat et le tableau blanc donnent une place à ces échanges,
+                en complément des cours et des quiz.
+            </p>
+            <a class="about-link" href="{% url 'education:whiteboard' %}">
+                Ouvrir le tableau blanc <i class="bi bi-arrow-right" aria-hidden="true"></i>
+            </a>
+        </div>
+    </section>
+
+    <section class="about-section about-ai" aria-labelledby="about-ai-title">
+        <div>
+            <p class="about-kicker">L’IA, à sa juste place</p>
+            <h2 id="about-ai-title">Un appui.<br>Pas un raccourci.</h2>
+        </div>
+        <div class="about-ai-copy">
+            <p>
+                L’assistance IA peut aider à reformuler une explication, explorer
+                une piste sur le tableau blanc ou préparer des questions de quiz.
+                <strong>Elle ne remplace ni le raisonnement de l’élève,
+                ni le regard de l’enseignant.</strong>
+            </p>
+            <p>
+                Ses réponses peuvent contenir des erreurs. Les explications sont
+                à confronter au cours et les étapes à vérifier ; les questions
+                générées doivent être relues par l’enseignant avant leur utilisation.
+                L’objectif reste de comprendre, pas simplement d’obtenir une réponse.
+            </p>
+        </div>
+    </section>
+
+    <section class="about-closing" aria-labelledby="about-closing-title">
+        <div>
+            <h2 id="about-closing-title">La suite commence par une notion.</h2>
+            <p>Choisissez votre niveau et prenez le temps de comprendre.</p>
+        </div>
+        <div class="about-actions">
+            <a class="about-button" href="{% url 'education:niveaux' %}">Trouver mon niveau <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+            {% if user.is_authenticated %}
+            <a class="about-link" href="{% url 'accounts:dashboard' %}">Mon tableau de bord</a>
+            {% else %}
+            <a class="about-link" href="{% url 'accounts:register_choice' %}">Rejoindre EduBac</a>
+            {% endif %}
+        </div>
+    </section>
 </div>
 {% endblock %}
