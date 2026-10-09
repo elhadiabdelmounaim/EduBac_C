@@ -971,10 +971,7 @@ def export_results_excel(request):
     ws = wb.active
     ws.title = 'Resultats'
 
-    headers = [
-        'Classe', 'Élève', 'E-mail', 'Quiz', 'Leçon',
-        'Score (%)', 'Date', 'Heure',
-    ]
+    headers = ['Nom', 'Prénom', 'Quiz', 'Note (%)']
     header_fill = PatternFill('solid', fgColor='1A6B6B')
     header_font = Font(color='FFFFFF', bold=True)
     thin = Border(
@@ -990,43 +987,22 @@ def export_results_excel(request):
         cell.alignment = Alignment(horizontal='center')
         cell.border = thin
 
-    # Map student -> class names for teacher
-    membership_map = {}
-    from classrooms.models import ClassroomMember as CM
-    for m in CM.objects.filter(classroom__teacher=request.user).select_related('classroom'):
-        membership_map.setdefault(m.user_id, [])
-        if m.classroom.name not in membership_map[m.user_id]:
-            membership_map[m.user_id].append(m.classroom.name)
-
     row = 2
-    for a in attempts[:5000]:
-        if class_id:
-            classes = class_name.replace('_', ' ')
-        else:
-            classes = ', '.join(membership_map.get(a.student_id, []))
-        ws.cell(row=row, column=1, value=classes).border = thin
-        ws.cell(row=row, column=2, value=a.student.get_full_name() or a.student.username).border = thin
-        ws.cell(row=row, column=3, value=a.student.email or '').border = thin
-        ws.cell(row=row, column=4, value=a.quiz.title).border = thin
-        ws.cell(row=row, column=5, value=a.quiz.lesson.title if a.quiz.lesson_id else '').border = thin
-        cell_score = ws.cell(row=row, column=6, value=float(a.score or 0))
+    for a in attempts.iterator(chunk_size=500):
+        for col, value in enumerate((a.student.last_name, a.student.first_name, a.quiz.title), 1):
+            cell = ws.cell(row=row, column=col, value=value or '')
+            cell.data_type = 's'  # Names and titles are text, never Excel formulas.
+            cell.border = thin
+        cell_score = ws.cell(row=row, column=4, value=a.score)
         cell_score.border = thin
         cell_score.alignment = Alignment(horizontal='center')
-        ws.cell(
-            row=row, column=7,
-            value=a.submitted_at.strftime('%d/%m/%Y') if a.submitted_at else ''
-        ).border = thin
-        ws.cell(
-            row=row, column=8,
-            value=a.submitted_at.strftime('%H:%M') if a.submitted_at else ''
-        ).border = thin
+        cell_score.number_format = '0.00'
         row += 1
 
-    for col in range(1, 9):
-        ws.column_dimensions[chr(64 + col)].width = 18
-    ws.column_dimensions['B'].width = 24
-    ws.column_dimensions['D'].width = 28
-    ws.column_dimensions['E'].width = 28
+    for col, width in zip('ABCD', (24, 24, 36, 14)):
+        ws.column_dimensions[col].width = width
+    ws.freeze_panes = 'A2'
+    ws.auto_filter.ref = ws.dimensions
 
     filename = f'edubac_resultats_{class_name}.xlsx'
     response = HttpResponse(

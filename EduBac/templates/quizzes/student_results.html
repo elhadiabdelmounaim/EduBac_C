@@ -5,7 +5,7 @@
     <div class="d-flex flex-wrap gap-2">
         <a href="{% url 'quizzes:export_excel' %}?classe={{ class_id }}{% if quiz_id %}&quiz={{ quiz_id }}{% endif %}"
            class="btn btn-edubac btn-sm">
-            <i class="bi bi-file-earmark-excel"></i> Télécharger Excel
+            <i class="bi bi-file-earmark-excel"></i> {% if selected_class %}Exporter cette classe en Excel{% else %}Exporter toutes mes classes{% endif %}
         </a>
         <a href="{% url 'quizzes:export_csv' %}" class="btn btn-outline-primary btn-sm">
             <i class="bi bi-download"></i> CSV
@@ -51,6 +51,7 @@
     </div>
 </form>
 
+<p class="small text-muted">Choisissez une classe ci-dessus, puis exportez ses résultats en Excel : nom, prénom, quiz et note (%).</p>
 <div class="row g-3 mb-4">
     <div class="col-md-4">
         <div class="stat-pill">
