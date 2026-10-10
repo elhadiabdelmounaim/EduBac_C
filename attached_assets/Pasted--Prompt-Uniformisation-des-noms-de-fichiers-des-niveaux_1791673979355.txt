@@ -1,0 +1,50 @@
+## Prompt : Uniformisation des noms de fichiers des niveaux scolaires dans EduBac
+
+Analyse d’abord la structure actuelle du projet EduBac et identifie tous les fichiers et dossiers qui utilisent les noms des niveaux scolaires.
+
+Je veux uniformiser les noms des niveaux en utilisant exactement les abréviations suivantes :
+
+- `TCL` : Tronc Commun Lettres
+- `TCS` : Tronc Commun Sciences
+- `TCT` : Tronc Commun Technologie
+- `1BAC_SE` : Première Bac Sciences Expérimentales
+- `1BAC_L` : Première Bac Lettres
+- `1BAC_SM` : Première Bac Sciences Mathématiques
+- `2BAC_SVT` : Deuxième Bac Sciences de la Vie et de la Terre
+- `2BAC_PC` : Deuxième Bac Sciences Physiques
+- `2BAC_L` : Deuxième Bac Lettres
+
+### Instructions obligatoires
+
+1. Remplace les anciens noms des fichiers et dossiers des niveaux scolaires par les abréviations correspondantes, uniquement lorsque ces fichiers et dossiers représentent réellement ces niveaux.
+
+2. Applique cette convention de nommage partout où cela est nécessaire dans le projet, notamment dans les dossiers de ressources pédagogiques, les fichiers de cours, les ressources destinées à l'IA et les chemins d'accès concernés.
+
+3. Mets à jour les références correspondantes dans le code Python, les templates HTML, les fichiers JavaScript, les fichiers CSS et les configurations, uniquement lorsque cela est nécessaire.
+
+4. Vérifie les chemins utilisés pour charger les cours, les fichiers PDF, les ressources textuelles de l'IA et les données associées aux niveaux scolaires.
+
+5. Préserve intégralement le contenu des fichiers. Ne supprime aucun cours, exercice, quiz, PDF ou ressource existante.
+
+6. Ne crée pas de doublons et ne modifie pas les noms des fichiers qui ne correspondent pas aux niveaux scolaires concernés.
+
+7. Si les noms des niveaux sont enregistrés dans la base de données, vérifie les conséquences du changement et préserve les données existantes. Ne modifie pas les migrations ou la structure de la base de données sans nécessité.
+
+8. Conserve les fonctionnalités existantes de connexion, de sélection du niveau, de sélection des leçons, de génération des quiz par IA et de téléchargement des cours.
+
+9. Respecte la structure actuelle du projet. Ne crée pas un nouveau projet Django et ne remplace pas les fichiers principaux par de nouvelles versions inutiles.
+
+10. Avant de terminer, recherche les anciennes références restantes et vérifie que tous les chemins et liens concernés fonctionnent correctement.
+
+### Résultat attendu
+
+Tous les niveaux scolaires utilisent une convention de nommage cohérente, basée sur les neuf abréviations définies ci-dessus. Les fonctionnalités existantes doivent rester opérationnelles.
+
+À la fin, fournis un rapport indiquant :
+- Les fichiers et dossiers renommés.
+- Les références mises à jour.
+- Les éventuels anciens noms conservés volontairement.
+- Les vérifications et tests effectués.
+- Les éventuelles opérations manuelles restantes.
+
+**Important :** commence par analyser le projet avant toute modification. Évite toute suppression irréversible et ne touche pas aux fichiers sans rapport avec cette tâche.
