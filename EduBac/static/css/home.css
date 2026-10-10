@@ -54,8 +54,8 @@ html[data-theme="dark"] .home-page {
 }
 .home-page .home-wordmark {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0 .16em;
+    flex-wrap: nowrap;
+    gap: 0;
     font-family: Georgia, 'Times New Roman', serif;
     font-size: clamp(2.6rem, 5.7vw, 5rem);
     font-weight: 900;

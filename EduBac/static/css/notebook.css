@@ -85,7 +85,7 @@ a:hover { color: var(--nb-ochre); }
 .brand-text { min-width: 0; }
 .brand-text strong {
     display: flex;
-    gap: .22em;
+    gap: 0;
     color: #fcfaf4;
     font-family: Georgia, "Times New Roman", serif;
     font-size: 1.03rem;
