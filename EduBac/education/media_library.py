@@ -4,9 +4,16 @@ from django.conf import settings
 from django.utils.text import slugify
 
 LEVEL_FOLDERS = {
-    'tronc_commun': 'tc', '1ere_bac_sc': '1sc', '1ere_bac_sm': '1sm',
-    '1ere_bac_lettres': '1let', '2eme_bac_svt': '2svt', '2eme_bac_pc': '2pc',
-    '2eme_bac_lettres': '2let', '2eme_bac_sm': '2sm',
+    'tronc_commun_lettres': 'TCL',
+    'tronc_commun': 'TCS',
+    'tronc_commun_technologie': 'TCT',
+    '1ere_bac_sc': '1BAC_SE',
+    '1ere_bac_lettres': '1BAC_L',
+    '1ere_bac_sm': '1BAC_SM',
+    '2eme_bac_svt': '2BAC_SVT',
+    '2eme_bac_pc': '2BAC_PC',
+    '2eme_bac_lettres': '2BAC_L',
+    '2eme_bac_sm': '2BAC_SM',
 }
 
 

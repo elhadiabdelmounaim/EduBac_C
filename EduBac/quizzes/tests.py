@@ -105,7 +105,8 @@ class QuizLessonSelectionTests(TestCase):
         rendered_form = response.content.decode()
         self.assertRegex(rendered_form, r'<textarea[^>]*name="description"[^>]*rows="5"')
         self.assertNotRegex(rendered_form, r'<textarea[^>]*name="description"[^>]*required')
-        self.assertContains(response, 'Generating quiz...')
+        self.assertContains(response, 'Préparation du quiz…')
+        self.assertContains(response, 'data-gen-status')
         self.assertNotContains(response, 'data-loading')
 
     @patch('ai.services.AIService.generate_quiz_from_lesson')
@@ -217,6 +218,9 @@ class QuizLessonSelectionTests(TestCase):
             provider=None,
             model=None,
             description=description,
+            source_file=None,
+            use_resources=True,
+            subject='',
         )
 
 

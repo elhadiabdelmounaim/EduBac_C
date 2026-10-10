@@ -55,7 +55,7 @@ class MediaFoldersTests(TestCase):
         course = Course.objects.create(name='Mathématiques', niveau='1ere_bac_sm')
         lesson = Lesson.objects.create(course=course, title='Logique', order=1, content='Original')
         with TemporaryDirectory() as media, override_settings(MEDIA_ROOT=media):
-            legacy = Path(media) / 'lessons' / '1sm' / '01.md'
+            legacy = Path(media) / 'lessons' / '1BAC_SM' / '01.md'
             legacy.parent.mkdir(parents=True)
             legacy.write_text('Cours existant', encoding='utf-8')
             call_command('organize_media')
@@ -75,7 +75,7 @@ class MediaFoldersTests(TestCase):
         lesson = Lesson.objects.create(course=course, title='Logique', order=1, content='Contenu DB')
         with TemporaryDirectory() as media, override_settings(MEDIA_ROOT=media):
             call_command('organize_media')
-            chapter = Path(media) / 'lessons/1sm/01_logique'
+            chapter = Path(media) / 'lessons/1BAC_SM/01_logique'
             source = chapter / 'Sources_IA' / 'Règles.txt'
             source.write_text('قاعدة\nLa formule est $x^2+1$.', encoding='utf-8')
             self.assertIn('قاعدة', lesson.get_ai_help()['contenu'])

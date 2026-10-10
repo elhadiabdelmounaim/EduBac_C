@@ -94,18 +94,9 @@ class Lesson(models.Model):
         try:
             from pathlib import Path
             from django.conf import settings
+            from .media_library import LEVEL_FOLDERS
             media = Path(settings.MEDIA_ROOT)
-            folder_map = {
-                'tronc_commun': 'tc',
-                '1ere_bac_sc': '1sc',
-                '1ere_bac_sm': '1sm',
-                '1ere_bac_lettres': '1let',
-                '2eme_bac_svt': '2svt',
-                '2eme_bac_pc': '2pc',
-                '2eme_bac_lettres': '2let',
-                '2eme_bac_sm': '2sm',
-            }
-            folder = folder_map.get(self.course.niveau, '')
+            folder = LEVEL_FOLDERS.get(self.course.niveau, '')
             level_dir = media / 'lessons' / folder if folder else None
             if level_dir and level_dir.is_dir():
                 order = self.order or 1

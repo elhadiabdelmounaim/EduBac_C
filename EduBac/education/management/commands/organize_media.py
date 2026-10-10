@@ -11,10 +11,18 @@ from education.media_library import chapter_relative
 
 
 class Command(BaseCommand):
-    help = "Crée media/lessons/niveau/chapitre/{Cours,Exercices} sans modifier les fichiers existants."
+    help = "Crée les dossiers de ressources normalisés, sans modifier les fichiers existants."
 
     def handle(self, *args, **options):
         root = Path(settings.MEDIA_ROOT).resolve()
+        # Reserved folders only: no invented programmes or duplicate lessons.
+        for level in ('TCL', 'TCT'):
+            folder = root / 'lessons' / level
+            if folder.is_symlink() or not folder.resolve().is_relative_to(root):
+                raise CommandError(f"Chemin hors du dossier media : {folder}")
+            folder.mkdir(parents=True, exist_ok=True)
+            if not any(folder.iterdir()):
+                (folder / '.gitkeep').touch(exist_ok=False)
         lessons = list(Lesson.objects.select_related('course').order_by(
             'course__niveau', 'course__order', 'course_id', 'order', 'id'
         ))

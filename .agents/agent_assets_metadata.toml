@@ -28,3 +28,17 @@ mtime_ms = 1791502750718
 storage_uri = "gcs://replit-rams-assets-reed/rams/assets/repl:5ed16b6e-938c-4494-bd84-1df591cabb5c/0eaf8391-e3d8-4c09-a4c9-74d7f9e47e86/93562d74-2648-4865-8b50-a212aa7915b1"
 storage_version_token = "1791502765195041"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "DhZWMx6hmE_hP5hlLREIe"
+uri = "file://reports/uniformisation-niveaux-edubac.txt"
+type = "text"
+title = "تقرير توحيد أسماء مستويات EduBac"
+description = "المجلدات المعاد تسميتها، المراجع المحدّثة، الاستثناءات المقصودة، نتائج الاختبارات وخطوات تحديث النسخ الأخرى."
+logical_id = "55c09843-efda-47cb-898b-e25fd7795cfc"
+content_hash = "sha256:a2038ee33aa64fb0251c1b6b84333ecbdae0bc5891a751abb815df57c6b2e4d2"
+size = 5683
+mtime_ms = 1791674470329
+storage_uri = "gcs://replit-rams-assets-reed/rams/assets/repl:5ed16b6e-938c-4494-bd84-1df591cabb5c/55c09843-efda-47cb-898b-e25fd7795cfc/e229d21b-5bf0-4d72-988e-bdfd565fae3f"
+storage_version_token = "1791674475053222"
+content_type = "text/plain"

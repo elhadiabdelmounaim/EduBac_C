@@ -1,21 +1,12 @@
 from pathlib import Path
 from django.core.management.base import BaseCommand
-from django.core.files import File
 from django.conf import settings
 from education.models import Course, Lesson
 from education.curriculum import CURRICULUM
+from education.media_library import LEVEL_FOLDERS
 
 # code niveau → dossier media/lessons/
-NIVEAU_FOLDER = {
-    'tronc_commun': 'tc',
-    '1ere_bac_sc': '1sc',
-    '1ere_bac_sm': '1sm',
-    '1ere_bac_lettres': '1let',
-    '2eme_bac_svt': '2svt',
-    '2eme_bac_pc': '2pc',
-    '2eme_bac_lettres': '2let',
-    '2eme_bac_sm': '2sm',
-}
+NIVEAU_FOLDER = LEVEL_FOLDERS
 
 
 class Command(BaseCommand):
@@ -93,8 +84,9 @@ class Command(BaseCommand):
                     and pdf_path.stat().st_size > 0
                 ):
                     rel = f'lessons/{folder}/{i:02d}.pdf'
-                    with open(pdf_path, 'rb') as f:
-                        lesson.pdf.save(rel, File(f), save=True)
+                    # Link the existing PDF in place; FileField.save would copy it.
+                    lesson.pdf.name = rel
+                    lesson.save(update_fields=['pdf'])
 
                 total_lessons += 1
 
