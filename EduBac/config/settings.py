@@ -208,3 +208,14 @@ CHANNEL_LAYERS = {
         'BACKEND': 'channels.layers.InMemoryChannelLayer',
     },
 }
+
+# Quiz timing logs contain counts/durations only, never prompts or API keys.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {'quiz_console': {'class': 'logging.StreamHandler'}},
+    'loggers': {
+        'ai.services': {'handlers': ['quiz_console'], 'level': 'INFO', 'propagate': False},
+        'quizzes.generation': {'handlers': ['quiz_console'], 'level': 'INFO', 'propagate': False},
+    },
+}

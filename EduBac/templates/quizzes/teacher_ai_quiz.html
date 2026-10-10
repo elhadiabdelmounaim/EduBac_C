@@ -206,8 +206,9 @@
                                 <span>Générer le quiz avec l’IA</span>
                             </button>
                             <div id="genLoading" class="d-none qb-loading-status" role="status">
-                                <div class="small text-muted" data-gen-status>Generating quiz...</div>
+                                <div class="small text-muted" data-gen-status>Préparation du quiz…</div>
                                 <div class="qb-loading-bar"><span></span></div>
+                                <a id="genRecovery" class="small" href="{% url 'quizzes:manage' %}" hidden>Vérifier mes quiz avant de relancer</a>
                             </div>
                         </div>
                     </div>{# /.qb-section-card__body #}
@@ -407,19 +408,53 @@
   var form = document.getElementById('genForm');
   var genBtn = document.getElementById('genBtn');
   var genLoading = document.getElementById('genLoading');
+  var generating = false;
   if(form && genBtn){
-    form.addEventListener('submit', function(e){
+    form.addEventListener('submit', async function(e){
       var act = (e.submitter && e.submitter.value) || 'generate';
       if(act !== 'generate' || !genLoading) return;
+      // Native submission remains the fallback when fetch is unavailable.
+      if(!window.fetch) return;
+      e.preventDefault();
+      if(generating) return;
+      generating = true;
+      var payload = new FormData(form);
+      payload.set('action', 'generate');
       genLoading.classList.remove('d-none');
       var label = genLoading.querySelector('[data-gen-status]');
-      if(label) label.textContent = 'Generating quiz...';
+      if(label) label.textContent = 'L’IA génère et vérifie les questions. Vous pouvez continuer à consulter la page.';
       genBtn.disabled = true;
-      window.setTimeout(function(){
-        try { window.stop(); } catch (err) {}
-        if(label) label.textContent = 'Generation failed: the server took too long. Please try again.';
-        genBtn.disabled = false;
+      genBtn.setAttribute('aria-busy', 'true');
+      var waitNotice = window.setTimeout(function(){
+        if(label) label.textContent = 'La génération prend plus de temps que prévu. La demande est toujours en cours ; ne la relancez pas.';
       }, 60000);
+      try {
+        // A submit button named "action" shadows HTMLFormElement.action.
+        var response = await fetch(form.getAttribute('action') || window.location.href, {
+          method: 'POST', body: payload, credentials: 'same-origin',
+          headers: {'X-Requested-With': 'XMLHttpRequest'}
+        });
+        if(response.redirected) {
+          window.location.assign(response.url);
+          return;
+        }
+        if(!response.ok || !(response.headers.get('content-type') || '').includes('text/html')) {
+          throw new Error('Réponse du serveur indisponible.');
+        }
+        var html = await response.text();
+        if(label) label.textContent = 'Affichage du résultat…';
+        // Same-origin Django HTML, escaped by the existing templates. A full
+        // document replacement also reinitializes the source picker/math scripts.
+        document.open();
+        document.write(html);
+        document.close();
+      } catch(err) {
+        if(label) label.textContent = 'Connexion interrompue. Le serveur peut avoir enregistré le quiz : vérifiez « Mes quiz » avant de relancer.';
+        var recovery = document.getElementById('genRecovery');
+        if(recovery) recovery.hidden = false;
+      } finally {
+        window.clearTimeout(waitNotice);
+      }
     });
   }
 })();

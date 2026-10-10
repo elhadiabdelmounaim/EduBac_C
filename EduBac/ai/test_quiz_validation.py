@@ -201,10 +201,11 @@ class QuizQuestionValidationTests(TestCase):
         invalid_other = deepcopy(other)
         del invalid_other["choices"]
         chat.side_effect = [response(self.broken, self.good, invalid_other),
-                            response(self.fixed), response(other), '{"similar_questions":[]}']
+                            response(dict(self.fixed, index=1), dict(other, index=3)),
+                            '{"similar_questions":[]}']
         result = self.service.generate_quiz_from_lesson(self.lesson, 3)
         self.assertEqual(result["questions"], [self.fixed, self.good, other])
-        self.assertEqual(chat.call_count, 4)
+        self.assertEqual(chat.call_count, 3)
 
     @patch.object(AIService, "_chat")
     def test_repair_cannot_duplicate_a_valid_question(self, chat):

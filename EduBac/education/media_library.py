@@ -10,27 +10,30 @@ LEVEL_FOLDERS = {
 }
 
 
-def chapter_relative(lesson):
+def chapter_relative(lesson, owners=None):
     from .models import Lesson
     level = LEVEL_FOLDERS.get(lesson.course.niveau, slugify(lesson.course.niveau))
     name = f"{lesson.order:02d}_{slugify(lesson.title)[:160] or 'lecon'}"
     # Match the organizer's ordering when multiple courses share a chapter name.
-    peers = Lesson.objects.filter(
-        course__niveau=lesson.course.niveau, order=lesson.order
-    ).select_related('course').order_by('course__order', 'course_id', 'id')
-    for peer in peers:
-        if (slugify(peer.title)[:160] or 'lecon') == (slugify(lesson.title)[:160] or 'lecon'):
-            if peer.pk != lesson.pk:
-                name += f"_lecon-{lesson.pk}"
-            break
+    slug = slugify(lesson.title)[:160] or 'lecon'
+    if owners is not None:
+        owner = owners[(lesson.course.niveau, lesson.order, slug)]
+    else:
+        peers = Lesson.objects.filter(
+            course__niveau=lesson.course.niveau, order=lesson.order
+        ).select_related('course').order_by('course__order', 'course_id', 'id')
+        owner = next((peer.pk for peer in peers
+                      if (slugify(peer.title)[:160] or 'lecon') == slug), lesson.pk)
+    if owner != lesson.pk:
+        name += f"_lecon-{lesson.pk}"
     return Path('lessons') / level / name
 
 
-def documents(lesson, kind):
+def documents(lesson, kind, *, relative=None):
     if kind not in ('Cours', 'Exercices', 'Sources_IA'):
         return []
     root = Path(settings.MEDIA_ROOT).resolve()
-    folder = root / chapter_relative(lesson) / kind
+    folder = root / (relative if relative is not None else chapter_relative(lesson)) / kind
     if not folder.resolve().is_relative_to(root) or not folder.is_dir():
         return []
     extension = '.txt' if kind == 'Sources_IA' else '.pdf'
@@ -40,6 +43,21 @@ def documents(lesson, kind):
          and p.is_file() and p.resolve().is_relative_to(root)),
         key=lambda p: p.name.casefold(),
     )
+
+
+def source_files_for_lessons(lessons):
+    """Reuse the loaded catalogue; retain fresh disk scans and folder disambiguation."""
+    lessons = list(lessons)
+    owners = {}
+    for lesson in sorted(lessons, key=lambda item: (item.course.order, item.course_id, item.pk)):
+        key = (lesson.course.niveau, lesson.order, slugify(lesson.title)[:160] or 'lecon')
+        owners.setdefault(key, lesson.pk)
+    return {
+        str(lesson.pk): [path.name for path in documents(
+            lesson, 'Sources_IA', relative=chapter_relative(lesson, owners),
+        )]
+        for lesson in lessons
+    }
 
 
 def ai_source_text(lesson, source_file=None):

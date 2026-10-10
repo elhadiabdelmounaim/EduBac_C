@@ -78,6 +78,43 @@ class QuizLessonPickerBrowserTests(StaticLiveServerTestCase):
         self.page.get_by_role('button', name='Se connecter', exact=True).click()
         self.page.wait_for_url(lambda url: '/connexion/' not in url)
 
+    def test_generation_keeps_page_interactive_and_prevents_duplicate_submissions(self):
+        from threading import Event
+        from ai.services import AIService
+        from ai.test_quiz_novelty import NEW, quiz_json
+        release = Event()
+
+        def delayed_generation(*args, **kwargs):
+            release.wait(10)
+            return quiz_json([NEW[0]])
+
+        self.log_in_teacher()
+        self.page.goto(self.live_server_url + reverse('quizzes:teacher_ai'))
+        self.page.select_option('#niveauSelect', CURRICULUM[0]['code'])
+        self.page.select_option('#lessonSelect', self.source_lesson_id)
+        self.page.select_option('#generationMode', 'topic')
+        self.page.locator('#questionCount').fill('1')
+        with (
+            patch.object(AIService, '_get_provider', return_value=SimpleNamespace(name='test', model='test')),
+            patch.object(AIService, '_chat', side_effect=delayed_generation) as chat,
+        ):
+            try:
+                with self.page.expect_response(lambda response: response.request.method == 'POST'
+                                               and '/generer-envoyer/' in response.url):
+                    self.page.locator('#genBtn').click()
+                    expect(self.page.locator('#genLoading')).to_be_visible()
+                    expect(self.page.locator('#genBtn')).to_be_disabled()
+                    expect(self.page.locator('#quizDescription')).to_be_enabled()
+                    self.page.locator('#quizDescription').fill('La page reste utilisable.')
+                    self.page.evaluate("document.getElementById('genForm').requestSubmit()")
+                    release.set()
+                expect(self.page.get_by_text('Une parcelle rectangulaire', exact=False).first).to_be_visible()
+                expect(self.page.locator('#genBtn')).to_be_enabled()
+                self.assertEqual(chat.call_count, 1)
+                self.page.screenshot(path='/tmp/quiz-performance-ui.jpg', full_page=True)
+            finally:
+                release.set()
+
     def test_topic_mode_reaches_ai_without_reading_sources(self):
         from ai.services import AIService
         from ai.test_quiz_novelty import NEW, quiz_json
@@ -97,8 +134,11 @@ class QuizLessonPickerBrowserTests(StaticLiveServerTestCase):
             patch.object(AIService, '_get_provider', return_value=SimpleNamespace(name='test', model='test')),
             patch.object(AIService, '_chat', return_value=quiz_json([NEW[0]])) as chat,
         ):
-            with self.page.expect_navigation(wait_until='domcontentloaded'):
+            with self.page.expect_response(lambda response: response.request.method == 'POST'
+                                           and '/generer-envoyer/' in response.url):
                 self.page.locator('#genBtn').click()
+            expect(self.page.locator('#genBtn')).to_be_enabled()
+            expect(self.page.get_by_text('Une parcelle rectangulaire', exact=False).first).to_be_visible()
             read.assert_not_called()
             prompt = chat.call_args_list[0].args[0][1]['content']
             self.assertIn('Équations linéaires', prompt)
@@ -142,19 +182,53 @@ class QuizLessonPickerBrowserTests(StaticLiveServerTestCase):
             patch.object(AIService, '_get_provider', return_value=SimpleNamespace(name='test', model='test')),
             patch.object(AIService, '_chat', return_value=quiz_json([NEW[0]])) as chat,
         ):
-            with self.page.expect_navigation(wait_until='domcontentloaded'):
+            with self.page.expect_response(lambda response: response.request.method == 'POST'
+                                           and '/generer-envoyer/' in response.url):
                 self.page.locator('#genBtn').click()
+            expect(self.page.locator('#genBtn')).to_be_enabled()
+            expect(self.page.get_by_text('Une parcelle rectangulaire', exact=False).first).to_be_visible()
             expect(source).to_have_value('Règles été.txt')
             prompt = chat.call_args_list[0].args[0][1]['content']
             self.assertIn('SOURCE_CHOISIE $x^2$', prompt)
             self.assertNotIn('AUTRE_SOURCE', prompt)
         (self.source_folder / 'Règles été.txt').unlink()
         with patch.object(AIService, '_chat') as chat:
-            with self.page.expect_navigation(wait_until='domcontentloaded'):
+            with self.page.expect_response(lambda response: response.request.method == 'POST'
+                                           and '/generer-envoyer/' in response.url):
                 self.page.locator('#genBtn').click()
-            chat.assert_not_called()
             expect(self.page.get_by_text('Le fichier source sélectionné est introuvable', exact=False)).to_be_visible()
+            chat.assert_not_called()
             expect(source).to_have_value('')
+
+    def test_fetch_generation_preserves_parameters_and_rejects_repeat(self):
+        from ai.services import AIService
+        from ai.test_quiz_novelty import OLD, NEW, quiz_json
+        self.log_in_teacher()
+        self.page.goto(self.live_server_url + reverse('quizzes:teacher_ai'))
+        self.page.select_option('#niveauSelect', CURRICULUM[0]['code'])
+        self.page.select_option('#lessonSelect', self.source_lesson_id)
+        self.page.select_option('#generationMode', 'topic')
+        self.page.locator('#questionCount').fill('1')
+        self.page.locator('#quizSubject').fill('Polynômes')
+        self.page.locator('#quizDescription').fill('Varier les raisonnements.')
+        self.page.locator('#secondsPerQ').fill('35')
+        with (
+            patch.object(AIService, '_get_provider', return_value=SimpleNamespace(name='test', model='test')),
+            patch.object(AIService, '_chat', side_effect=[
+                quiz_json([OLD[0]]), quiz_json([OLD[0]]), quiz_json([NEW[0]]),
+            ]) as chat,
+        ):
+            for text in ('Développer et réduire', 'Une parcelle rectangulaire'):
+                with self.page.expect_response(lambda response: response.request.method == 'POST'
+                                               and '/generer-envoyer/' in response.url):
+                    self.page.locator('#genBtn').click()
+                expect(self.page.locator('#genBtn')).to_be_enabled()
+                expect(self.page.get_by_text(text, exact=False).first).to_be_visible()
+                expect(self.page.locator('#quizSubject')).to_have_value('Polynômes')
+                expect(self.page.locator('#quizDescription')).to_have_value('Varier les raisonnements.')
+                expect(self.page.locator('#secondsPerQ')).to_have_value('35')
+                expect(self.page.locator('#questionCount')).to_have_value('1')
+            self.assertEqual(chat.call_count, 3)
 
     def test_repeated_generation_preserves_parameters_and_replaces_duplicates(self):
         from ai.services import AIService
@@ -186,8 +260,12 @@ class QuizLessonPickerBrowserTests(StaticLiveServerTestCase):
             ]) as chat,
         ):
             for index in range(2):
-                with self.page.expect_navigation(wait_until='domcontentloaded'):
+                with self.page.expect_response(lambda response: response.request.method == 'POST'
+                                               and '/generer-envoyer/' in response.url):
                     self.page.locator('#genBtn').click()
+                expect(self.page.locator('#genBtn')).to_be_enabled()
+                question_label = 'Développer et réduire' if index == 0 else 'Une parcelle rectangulaire'
+                expect(self.page.get_by_text(question_label, exact=False).first).to_be_visible()
                 expect(self.page.locator('#niveauSelect')).to_have_value(level)
                 expect(self.page.locator('#lessonSelect')).to_have_value(lesson_id)
                 expect(self.page.locator('#questionCount')).to_have_value('2')

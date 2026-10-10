@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 import re
 
 from django.conf import settings
@@ -195,6 +196,7 @@ class GroqProvider(BaseProvider):
         models_to_try = [self.model] + [m for m in self.FALLBACK_MODELS if m != self.model]
         last_error = None
         call_timeout = self.timeout if timeout is None else timeout
+        deadline = time.monotonic() + call_timeout
 
         for model_id in models_to_try:
             kwargs = {
@@ -211,6 +213,10 @@ class GroqProvider(BaseProvider):
                 kwargs["response_format"] = {"type": "json_object"}
             dropped_effort = False
             while True:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise AIProviderError("Timeout Groq.", code="timeout")
+                kwargs["timeout"] = remaining
                 try:
                     response = client.chat.completions.create(**kwargs)
                     if model_id != self.model:

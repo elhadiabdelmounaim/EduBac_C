@@ -701,7 +701,7 @@ def teacher_ai_quiz(request):
         elif not lessons.filter(pk=lesson_id).exists():
             error = 'Veuillez choisir une leçon appartenant au niveau sélectionné.'
         else:
-            lesson = get_object_or_404(Lesson, pk=lesson_id)
+            lesson = get_object_or_404(Lesson.objects.select_related('course'), pk=lesson_id)
 
             if action == 'generate':
                 try:
@@ -718,7 +718,8 @@ def teacher_ai_quiz(request):
                         subject=quiz_subject,
                     )
                     # Créer le quiz + questions
-                    quiz = Quiz.objects.create(
+                    from .generation import save_generated_quiz
+                    quiz = save_generated_quiz(data,
                         title=data.get('title') or f'Quiz — {lesson.title}',
                         description=quiz_description,
                         lesson=lesson,
@@ -729,39 +730,6 @@ def teacher_ai_quiz(request):
                         status='draft',
                         created_by=request.user,
                     )
-                    for i, qdata in enumerate(data.get('questions', []), start=1):
-                        correct_text = normalize_math_text(
-                            qdata.get('correct_answer', '')
-                        )
-                        q = Question.objects.create(
-                            quiz=quiz,
-                            text=normalize_math_text(qdata.get('text', '')),
-                            correct_answer=correct_text,
-                            explanation=normalize_math_text(qdata.get('explanation', '')),
-                            hint=normalize_math_text(qdata.get('hint', '')),
-                            order=i,
-                        )
-                        for j, c in enumerate(qdata.get('choices', [])):
-                            if isinstance(c, dict):
-                                ctext = normalize_math_text(c.get('text', ''))
-                                is_ok = c.get(
-                                    'is_correct',
-                                    ctext.strip().lower() == correct_text.strip().lower(),
-                                )
-                            else:
-                                ctext = normalize_math_text(c)
-                                is_ok = (
-                                    ctext.strip().lower()
-                                    == correct_text.strip().lower()
-                                )
-                            Choice.objects.create(
-                                question=q,
-                                text=ctext,
-                                is_correct=is_ok,
-                                order=j,
-                            )
-                    quiz.question_count = quiz.questions.count()
-                    quiz.save(update_fields=['question_count'])
                     quiz_created = quiz
                     preview = quiz.get_questions().prefetch_related('choices')
                     messages.success(request, 'Quiz generated successfully')
@@ -822,11 +790,8 @@ def teacher_ai_quiz(request):
                 return redirect('quizzes:manage')
 
     from ai.services import available_providers
-    from education.media_library import documents
-    source_files_by_lesson = {
-        str(item.pk): [p.name for p in documents(item, 'Sources_IA')]
-        for item in all_lessons
-    }
+    from education.media_library import source_files_for_lessons
+    source_files_by_lesson = source_files_for_lessons(all_lessons)
     classrooms = Classroom.objects.filter(teacher=request.user, is_active=True)
     return render(request, 'quizzes/teacher_ai_quiz.html', {
         'niveaux': niveaux,

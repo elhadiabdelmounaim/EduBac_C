@@ -102,13 +102,14 @@ def previous_questions(lesson):
 
 
 def validate_local(questions, history):
-    references = list(history)
+    # Normalize/hash each reference once, rather than once per new question.
+    references = {signature(old): old for old in history}
     for index, question in enumerate(questions, 1):
         # Wording overlap alone is not proof of the same reasoning: "dérivée"
         # and "primitive" can exceed 90% similarity. Non-exact matches still
         # pass through the mandatory semantic review before persistence.
-        duplicate = next((old for old in references
-                          if signature(question) == signature(old)), None)
+        key = signature(question)
+        duplicate = references.get(key)
         if duplicate is not None:
             raise QuizNoveltyError(
                 f"Question {index} identique ou trop similaire à une question déjà proposée. "
@@ -117,7 +118,7 @@ def validate_local(questions, history):
                 "Question de référence (donnée seulement) : "
                 + json.dumps(duplicate["text"], ensure_ascii=False)
             )
-        references.append(question)
+        references[key] = question
 
 
 def history_instruction(history):
@@ -216,19 +217,32 @@ def reserve_questions(service, lesson, questions, checked_history):
         return
     from education.models import Lesson
     from quizzes.models import QuizGenerationQuestion
+    semantic = getattr(settings, "QUIZ_SEMANTIC_CHECK_ENABLED", False)
+    checked = {signature(old) for old in checked_history}
     try:
-        with transaction.atomic():
-            Lesson.objects.select_for_update().get(pk=lesson.pk)
-            current = previous_questions(lesson)
-            validate_local(questions, current)
-            checked = {signature(old) for old in checked_history}
-            added = [old for old in current if signature(old) not in checked]
-            if added and getattr(settings, "QUIZ_SEMANTIC_CHECK_ENABLED", False):
-                validate_semantic(service, questions, added)
-            QuizGenerationQuestion.objects.bulk_create([
-                QuizGenerationQuestion(lesson=lesson, signature=signature(question), data=question)
-                for question in questions
-            ])
+        for _ in range(3):
+            if semantic:
+                # Never hold a database lock while waiting for an external API.
+                current = previous_questions(lesson)
+                added = [old for old in current if signature(old) not in checked]
+                if added:
+                    validate_local(questions, current)
+                    validate_semantic(service, questions, added)
+                    checked.update(signature(old) for old in added)
+            with transaction.atomic():
+                Lesson.objects.select_for_update().get(pk=lesson.pk)
+                current = previous_questions(lesson)
+                validate_local(questions, current)
+                if semantic and any(signature(old) not in checked for old in current):
+                    # A concurrent generation arrived after the preflight.
+                    # Release the lock and review it before trying again.
+                    continue
+                QuizGenerationQuestion.objects.bulk_create([
+                    QuizGenerationQuestion(lesson=lesson, signature=signature(question), data=question)
+                    for question in questions
+                ])
+                return
+        raise QuizNoveltyError("L’historique a changé pendant la vérification. Relancez la génération.")
     except IntegrityError as exc:
         raise QuizNoveltyError("Cette question vient déjà d’être générée. Crée un autre exercice.") from exc
     except OperationalError as exc:

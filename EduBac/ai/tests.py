@@ -613,5 +613,5 @@ class QuizLatexJsonTests(SimpleTestCase):
 
         provider_prompt = chat.call_args.args[0][-1]['content']
         self.assertIn(description, provider_prompt)
-        self.assertIn('priorité principale', provider_prompt)
+        self.assertIn('priorité principale', provider_prompt.lower())
         self.assertIn('strictement dans le contenu de la leçon', provider_prompt)
