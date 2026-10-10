@@ -1,0 +1,40 @@
+# Analyse et optimisation de la vitesse de génération des quiz dans EduBac
+
+Analyse mon projet Django **EduBac** afin d’identifier les améliorations possibles pour accélérer la génération des quiz par l’intelligence artificielle.
+
+**Objectif principal :** réduire au maximum le temps nécessaire pour générer un quiz, sans compromettre la qualité, la pertinence et la diversité des questions.
+
+Avant toute modification, examine le code existant et identifie les causes possibles de lenteur.
+
+Analyse particulièrement les points suivants :
+
+1. **API d’intelligence artificielle :** vérifier le fournisseur utilisé, la vitesse du modèle, les délais de réponse, les erreurs et les possibilités d’utiliser un modèle plus rapide ou gratuit.
+2. **Architecture du code :** repérer les fonctions inutiles, les traitements répétitifs, les requêtes redondantes et les éventuels blocages.
+3. **Prompt de génération :** optimiser les instructions envoyées à l’IA pour réduire les tokens et accélérer la réponse, tout en conservant des questions mathématiques correctes.
+4. **Format JSON :** simplifier la structure des réponses et optimiser leur validation et leur conversion en objets Python.
+5. **Base de données Django :** identifier les requêtes inutiles et optimiser la récupération des niveaux, des leçons et des informations nécessaires.
+6. **Interface utilisateur :** améliorer l’expérience pendant la génération avec un indicateur de progression et éviter les blocages de la page.
+7. **Cache et réutilisation :** déterminer si certaines données peuvent être mises en cache sans retourner systématiquement le même quiz.
+8. **Traitement asynchrone :** étudier la possibilité d’utiliser Celery, Redis ou une solution plus simple adaptée au projet.
+9. **Configuration et performances :** vérifier les délais d’attente, les tentatives automatiques, les appels multiples à l’API et les éventuels traitements superflus.
+
+### Résultats attendus
+
+- Présente les problèmes détectés, avec les fichiers et fonctions concernés.
+- Classe les améliorations par ordre de priorité : impact élevé, moyen ou faible.
+- Propose une solution concrète pour chaque problème.
+- Estime les gains de temps potentiels lorsque cela est raisonnablement possible, sans inventer de mesures.
+- Privilégie les solutions gratuites ou à faible coût.
+- Compare les modèles d’IA compatibles avec l’architecture actuelle selon leur vitesse, leur disponibilité et leur qualité.
+- Propose un plan d’optimisation progressif, en commençant par les changements les plus simples et les plus efficaces.
+
+### Contraintes importantes
+
+- Ne crée pas un nouveau projet Django.
+- Ne supprime aucun fichier existant.
+- Ne modifie pas les fonctionnalités qui ne sont pas concernées par les performances.
+- Conserve le fonctionnement actuel des quiz, les niveaux scolaires, les leçons et les règles métier.
+- Ne remplace pas le fournisseur d’IA sans présenter les avantages et les inconvénients de cette décision.
+- Ne modifie aucun fichier avant d’avoir présenté le diagnostic et les changements proposés.
+
+**Pour commencer, réalise uniquement l’audit et présente-moi les cinq améliorations les plus importantes pour accélérer la génération des quiz. Attends ma validation avant d’appliquer les modifications.**
