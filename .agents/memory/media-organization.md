@@ -23,3 +23,9 @@ Level-folder standardization does not authorize creating new curricula or changi
 **Why:** The requested abbreviation list omitted an existing mathematics level and included common-core branches without separate course data. The user explicitly chose to preserve the existing content without duplication.
 
 **How to apply:** Keep the existing shared curriculum behavior unless separately asked to split it. Do not copy shared lessons into reserved branch folders or remove the mathematics curriculum to match a shorter abbreviation list.
+
+For the level-name correction, work on the existing files and rename them; do not add new implementation files.
+
+**Why:** The user corrected the previous approach: «كان يجب أن تشتغل على الملفات الموجودة مسبقًا وتغيير أسماءها. أنت قمت بإنشاء ملفات جديدة.»
+
+**How to apply:** Modify existing code for this request. Distinguish actual resource renames from added commands, tests, reports and empty-folder markers, and clarify cleanup before removing additions.
