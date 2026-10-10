@@ -87,6 +87,8 @@ def niveau_detail(request, niveau):
     from pathlib import Path
     from django.conf import settings
     from django.contrib import messages
+    from django.urls import reverse
+    from .media_library import chapter_relative, documents
     # Sécurité : un élève ne voit que son niveau (sauf lecture libre si non connecté)
     user = getattr(request, 'edubac_user', None) or getattr(request, 'user', None)
     if user and getattr(user, 'is_authenticated', False) and getattr(user, 'role', None) == 'student':
@@ -113,11 +115,23 @@ def niveau_detail(request, niveau):
     lessons_qs = course.lessons.all().order_by('order') if course else Lesson.objects.none()
     lessons = []
     for lesson in lessons_qs:
+        relative = chapter_relative(lesson)
+        lesson_documents = [
+            {
+                'name': path.name, 'kind': kind,
+                'url': reverse('education:lesson_document', args=[lesson.pk, kind, path.name]),
+            }
+            for kind in ('Cours', 'Exercices')
+            for path in documents(lesson, kind, relative=relative)
+        ]
         has_file = False
         if lesson.pdf:
             fp = Path(settings.MEDIA_ROOT) / lesson.pdf.name
             has_file = fp.is_file() and fp.stat().st_size > 0
-        lessons.append({'obj': lesson, 'has_file': has_file})
+        lessons.append({
+            'obj': lesson, 'has_file': has_file,
+            'documents': lesson_documents,
+        })
     return render(request, 'education/niveau_detail.html', {
         'niveau_code': niveau,
         'niveau_label': label,

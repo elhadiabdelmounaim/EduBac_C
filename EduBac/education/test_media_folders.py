@@ -1,5 +1,6 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from django.core.management import call_command
 from django.test import TestCase, override_settings
@@ -9,6 +10,47 @@ from education.models import Course, Lesson
 
 
 class MediaFoldersTests(TestCase):
+    @patch('education.views._ensure_curriculum_loaded')
+    def test_level_page_discovers_course_and_exercise_pdfs_without_database_import(self, load):
+        from education.media_library import chapter_relative
+        course = Course.objects.create(name='Mathématiques', niveau='1ere_bac_lettres')
+        lesson = Lesson.objects.create(course=course, title='Notions de logique', order=1)
+        with TemporaryDirectory() as media, override_settings(MEDIA_ROOT=media):
+            chapter = Path(media) / chapter_relative(lesson)
+            for kind in ('Cours', 'Exercices', 'Sources_IA'):
+                (chapter / kind).mkdir(parents=True)
+            pdf = chapter / 'Cours' / 'logique.PDF'
+            exercise = chapter / 'Exercices' / 'Série été.pdf'
+            source = chapter / 'Sources_IA' / 'Source réservée.txt'
+            pdf.write_bytes(b'%PDF-1.4\nTest')
+            exercise.write_bytes(b'%PDF-1.4\nExercices')
+            source.write_text('Source pédagogique', encoding='utf-8')
+            level_url = reverse('education:niveau_detail', args=[course.niveau])
+            response = self.client.get(level_url)
+            self.assertContains(response, pdf.name)
+            self.assertContains(response, exercise.name)
+            self.assertNotContains(response, source.name)
+            self.assertContains(response, reverse('education:lesson_document',
+                                                 args=[lesson.pk, 'Cours', pdf.name]))
+            self.assertContains(response, reverse('education:lesson_detail', args=[lesson.pk]))
+            pdf.unlink()
+            response = self.client.get(level_url)
+            self.assertNotContains(response, pdf.name)
+            self.assertContains(response, exercise.name)
+            exercise.unlink()
+            self.assertContains(self.client.get(level_url), 'Fichier bientôt disponible')
+
+    @patch('education.views._ensure_curriculum_loaded')
+    def test_level_page_preserves_legacy_pdf_links(self, load):
+        course = Course.objects.create(name='Mathématiques', niveau='1ere_bac_lettres')
+        Lesson.objects.create(course=course, title='Logique', order=1, pdf='ancien.pdf')
+        with TemporaryDirectory() as media, override_settings(MEDIA_ROOT=media):
+            (Path(media) / 'ancien.pdf').write_bytes(b'%PDF-1.4\nTest')
+            self.assertContains(
+                self.client.get(reverse('education:niveau_detail', args=[course.niveau])),
+                '/media/ancien.pdf',
+            )
+
     def test_all_lessons_have_folders_without_overwriting_files(self):
         course = Course.objects.create(name='Mathématiques', niveau='1ere_bac_sm')
         lesson = Lesson.objects.create(course=course, title='Logique', order=1, content='Original')
