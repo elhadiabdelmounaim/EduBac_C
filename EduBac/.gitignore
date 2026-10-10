@@ -13,6 +13,8 @@ media/*
 media/lessons/**
 !media/lessons/**/
 !media/lessons/**/.gitkeep
+# Inclure les sources IA, sans inclure les autres documents et téléversements.
+!media/lessons/**/Sources_IA/**
 staticfiles/
 .DS_Store
 *.egg-info/
