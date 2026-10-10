@@ -1,0 +1,371 @@
+# Ressource pédagogique : Notions de logique mathématique
+
+**Niveau :** 1ère année Baccalauréat  
+**Matière :** Mathématiques  
+**Enseignant :** Prof. Elhadi Abdelmounaim
+
+---
+
+## Chapitre I : Proposition et fonction propositionnelle
+
+### 1. Proposition
+
+Une proposition, appelée aussi assertion, est une phrase mathématique qui possède une valeur de vérité : elle est soit vraie, soit fausse, mais pas les deux en même temps.
+
+On désigne généralement les propositions par les lettres P, Q ou R.
+
+**Exemples :**
+- « 2022 est un nombre pair » : proposition vraie.
+- « Tout carré est un parallélogramme » : proposition vraie.
+- « Tout nombre pair est divisible par 4 » : proposition fausse.
+- « 3 + 2 = 5 » : proposition vraie.
+- « 3 + 2 = 6 » : proposition fausse.
+
+Une expression mathématique dépourvue de sens précis ne constitue pas une proposition.
+
+### 2. Fonction propositionnelle
+
+Une fonction propositionnelle est un énoncé contenant une ou plusieurs variables appartenant à un ensemble donné. Elle devient une proposition lorsqu'on remplace les variables par des valeurs précises de cet ensemble.
+
+**Exemples :**
+
+- P(x) : x² − x < 0, avec x appartenant à R.
+- P(0) est fausse.
+- P(1/2) est vraie.
+- P(n,m) : n + m = 10, avec n et m appartenant à N.
+- P(4,6) est vraie.
+- P(2,7) est fausse.
+
+### 3. Déterminer la valeur de vérité
+
+Pour déterminer la valeur de vérité d'une proposition, il faut vérifier si l'égalité, l'inégalité ou l'affirmation mathématique est correcte.
+
+Exemples d'applications :
+- Vérifier l'égalité entre des expressions contenant des racines carrées.
+- Déterminer si un nombre appartient à un ensemble.
+- Vérifier si un polynôme admet des racines réelles.
+- Déterminer si une affirmation est vraie ou fausse.
+
+---
+
+## Chapitre II : Les quantificateurs
+
+Les quantificateurs permettent de préciser combien d'éléments d'un ensemble vérifient une propriété.
+
+### 1. Quantificateur universel
+
+Le symbole ∀ signifie « pour tout » ou « quel que soit ».
+
+L'écriture « pour tout x appartenant à E, P(x) » signifie que P(x) est vraie pour chaque élément de E.
+
+Notation : ∀x ∈ E, P(x).
+
+**Exemple :** Pour tout réel x, x² ≥ 0.
+
+Cette proposition est vraie.
+
+### 2. Quantificateur existentiel
+
+Le symbole ∃ signifie « il existe au moins un ».
+
+L'écriture « il existe x appartenant à E tel que P(x) » signifie qu'au moins un élément de E vérifie P(x).
+
+Notation : ∃x ∈ E, P(x).
+
+**Exemple :** Il existe un entier naturel n tel que 2n − 4 = 0.
+
+Cette proposition est vraie, car n = 2 convient.
+
+### 3. Quantificateur d'unicité
+
+Le symbole ∃! signifie « il existe un unique ».
+
+Il indique qu'une propriété est vérifiée par un seul élément de l'ensemble considéré.
+
+**Exemple :** L'équation (x − 1)² = 0 admet une unique solution réelle, x = 1.
+
+### 4. Traduction des phrases mathématiques
+
+L'élève doit savoir traduire une phrase en langage mathématique à l'aide des quantificateurs.
+
+Exemples :
+- Tous les entiers naturels sont positifs : ∀n ∈ N, n ≥ 0, selon la convention adoptée pour N.
+- Il existe un réel dont le carré vaut −1 : ∃x ∈ R, x² = −1.
+- L'équation 3x − 2 = 0 admet une solution réelle : ∃x ∈ R, 3x − 2 = 0.
+- Tout réel x est inférieur à au moins un entier naturel augmenté de 1 : ∀x ∈ R, ∃n ∈ N, x < n + 1.
+
+### 5. Permutation des quantificateurs
+
+Deux quantificateurs universels consécutifs peuvent être permutés sans changer le sens logique de la proposition. Il en va de même pour deux quantificateurs existentiels.
+
+En revanche, on ne peut pas permuter librement un quantificateur universel et un quantificateur existentiel.
+
+**Exemple :**
+
+- ∃x ∈ R, ∀y ∈ R, x + y = 2 : proposition fausse.
+- ∀y ∈ R, ∃x ∈ R, x + y = 2 : proposition vraie, car on peut choisir x = 2 − y.
+
+---
+
+## Chapitre III : Opérations sur les propositions
+
+### 1. La négation
+
+La négation d'une proposition P, notée non P ou ¬P, est vraie lorsque P est fausse et fausse lorsque P est vraie.
+
+Table de vérité :
+- Si P est vraie, ¬P est fausse.
+- Si P est fausse, ¬P est vraie.
+
+Exemples :
+- La négation de « 3 > 2 » est « 3 ≤ 2 ».
+- La négation de « x = 4 » est « x ≠ 4 ».
+- La négation de « x ≥ 5 » est « x < 5 ».
+
+### 2. Négation des propositions quantifiées
+
+Les règles fondamentales sont :
+
+- La négation de « pour tout x, P(x) » est « il existe x tel que non P(x) ».
+- La négation de « il existe x tel que P(x) » est « pour tout x, non P(x) ».
+
+Exemples :
+- Négation de ∀x ∈ R, x² ≥ 0 : ∃x ∈ R, x² < 0.
+- Négation de ∃x ∈ R, x² = 4 : ∀x ∈ R, x² ≠ 4.
+
+Pour les quantificateurs successifs, on inverse chaque quantificateur et on nie la propriété finale.
+
+Exemple :
+- Négation de ∀x ∈ E, ∃y ∈ E, P(x,y) :
+  ∃x ∈ E, ∀y ∈ E, non P(x,y).
+
+### 3. La disjonction
+
+La disjonction de P et Q se note P ou Q, ou P ∨ Q.
+
+Elle est vraie lorsqu'au moins une des deux propositions est vraie.
+
+Table de vérité :
+- Vrai ou vrai : vrai.
+- Vrai ou faux : vrai.
+- Faux ou vrai : vrai.
+- Faux ou faux : faux.
+
+### 4. La conjonction
+
+La conjonction de P et Q se note P et Q, ou P ∧ Q.
+
+Elle est vraie uniquement lorsque les deux propositions sont vraies.
+
+Table de vérité :
+- Vrai et vrai : vrai.
+- Vrai et faux : faux.
+- Faux et vrai : faux.
+- Faux et faux : faux.
+
+### 5. Les lois de De Morgan
+
+Les lois de De Morgan permettent de nier une conjonction ou une disjonction.
+
+- La négation de P et Q équivaut à non P ou non Q.
+- La négation de P ou Q équivaut à non P et non Q.
+
+En notation logique :
+- ¬(P ∧ Q) ⇔ (¬P ∨ ¬Q).
+- ¬(P ∨ Q) ⇔ (¬P ∧ ¬Q).
+
+### 6. L'implication
+
+L'implication P ⇒ Q se lit « P implique Q » ou « si P, alors Q ».
+
+Elle est fausse uniquement lorsque P est vraie et Q est fausse.
+
+Table de vérité :
+- Vrai implique vrai : vrai.
+- Vrai implique faux : faux.
+- Faux implique vrai : vrai.
+- Faux implique faux : vrai.
+
+**Méthode de démonstration :**
+
+Pour démontrer P ⇒ Q :
+1. On suppose que P est vraie.
+2. On utilise les hypothèses pour établir Q.
+3. On conclut que P implique Q.
+
+L'implication réciproque de P ⇒ Q est Q ⇒ P. Une implication et sa réciproque ne sont pas nécessairement équivalentes.
+
+Une implication P ⇒ Q est logiquement équivalente à ¬P ∨ Q.
+
+### 7. L'équivalence
+
+L'équivalence P ⇔ Q signifie que P est vraie si et seulement si Q est vraie.
+
+Elle correspond aux deux implications :
+- P ⇒ Q.
+- Q ⇒ P.
+
+L'équivalence est vraie lorsque P et Q possèdent la même valeur de vérité.
+
+**Méthode de démonstration :**
+1. Démontrer P ⇒ Q.
+2. Démontrer Q ⇒ P.
+3. Conclure que P ⇔ Q.
+
+---
+
+## Chapitre IV : Lois logiques
+
+Une loi logique est une proposition composée qui est vraie quelles que soient les valeurs de vérité de ses propositions élémentaires.
+
+### 1. Principales lois logiques
+
+**Double négation :**
+
+La négation de la négation de P équivaut à P.
+
+**Contraposée :**
+
+P ⇒ Q est équivalente à ¬Q ⇒ ¬P.
+
+**Distributivité de la disjonction sur la conjonction :**
+
+P ∨ (Q ∧ R) est équivalent à (P ∨ Q) ∧ (P ∨ R).
+
+**Distributivité de la conjonction sur la disjonction :**
+
+P ∧ (Q ∨ R) est équivalent à (P ∧ Q) ∨ (P ∧ R).
+
+**Négation de l'implication :**
+
+La négation de P ⇒ Q équivaut à P ∧ ¬Q.
+
+**Transitivité de l'implication :**
+
+Si P ⇒ Q et Q ⇒ R, alors P ⇒ R.
+
+### 2. Tables de vérité
+
+Les tables de vérité servent à vérifier les lois logiques. Pour une loi comportant deux propositions élémentaires, il faut examiner les quatre combinaisons possibles de valeurs de vérité.
+
+Pour trois propositions élémentaires, il faut examiner les huit combinaisons possibles.
+
+Une proposition composée est une loi logique si sa colonne finale contient uniquement des valeurs vraies.
+
+---
+
+## Chapitre V : Raisonnements mathématiques
+
+### 1. Raisonnement par contre-exemple
+
+Pour démontrer qu'une proposition universelle est fausse, il suffit de trouver un élément qui ne vérifie pas la propriété annoncée.
+
+Si l'affirmation est « pour tout x appartenant à E, P(x) », il suffit de trouver un élément x de E pour lequel P(x) est fausse.
+
+**Exemple :**
+
+L'affirmation « pour tout réel x, x + 1 = 2 » est fausse. En effet, pour x = 0, on obtient 1 = 2, ce qui est faux.
+
+### 2. Raisonnement par contraposée
+
+Pour démontrer une implication P ⇒ Q, on peut démontrer sa contraposée ¬Q ⇒ ¬P.
+
+Les deux propositions sont logiquement équivalentes.
+
+**Méthode :**
+1. Identifier l'hypothèse P et la conclusion Q.
+2. Supposer que Q est fausse.
+3. Démontrer que P est alors fausse.
+4. Conclure que P implique Q.
+
+### 3. Raisonnement par équivalences successives
+
+Cette méthode consiste à transformer progressivement une proposition en une autre à l'aide d'équivalences justifiées.
+
+Si P ⇔ R et R ⇔ Q, alors P ⇔ Q.
+
+Il faut vérifier que chaque transformation est une équivalence et que les conditions d'existence, les domaines de définition et les restrictions éventuelles sont respectés.
+
+### 4. Raisonnement par disjonction des cas
+
+Pour démontrer une propriété, on peut séparer l'étude en plusieurs cas qui couvrent toutes les possibilités.
+
+**Exemple :** Montrer que n² + n est pair pour tout entier naturel n.
+
+- Si n est pair, alors n² est pair et n² + n est pair.
+- Si n est impair, alors n² est impair. La somme de deux nombres impairs est paire.
+- Dans les deux cas, n² + n est pair.
+
+### 5. Raisonnement par l'absurde
+
+Pour démontrer une proposition P par l'absurde :
+1. On suppose que P est fausse.
+2. On déduit des conséquences de cette hypothèse.
+3. On aboutit à une contradiction.
+4. On conclut que P est vraie.
+
+La contradiction peut être une égalité impossible, une inégalité contradictoire ou deux affirmations incompatibles.
+
+### 6. Raisonnement par récurrence
+
+Le raisonnement par récurrence sert à démontrer qu'une propriété P(n) est vraie pour tout entier naturel n supérieur ou égal à un entier initial n₀.
+
+Il comprend trois étapes.
+
+**Étape 1 : Initialisation**
+
+On vérifie que P(n₀) est vraie.
+
+**Étape 2 : Hérédité**
+
+On suppose que P(n) est vraie pour un entier n ≥ n₀, puis on démontre que P(n+1) est vraie.
+
+**Étape 3 : Conclusion**
+
+On conclut que P(n) est vraie pour tout entier n ≥ n₀.
+
+**Exemples d'applications :**
+- Montrer que 5ⁿ − 3ⁿ est divisible par 2 pour tout entier naturel n.
+- Démontrer la formule de la somme des n premiers entiers naturels : 1 + 2 + … + n = n(n+1)/2.
+- Démontrer la formule de la somme géométrique : 1 + 2 + 2² + … + 2ⁿ = 2ⁿ⁺¹ − 1.
+
+---
+
+## Compétences attendues
+
+À la fin de ce chapitre, l'élève doit être capable de :
+
+1. Reconnaître une proposition et une fonction propositionnelle.
+2. Déterminer la valeur de vérité d'une proposition.
+3. Utiliser correctement les quantificateurs universel, existentiel et d'unicité.
+4. Traduire des phrases mathématiques en symboles logiques et inversement.
+5. Nier des propositions simples et des propositions quantifiées.
+6. Utiliser les opérations logiques : négation, disjonction, conjonction, implication et équivalence.
+7. Construire et interpréter des tables de vérité.
+8. Reconnaître et appliquer les lois logiques.
+9. Démontrer une implication ou une équivalence.
+10. Utiliser un contre-exemple pour réfuter une affirmation universelle.
+11. Maîtriser les raisonnements par contraposée, équivalences successives, disjonction des cas et absurde.
+12. Rédiger une démonstration par récurrence en respectant les trois étapes.
+
+---
+
+## Instructions destinées à l'intelligence artificielle
+
+Utiliser cette ressource pour produire des contenus pédagogiques adaptés au niveau de la première année du baccalauréat marocain.
+
+L'IA peut générer :
+- Des résumés structurés du cours.
+- Des exercices progressifs, du niveau facile au niveau difficile.
+- Des quiz à choix multiples.
+- Des questions vrai/faux avec justification.
+- Des exercices de traduction entre le langage courant et le langage logique.
+- Des exercices de négation de propositions quantifiées.
+- Des exercices de démonstration.
+- Des évaluations couvrant plusieurs parties du chapitre.
+
+Chaque question générée doit être mathématiquement correcte, adaptée au niveau scolaire et différente des questions précédentes lorsque de nouvelles questions sont demandées.
+
+Les réponses et les corrections doivent être séparées des questions destinées aux élèves. Lorsqu'un quiz est destiné à être passé par un élève, ne pas afficher les solutions avant la fin du quiz.
+
+Vérifier systématiquement la cohérence des hypothèses, les domaines de définition, les valeurs de vérité et la validité des démonstrations avant de produire le contenu.
