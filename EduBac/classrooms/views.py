@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.db.models import Avg, Count, Q
+from django.db import transaction
 from django.http import FileResponse, HttpResponse, Http404
 from django.views.decorators.http import require_POST
 from accounts.decorators import login_required_simple, teacher_required, student_required
@@ -268,6 +269,41 @@ def delete_classroom(request, pk):
         'has_excel': has_excel,
         'page_title': f'Supprimer — {classroom.name}',
     })
+
+
+@teacher_required
+@require_POST
+def reject_members(request, pk=None):
+    """Supprimer uniquement les adhésions sélectionnées dans les classes du professeur."""
+    classroom = get_object_or_404(Classroom, pk=pk, teacher=request.user) if pk else None
+    destination = (
+        redirect('classrooms:detail', pk=classroom.pk)
+        if classroom else redirect('classrooms:students')
+    )
+    raw_ids = request.POST.getlist('membership_ids')
+    if not raw_ids:
+        messages.error(request, 'Sélectionnez au moins un élève.')
+        return destination
+    try:
+        ids = {int(value) for value in raw_ids}
+    except (ValueError, TypeError):
+        raise Http404('Sélection invalide.')
+    with transaction.atomic():
+        memberships = ClassroomMember.objects.select_for_update().filter(
+            pk__in=ids, classroom__teacher=request.user, user__role='student',
+        )
+        if classroom:
+            memberships = memberships.filter(classroom=classroom)
+        # Refuser toute la sélection si elle contient un membre hors de ce périmètre.
+        selected = list(memberships.values_list('pk', flat=True))
+        if set(selected) != ids:
+            raise Http404('Un élève sélectionné ne fait pas partie de cette liste.')
+        ClassroomMember.objects.filter(pk__in=selected).delete()
+    messages.success(
+        request,
+        f'{len(selected)} élève(s) retiré(s) de la classe. Comptes et résultats conservés.',
+    )
+    return destination
 
 
 @teacher_required

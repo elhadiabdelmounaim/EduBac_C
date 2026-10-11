@@ -1,24 +1,37 @@
 {% extends "base.html" %}
 {% block content %}
 <h1 class="h3 mb-4">Mes élèves</h1>
+<form method="post" action="{% url 'classrooms:reject_members' %}" id="rejectMembersForm">
+{% csrf_token %}
+{% include "classrooms/member_selection.html" %}
 <div class="table-responsive">
 <table class="table table-hover bg-white shadow-sm">
     <thead class="table-light">
-        <tr><th>Nom</th><th>Identifiant</th><th>Niveau</th><th>Classe</th><th>Inscrit le</th></tr>
+        <tr><th><span class="visually-hidden">Sélection</span></th><th>Nom</th><th>Identifiant</th><th>Niveau</th><th>Classe</th><th>Inscrit le</th></tr>
     </thead>
     <tbody>
     {% for m in memberships %}
         <tr>
-            <td>{{ m.user.get_full_name }}</td>
+            <td>
+                <input type="checkbox" name="membership_ids" value="{{ m.pk }}" id="member-{{ m.pk }}"
+                       class="form-check-input js-member-select">
+                <label for="member-{{ m.pk }}" class="visually-hidden">Sélectionner {{ m.user.get_full_name|default:m.user.username }}</label>
+            </td>
+            <td>{{ m.user.get_full_name|default:m.user.username }}</td>
             <td class="small text-muted">{{ m.user.username }}</td>
             <td>{% if m.user.student_profile %}{{ m.user.student_profile.get_niveau_display }}{% else %}—{% endif %}</td>
             <td>{{ m.classroom.name }}</td>
             <td class="small">{{ m.joined_at|date:"d/m/Y" }}</td>
         </tr>
     {% empty %}
-        <tr><td colspan="5" class="text-muted">Aucun élève dans vos classes.</td></tr>
+        <tr><td colspan="6" class="text-muted">Aucun élève dans vos classes.</td></tr>
     {% endfor %}
     </tbody>
 </table>
 </div>
+</form>
+{% endblock %}
+{% block extra_js %}
+{% load static %}
+<script src="{% static 'js/classroom-members.js' %}"></script>
 {% endblock %}
