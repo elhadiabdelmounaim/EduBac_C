@@ -86,12 +86,6 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'errors' %}active{% endif %}"
-                   href="{% url 'quizzes:errors' %}">
-                    <i class="bi bi-exclamation-triangle"></i><span>Mes erreurs</span>
-                </a>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'ranking' %}active{% endif %}"
                    href="{% url 'quizzes:ranking' %}">
                     <i class="bi bi-trophy"></i><span>Classement</span>

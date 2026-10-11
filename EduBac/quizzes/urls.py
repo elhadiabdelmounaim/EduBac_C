@@ -31,6 +31,5 @@ urlpatterns = [
     path('<int:pk>/stats-questions/', views.question_stats, name='question_stats'),
     path('<int:pk>/dupliquer/', views.duplicate_quiz, name='duplicate'),
     path('tentative/<int:attempt_id>/commentaire/', views.comment_attempt, name='comment'),
-    path('analyse-erreurs/', views.error_analysis, name='errors'),
     path('classement/', views.class_ranking, name='ranking'),
 ]

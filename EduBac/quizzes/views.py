@@ -1122,23 +1122,6 @@ def duplicate_quiz(request, pk):
 
 
 @student_required
-def error_analysis(request):
-    """Questions le plus souvent ratées par l'élève."""
-    from django.db.models import Count
-    wrong = (
-        StudentAnswer.objects
-        .filter(attempt__student=request.user, is_correct=False)
-        .values('question_id', 'question__text', 'question__quiz__title')
-        .annotate(n=Count('id'))
-        .order_by('-n')[:20]
-    )
-    return render(request, 'quizzes/error_analysis.html', {
-        'wrong': wrong,
-        'page_title': 'Analyse des erreurs',
-    })
-
-
-@student_required
 def class_ranking(request):
     """Classement simple par score moyen (classe de l'élève si membre)."""
     from django.db.models import Avg, Count

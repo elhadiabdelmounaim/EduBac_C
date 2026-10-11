@@ -2,7 +2,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from django.test import TestCase, override_settings
-from django.urls import reverse
+from django.urls import NoReverseMatch, Resolver404, resolve, reverse
 
 from accounts.models import User
 from education.models import Course, Lesson
@@ -242,6 +242,26 @@ class MathTextNormalizationTests(TestCase):
         self.assertEqual(latex_to_plain('Texte simple'), 'Texte simple')
 
 
+class RemovedWeakPointsFeatureTests(TestCase):
+    def test_former_analysis_page_is_not_routable(self):
+        with self.assertRaises(Resolver404):
+            resolve('/quizzes/analyse-erreurs/')
+        with self.assertRaises(NoReverseMatch):
+            reverse('quizzes:errors')
+
+    def test_templates_do_not_offer_removed_feature(self):
+        template_root = Path(__file__).resolve().parent.parent / 'templates'
+        for path in template_root.rglob('*.html'):
+            source = path.read_text(encoding='utf-8')
+            with self.subTest(template=str(path.relative_to(template_root))):
+                for removed in ('quizzes:errors', 'Mes points faibles', 'Mes erreurs', 'Points faibles'):
+                    self.assertNotIn(removed, source)
+        self.assertNotIn(
+            "Besoin d'une explication ?",
+            (template_root / 'education/lesson_detail.html').read_text(encoding='utf-8'),
+        )
+
+
 class LocalKaTeXAssetTests(TestCase):
     def test_math_pages_use_local_pinned_assets_only(self):
         project_root = Path(__file__).resolve().parent.parent
@@ -254,7 +274,6 @@ class LocalKaTeXAssetTests(TestCase):
             'quizzes/teacher_ai_quiz.html',
             'quizzes/question_stats.html',
             'quizzes/teacher_stats.html',
-            'quizzes/error_analysis.html',
             'whiteboard/quiz_correction.html',
             'education/lesson_detail.html',
         ]
