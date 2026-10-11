@@ -35,3 +35,9 @@ Adding lesson PDFs should work with normal Git staging, without forced additions
 **Why:** The user rejected the repeated manual `git add -f` workflow and asked for a smooth process when adding PDFs in VS Code.
 
 **How to apply:** Allow lesson PDFs through ignore rules while keeping unrelated uploads ignored. Explain that local VS Code copies must receive the changed rule; do not imply workspace changes automatically modify the user's computer.
+
+Course Markdown must be portable with the lesson resources, not depend solely on a database edit in this workspace.
+
+**Why:** The user wants « Voir le cours » for Généralités sur les fonctions to display Markdown/LaTeX just like Logic, and expects the same result in their local copy.
+
+**How to apply:** Keep one Markdown source in the chapter's Cours folder and render it in place. Preserve the existing database content as a fallback when no Markdown is provided. Move uploads rather than copying them; reserve Sources_IA TXT for quiz input.

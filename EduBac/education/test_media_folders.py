@@ -10,6 +10,66 @@ from education.models import Course, Lesson
 
 
 class MediaFoldersTests(TestCase):
+    def test_course_markdown_is_displayed_and_reread_without_database_import(self):
+        from education.media_library import chapter_relative
+        course = Course.objects.create(name='Mathématiques', niveau='1ere_bac_sc')
+        lesson = Lesson.objects.create(
+            course=course, title='Généralités sur les fonctions numériques',
+            order=2, content='Ancien contenu',
+        )
+        with TemporaryDirectory() as media, override_settings(MEDIA_ROOT=media):
+            folder = Path(media) / chapter_relative(lesson) / 'Cours'
+            folder.mkdir(parents=True)
+            source = folder / 'fonctions.md'
+            text = '# Fonctions\n\nUne formule : \\(f(x)=\\frac{1}{x}\\).\n'
+            source.write_text(text, encoding='utf-8')
+            url = reverse('education:lesson_detail', args=[lesson.pk])
+            response = self.client.get(url)
+            self.assertContains(response, '<h1>Fonctions</h1>', html=True)
+            self.assertContains(response, r'$f(x)=\frac{1}{x}$')
+            self.assertNotContains(response, 'Ancien contenu')
+            self.assertEqual(lesson.get_content(), text)
+            source.write_text('# Cours mis à jour', encoding='utf-8')
+            self.assertContains(self.client.get(url), 'Cours mis à jour')
+            lesson.refresh_from_db()
+            self.assertEqual(lesson.content, 'Ancien contenu')
+            self.assertEqual(Lesson.objects.count(), 1)
+            self.assertEqual(list(folder.iterdir()), [source])
+            source.unlink()
+            self.assertContains(self.client.get(url), 'Ancien contenu')
+
+    def test_course_markdown_rejects_duplicates_empty_and_invalid_encoding(self):
+        from education.media_library import chapter_relative
+        course = Course.objects.create(name='Mathématiques', niveau='1ere_bac_sc')
+        lesson = Lesson.objects.create(course=course, title='Fonctions', order=2, content='DB')
+        with TemporaryDirectory() as media, override_settings(MEDIA_ROOT=media):
+            folder = Path(media) / chapter_relative(lesson) / 'Cours'
+            folder.mkdir(parents=True)
+            source = folder / 'cours.md'
+            source.write_text('# Cours', encoding='utf-8')
+            duplicate = folder / 'copie.MD'
+            duplicate.write_text('# Copie', encoding='utf-8')
+            url = reverse('education:lesson_detail', args=[lesson.pk])
+            self.assertContains(self.client.get(url), 'Plusieurs fichiers Markdown')
+            duplicate.unlink()
+            source.write_text('', encoding='utf-8')
+            self.assertContains(self.client.get(url), 'est vide')
+            source.write_bytes(b'\xff')
+            self.assertContains(self.client.get(url), 'encodage UTF-8')
+
+    def test_course_markdown_does_not_read_other_levels_or_ai_sources(self):
+        from education.media_library import chapter_relative
+        course = Course.objects.create(name='Mathématiques', niveau='1ere_bac_sc')
+        lesson = Lesson.objects.create(course=course, title='Fonctions', order=2, content='DB')
+        with TemporaryDirectory() as media, override_settings(MEDIA_ROOT=media):
+            chapter = Path(media) / chapter_relative(lesson)
+            (chapter / 'Sources_IA').mkdir(parents=True)
+            (chapter / 'Sources_IA' / 'cours.md').write_text('Source IA', encoding='utf-8')
+            other = Path(media) / 'lessons/1BAC_SM/02_fonctions/Cours'
+            other.mkdir(parents=True)
+            (other / 'cours.md').write_text('Autre niveau', encoding='utf-8')
+            self.assertEqual(lesson.get_content(), 'DB')
+
     @patch('education.views._ensure_curriculum_loaded')
     def test_level_page_discovers_course_and_exercise_pdfs_without_database_import(self, load):
         from education.media_library import chapter_relative

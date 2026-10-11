@@ -73,7 +73,9 @@ class Lesson(models.Model):
         return f"{self.title} — {self.course.name}"
 
     def get_content(self):
-        return self.content
+        from .media_library import course_markdown
+        markdown = course_markdown(self)
+        return self.content if markdown is None else markdown
 
     def get_quizzes(self):
         return self.quizzes.all()

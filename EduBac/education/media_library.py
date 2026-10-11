@@ -67,6 +67,36 @@ def source_files_for_lessons(lessons):
     }
 
 
+def course_markdown(lesson):
+    """Read the single course Markdown in place, without a database import."""
+    root = Path(settings.MEDIA_ROOT).resolve()
+    folder = root / chapter_relative(lesson) / 'Cours'
+    if not folder.resolve().is_relative_to(root) or not folder.is_dir():
+        return None
+    paths = sorted(
+        (p for p in folder.iterdir()
+         if p.suffix.lower() == '.md' and not p.is_symlink()
+         and p.is_file() and p.resolve().is_relative_to(root)),
+        key=lambda p: p.name.casefold(),
+    )
+    if not paths:
+        return None
+    if len(paths) > 1:
+        raise ValueError(
+            "Plusieurs fichiers Markdown sont présents dans Cours. "
+            "Conservez un seul fichier Markdown pour afficher cette leçon."
+        )
+    try:
+        text = paths[0].read_text(encoding='utf-8-sig')
+    except (OSError, UnicodeError) as exc:
+        raise ValueError(
+            f"Impossible de lire « {paths[0].name} ». Vérifiez son encodage UTF-8."
+        ) from exc
+    if not text.strip():
+        raise ValueError(f"Le fichier Markdown « {paths[0].name} » est vide.")
+    return text
+
+
 def ai_source_text(lesson, source_file=None):
     """Read only UTF-8 text, bounded before decoding; preserve LaTeX literally."""
     limit = max(1, int(getattr(settings, 'QUIZ_LESSON_CONTEXT_CHARS', 5000)))

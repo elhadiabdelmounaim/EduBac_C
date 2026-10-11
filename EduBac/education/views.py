@@ -154,6 +154,12 @@ def course_detail(request, pk):
 def lesson_detail(request, pk):
     lesson = get_object_or_404(Lesson, pk=pk)
     from .media_library import documents
+    course_content_error = ''
+    try:
+        course_content = lesson.get_content()
+    except ValueError as exc:
+        course_content = ''
+        course_content_error = str(exc)
     course = lesson.course
     # Leçon suivante / précédente
     next_lesson = Lesson.objects.filter(course=course, order__gt=lesson.order).order_by('order').first()
@@ -183,6 +189,8 @@ def lesson_detail(request, pk):
                 faq_items.append({'q': line, 'a': ''})
     return render(request, 'education/lesson_detail.html', {
         'lesson': lesson,
+        'course_content': course_content,
+        'course_content_error': course_content_error,
         'course': course,
         'next_lesson': next_lesson,
         'prev_lesson': prev_lesson,

@@ -16,6 +16,7 @@ media/lessons/**
 # Inclure les sources IA et les PDF pédagogiques, sans inclure les autres téléversements.
 !media/lessons/**/Sources_IA/**
 !media/lessons/**/*.[pP][dD][fF]
+!media/lessons/**/Cours/*.[mM][dD]
 staticfiles/
 .DS_Store
 *.egg-info/

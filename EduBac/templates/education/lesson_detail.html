@@ -99,8 +99,10 @@
 <div class="card shadow-sm mb-3 border-0" style="border-radius:16px;">
     <div class="card-body">
         <h2 class="h6 fw-bold mb-3">Contenu du cours</h2>
-        {% if lesson.content %}
-        <div class="lesson-md" id="lessonContent">{{ lesson.content|markdown_latex }}</div>
+        {% if course_content_error %}
+        <p class="alert alert-warning" role="alert">{{ course_content_error }}</p>
+        {% elif course_content %}
+        <div class="lesson-md" id="lessonContent">{{ course_content|markdown_latex }}</div>
         {% else %}
         <p class="text-muted mb-0">Contenu à venir. Tu pourras coller du Markdown + LaTeX ici, et joindre un PDF.</p>
         {% endif %}
