@@ -10,6 +10,30 @@ from education.models import Course, Lesson
 
 
 class MediaFoldersTests(TestCase):
+    def test_lesson_footer_navigation_handles_first_middle_last_and_single(self):
+        course = Course.objects.create(name='Mathématiques', niveau='1ere_bac_sc')
+        lessons = [
+            Lesson.objects.create(course=course, title=f'Leçon test {order}', order=order)
+            for order in (1, 2, 3)
+        ]
+        for index, lesson in enumerate(lessons):
+            response = self.client.get(reverse('education:lesson_detail', args=[lesson.pk]))
+            self.assertContains(response, 'id="lessonEndcap"')
+            self.assertContains(response, 'data-state="yes" aria-pressed="false"')
+            self.assertContains(response, 'data-state="no" aria-pressed="false"')
+            self.assertContains(response, 'class="lesson-nav__link lesson-nav__link--previous"', count=int(index > 0))
+            self.assertContains(response, 'class="lesson-nav__link lesson-nav__link--next"', count=int(index < 2))
+            if index > 0:
+                self.assertContains(response, reverse('education:lesson_detail', args=[lessons[index - 1].pk]))
+            if index < 2:
+                self.assertContains(response, reverse('education:lesson_detail', args=[lessons[index + 1].pk]))
+        lessons[0].delete()
+        lessons[2].delete()
+        response = self.client.get(reverse('education:lesson_detail', args=[lessons[1].pk]))
+        self.assertNotContains(response, 'class="lesson-nav__link ')
+        self.assertContains(response, 'Vous êtes au début de ce parcours.')
+        self.assertContains(response, 'Vous êtes à la fin de ce parcours.')
+
     def test_course_markdown_is_displayed_and_reread_without_database_import(self):
         from education.media_library import chapter_relative
         course = Course.objects.create(name='Mathématiques', niveau='1ere_bac_sc')

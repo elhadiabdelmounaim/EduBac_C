@@ -212,6 +212,137 @@ html[data-theme="dark"] #lessonContent.lesson-md--boxed .course-box--note {
     }
     #lessonContent.lesson-md--boxed .course-box__body .katex-display { overflow: visible; }
 }
+
+/* A clear lesson ending: reflection first, then movement through the course. */
+.lesson-endcap {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    gap: 1rem;
+    margin: 1.5rem 0 1rem;
+}
+.lesson-endcap__panel {
+    min-width: 0;
+    padding: 1.1rem 1.2rem;
+    color: var(--nb-ink, #263449);
+    background: var(--nb-surface, #fcfaf4);
+    border: 1px solid var(--nb-line, #d5d9cf);
+    border-radius: 14px;
+    box-shadow: var(--nb-shadow, 0 5px 18px rgba(38, 52, 73, .07));
+}
+.lesson-endcap__eyebrow {
+    display: block;
+    margin-bottom: .35rem;
+    color: var(--nb-muted, #53636b);
+    font-size: .72rem;
+    letter-spacing: .09em;
+    line-height: 1.4;
+    text-transform: uppercase;
+}
+.lesson-endcap__title {
+    margin: 0 0 .8rem;
+    color: var(--nb-ink, #263449);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.08rem;
+    font-weight: 700;
+}
+.understand-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .55rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+.understand-bar .btn-understand {
+    min-height: 2.55rem;
+    padding-inline: .85rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: .85rem;
+}
+.lesson-endcap .btn-understand[data-state="yes"] {
+    color: var(--nb-teal, #185f60);
+    border-color: var(--nb-teal, #185f60);
+    background: transparent;
+}
+.lesson-endcap .btn-understand[data-state="no"] {
+    color: var(--nb-ochre, #975815);
+    border-color: var(--nb-ochre, #975815);
+    background: transparent;
+}
+.understand-bar .btn-understand.active[data-state="yes"] {
+    color: var(--nb-surface, #fcfaf4);
+    background: var(--nb-teal, #185f60);
+    border-color: var(--nb-teal, #185f60);
+}
+.understand-bar .btn-understand.active[data-state="no"] {
+    color: var(--nb-surface, #fcfaf4);
+    background: var(--nb-ochre, #975815);
+    border-color: var(--nb-ochre, #975815);
+}
+.understand-bar .btn-understand:focus-visible,
+.lesson-nav__link:focus-visible {
+    outline: 3px solid var(--nb-teal, #185f60);
+    outline-offset: 3px;
+}
+.lesson-nav__links {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: .7rem;
+}
+.lesson-nav__link {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    min-height: 2.8rem;
+    padding: .6rem .8rem;
+    color: var(--nb-teal, #185f60);
+    background: var(--nb-teal-soft, #e7eeea);
+    border: 1px solid var(--nb-line, #d5d9cf);
+    border-radius: 9px;
+    font-size: .88rem;
+    line-height: 1.4;
+    text-decoration: none;
+    transition: background-color .18s ease, border-color .18s ease;
+}
+.lesson-nav__link:hover {
+    color: var(--nb-ink, #263449);
+    background: var(--nb-paper, #f4f1e8);
+    border-color: var(--nb-teal, #185f60);
+}
+.lesson-nav__link--next {
+    margin-left: auto;
+    color: var(--nb-surface, #fcfaf4);
+    background: var(--nb-teal, #185f60);
+    border-color: var(--nb-teal, #185f60);
+    text-align: right;
+}
+.lesson-nav__link--next:hover {
+    color: var(--nb-surface, #fcfaf4);
+    background: var(--edubac-teal-light, #347d78);
+    border-color: var(--edubac-teal-light, #347d78);
+}
+.lesson-nav__edge {
+    align-self: center;
+    margin: 0;
+    color: var(--nb-muted, #53636b);
+    font-size: .88rem;
+    line-height: 1.5;
+}
+@media (max-width: 767.98px) {
+    .lesson-endcap { grid-template-columns: 1fr; gap: .75rem; }
+    .lesson-endcap__panel { padding: 1rem; }
+}
+@media (max-width: 420px) {
+    .understand-bar { align-items: stretch; }
+    .understand-bar .small { flex-basis: 100%; }
+    .understand-bar .btn-understand { flex: 1 1 auto; }
+    .lesson-nav__links { flex-direction: column; }
+    .lesson-nav__link--next { margin-left: 0; }
+    .lesson-nav__edge { padding: .3rem 0; }
+}
 </style>
 {% endblock %}
 {% block content %}
@@ -313,25 +444,40 @@ html[data-theme="dark"] #lessonContent.lesson-md--boxed .course-box--note {
 {% endif %}
 
 
-<div class="understand-bar">
-    <span class="small text-muted me-1 align-self-center">As-tu compris cette lecon ?</span>
-    <button type="button" class="btn btn-sm btn-outline-success btn-understand" data-state="yes">
-        <i class="bi bi-emoji-smile"></i> Oui, compris
-    </button>
-    <button type="button" class="btn btn-sm btn-outline-warning btn-understand" data-state="no">
-        <i class="bi bi-emoji-neutral"></i> A revoir
-    </button>
-</div>
+<div class="lesson-endcap" id="lessonEndcap">
+    <section class="lesson-endcap__panel" aria-labelledby="lessonReflectionTitle">
+        <span class="lesson-endcap__eyebrow">Petit bilan</span>
+        <h2 class="lesson-endcap__title" id="lessonReflectionTitle">As-tu compris cette leçon&nbsp;?</h2>
+        <div class="understand-bar" role="group" aria-label="Indiquer si la leçon est comprise">
+            <button type="button" class="btn btn-sm btn-outline-success btn-understand" data-state="yes" aria-pressed="false">
+                <i class="bi bi-emoji-smile" aria-hidden="true"></i> Oui, compris
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-warning btn-understand" data-state="no" aria-pressed="false">
+                <i class="bi bi-emoji-neutral" aria-hidden="true"></i> A revoir
+            </button>
+        </div>
+    </section>
 
-<div class="d-flex flex-wrap gap-2 mb-3">
-    {% if prev_lesson %}
-    <a href="{% url 'education:lesson_detail' prev_lesson.pk %}" class="btn btn-link btn-sm">← {{ prev_lesson.title|truncatechars:30 }}</a>
-    {% endif %}
-    {% if next_lesson %}
-    <a href="{% url 'education:lesson_detail' next_lesson.pk %}" class="btn btn-edubac btn-sm">
-        Leçon suivante : {{ next_lesson.title|truncatechars:30 }} →
-    </a>
-    {% endif %}
+    <nav class="lesson-endcap__panel lesson-nav" aria-label="Navigation entre les leçons">
+        <span class="lesson-endcap__eyebrow">Poursuivre le parcours</span>
+        <h2 class="lesson-endcap__title">Leçon précédente ou suivante</h2>
+        <div class="lesson-nav__links">
+            {% if prev_lesson %}
+            <a href="{% url 'education:lesson_detail' prev_lesson.pk %}" class="lesson-nav__link lesson-nav__link--previous">
+                ← {{ prev_lesson.title|truncatechars:30 }}
+            </a>
+            {% else %}
+            <p class="lesson-nav__edge">Vous êtes au début de ce parcours.</p>
+            {% endif %}
+            {% if next_lesson %}
+            <a href="{% url 'education:lesson_detail' next_lesson.pk %}" class="lesson-nav__link lesson-nav__link--next">
+                Leçon suivante&nbsp;: {{ next_lesson.title|truncatechars:30 }} →
+            </a>
+            {% else %}
+            <p class="lesson-nav__edge">Vous êtes à la fin de ce parcours.</p>
+            {% endif %}
+        </div>
+    </nav>
 </div>
 {% endblock %}
 {% block extra_js %}
@@ -349,13 +495,20 @@ html[data-theme="dark"] #lessonContent.lesson-md--boxed .course-box--note {
   }
   document.querySelectorAll('.btn-understand').forEach(function(b){
     b.addEventListener('click', function(){
-      document.querySelectorAll('.btn-understand').forEach(function(x){ x.classList.remove('active'); });
+      document.querySelectorAll('.btn-understand').forEach(function(x){
+        x.classList.remove('active');
+        x.setAttribute('aria-pressed', 'false');
+      });
       b.classList.add('active');
+      b.setAttribute('aria-pressed', 'true');
       try { localStorage.setItem('edubac-lesson-{{ lesson.pk }}', b.getAttribute('data-state')); } catch(e){}
     });
     try {
       var saved = localStorage.getItem('edubac-lesson-{{ lesson.pk }}');
-      if(saved && b.getAttribute('data-state')===saved) b.classList.add('active');
+      if(saved && b.getAttribute('data-state')===saved) {
+        b.classList.add('active');
+        b.setAttribute('aria-pressed', 'true');
+      }
     } catch(e){}
   });
 })();
