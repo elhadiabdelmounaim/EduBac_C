@@ -59,6 +59,159 @@
 }
 .lesson-md th { background: rgba(56, 103, 105, 0.1); }
 .lesson-md .katex-display { margin: 1rem 0; overflow-x: auto; }
+
+/* Pedagogical boxes are opt-in: only the boxed functions lesson receives this
+   notebook treatment; ordinary lesson Markdown remains untouched. */
+#lessonContent.lesson-md--boxed {
+    --course-box-ink: var(--nb-ink, #263449);
+    --course-box-paper: var(--nb-surface, #fcfaf4);
+    --course-box-line: var(--nb-line, #d5d9cf);
+    --course-box-muted: var(--nb-muted, #53636b);
+    color: var(--course-box-ink);
+    min-width: 0;
+}
+#lessonContent.lesson-md--boxed > h1,
+#lessonContent.lesson-md--boxed > h2 {
+    color: var(--nb-ink, #263449);
+    font-family: Georgia, "Times New Roman", serif;
+    line-height: 1.25;
+    text-wrap: balance;
+}
+#lessonContent.lesson-md--boxed > h1 {
+    margin: 2rem 0 1rem;
+    padding-bottom: .65rem;
+    border-bottom: 2px solid var(--nb-ochre, #975815);
+    font-size: clamp(1.55rem, 4vw, 2rem);
+}
+#lessonContent.lesson-md--boxed > h2 {
+    margin: 1.8rem 0 .9rem;
+    padding-left: .75rem;
+    border-left: 3px solid var(--nb-teal, #185f60);
+    font-size: clamp(1.2rem, 3vw, 1.5rem);
+}
+#lessonContent.lesson-md--boxed .course-box {
+    --box-accent: var(--nb-teal, #185f60);
+    --box-tint: var(--nb-teal-soft, #e7eeea);
+    position: relative;
+    margin: 1.15rem 0 1.35rem;
+    padding: 0;
+    overflow: hidden;
+    color: var(--course-box-ink);
+    background: var(--course-box-paper);
+    border: 1px solid var(--course-box-line);
+    border-left: 4px solid var(--box-accent);
+    border-radius: 5px 15px 15px 5px;
+    box-shadow: var(--nb-shadow, 0 5px 18px rgba(38, 52, 73, .07));
+}
+#lessonContent.lesson-md--boxed .course-box__title {
+    margin: 0;
+    padding: .72rem 1rem .68rem;
+    color: var(--box-accent);
+    background: var(--box-tint);
+    border-bottom: 1px solid var(--course-box-line);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.08rem;
+    font-weight: 700;
+    line-height: 1.35;
+    text-wrap: balance;
+}
+#lessonContent.lesson-md--boxed .course-box__body {
+    padding: .9rem 1rem .35rem;
+    overflow-wrap: anywhere;
+}
+#lessonContent.lesson-md--boxed .course-box__body > :first-child { margin-top: 0; }
+#lessonContent.lesson-md--boxed .course-box__body > :last-child { margin-bottom: .55rem; }
+#lessonContent.lesson-md--boxed .course-box__body p,
+#lessonContent.lesson-md--boxed .course-box__body li { line-height: 1.72; }
+#lessonContent.lesson-md--boxed .course-box__body ul,
+#lessonContent.lesson-md--boxed .course-box__body ol { padding-left: 1.35rem; }
+#lessonContent.lesson-md--boxed .course-box__body li + li { margin-top: .28rem; }
+#lessonContent.lesson-md--boxed .course-box__body .katex-display {
+    max-width: 100%;
+    padding: .45rem 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-inline: contain;
+    scrollbar-color: var(--box-accent) transparent;
+}
+#lessonContent.lesson-md--boxed .course-box__body :focus-visible {
+    outline: 3px solid var(--box-accent);
+    outline-offset: 3px;
+}
+#lessonContent.lesson-md--boxed .course-box--definition {
+    --box-accent: var(--nb-teal, #185f60);
+    --box-tint: var(--nb-teal-soft, #e7eeea);
+}
+#lessonContent.lesson-md--boxed .course-box--property {
+    --box-accent: var(--nb-ochre, #975815);
+    --box-tint: var(--nb-paper, #f4f1e8);
+}
+#lessonContent.lesson-md--boxed .course-box--example {
+    --box-accent: #39744f;
+    --box-tint: #edf3e9;
+}
+#lessonContent.lesson-md--boxed .course-box--exercise {
+    --box-accent: #805044;
+    --box-tint: #f4ece7;
+}
+#lessonContent.lesson-md--boxed .course-box--activity {
+    --box-accent: #426b78;
+    --box-tint: #eaf0f0;
+}
+#lessonContent.lesson-md--boxed .course-box--note {
+    --box-accent: #76623b;
+    --box-tint: #f3efdf;
+}
+html[data-theme="dark"] #lessonContent.lesson-md--boxed .course-box--example {
+    --box-accent: #8fd0a0;
+    --box-tint: #263a32;
+}
+html[data-theme="dark"] #lessonContent.lesson-md--boxed .course-box--exercise {
+    --box-accent: #e2aa9b;
+    --box-tint: #392e2b;
+}
+html[data-theme="dark"] #lessonContent.lesson-md--boxed .course-box--activity {
+    --box-accent: #9bcbd0;
+    --box-tint: #29383b;
+}
+html[data-theme="dark"] #lessonContent.lesson-md--boxed .course-box--note {
+    --box-accent: #e4ca8b;
+    --box-tint: #393625;
+}
+@media (max-width: 575.98px) {
+    #lessonContent.lesson-md--boxed .course-box {
+        margin: .9rem 0 1.1rem;
+        border-radius: 4px 12px 12px 4px;
+    }
+    #lessonContent.lesson-md--boxed .course-box__title { padding: .65rem .8rem; }
+    #lessonContent.lesson-md--boxed .course-box__body { padding: .78rem .8rem .3rem; }
+    #lessonContent.lesson-md--boxed .course-box__body .katex-display {
+        margin-right: -.25rem;
+        padding-inline: .25rem;
+    }
+}
+@media (prefers-reduced-motion: no-preference) {
+    #lessonContent.lesson-md--boxed .course-box {
+        transition: border-color .18s ease, box-shadow .18s ease;
+    }
+    #lessonContent.lesson-md--boxed .course-box:hover {
+        box-shadow: 0 7px 20px rgba(38, 52, 73, .11);
+    }
+}
+@media print {
+    #lessonContent.lesson-md--boxed .course-box {
+        break-inside: avoid;
+        color: #263449;
+        background: #fff;
+        border-color: #9ca39c;
+        box-shadow: none;
+    }
+    #lessonContent.lesson-md--boxed .course-box__title {
+        color: #263449;
+        background: #f1f1eb;
+    }
+    #lessonContent.lesson-md--boxed .course-box__body .katex-display { overflow: visible; }
+}
 </style>
 {% endblock %}
 {% block content %}
@@ -102,7 +255,11 @@
         {% if course_content_error %}
         <p class="alert alert-warning" role="alert">{{ course_content_error }}</p>
         {% elif course_content %}
+        {% if use_course_boxes %}
+        <div class="lesson-md lesson-md--boxed" id="lessonContent">{{ course_content|markdown_course_boxes }}</div>
+        {% else %}
         <div class="lesson-md" id="lessonContent">{{ course_content|markdown_latex }}</div>
+        {% endif %}
         {% else %}
         <p class="text-muted mb-0">Contenu à venir. Tu pourras coller du Markdown + LaTeX ici, et joindre un PDF.</p>
         {% endif %}

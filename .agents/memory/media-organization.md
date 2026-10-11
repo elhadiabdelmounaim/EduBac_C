@@ -41,3 +41,9 @@ Course Markdown must be portable with the lesson resources, not depend solely on
 **Why:** The user wants « Voir le cours » for Généralités sur les fonctions to display Markdown/LaTeX just like Logic, and expects the same result in their local copy.
 
 **How to apply:** Keep one Markdown source in the chapter's Cours folder and render it in place. Preserve the existing database content as a fallback when no Markdown is provided. Move uploads rather than copying them; reserve Sources_IA TXT for quiz input.
+
+The user approved tcolorbox-like pedagogical boxes for the functions lesson: definitions, properties, examples, activities and exercises.
+
+**Why:** They want elegant Markdown/LaTeX presentation while retaining the original course, not replacing it with a PDF-only view.
+
+**How to apply:** Decorate recognized headings at rendering time, preserving the source file and mathematical text. Limit this opt-in to the functions lesson unless the user asks to extend it; match the approved notebook identity.

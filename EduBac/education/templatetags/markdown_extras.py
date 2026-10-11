@@ -2,6 +2,8 @@
 Rendu Markdown + conservation des formules LaTeX pour KaTeX.
 """
 import re
+import unicodedata
+from html import unescape
 from django import template
 from django.utils.safestring import mark_safe
 from django.utils.html import escape
@@ -103,6 +105,56 @@ def markdown_latex(value):
     html = _render_markdown(protected)
     html = _restore_math(html, blocks, inlines)
     return mark_safe(html)
+
+
+def _course_box_kind(heading):
+    text = unescape(re.sub(r'<[^>]+>', '', heading)).strip().casefold()
+    text = ''.join(
+        char for char in unicodedata.normalize('NFKD', text)
+        if not unicodedata.combining(char)
+    )
+    groups = (
+        ('definition', ('definition', 'fonction periodique', 'fonction composee', 'extremum')),
+        ('property', ('propriete', 'sens de variation', 'technique')),
+        ('example', ('exemple',)),
+        ('exercise', ('application', 'exercice')),
+        ('activity', ('activite',)),
+        ('note', ('remarque', 'interpretation graphique')),
+    )
+    return next(
+        (kind for kind, prefixes in groups if text.startswith(prefixes)),
+        None,
+    )
+
+
+@register.filter(name='markdown_course_boxes')
+def markdown_course_boxes(value):
+    """Decorate pedagogical headings, keeping the original Markdown and math."""
+    html = str(markdown_latex(value))
+    parts = re.split(
+        r'(<h[1-3]\b[^>]*>.*?</h[1-3]>|<hr\b[^>]*>)',
+        html, flags=re.DOTALL,
+    )
+    output, opened = [], False
+    for part in parts:
+        boundary = re.match(r'<(?:h[1-3]|hr)\b', part)
+        if boundary and opened:
+            output.append('</div></section>')
+            opened = False
+        kind = _course_box_kind(part) if re.match(r'<h3\b', part) else None
+        if kind:
+            # Markdown emits plain h3 tags; keep their text and LaTeX unchanged.
+            title = re.sub(r'^<h3>', '<h3 class="course-box__title">', part)
+            output.extend((
+                f'<section class="course-box course-box--{kind}">',
+                title, '<div class="course-box__body">',
+            ))
+            opened = True
+        else:
+            output.append(part)
+    if opened:
+        output.append('</div></section>')
+    return mark_safe(''.join(output))
 
 
 @register.filter(name='latex')

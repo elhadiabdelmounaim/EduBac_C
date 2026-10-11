@@ -27,6 +27,7 @@ class MediaFoldersTests(TestCase):
             response = self.client.get(url)
             self.assertContains(response, '<h1>Fonctions</h1>', html=True)
             self.assertContains(response, r'$f(x)=\frac{1}{x}$')
+            self.assertContains(response, 'lesson-md--boxed')
             self.assertNotContains(response, 'Ancien contenu')
             self.assertEqual(lesson.get_content(), text)
             source.write_text('# Cours mis à jour', encoding='utf-8')
@@ -69,6 +70,8 @@ class MediaFoldersTests(TestCase):
             other.mkdir(parents=True)
             (other / 'cours.md').write_text('Autre niveau', encoding='utf-8')
             self.assertEqual(lesson.get_content(), 'DB')
+            response = self.client.get(reverse('education:lesson_detail', args=[lesson.pk]))
+            self.assertNotContains(response, 'lesson-md--boxed"')
 
     @patch('education.views._ensure_curriculum_loaded')
     def test_level_page_discovers_course_and_exercise_pdfs_without_database_import(self, load):

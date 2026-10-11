@@ -191,6 +191,11 @@ def lesson_detail(request, pk):
         'lesson': lesson,
         'course_content': course_content,
         'course_content_error': course_content_error,
+        'use_course_boxes': (
+            course.niveau == '1ere_bac_sc'
+            and lesson.order == 2
+            and lesson.title == 'Généralités sur les fonctions numériques'
+        ),
         'course': course,
         'next_lesson': next_lesson,
         'prev_lesson': prev_lesson,
