@@ -42,3 +42,17 @@ mtime_ms = 1791674470329
 storage_uri = "gcs://replit-rams-assets-reed/rams/assets/repl:5ed16b6e-938c-4494-bd84-1df591cabb5c/55c09843-efda-47cb-898b-e25fd7795cfc/e229d21b-5bf0-4d72-988e-bdfd565fae3f"
 storage_version_token = "1791674475053222"
 content_type = "text/plain"
+
+[[outputs]]
+id = "04o2vaZw4e0a-45wN_-dx"
+uri = "file://generated-artifacts/functions-course.jpg"
+type = "image"
+title = "Cours de fonctions — rendu réel"
+description = "Page ouverte par « Voir la leçon » en 1ère Bac Sciences expérimentales : activités, définitions et exemples encadrés."
+logical_id = "fff61d70-c73b-411f-9f73-0766944e714f"
+content_hash = "sha256:dc8e89fcae6a1986e9ec328c9d8abfb1ad7655478534e2561e00d63d43aff8c7"
+size = 143546
+mtime_ms = 1791719361692
+storage_uri = "gcs://replit-rams-assets-reed/rams/assets/repl:5ed16b6e-938c-4494-bd84-1df591cabb5c/fff61d70-c73b-411f-9f73-0766944e714f/7770931f-d6bb-42f7-a82d-c2602d769253"
+storage_version_token = "1791719371521322"
+content_type = "image/jpeg"
