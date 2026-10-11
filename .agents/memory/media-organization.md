@@ -29,3 +29,9 @@ For the level-name correction, work on the existing files and rename them; do no
 **Why:** The user corrected the previous approach: «كان يجب أن تشتغل على الملفات الموجودة مسبقًا وتغيير أسماءها. أنت قمت بإنشاء ملفات جديدة.» They clarified: «قم بإعادة التسمية فقط. أي لا أريد أن أجد ملفات مكررة».
 
 **How to apply:** Modify existing code for this request, retaining only reference changes needed for renamed resources. Preserve original content; do not create copies or supplemental command, test or report files for this renaming.
+
+Adding lesson PDFs should work with normal Git staging, without forced additions or typing each file path.
+
+**Why:** The user rejected the repeated manual `git add -f` workflow and asked for a smooth process when adding PDFs in VS Code.
+
+**How to apply:** Allow lesson PDFs through ignore rules while keeping unrelated uploads ignored. Explain that local VS Code copies must receive the changed rule; do not imply workspace changes automatically modify the user's computer.

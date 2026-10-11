@@ -13,8 +13,9 @@ media/*
 media/lessons/**
 !media/lessons/**/
 !media/lessons/**/.gitkeep
-# Inclure les sources IA, sans inclure les autres documents et téléversements.
+# Inclure les sources IA et les PDF pédagogiques, sans inclure les autres téléversements.
 !media/lessons/**/Sources_IA/**
+!media/lessons/**/*.[pP][dD][fF]
 staticfiles/
 .DS_Store
 *.egg-info/
