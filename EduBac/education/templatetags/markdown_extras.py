@@ -127,6 +127,37 @@ def _course_box_kind(heading):
     )
 
 
+def _decorate_course_quotes(html):
+    """Support pedagogical labels inside quotes, including adjacent quotes."""
+    def decorate(match):
+        body = match.group(1)
+        # Keep nested/general quotations untouched.
+        if '<blockquote' in body:
+            return match.group(0)
+        labels = list(re.finditer(
+            r'<p>\s*<strong>(.*?)</strong>\s*</p>', body, re.DOTALL,
+        ))
+        labels = [(label, _course_box_kind(label.group(1))) for label in labels]
+        labels = [(label, kind) for label, kind in labels if kind]
+        if not labels:
+            return match.group(0)
+        output = []
+        prefix = body[:labels[0][0].start()]
+        if prefix.strip():
+            output.append(f'<blockquote>{prefix}</blockquote>')
+        for index, (label, kind) in enumerate(labels):
+            end = labels[index + 1][0].start() if index + 1 < len(labels) else len(body)
+            output.append(
+                f'<section class="course-box course-box--{kind}">'
+                f'<h3 class="course-box__title">{label.group(1)}</h3>'
+                f'<div class="course-box__body">{body[label.end():end]}</div>'
+                '</section>'
+            )
+        return ''.join(output)
+
+    return re.sub(r'<blockquote>(.*?)</blockquote>', decorate, html, flags=re.DOTALL)
+
+
 @register.filter(name='markdown_course_boxes')
 def markdown_course_boxes(value):
     """Decorate pedagogical headings, keeping the original Markdown and math."""
@@ -154,7 +185,7 @@ def markdown_course_boxes(value):
             output.append(part)
     if opened:
         output.append('</div></section>')
-    return mark_safe(''.join(output))
+    return mark_safe(_decorate_course_quotes(''.join(output)))
 
 
 @register.filter(name='latex')

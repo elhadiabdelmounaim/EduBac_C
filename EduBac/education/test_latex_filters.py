@@ -69,3 +69,37 @@ class LatexTemplateFilterTests(SimpleTestCase):
         )
         self.assertIn('&lt;script&gt;', rendered)
         self.assertNotIn('<script>', rendered)
+
+    def test_course_boxes_support_adjacent_labeled_quotes(self):
+        source = (
+            '## Chapitre\n\n> **Activité 1**\n>\n> Calculer $f(x)$.\n\n'
+            '> **Définition**\n>\n> Une fonction.\n\n'
+            '> **Exemple**\n>\n> $$f(x)=x^2$$\n\n'
+            '> **Exercice 2**\n>\n> 1. Calculer.\n\n---\n\nFin.'
+        )
+        rendered = self.render_filter(source, 'markdown_course_boxes')
+        for kind in ('activity', 'definition', 'example', 'exercise'):
+            self.assertIn(f'course-box--{kind}', rendered)
+        self.assertEqual(rendered.count('<section '), 4)
+        self.assertEqual(rendered.count('</section>'), 4)
+        self.assertIn('<h3 class="course-box__title">Définition</h3>', rendered)
+        self.assertIn('$f(x)$', rendered)
+        self.assertIn('$$f(x)=x^2$$', rendered)
+        self.assertNotIn('<blockquote>', rendered)
+        self.assertIn('<hr>', rendered)
+
+    def test_course_boxes_preserve_general_and_nested_quotes(self):
+        source = '> Une citation.\n\n---\n\n> Citation extérieure.\n>\n> > **Définition**\n> >\n> > Citation intérieure.'
+        self.assertEqual(
+            self.render_filter(source, 'markdown_course_boxes'),
+            self.render_filter(source, 'markdown_latex'),
+        )
+
+    def test_course_quote_boxes_escape_math(self):
+        rendered = self.render_filter(
+            '> **Exemple**\n>\n> ' + r'$\text{<script>alert(1)</script>}$',
+            'markdown_course_boxes',
+        )
+        self.assertIn('course-box--example', rendered)
+        self.assertIn('&lt;script&gt;', rendered)
+        self.assertNotIn('<script>', rendered)
