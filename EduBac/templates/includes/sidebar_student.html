@@ -37,18 +37,6 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'training' %}active{% endif %}"
-                   href="{% url 'quizzes:training' %}">
-                    <i class="bi bi-bullseye"></i><span>Entraînement</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.app_name == 'ai' %}active{% endif %}"
-                   href="{% url 'ai:assistant' %}">
-                    <i class="bi bi-robot"></i><span>Assistant IA</span>
-                </a>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.app_name == 'chat' %}active{% endif %}"
                    href="{% url 'chat:home' %}">
                     <i class="bi bi-chat-dots"></i><span>Chat</span>

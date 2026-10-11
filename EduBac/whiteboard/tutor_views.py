@@ -38,6 +38,8 @@ def board_tutor(request, pk):
     user = getattr(request, 'edubac_user', None)
     if user is None:
         return JsonResponse({'error': 'Connecte-toi pour utiliser le tuteur.'}, status=401)
+    if user.role != 'teacher':
+        return JsonResponse({'error': 'Assistant réservé aux enseignants.'}, status=403)
     board = get_object_or_404(
         WhiteboardBoard.objects.select_related('lesson__course', 'classroom'), pk=pk, is_active=True)
     if not user_can_access_board(user, board):

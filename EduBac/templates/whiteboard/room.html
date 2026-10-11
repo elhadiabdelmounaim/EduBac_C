@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block extra_css %}
 <link rel="stylesheet" href="/static/css/whiteboard.css?v=20261009-tools2">
-<link rel="stylesheet" href="/static/css/whiteboard-tutor.css">
+{% if not is_student %}<link rel="stylesheet" href="/static/css/whiteboard-tutor.css">{% endif %}
 <link rel="stylesheet" href="/static/css/whiteboard-share.css">
 {% include "includes/katex.html" %}
 {% endblock %}
@@ -11,7 +11,7 @@
      data-board-id="{{ board.pk }}"
      data-can-edit="{{ can_edit|yesno:'1,0' }}"
      data-api-url="{% url 'whiteboard:api_content' board.pk %}"
-     data-tutor-url="{% url 'whiteboard:tutor' board.pk %}"
+     {% if not is_student %}data-tutor-url="{% url 'whiteboard:tutor' board.pk %}"{% endif %}
      data-ws-path="{{ ws_path }}"
      data-csrf="{{ csrf_token }}">
 
@@ -42,7 +42,9 @@
             {% if is_teacher_owner %}
             <button type="button" class="btn btn-sm btn-edubac" id="wbShare" data-share-url="{% url 'whiteboard:share_create' %}">Partager</button>
             {% endif %}
+            {% if not is_student %}
             <button type="button" class="btn btn-sm btn-edubac" id="wbTutorToggle" aria-expanded="false" aria-controls="wbTutor"><i class="bi bi-chat-square-text" aria-hidden="true"></i> Assistant IA</button>
+            {% endif %}
         </div>
     </div>
 
@@ -92,7 +94,8 @@
            </div>
           </div>
         </div>
-        <aside class="wb-tutor" id="wbTutor" aria-label="Assistant de mathématiques" hidden{% if is_student %} inert{% endif %}>
+        {% if not is_student %}
+        <aside class="wb-tutor" id="wbTutor" aria-label="Assistant de mathématiques" hidden>
           <header class="wb-tutor-head"><div><small>Apprendre, étape par étape</small><strong>Assistant EduBac</strong></div><button type="button" id="wbTutorClose" aria-label="Fermer l’assistant"><i class="bi bi-x-lg"></i></button></header>
           <div class="wb-tutor-context">
             <p id="wbTutorLesson">Niveau et leçon : fournis par EduBac.</p>
@@ -122,6 +125,7 @@
             <p class="small text-muted mt-2 mb-0" style="font-size:.65rem">L’IA peut se tromper. Vérifie les étapes. Les images jointes sont envoyées à l’assistant.</p>
           </form>
         </aside>
+        {% endif %}
     </div>
 
     <div class="wb-bottombar"{% if is_student %} hidden inert{% endif %}>

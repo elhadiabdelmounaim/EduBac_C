@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from accounts.decorators import login_required_simple
+from accounts.decorators import login_required_simple, teacher_required
 from django.contrib import messages
 from django.db import transaction
 from django.http import Http404
@@ -58,7 +58,7 @@ def _handle_assistant_post(request, lesson, question, level, style, previous, co
     return conversation, response_text
 
 
-@login_required_simple
+@teacher_required
 def assistant(request):
     courses = Course.objects.all().order_by('niveau', 'order')
     response_text = None
@@ -125,7 +125,7 @@ def assistant(request):
     })
 
 
-@login_required_simple
+@teacher_required
 def assistant_lesson(request, lesson_id):
     # Share the same conversation flow, including saved history and validation.
     get_object_or_404(Lesson, pk=lesson_id)

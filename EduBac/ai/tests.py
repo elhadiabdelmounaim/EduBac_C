@@ -5,7 +5,7 @@ from types import SimpleNamespace
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 
-from accounts.models import User
+from accounts.models import User, StudentProfile
 from education.models import Course, Lesson
 from .models import AIConversation, AIMessage
 from .providers import AIProviderError
@@ -16,10 +16,103 @@ from .services import AIService, _rate_limit_delay, public_quiz_error, repair_la
 
 
 @override_settings(ALLOWED_HOSTS=['testserver'])
+class StudentTeacherToolAccessTests(TestCase):
+    def setUp(self):
+        from quizzes.models import Quiz, Question, Attempt, StudentAnswer
+        from whiteboard.models import WhiteboardBoard
+        from django.utils import timezone
+        self.teacher = User.objects.create_user(username='tool-teacher', email='tool-teacher@example.test', role='teacher')
+        self.student = User.objects.create_user(username='tool-student', email='tool-student@example.test', role='student')
+        StudentProfile.objects.create(user=self.student, niveau='1ere_bac_sc')
+        course = Course.objects.create(name='Mathématiques', niveau='1ere_bac_sc')
+        self.lesson = Lesson.objects.create(course=course, title='Leçon de test', order=1)
+        self.quiz = Quiz.objects.create(
+            title='Quiz enseignant', lesson=self.lesson, created_by=self.teacher, status='published',
+        )
+        question = Question.objects.create(quiz=self.quiz, text='Calculer 1+1', correct_answer='2')
+        self.attempt = Attempt.objects.create(
+            student=self.student, quiz=self.quiz, submitted_at=timezone.now(), score=0,
+        )
+        StudentAnswer.objects.create(attempt=self.attempt, question=question, answer='3', is_correct=False)
+        self.board = WhiteboardBoard.objects.create(created_by=self.student, lesson=self.lesson)
+
+    def login(self, user):
+        session = self.client.session
+        session['user_id'] = user.pk
+        session.save()
+
+    @patch('ai.views.AIService.generate_explanation')
+    def test_students_cannot_open_or_post_to_assistant_and_training(self, generate):
+        self.login(self.student)
+        urls = [
+            reverse('ai:assistant'),
+            reverse('ai:assistant_lesson', args=[self.lesson.pk]),
+            reverse('quizzes:training'),
+        ]
+        for url in urls:
+            for method in ('get', 'post'):
+                with self.subTest(url=url, method=method):
+                    response = getattr(self.client, method)(url, {'question': 'Un indice ?'})
+                    self.assertRedirects(response, reverse('education:home'), fetch_redirect_response=False)
+        generate.assert_not_called()
+        self.assertEqual(AIConversation.objects.count(), 0)
+
+    @patch('whiteboard.tutor_views.tutor_response')
+    def test_student_board_assistant_is_absent_and_api_is_forbidden(self, tutor):
+        self.login(self.student)
+        response = self.client.get(reverse('whiteboard:room', args=[self.board.pk]))
+        self.assertEqual(response.status_code, 200)
+        for text in ('wbTutor', 'data-tutor-url', 'whiteboard-tutor.js', 'Assistant IA'):
+            self.assertNotContains(response, text)
+        response = self.client.post(
+            reverse('whiteboard:tutor', args=[self.board.pk]),
+            json.dumps({'question': 'Un indice ?'}), content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 403)
+        tutor.assert_not_called()
+
+    def test_all_student_entry_pages_hide_tools_and_keep_quiz_results(self):
+        self.login(self.student)
+        urls = [
+            reverse('accounts:dashboard'),
+            reverse('education:home'),
+            reverse('education:lesson_detail', args=[self.lesson.pk]),
+            reverse('quizzes:my_results'),
+            reverse('quizzes:review', args=[self.attempt.pk]),
+            reverse('quizzes:results', args=[self.attempt.pk]),
+        ]
+        for url in urls:
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, 200)
+                for text in ('Entraînement', 'Assistant IA', 'ai-fab', reverse('ai:assistant'), reverse('quizzes:training')):
+                    self.assertNotContains(response, text)
+        self.attempt.refresh_from_db()
+        self.assertEqual(self.attempt.answers.count(), 1)
+        self.assertEqual(self.attempt.score, 0)
+
+    def test_teachers_retain_assistant_training_and_working_links(self):
+        self.login(self.teacher)
+        self.assertEqual(self.client.get(reverse('ai:assistant')).status_code, 200)
+        response = self.client.get(reverse('ai:assistant_lesson', args=[self.lesson.pk]))
+        self.assertRedirects(
+            response, f"{reverse('ai:assistant')}?lesson={self.lesson.pk}",
+            fetch_redirect_response=False,
+        )
+        response = self.client.get(reverse('quizzes:training'))
+        self.assertContains(response, self.quiz.title)
+        self.assertContains(response, reverse('quizzes:edit_questions', args=[self.quiz.pk]))
+        self.assertContains(response, 'Assistant IA')
+        self.assertEqual(
+            self.client.get(reverse('quizzes:edit_questions', args=[self.quiz.pk])).status_code, 200,
+        )
+
+
+@override_settings(ALLOWED_HOSTS=['testserver'])
 class TutorTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='learner', email='learner@example.test')
-        self.other = User.objects.create_user(username='other', email='other@example.test')
+        self.user = User.objects.create_user(username='learner', email='learner@example.test', role='teacher')
+        self.other = User.objects.create_user(username='other', email='other@example.test', role='teacher')
         course = Course.objects.create(name='Algèbre', niveau='tronc_commun')
         self.lesson = Lesson.objects.create(
             title='Équations', content='Pour résoudre x + 2 = 5, soustraire 2.', course=course,

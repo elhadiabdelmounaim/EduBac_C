@@ -27,7 +27,11 @@
             <p class="home-kicker">Ton point de départ</p>
             <h2 id="home-guide-title">Explore les niveaux scolaires.</h2>
         </div>
+        {% if user.is_student %}
+        <p>Choisis ton niveau pour retrouver tes leçons de mathématiques et les quiz proposés par tes enseignants pour vérifier tes acquis.</p>
+        {% else %}
         <p>Choisis ton niveau pour retrouver tes leçons de mathématiques. Les quiz et l'assistant IA t'accompagnent pour vérifier tes acquis et approfondir ta compréhension.</p>
+        {% endif %}
     </section>
 
     <section id="home-niveaux" class="home-levels" aria-labelledby="home-levels-title">

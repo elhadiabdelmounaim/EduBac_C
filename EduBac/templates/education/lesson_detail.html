@@ -1,15 +1,6 @@
 {% extends "base.html" %}
 {% load markdown_extras %}
-{% block title %}{{ lesson.title }}
-<a href="{% url 'ai:assistant_lesson' lesson.pk %}" class="ai-fab" title="Demander a l'assistant IA">
-    <i class="bi bi-robot"></i>
-    <span class="ai-fab-text">Assistant IA</span>
-</a>
-<button type="button" class="focus-mode-btn" id="focusModeBtn" title="Mode lecture" aria-label="Mode lecture">
-    <i class="bi bi-book" id="focusModeIcon"></i>
-</button>
-
-{% endblock %}
+{% block title %}{{ lesson.title }}{% endblock %}
 {% block extra_css %}
 {% include "includes/katex.html" %}
 <style>
@@ -346,6 +337,15 @@ html[data-theme="dark"] #lessonContent.lesson-md--boxed .course-box--note {
 </style>
 {% endblock %}
 {% block content %}
+{% if user.is_teacher %}
+<a href="{% url 'ai:assistant_lesson' lesson.pk %}" class="ai-fab" title="Demander à l'assistant IA">
+    <i class="bi bi-robot"></i>
+    <span class="ai-fab-text">Assistant IA</span>
+</a>
+{% endif %}
+<button type="button" class="focus-mode-btn" id="focusModeBtn" title="Mode lecture" aria-label="Mode lecture">
+    <i class="bi bi-book" id="focusModeIcon"></i>
+</button>
 <nav class="edubac-breadcrumb" aria-label="Fil d'Ariane">
     <a href="{% url 'education:home' %}"><i class="bi bi-house-door"></i></a>
     <span class="sep">/</span>

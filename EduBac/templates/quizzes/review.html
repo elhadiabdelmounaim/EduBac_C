@@ -22,7 +22,7 @@
             <div class="lesson-md">{{ a.question.explanation|latex }}</div>
         </div>
         {% endif %}
-        {% if not a.is_correct %}
+        {% if user.is_teacher and not a.is_correct %}
         <a href="{% url 'ai:assistant' %}" class="btn btn-sm btn-outline-primary mt-2">Demander une autre explication à l'IA</a>
         {% endif %}
     </div>

@@ -32,7 +32,7 @@ class WhiteboardTutorTests(TestCase):
             created_by=self.teacher, classroom=self.classroom, lesson=self.lesson, students_can_edit=True,
             content={'version': 1, 'objects': []})
         self.url = f'/tableau/{self.board.pk}/tutor/'
-        self.login(self.student)
+        self.login(self.teacher)
         self.payload = {
             'question': 'Donne-moi un indice', 'mode': 'hint', 'intent': 'hint',
             'objects': [{'id': 'equation', 'type': 'math', 'latex': '2x + 5 = 13', 'x': 80, 'y': 80}],
@@ -53,12 +53,12 @@ class WhiteboardTutorTests(TestCase):
                            'verification': None, **kwargs})
 
     @patch('whiteboard.tutor_service.get_provider')
-    def test_full_student_hint_wrong_attempt_solution_save_reload(self, factory):
+    def test_full_teacher_hint_wrong_attempt_solution_save_reload(self, factory):
         provider = factory.return_value
         provider.chat.return_value = self.answer()
         first = self.post()
         self.assertEqual(first.status_code, 200)
-        self.assertFalse(first.json()['can_edit'])
+        self.assertTrue(first.json()['can_edit'])
         context = json.loads(provider.chat.call_args.args[0][1]['content'])
         self.assertEqual(context['niveau'], '1ère Bac Sciences')
         self.assertEqual(context['lesson'], 'Équations')
@@ -90,6 +90,7 @@ class WhiteboardTutorTests(TestCase):
              'latex' if a['action'] == 'add_equation' else 'text': a['content'], 'x': 40, 'y': 180+i*80}
             for i, a in enumerate(actions)]}
         url = f'/tableau/{self.board.pk}/api/'
+        self.login(self.student)
         saved = self.client.post(url, json.dumps({'content': content}), content_type='application/json')
         self.assertEqual(saved.status_code, 403)
         self.board.refresh_from_db()
@@ -102,16 +103,18 @@ class WhiteboardTutorTests(TestCase):
 
     @patch('whiteboard.tutor_service.get_provider')
     def test_read_only_tutoring_does_not_grant_mutation(self, factory):
+        self.login(self.student)
         self.board.students_can_edit = False
         self.board.save()
         factory.return_value.chat.return_value = self.answer()
-        self.assertFalse(self.post().json()['can_edit'])
+        self.assertEqual(self.post().status_code, 403)
+        factory.assert_not_called()
         self.assertEqual(self.client.post(f'/tableau/{self.board.pk}/api/',
             json.dumps({'content': {}}), content_type='application/json').status_code, 403)
 
     @patch('whiteboard.tutor_service.get_provider')
     def test_outsider_and_anonymous_denied_before_provider(self, factory):
-        outsider = User.objects.create_user(username='o', email='o@test.local')
+        outsider = User.objects.create_user(username='o', email='o@test.local', role='teacher')
         self.login(outsider)
         self.assertEqual(self.post().status_code, 403)
         self.client.logout()
@@ -119,6 +122,7 @@ class WhiteboardTutorTests(TestCase):
         factory.assert_not_called()
 
     def test_student_personal_board_and_lesson_without_class_privilege(self):
+        self.login(self.student)
         self.assertEqual(self.client.post('/tableau/creer/', {'title': 'Mon travail',
             'classroom': self.classroom.pk}).status_code, 403)
         created = self.client.post('/tableau/creer/', {'title': 'Mon travail', 'lesson': self.lesson.pk})

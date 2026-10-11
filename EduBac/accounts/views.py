@@ -247,7 +247,6 @@ def student_dashboard(request):
     courses = Course.objects.filter(niveau=profile.niveau).order_by('order')[:6] if profile else Course.objects.none()
     assignments = QuizAssignment.objects.filter(student=user).select_related('quiz').order_by('-assigned_at')[:5]
     recent_attempts = Attempt.objects.filter(student=user, submitted_at__isnull=False).select_related('quiz').order_by('-submitted_at')[:5]
-    training_count = Quiz.objects.filter(status='published').count()
     streak = get_streak(user)
     weekly = weekly_goal_progress(user)
     recent_badges = UserBadge.objects.filter(user=user).select_related('badge')[:5]
@@ -274,7 +273,6 @@ def student_dashboard(request):
         'courses': courses,
         'assignments': assignments,
         'recent_attempts': recent_attempts,
-        'training_count': training_count,
         'user': user,
         'streak': streak,
         'weekly': weekly,

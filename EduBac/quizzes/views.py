@@ -401,13 +401,12 @@ def my_results(request):
     })
 
 
-@student_required
+@teacher_required
 def training(request):
-    """Entraînement libre : quiz publiés liés au niveau de l'élève."""
-    profile = getattr(request.user, 'student_profile', None)
-    quizzes = Quiz.objects.filter(status='published').select_related('lesson', 'lesson__course')
-    if profile:
-        quizzes = quizzes.filter(lesson__course__niveau=profile.niveau)
+    """Catalogue d'entraînement réservé à l'enseignant et à ses propres quiz."""
+    quizzes = Quiz.objects.filter(
+        status='published', created_by=request.user,
+    ).select_related('lesson', 'lesson__course')
     quizzes = quizzes.order_by('-created_at')
     return render(request, 'quizzes/training.html', {
         'quizzes': quizzes,

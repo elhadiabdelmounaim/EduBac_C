@@ -220,3 +220,48 @@ class NavbarBrowserTests(StaticLiveServerTestCase):
 
     def test_teacher(self):
         self.run_matrix("teacher")
+
+    def test_student_tools_removed_and_teacher_tools_retained(self):
+        users = {}
+        for role, profile in (("student", StudentProfile), ("teacher", TeacherProfile)):
+            user = User.objects.create_user(
+                username=f"tools_{role}", email=f"tools_{role}@example.test",
+                password="Browser-test-only-123!", role=role,
+            )
+            profile.objects.get_or_create(user=user)
+            users[role] = user
+        assistant_url = self.live_server_url + reverse("ai:assistant")
+        training_url = self.live_server_url + reverse("quizzes:training")
+        home_url = self.live_server_url + reverse("education:home")
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(
+                executable_path=os.environ.get("CHROMIUM_EXECUTABLE") or shutil.which("chromium"),
+                headless=True, args=["--no-sandbox"],
+            )
+            try:
+                for role in ("student", "teacher"):
+                    context = browser.new_context(viewport={"width": 1440, "height": 900})
+                    try:
+                        page = context.new_page()
+                        page.goto(self.live_server_url + reverse("accounts:login"))
+                        page.locator('input[name="email"]').fill(users[role].email)
+                        page.locator('input[name="password"]').fill("Browser-test-only-123!")
+                        page.locator('button[type="submit"]').click()
+                        page.wait_for_url(self.live_server_url + reverse("accounts:dashboard"))
+                        for width in (390, 1440):
+                            page.set_viewport_size({"width": width, "height": 900})
+                            page.goto(self.live_server_url + reverse("accounts:dashboard"))
+                            for route in (reverse("ai:assistant"), reverse("quizzes:training")):
+                                links = page.locator(f'a[href="{route}"]')
+                                if role == "student":
+                                    expect(links).to_have_count(0)
+                                else:
+                                    self.assertGreater(links.count(), 0)
+                        for url in (assistant_url, training_url):
+                            response = page.goto(url)
+                            self.assertEqual(response.status, 200)
+                            expect(page).to_have_url(home_url if role == "student" else url)
+                    finally:
+                        context.close()
+            finally:
+                browser.close()
