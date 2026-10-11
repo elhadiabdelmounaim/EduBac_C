@@ -24,6 +24,7 @@ urlpatterns = [
     path('<int:pk>/programmer/', views.schedule_quiz, name='schedule'),
     path('<int:pk>/publier/', views.publish_quiz, name='publish'),
     path('<int:pk>/questions/', views.edit_quiz_questions, name='edit_questions'),
+    path('<int:pk>/supprimer/', views.delete_quiz, name='delete'),
     path('tentative/<int:attempt_id>/revision/', views.review_attempt, name='review'),
     path('export-resultats/', views.export_results_csv, name='export_csv'),
     path('export-resultats-excel/', views.export_results_excel, name='export_excel'),

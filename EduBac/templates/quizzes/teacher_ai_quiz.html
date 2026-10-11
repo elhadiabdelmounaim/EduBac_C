@@ -278,6 +278,7 @@
                 <a href="{% url 'quizzes:edit_questions' quiz_created.pk %}" class="btn btn-sm btn-outline-primary">
                     <i class="bi bi-pencil"></i> Modifier
                 </a>
+                <a href="{% url 'quizzes:delete' quiz_created.pk %}" class="btn btn-sm btn-outline-danger">Supprimer</a>
                 <span class="qb-time-badge">{{ quiz_created.seconds_per_question }} s / question</span>
             </div>
         </div>

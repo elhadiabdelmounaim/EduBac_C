@@ -77,6 +77,7 @@
                 <a href="{% url 'quizzes:duplicate' q.pk %}" class="btn btn-sm btn-outline-secondary">Dupliquer</a>
                 <a href="{% url 'quizzes:assign_quiz' q.pk %}" class="btn btn-sm btn-outline-primary">Affecter</a>
                 <a href="/admin/quizzes/quiz/{{ q.pk }}/change/" class="btn btn-sm btn-outline-secondary">Éditer</a>
+                <a href="{% url 'quizzes:delete' q.pk %}" class="btn btn-sm btn-outline-danger" aria-label="Supprimer le quiz {{ q.title }}">Supprimer</a>
             </td>
         </tr>
     {% empty %}

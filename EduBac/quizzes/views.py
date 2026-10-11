@@ -5,6 +5,8 @@ from accounts.decorators import login_required_simple
 from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Avg, Count, Q
+from django.db import transaction
+from django.views.decorators.http import require_http_methods
 
 from accounts.decorators import teacher_required, student_required
 from accounts.models import User
@@ -422,6 +424,50 @@ def _publish_scheduled_quizzes():
     Quiz.objects.filter(
         status='draft', publish_at__isnull=False, publish_at__lte=now
     ).update(status='published')
+
+
+@teacher_required
+@require_http_methods(['GET', 'POST'])
+def delete_quiz(request, pk):
+    """Confirmation explicite avant la suppression d'un quiz et de ses données liées."""
+    allowed = Quiz.objects.select_related('lesson', 'lesson__course')
+    if not request.user.is_superuser:
+        # Même périmètre que la gestion et l'édition : ses quiz et les anciens sans auteur.
+        allowed = allowed.filter(Q(created_by=request.user) | Q(created_by__isnull=True))
+    quiz = get_object_or_404(allowed, pk=pk)
+    error = None
+    if request.method == 'POST':
+        if request.POST.get('confirm_delete') != '1':
+            error = 'Confirmez la suppression avant de continuer.'
+        else:
+            from classrooms.services.excel_results import class_has_excel, delete_class_excel
+            with transaction.atomic():
+                quiz = get_object_or_404(allowed.select_for_update(), pk=pk)
+                # Invalider les exports mis en cache ; les prochains téléchargements
+                # seront reconstruits depuis la base, sans le quiz supprimé.
+                affected_classes = Classroom.objects.filter(
+                    Q(members__user__attempts__quiz=quiz) | Q(pk=quiz.classroom_id)
+                ).distinct()
+                cached_classes = [c for c in affected_classes if class_has_excel(c)]
+                title = quiz.title
+                quiz.delete()
+            failed_exports = [c for c in cached_classes if not delete_class_excel(c)]
+            messages.success(request, f'Quiz « {title} » supprimé.')
+            if failed_exports:
+                messages.warning(
+                    request,
+                    'Le quiz est supprimé, mais certains exports Excel doivent être régénérés depuis la page des résultats.',
+                )
+            return redirect('quizzes:manage')
+    return render(request, 'quizzes/delete_confirm.html', {
+        'quiz': quiz,
+        'question_count': quiz.questions.count(),
+        'assignment_count': quiz.assignments.count(),
+        'attempt_count': quiz.attempts.count(),
+        'answer_count': StudentAnswer.objects.filter(attempt__quiz=quiz).count(),
+        'error': error,
+        'page_title': f'Supprimer — {quiz.title}',
+    }, status=400 if error else 200)
 
 
 @teacher_required
