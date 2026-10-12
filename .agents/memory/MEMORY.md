@@ -11,3 +11,4 @@
 - [Site-wide visual direction](site-wide-design.md) — keep the approved notebook style consistent across all user-facing pages, not just Accueil.
 - [Removed features](removed-features.md) — the user does not want weak-points analysis or its links anywhere in the project.
 - [Classroom removal](classroom-removal.md) — Rejeter removes only the selected class membership; student accounts and results must remain intact.
+- [Quiz actions stay in the site](quiz-actions.md) — the user rejects quiz-management buttons that open Django Admin.

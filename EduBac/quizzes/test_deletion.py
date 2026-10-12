@@ -130,6 +130,9 @@ class QuizDeletionTests(TestCase):
     def test_delete_links_on_teacher_lists_and_question_editor(self):
         for route in ('quizzes:manage', 'quizzes:training'):
             self.assertContains(self.client.get(reverse(route)), self.url)
+        manage = self.client.get(reverse('quizzes:manage'))
+        self.assertNotContains(manage, '/admin/quizzes/quiz/')
+        self.assertContains(manage, '>Delete</a>')
         self.assertContains(
             self.client.get(reverse('quizzes:edit_questions', args=[self.quiz.pk])), self.url,
         )
