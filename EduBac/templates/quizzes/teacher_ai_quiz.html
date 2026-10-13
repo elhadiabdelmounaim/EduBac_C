@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load markdown_extras %}
+{% load markdown_extras static %}
 {% block content %}
 <div class="quiz-builder fade-up">
 
@@ -30,14 +30,15 @@
     </nav>
 
     {% if quiz_created %}
-    <div class="alert alert-success" role="status">Quiz generated successfully</div>
+    <div class="alert alert-success" role="status">Quiz généré avec succès.</div>
     {% endif %}
     {% if error %}
-    <div class="alert alert-danger" role="alert">Generation failed: {{ error }}</div>
+    <div class="alert alert-danger" role="alert">Échec de la génération : {{ error }}</div>
     {% endif %}
 
-    <form method="post" id="genForm">
+    <form method="post" id="genForm" enctype="multipart/form-data">
         {% csrf_token %}
+        <input type="hidden" name="resource_selection_present" value="1">
         <div class="qb-layout">
 
             {# ======== Colonne configuration (65%) ======== #}
@@ -100,22 +101,57 @@
                                 <div class="qb-card-body">
                                     <input type="text" name="subject" id="quizSubject" class="form-control"
                                            maxlength="200" value="{{ quiz_subject }}" placeholder="Ex. : résoudre des équations du second degré">
-                                    <div class="form-text">Facultatif : le titre de la leçon choisie sera utilisé si ce champ est vide. La leçon sert à classer le quiz ; aucun de ses fichiers ou contenus ne sera lu.</div>
+                                    <div class="form-text">Indiquez le sujet à traiter. Les ressources de la leçon et les fichiers ajoutés sont désactivés dans ce mode.</div>
                                 </div>
                             </div>
-                            <div class="qb-card">
+                            <div class="qb-card qb-resources-card">
                                 <div class="qb-card-head">
-                                    <label for="sourceFileSelect">Fichier source</label>
+                                    <i class="bi bi-folder2-open"></i>
+                                    <label for="sourceFileSelect" class="mb-0">Ressources de la leçon</label>
                                 </div>
                                 <div class="qb-card-body">
-                                    <select name="source_file" id="sourceFileSelect" class="form-select"
-                                            aria-describedby="sourceFileHint" disabled
-                                            data-selected="{{ selected_source_file }}">
+                                    <p class="form-text mt-0 mb-2" id="sourceFileHint">
+                                        Choisissez une leçon pour afficher ses ressources. Sélection multiple : Ctrl (Windows) ou Cmd (Mac), puis clic.
+                                    </p>
+                                    <select name="source_files" id="sourceFileSelect" class="form-select qb-resource-select"
+                                            aria-describedby="sourceFileHint resourceSelectionSummary" multiple size="5" disabled>
                                         <option value="">— Choisir d’abord une leçon —</option>
                                     </select>
-                                    <div class="form-text mt-1" id="sourceFileHint" aria-live="polite">
-                                        Fichiers TXT du dossier Sources_IA de la leçon.
+                                    <div class="qb-resource-actions">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllResources" disabled>Tout sélectionner</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="clearResources" disabled>Tout effacer</button>
                                     </div>
+                                    <div class="form-text mt-2" id="resourceSelectionSummary" aria-live="polite">Aucune ressource sélectionnée.</div>
+
+                                    <div class="qb-upload-divider"><span>ou compléter avec vos fichiers</span></div>
+                                    <label for="quizResourceUploads" class="form-label fw-semibold">Ajouter des fichiers pour cette génération</label>
+                                    <input type="file" id="quizResourceUploads" name="resource_uploads" class="form-control"
+                                           accept=".txt,.md,.pdf,.docx" multiple aria-describedby="uploadHint uploadFileSummary">
+                                    <div class="form-text mt-2" id="uploadHint">
+                                        TXT, Markdown, PDF textuels ou DOCX. Jusqu’à 5 fichiers, 10 Mio chacun et 25 Mio au total ; 12 ressources au maximum avec la sélection ci-dessus.
+                                        Les PDF numérisés, images et OCR ne sont pas pris en charge. Ces fichiers servent uniquement à cette génération et ne sont pas ajoutés à la bibliothèque publique.
+                                    </div>
+                                    <div class="form-text mt-1" id="uploadFileSummary" aria-live="polite">Aucun nouveau fichier choisi.</div>
+                                    <div class="alert alert-warning py-2 mt-2 mb-0" id="resourceValidationMessage" role="alert" hidden></div>
+                                    {% if uploaded_resource_names %}
+                                    <div class="qb-upload-notice mt-3" role="status">
+                                        <strong>Fichiers reçus pour cette génération :</strong>
+                                        <ul class="mb-1 mt-1">
+                                            {% for filename in uploaded_resource_names %}<li>{{ filename }}</li>{% endfor %}
+                                        </ul>
+                                        Le navigateur réinitialise le champ fichier après l’envoi. Pour une nouvelle génération, sélectionnez à nouveau ces fichiers.
+                                    </div>
+                                    {% endif %}
+                                    {% if resource_warnings %}
+                                    <div class="alert alert-warning mt-3 mb-0" role="alert">
+                                        <strong>À vérifier dans les ressources :</strong>
+                                        <ul class="mb-0 mt-1">{% for warning in resource_warnings %}<li>{{ warning }}</li>{% endfor %}</ul>
+                                    </div>
+                                    {% endif %}
+                                    <p class="qb-resource-guidance mb-0 mt-3">
+                                        Les ressources sélectionnées et votre description orientent le quiz. L’agent peut les compléter avec des connaissances mathématiques liées au même sujet et au niveau scolaire choisi. Aucune ressource n’est obligatoire si vous décrivez le quiz.
+                                    </p>
+                                    <span class="visually-hidden" id="topicResourceNote">En mode sujet, les ressources et fichiers ne seront pas envoyés.</span>
                                 </div>
                             </div>
 
@@ -133,7 +169,7 @@
                                         placeholder="Décrivez les notions, compétences ou types de questions sur lesquels le quiz doit se concentrer..."
                                     >{{ quiz_description }}</textarea>
                                     <div class="form-text mt-2">
-                                        Facultatif. L’IA privilégiera ces éléments parmi ceux de la leçon.
+                                        Avec des ressources, précisez les notions et compétences à privilégier. Sans ressource, indiquez ici vos consignes ou un sujet explicite.
                                     </div>
                                 </div>
                             </div>
@@ -348,6 +384,8 @@
 </div>{# /.quiz-builder #}
 
 {{ source_files_by_lesson|json_script:"source-files-data" }}
+{{ resource_options_by_lesson|json_script:"resource-options-data" }}
+{{ selected_source_files|json_script:"selected-source-files-data" }}
 <script>
 (function(){
   var hints = {
@@ -461,107 +499,7 @@
 })();
 </script>
 
-<script>
-(function() {
-    var niveauSelect = document.getElementById('niveauSelect');
-    var lessonSelect = document.getElementById('lessonSelect');
-    if (!niveauSelect || !lessonSelect) return;
-    var sourceSelect = document.getElementById('sourceFileSelect');
-    var sourceHint = document.getElementById('sourceFileHint');
-    var generationMode = document.getElementById('generationMode');
-    var topicCard = document.getElementById('topicCard');
-    var sourceFiles = JSON.parse(document.getElementById('source-files-data').textContent);
-    function updateSources(selected) {
-        var topicMode = generationMode.value === 'topic';
-        topicCard.hidden = !topicMode;
-        if (topicMode) {
-            sourceSelect.innerHTML = '';
-            sourceSelect.add(new Option('Sans fichier source', ''));
-            sourceSelect.disabled = true;
-            sourceHint.textContent = 'Seuls le sujet, le niveau et vos consignes seront utilisés. Ajoutez vos consignes dans la description du quiz.';
-            return;
-        }
-        var files = sourceFiles[lessonSelect.value] || [];
-        sourceSelect.innerHTML = '';
-        sourceSelect.add(new Option(lessonSelect.value
-            ? 'Tous les fichiers de la leçon'
-            : '— Choisir d’abord une leçon —', ''));
-        files.forEach(function(name) { sourceSelect.add(new Option(name, name)); });
-        sourceSelect.disabled = !lessonSelect.value || !files.length;
-        sourceSelect.value = files.indexOf(selected) >= 0 ? selected : '';
-        sourceHint.textContent = !lessonSelect.value
-            ? 'Choisissez une leçon pour afficher ses fichiers TXT.'
-            : files.length
-                ? 'Sources_IA : choisissez un fichier précis ou tous les fichiers (texte limité au budget IA).'
-                : 'Aucun fichier TXT dans Sources_IA. Le contenu existant de la leçon sera utilisé.';
-    }
-    lessonSelect.addEventListener('change', function() { updateSources(''); });
-    generationMode.addEventListener('change', function() { updateSources(''); });
-
-    var placeholder = lessonSelect.options[0];
-    var optionNodes = lessonSelect.getElementsByTagName('option');
-    var lessonOptions = [];
-    for (var i = 0; i < optionNodes.length; i++) {
-        if (optionNodes[i].getAttribute('data-niveau') !== null) {
-            lessonOptions.push(optionNodes[i]);
-        }
-    }
-
-    function updateLessons(resetSelection) {
-        var niveau = niveauSelect.value;
-        var previousLesson = resetSelection ? '' : lessonSelect.value;
-        var matchingLessons = [];
-        for (var i = 0; i < lessonOptions.length; i++) {
-            if (lessonOptions[i].getAttribute('data-niveau') === niveau) {
-                matchingLessons.push(lessonOptions[i]);
-            }
-        }
-
-        while (lessonSelect.firstChild) {
-            lessonSelect.removeChild(lessonSelect.firstChild);
-        }
-        lessonSelect.appendChild(placeholder);
-        for (var i = 0; i < matchingLessons.length; i++) {
-            var option = matchingLessons[i];
-            option.removeAttribute('hidden');
-            option.removeAttribute('disabled');
-            lessonSelect.appendChild(option);
-        }
-
-        placeholder.textContent = niveau
-            ? (matchingLessons.length ? '— Choisir une leçon —' : '— Aucune leçon disponible —')
-            : '— Choisir d’abord un niveau —';
-        lessonSelect.disabled = !niveau || matchingLessons.length === 0;
-
-        var previousLessonAvailable = false;
-        for (var i = 0; i < matchingLessons.length; i++) {
-            if (matchingLessons[i].value === previousLesson) {
-                previousLessonAvailable = true;
-                break;
-            }
-        }
-        if (previousLesson && previousLessonAvailable) {
-            lessonSelect.value = previousLesson;
-        } else {
-            lessonSelect.value = '';
-        }
-    }
-
-    var handleNiveauChange = function() {
-        updateLessons(true);
-        updateSources('');
-    };
-    if (niveauSelect.addEventListener) {
-        niveauSelect.addEventListener('change', handleNiveauChange);
-    } else if (niveauSelect.attachEvent) {
-        niveauSelect.attachEvent('onchange', handleNiveauChange);
-    } else {
-        niveauSelect.onchange = handleNiveauChange;
-    }
-    updateLessons(false);
-    updateSources(sourceSelect.getAttribute('data-selected'));
-})();
-</script>
+<script src="{% static 'js/teacher-quiz-resources.js' %}?v=resources-2"></script>
 
 <script>
 (function(){
@@ -590,4 +528,7 @@
 })();
 </script>
 {% endblock %}
-{% block extra_css %}{% include "includes/katex.html" %}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/teacher-quiz-resources.css' %}?v=resources-2">
+{% include "includes/katex.html" %}
+{% endblock %}

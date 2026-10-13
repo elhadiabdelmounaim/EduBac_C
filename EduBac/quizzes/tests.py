@@ -124,10 +124,11 @@ class QuizLessonSelectionTests(TestCase):
             'question_count': 1,
             'seconds_per_question': 20,
             'difficulty': 'moyen',
+            'description': 'Évaluer les opérations sur les nombres réels.',
         })
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Generation failed:')
+        self.assertContains(response, 'Échec de la génération')
         self.assertContains(response, 'IA atteinte')
         self.assertContains(response, '20 secondes')
         self.assertEqual(Quiz.objects.count(), before)
@@ -163,6 +164,7 @@ class QuizLessonSelectionTests(TestCase):
             'question_count': 1,
             'seconds_per_question': 20,
             'difficulty': 'moyen',
+            'subject': 'Calculs sur les fractions',
         })
 
         self.assertEqual(response.status_code, 200)
@@ -219,8 +221,10 @@ class QuizLessonSelectionTests(TestCase):
             model=None,
             description=description,
             source_file=None,
-            use_resources=True,
+            use_resources=False,
             subject='',
+            resource_context='',
+            allow_related_knowledge=True,
         )
 
 

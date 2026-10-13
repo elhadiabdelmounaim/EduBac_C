@@ -67,6 +67,17 @@ class QuizQuestionValidationTests(TestCase):
         with self.assertRaises(ValueError):
             validate_question(candidate, 5)
 
+    def test_option_letters_and_math_delimiters_do_not_hide_duplicate_answers(self):
+        for choices in (["B) $12$", "D) $12$"], ["$12$", "12"], [r"\(12\)", "$12$"]):
+            candidate = question()
+            candidate["choices"] = choices
+            with self.subTest(choices=choices), self.assertRaisesMessage(ValueError, "distincts"):
+                validate_question(candidate, 1)
+        candidate = question()
+        candidate["choices"] = [{"text": "$f(x)$", "is_correct": True}, {"text": "$F(x)$", "is_correct": False}]
+        candidate["correct_answer"] = "$f(x)$"
+        validate_question(candidate, 1)
+
     def test_missing_wrong_ambiguous_or_conflicting_answer_is_rejected(self):
         for mode in ("missing", "wrong", "multiple", "contradiction", "nonboolean", "numeric_index"):
             candidate = question()
@@ -235,6 +246,7 @@ class QuizQuestionValidationTests(TestCase):
         page = self.client.post(reverse("quizzes:teacher_ai"), {
             "action": "generate", "niveau": self.lesson.course.niveau, "lesson": self.lesson.pk,
             "question_count": 2, "difficulty": "moyen",
+            "description": "Évaluer les équations et les fonctions du second degré.",
         })
         self.assertEqual(page.status_code, 200)
         self.assertIsNone(page.context["error"])

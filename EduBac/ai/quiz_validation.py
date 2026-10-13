@@ -1,5 +1,16 @@
 """Validate one AI-generated QCM without inventing choices or an answer."""
 from copy import deepcopy
+import re
+
+
+def _choice_content(text):
+    """Option letters and display delimiters do not make two answers distinct."""
+    text = re.sub(r'^[A-D]\s*[).:\-]\s+', '', text.strip())
+    for left, right in (('$$', '$$'), ('$', '$'), (r'\(', r'\)'), (r'\[', r'\]')):
+        if text.startswith(left) and text.endswith(right):
+            text = text[len(left):-len(right)].strip()
+            break
+    return ' '.join(text.split())
 
 
 def validate_question(value, number):
@@ -33,7 +44,8 @@ def validate_question(value, number):
 
     # Preserve mathematical case: f(x) and F(x) are not interchangeable.
     keys = [" ".join(choice["text"].split()) for choice in normalized]
-    if len(set(keys)) != len(keys):
+    contents = [_choice_content(choice["text"]) for choice in normalized]
+    if len(set(contents)) != len(contents):
         raise ValueError(f"Question {number} : les choix doivent être distincts.")
     marked = [index for index, choice in enumerate(normalized) if choice["is_correct"]]
     if len(marked) > 1:

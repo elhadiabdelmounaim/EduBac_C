@@ -12,3 +12,4 @@
 - [Removed features](removed-features.md) — the user does not want weak-points analysis or its links anywhere in the project.
 - [Classroom removal](classroom-removal.md) — Rejeter removes only the selected class membership; student accounts and results must remain intact.
 - [Quiz actions stay in the site](quiz-actions.md) — the user rejects quiz-management buttons that open Django Admin.
+- [Teacher quiz grounding](teacher-quiz-grounding.md) — combine chosen resources, teacher objectives and relevant prior knowledge; resources are optional.

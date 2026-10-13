@@ -1,0 +1,123 @@
+/* Resource controls for the existing teacher quiz notebook. */
+.qb-resources-card {
+    grid-column: 1 / -1;
+    border-color: rgba(26, 107, 107, .2);
+    background: linear-gradient(145deg, rgba(248, 246, 235, .88), rgba(255, 255, 255, .96));
+}
+
+.qb-resources-card .qb-card-head {
+    color: var(--edubac-teal, #1a6b6b);
+}
+
+.qb-resource-select {
+    min-height: 9rem;
+    padding: .45rem !important;
+    border-radius: 12px !important;
+    background-color: rgba(255, 255, 255, .92);
+}
+
+.qb-resource-select option {
+    padding: .45rem .65rem;
+    border-radius: 6px;
+}
+
+.qb-resource-select option:checked {
+    color: #173d3d;
+    background: #d9ece7 linear-gradient(0deg, #d9ece7 0%, #d9ece7 100%);
+}
+
+.qb-resource-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-top: .7rem;
+}
+
+.qb-resource-actions .btn {
+    padding: .35rem .8rem;
+}
+
+.qb-upload-divider {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin: 1.15rem 0 .9rem;
+    color: #687a74;
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .045em;
+    text-transform: uppercase;
+}
+
+.qb-upload-divider::before,
+.qb-upload-divider::after {
+    content: "";
+    height: 1px;
+    flex: 1;
+    background: rgba(26, 107, 107, .2);
+}
+
+.qb-resource-guidance,
+.qb-upload-notice {
+    padding: .85rem 1rem;
+    border-left: 3px solid var(--edubac-accent, #dd8826);
+    border-radius: 0 10px 10px 0;
+    background: rgba(243, 230, 167, .23);
+    color: #43544f;
+    font-size: .88rem;
+    line-height: 1.55;
+}
+
+.qb-upload-notice ul {
+    padding-left: 1.25rem;
+}
+
+#quizResourceUploads:disabled,
+.qb-resource-select:disabled {
+    opacity: .58;
+    cursor: not-allowed;
+}
+
+.qb-resource-select:focus-visible,
+#quizResourceUploads:focus-visible,
+.qb-resource-actions button:focus-visible {
+    outline: 3px solid rgba(26, 107, 107, .42);
+    outline-offset: 2px;
+}
+
+@media (max-width: 575.98px) {
+    .qb-resource-actions .btn {
+        flex: 1 1 auto;
+    }
+
+    .qb-resource-guidance,
+    .qb-upload-notice {
+        font-size: .84rem;
+    }
+}
+
+html[data-theme="dark"] .qb-resources-card {
+    background: linear-gradient(145deg, rgba(34, 43, 53, .96), rgba(27, 34, 46, .98));
+    border-color: rgba(132, 202, 185, .22);
+}
+
+html[data-theme="dark"] .qb-resource-select {
+    color: #e8eee8;
+    background: #1a2030;
+    border-color: rgba(255, 255, 255, .17);
+}
+
+html[data-theme="dark"] .qb-resource-select option:checked {
+    color: #e8eee8;
+    background: #28554f linear-gradient(0deg, #28554f 0%, #28554f 100%);
+}
+
+html[data-theme="dark"] .qb-resource-guidance,
+html[data-theme="dark"] .qb-upload-notice {
+    color: #d8e1d9;
+    background: rgba(221, 136, 38, .11);
+}
+
+html[data-theme="dark"] .qb-upload-divider {
+    color: #b6c4bd;
+}

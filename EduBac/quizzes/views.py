@@ -702,11 +702,15 @@ def teacher_ai_quiz(request):
 
     all_lessons = Lesson.objects.select_related('course').order_by(
         'course__order', 'order', 'title'
-    )
+    ).prefetch_related('resources')
+    from .resources import resource_catalog, prepare_resources
+    resources_by_lesson = resource_catalog(all_lessons)
     lessons = Lesson.objects.none()
     if selected_niveau:
         lessons = Lesson.objects.filter(course__niveau=selected_niveau).order_by('order')
-    if selected_lesson_id and not lessons.filter(pk=selected_lesson_id).exists():
+    if selected_lesson_id and (
+        not selected_lesson_id.isdecimal() or not lessons.filter(pk=selected_lesson_id).exists()
+    ):
         selected_lesson_id = ''
 
     preview = None
@@ -714,10 +718,17 @@ def teacher_ai_quiz(request):
     error = None
     quiz_description = ''
     selected_source_file = request.POST.get('source_file', '')
+    selected_source_files = request.POST.getlist('source_files')
+    # Older clients still submit a single Sources_IA filename.
+    if not request.POST.get('resource_selection_present') and not selected_source_files:
+        selected_source_files = [selected_source_file] if selected_source_file else []
+    resource_warnings = []
+    uploaded_resource_names = []
     generation_mode = request.POST.get('generation_mode', 'resources')
     quiz_subject = (request.POST.get('subject') or '').strip()[:200]
     if generation_mode == 'topic':
         selected_source_file = ''
+        selected_source_files = []
     n_questions = 5
     sec = 20
     difficulty = 'moyen'
@@ -727,8 +738,13 @@ def teacher_ai_quiz(request):
         niveau = request.POST.get('niveau', '').strip()
         lesson_id = request.POST.get('lesson')
         quiz_description = (request.POST.get('description') or '').strip()
-        n_questions = int(request.POST.get('question_count') or 5)
-        sec = int(request.POST.get('seconds_per_question') or 20)
+        invalid_numbers = False
+        try:
+            n_questions = int(request.POST.get('question_count') or 5)
+            sec = int(request.POST.get('seconds_per_question') or 20)
+        except (ValueError, TypeError):
+            n_questions, sec = 5, 20
+            invalid_numbers = True
         difficulty = request.POST.get('difficulty', 'moyen')
         from ai.services import QUIZ_MAX_QUESTIONS
         n_questions = max(1, min(n_questions, QUIZ_MAX_QUESTIONS))
@@ -736,20 +752,34 @@ def teacher_ai_quiz(request):
 
         selected_niveau = niveau
         lessons = Lesson.objects.filter(course__niveau=niveau).order_by('order') if niveau else Lesson.objects.none()
-        if selected_lesson_id and not lessons.filter(pk=selected_lesson_id).exists():
+        if selected_lesson_id and (
+            not selected_lesson_id.isdecimal() or not lessons.filter(pk=selected_lesson_id).exists()
+        ):
             selected_lesson_id = ''
 
-        if generation_mode not in ('resources', 'topic'):
+        if invalid_numbers:
+            error = 'Indiquez un nombre de questions et une durée valides.'
+        elif generation_mode not in ('resources', 'topic'):
             error = 'Veuillez choisir un mode de génération valide.'
         elif not lesson_id:
             error = 'Veuillez choisir une leçon.'
-        elif not lessons.filter(pk=lesson_id).exists():
+        elif not str(lesson_id).isdecimal() or not lessons.filter(pk=lesson_id).exists():
             error = 'Veuillez choisir une leçon appartenant au niveau sélectionné.'
         else:
             lesson = get_object_or_404(Lesson.objects.select_related('course'), pk=lesson_id)
 
             if action == 'generate':
                 try:
+                    uploads = request.FILES.getlist('resource_uploads') if generation_mode != 'topic' else []
+                    if generation_mode == 'topic':
+                        context_text = ''
+                    else:
+                        choices = resources_by_lesson[str(lesson.pk)]
+                        context_text, resource_warnings, uploaded_resource_names = prepare_resources(
+                            choices, selected_source_files, uploads,
+                        )
+                    if not context_text and not (quiz_description or quiz_subject):
+                        raise ValueError('Sans ressources, indiquez un sujet ou une description pour guider le quiz.')
                     from ai.providers import AIProviderError
                     provider = (request.POST.get('ai_provider') or '').strip() or None
                     model = (request.POST.get('ai_model') or '').strip() or None
@@ -759,8 +789,10 @@ def teacher_ai_quiz(request):
                         provider=provider, model=model,
                         description=quiz_description,
                         source_file=selected_source_file or None,
-                        use_resources=generation_mode != 'topic',
+                        use_resources=bool(context_text),
                         subject=quiz_subject,
+                        resource_context=context_text,
+                        allow_related_knowledge=True,
                     )
                     # Créer le quiz + questions
                     from .generation import save_generated_quiz
@@ -844,6 +876,13 @@ def teacher_ai_quiz(request):
         'selected_lesson_id': selected_lesson_id,
         'source_files_by_lesson': source_files_by_lesson,
         'selected_source_file': selected_source_file,
+        'selected_source_files': selected_source_files,
+        'resource_options_by_lesson': {
+            key: [{'value': resource.value, 'label': resource.label} for resource in choices.values()]
+            for key, choices in resources_by_lesson.items()
+        },
+        'resource_warnings': resource_warnings,
+        'uploaded_resource_names': uploaded_resource_names,
         'generation_mode': generation_mode,
         'quiz_subject': quiz_subject,
         'lessons': lessons,
