@@ -70,7 +70,7 @@
                 onclick="document.getElementById('formAction').value='save';">
             <i class="bi bi-check2"></i> Enregistrer
         </button>
-        <a href="{% url 'quizzes:teacher_ai' %}" class="btn btn-outline-primary">Retour génération</a>
+        <a href="{% url 'quizzes:teacher_ai' %}?quiz={{ quiz.pk }}" class="btn btn-outline-primary">Retour au quiz</a>
         <a href="{% url 'quizzes:manage' %}" class="btn btn-link">Mes quiz</a>
     </div>
 </form>

@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from accounts.decorators import login_required_simple
 from django.contrib import messages
 from django.utils import timezone
@@ -682,6 +683,16 @@ def teacher_ai_quiz(request):
     from accounts.models import User, StudentProfile
     from ai.services import AIService
 
+    restored_quiz = None
+    if request.method == 'GET' and request.GET.get('quiz'):
+        quiz_id = request.GET['quiz']
+        accessible = Quiz.objects.select_related('lesson__course')
+        if not request.user.is_superuser:
+            accessible = accessible.filter(Q(created_by=request.user) | Q(created_by__isnull=True))
+        restored_quiz = get_object_or_404(
+            accessible, pk=quiz_id if quiz_id.isdecimal() else 0,
+        )
+
     niveaux = CURRICULUM
     selected_niveau = request.GET.get('niveau') or request.POST.get('niveau') or ''
     selected_lesson_id = (
@@ -690,6 +701,9 @@ def teacher_ai_quiz(request):
         else request.GET.get('lesson', '')
     )
     selected_lesson_id = str(selected_lesson_id).strip()
+    if restored_quiz:
+        selected_niveau = restored_quiz.lesson.course.niveau
+        selected_lesson_id = str(restored_quiz.lesson_id)
     selected_lesson = None
     if selected_lesson_id.isdecimal():
         selected_lesson = (
@@ -713,10 +727,10 @@ def teacher_ai_quiz(request):
     ):
         selected_lesson_id = ''
 
-    preview = None
-    quiz_created = None
+    preview = restored_quiz.get_questions().prefetch_related('choices') if restored_quiz else None
+    quiz_created = restored_quiz
     error = None
-    quiz_description = ''
+    quiz_description = restored_quiz.description if restored_quiz else ''
     selected_source_file = request.POST.get('source_file', '')
     selected_source_files = request.POST.getlist('source_files')
     # Older clients still submit a single Sources_IA filename.
@@ -729,9 +743,9 @@ def teacher_ai_quiz(request):
     if generation_mode == 'topic':
         selected_source_file = ''
         selected_source_files = []
-    n_questions = 5
-    sec = 20
-    difficulty = 'moyen'
+    n_questions = restored_quiz.questions.count() if restored_quiz else 5
+    sec = restored_quiz.seconds_per_question if restored_quiz else 20
+    difficulty = restored_quiz.difficulty if restored_quiz else 'moyen'
 
     if request.method == 'POST':
         action = request.POST.get('action', 'generate')
@@ -893,7 +907,8 @@ def teacher_ai_quiz(request):
         'selected_question_count': n_questions,
         'selected_seconds_per_question': sec,
         'selected_difficulty': difficulty,
-        'generation_submitted': request.method == 'POST',
+        'generation_submitted': request.method == 'POST' or restored_quiz is not None,
+        'restored_quiz': restored_quiz is not None,
         'selected_ai_provider': request.POST.get('ai_provider', ''),
         'selected_ai_model': request.POST.get('ai_model', ''),
         'classrooms': classrooms,
@@ -931,7 +946,7 @@ def edit_quiz_questions(request, pk):
                         c.is_correct = (ctext == correct) or (request.POST.get(f'c_{c.pk}_ok') == 'on')
                         c.save()
             messages.success(request, 'Questions enregistrées.')
-            return redirect('quizzes:edit_questions', pk=quiz.pk)
+            return redirect(f"{reverse('quizzes:teacher_ai')}?quiz={quiz.pk}")
         if action == 'delete_q':
             qid = request.POST.get('question_id')
             Question.objects.filter(pk=qid, quiz=quiz).delete()

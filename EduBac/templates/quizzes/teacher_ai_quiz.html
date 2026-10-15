@@ -29,7 +29,7 @@
         </div>
     </nav>
 
-    {% if quiz_created %}
+    {% if quiz_created and not restored_quiz %}
     <div class="alert alert-success" role="status">Quiz généré avec succès.</div>
     {% endif %}
     {% if error %}
