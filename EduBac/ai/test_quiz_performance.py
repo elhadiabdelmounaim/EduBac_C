@@ -20,7 +20,7 @@ from .services import AIService
 from .test_quiz_validation import question, response
 
 
-@override_settings(QUIZ_SEMANTIC_CHECK_ENABLED=False)
+@override_settings(QUIZ_SEMANTIC_CHECK_ENABLED=False, QUIZ_DUPLICATE_CHECK_ENABLED=True)
 class QuizPerformanceTests(TestCase):
     def setUp(self):
         self.course = Course.objects.create(name="Mathématiques", niveau="tronc_commun")

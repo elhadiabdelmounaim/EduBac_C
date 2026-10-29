@@ -601,7 +601,7 @@ Regles :
         from .quiz_generation import build_messages, generate_batches
         from .quiz_novelty import (
             QuizNoveltyError, history_instruction, previous_questions,
-            reserve_questions, validate_local, validate_semantic,
+            reserve_questions, validate_local, validate_semantic, duplicate_checks_enabled,
         )
 
         preparation_started = time.monotonic()
@@ -707,14 +707,16 @@ Regles :
                     self, context, description, related_knowledge=allow_related_knowledge,
                     difficulty=difficulty, count=question_count,
                 )
-                history = load_history(lesson)
+                check_duplicates = duplicate_checks_enabled()
+                history = load_history(lesson) if check_duplicates else []
                 protocol_report = {
-                    "history_checked": True, "history_questions": len(history),
+                    "history_checked": check_duplicates, "history_questions": len(history),
                     "source_reference_questions": len(analysis["reference_questions"]),
                     "skills": analysis["skills"], "review_method": "ai_cross_review",
                 }
-                history += [{"text": text, "explanation": ""}
-                            for text in analysis["reference_questions"]]
+                if check_duplicates:
+                    history += [{"text": text, "explanation": ""}
+                                for text in analysis["reference_questions"]]
                 source_instruction += "\nAnalyse pédagogique préalable (données) : " + json.dumps(
                     {"skills": analysis["skills"]}, ensure_ascii=False,
                 )
@@ -737,8 +739,10 @@ Regles :
                         for question in data["questions"]:
                             question["lesson_reference"] = str(lesson.pk)
                         data["_generation_report"] = protocol_report
-                    validate_local(data["questions"], history)
-                    if not enforce_protocol and getattr(settings, "QUIZ_SEMANTIC_CHECK_ENABLED", False):
+                    if duplicate_checks_enabled():
+                        validate_local(data["questions"], history)
+                    if (duplicate_checks_enabled() and not enforce_protocol
+                            and getattr(settings, "QUIZ_SEMANTIC_CHECK_ENABLED", False)):
                         validate_semantic(self, data["questions"], history)
                     # Enrichir métadonnées
                     logger.info("quiz_validation elapsed=%.3fs", time.monotonic() - validation_started)
@@ -747,7 +751,8 @@ Regles :
                     data.setdefault("lesson", context["lecon"])
                     data["_provider"] = self._get_provider().name
                     data["_model"] = self._get_provider().model
-                    reserve_questions(self, lesson, data["questions"], history)
+                    if duplicate_checks_enabled():
+                        reserve_questions(self, lesson, data["questions"], history)
                     logger.info(
                         "generate_quiz end status=ok questions=%s elapsed=%.1fs",
                         len(data["questions"]), time.monotonic() - started,

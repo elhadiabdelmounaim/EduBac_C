@@ -8,7 +8,7 @@ from .quiz_generation import repair_batch
 from .quiz_metrics import timed_phase, current_trace
 from .quiz_novelty import (
     QuizNoveltyError, _batches, previous_questions, quiz_json_chat,
-    quiz_output_budget, validate_local, validate_semantic,
+    quiz_output_budget, validate_local, validate_semantic, duplicate_checks_enabled,
 )
 
 
@@ -246,28 +246,29 @@ def validate_and_repair(service, data, context, description, difficulty, message
             trace.reject("math", invalid)
         mathematical_invalid = set(invalid)
         approved.update({i: info for i, info in reviewed.items() if not info["error"]})
-        # Canonical checks include source examples; semantic checks cover ALL accessible history.
-        protected = [i for i in range(len(questions)) if i not in pending]
-        accepted = [questions[i] for i in protected]
-        for i in pending:
-            question = questions[i]
-            if i in invalid:
-                continue
-            try:
-                validate_local([question], history + accepted)
-            except QuizNoveltyError as exc:
-                invalid[i] = str(exc)
-            else:
-                accepted.append(question)
-        positions = [i for i in pending if i not in invalid]
-        semantic = validate_semantic(
-            service, [questions[i] for i in positions],
-            history + [questions[i] for i in protected], collect=True,
-        )
-        for index in semantic:
-            invalid[positions[index - 1]] = "Question trop similaire : changer la situation ou le raisonnement."
-        if trace is not None:
-            trace.reject("novelty", set(invalid) - mathematical_invalid)
+        if duplicate_checks_enabled():
+            # Optional comparison is separate from the mandatory mathematical review.
+            protected = [i for i in range(len(questions)) if i not in pending]
+            accepted = [questions[i] for i in protected]
+            for i in pending:
+                question = questions[i]
+                if i in invalid:
+                    continue
+                try:
+                    validate_local([question], history + accepted)
+                except QuizNoveltyError as exc:
+                    invalid[i] = str(exc)
+                else:
+                    accepted.append(question)
+            positions = [i for i in pending if i not in invalid]
+            semantic = validate_semantic(
+                service, [questions[i] for i in positions],
+                history + [questions[i] for i in protected], collect=True,
+            )
+            for index in semantic:
+                invalid[positions[index - 1]] = "Question trop similaire : changer la situation ou le raisonnement."
+            if trace is not None:
+                trace.reject("novelty", set(invalid) - mathematical_invalid)
         if not invalid:
             for index, question in enumerate(questions):
                 question.update(
@@ -282,7 +283,7 @@ def validate_and_repair(service, data, context, description, difficulty, message
             }
         if attempt == 2:
             raise AIProviderError(
-                "Impossible d’obtenir le nombre demandé de questions correctes et réellement distinctes "
+                "Impossible d’obtenir le nombre demandé de questions correctes "
                 "après correction et remplacement. Aucun quiz enregistré ; ajustez les objectifs "
                 "ou le nombre de questions.", code="invalid_question",
             )

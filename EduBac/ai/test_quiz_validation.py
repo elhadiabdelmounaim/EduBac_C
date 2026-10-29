@@ -33,7 +33,7 @@ def response(*questions):
     return json.dumps({"title": "Quiz à conserver", "questions": questions}, ensure_ascii=False)
 
 
-@override_settings(ALLOWED_HOSTS=["testserver"], QUIZ_SEMANTIC_CHECK_ENABLED=True)
+@override_settings(ALLOWED_HOSTS=["testserver"], QUIZ_SEMANTIC_CHECK_ENABLED=True, QUIZ_DUPLICATE_CHECK_ENABLED=True)
 class QuizQuestionValidationTests(TestCase):
     def setUp(self):
         self.lesson = Lesson.objects.create(

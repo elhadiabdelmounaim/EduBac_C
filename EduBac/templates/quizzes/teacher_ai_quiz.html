@@ -34,10 +34,16 @@
     {% endif %}
     {% if generation_report %}
     <div class="alert alert-info" role="status">
+        {% if generation_report.history_checked %}
         Analyse pédagogique effectuée ; historique consulté :
         {{ generation_report.history_questions }} question(s).
         {{ generation_report.reviewed_questions }} question(s) retenue(s) après contrôle des réponses
         et de la diversité, y compris les exemples repérés dans les ressources.
+        {% else %}
+        Analyse pédagogique effectuée.
+        {{ generation_report.reviewed_questions }} question(s) retenue(s) après contrôle des réponses.
+        Le contrôle de répétition des questions est désactivé.
+        {% endif %}
         La revue croisée par IA ne constitue pas une preuve mathématique générale :
         relisez les questions, les réponses et les explications avant l’envoi.
     </div>

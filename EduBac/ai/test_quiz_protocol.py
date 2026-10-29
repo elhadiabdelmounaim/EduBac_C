@@ -58,7 +58,7 @@ def repaired(candidate, index=1):
     return json.dumps({"questions": [{"index": index, **candidate}]}, ensure_ascii=False)
 
 
-@override_settings(ALLOWED_HOSTS=["testserver"], QUIZ_SEMANTIC_CHECK_ENABLED=False)
+@override_settings(ALLOWED_HOSTS=["testserver"], QUIZ_SEMANTIC_CHECK_ENABLED=False, QUIZ_DUPLICATE_CHECK_ENABLED=True)
 class QuizProtocolTests(TestCase):
     def setUp(self):
         self.lesson = Lesson.objects.create(

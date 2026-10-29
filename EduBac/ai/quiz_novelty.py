@@ -17,6 +17,10 @@ HISTORY_BATCH_SIZE = 25
 SEMANTIC_BATCH_CHARACTERS = 14000
 
 
+def duplicate_checks_enabled():
+    return getattr(settings, "QUIZ_DUPLICATE_CHECK_ENABLED", False)
+
+
 class QuizNoveltyError(ValueError):
     pass
 
@@ -97,7 +101,7 @@ def similarity(first, second):
 
 @timed_phase("history_query", publish=False)
 def previous_questions(lesson):
-    if not getattr(lesson, "pk", None):
+    if not duplicate_checks_enabled() or not getattr(lesson, "pk", None):
         return []
     from quizzes.models import Question, QuizGenerationQuestion
     rows = list(Question.objects.filter(quiz__lesson_id=lesson.pk)
@@ -111,6 +115,8 @@ def previous_questions(lesson):
 
 
 def validate_local(questions, history):
+    if not duplicate_checks_enabled():
+        return
     # Normalize/hash each reference once, rather than once per new question.
     references = {signature(old): old for old in history}
     for index, question in enumerate(questions, 1):
@@ -131,6 +137,8 @@ def validate_local(questions, history):
 
 
 def history_instruction(history):
+    if not duplicate_checks_enabled():
+        return ""
     # The full history is checked locally; the prompt only shows a short sample.
     sample = [{"text": str(q.get("text") or "")[:150]} for q in history[-3:]]
     return (
@@ -159,7 +167,7 @@ def _batches(items, *, max_items, character_budget):
 @timed_phase("novelty")
 def validate_semantic(service, questions, history, *, collect=False):
     """Review all history in bounded batches, plus pairs within the new quiz."""
-    if not history and len(questions) < 2:
+    if not duplicate_checks_enabled() or (not history and len(questions) < 2):
         return set() if collect else None
     refused = set()
     system = (
@@ -229,7 +237,7 @@ def validate_semantic(service, questions, history, *, collect=False):
 @timed_phase("reservation", publish=False)
 def reserve_questions(service, lesson, questions, checked_history):
     """Persist successful generations; the unique key also catches concurrent copies."""
-    if not getattr(lesson, "pk", None):
+    if not duplicate_checks_enabled() or not getattr(lesson, "pk", None):
         return
     from education.models import Lesson
     from quizzes.models import QuizGenerationQuestion

@@ -3,7 +3,7 @@ import json
 
 from .prompts import QUIZ_LATEX_RULES
 from .providers import AIProviderError
-from .quiz_novelty import history_instruction, quiz_json_chat, quiz_output_budget
+from .quiz_novelty import history_instruction, quiz_json_chat, quiz_output_budget, duplicate_checks_enabled
 from .quiz_metrics import timed_phase
 
 QUIZ_SYSTEM = (
@@ -54,7 +54,7 @@ def generate_batches(service, make_messages, count, temperature, history, retry_
         batch_count = remaining
         while True:
             messages = make_messages(batch_count, history + accepted) + retry_messages
-            if accepted:
+            if accepted and duplicate_checks_enabled():
                 messages.append({"role": "user", "content":
                     "Questions déjà retenues pour ce quiz (à ne pas répéter) : "
                     + json.dumps([q["text"] for q in accepted], ensure_ascii=False)})

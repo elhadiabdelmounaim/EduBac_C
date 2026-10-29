@@ -39,7 +39,7 @@ def quiz_json(texts):
     })
 
 
-@override_settings(ALLOWED_HOSTS=["testserver"], QUIZ_SEMANTIC_CHECK_ENABLED=True)
+@override_settings(ALLOWED_HOSTS=["testserver"], QUIZ_SEMANTIC_CHECK_ENABLED=True, QUIZ_DUPLICATE_CHECK_ENABLED=True)
 class QuizNoveltyTests(TestCase):
     def setUp(self):
         self.course = Course.objects.create(name="Algèbre", niveau="tronc_commun")

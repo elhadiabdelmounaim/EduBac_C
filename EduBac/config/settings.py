@@ -131,6 +131,8 @@ GROQ_MODEL = os.getenv('GROQ_MODEL', 'openai/gpt-oss-20b')
 QUIZ_SEMANTIC_CHECK_ENABLED = os.getenv(
     'QUIZ_SEMANTIC_CHECK_ENABLED', 'false',
 ).strip().lower() in ('1', 'true', 'yes', 'on')
+# Question repetition is allowed; mathematical and answer-choice checks remain active.
+QUIZ_DUPLICATE_CHECK_ENABLED = False
 QUIZ_LESSON_CONTEXT_CHARS = int(os.getenv('QUIZ_LESSON_CONTEXT_CHARS', '5000'))
 QUIZ_GROQ_REQUEST_TOKEN_BUDGET = int(os.getenv('QUIZ_GROQ_REQUEST_TOKEN_BUDGET', '7500'))
 QUIZ_MAX_QUESTIONS = int(os.getenv('QUIZ_MAX_QUESTIONS', '20'))
