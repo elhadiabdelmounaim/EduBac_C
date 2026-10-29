@@ -332,6 +332,57 @@ class QuizProtocolTests(TestCase):
         self.assertEqual(chat.call_count, 4)
 
     @patch.object(AIService, "_chat")
+    def test_short_limits_during_analysis_and_generation_both_resume(self, chat):
+        limit = AIProviderError("Please try again in 21s.", code="rate_limit", retry_after=21)
+        chat.side_effect = [
+            limit, json.dumps(ANALYSIS), limit, generated(question()), reviews(),
+        ]
+        with patch("ai.services.time.sleep") as sleep:
+            data = self.run_protocol()
+        self.assertEqual(sleep.call_count, 2)
+        self.assertAlmostEqual(sleep.call_args.args[0], 21.35)
+        self.assertEqual(chat.call_args_list[0].args[0], chat.call_args_list[1].args[0])
+        self.assertEqual(chat.call_args_list[2].args[0], chat.call_args_list[3].args[0])
+        self.assertEqual(len(data["questions"]), 1)
+
+    @patch.object(AIService, "_chat")
+    def test_limit_in_later_batch_preserves_earlier_questions(self, chat):
+        third = question("Résoudre $2x+3=11$.", "4")
+        third["explanation"] = "Soustraire trois et diviser par deux donne quatre."
+        chat.side_effect = [
+            json.dumps(ANALYSIS), generated(question(), SECOND),
+            AIProviderError("Wait", code="rate_limit", retry_after=21), generated(third),
+            reviews(1, 2, 3), '{"similar_questions":[]}',
+        ]
+        with patch("ai.quiz_generation.quiz_output_budget", return_value=800):
+            data = self.run_protocol(count=3)
+        self.assertEqual([q["text"] for q in data["questions"]],
+                         [question()["text"], SECOND["text"], third["text"]])
+        self.assertEqual(chat.call_args_list[2].args[0], chat.call_args_list[3].args[0])
+        self.assertEqual(chat.call_count, 6)
+
+    @patch.object(AIService, "_chat")
+    def test_third_short_limit_stops_without_invalid_quiz_or_unbounded_wait(self, chat):
+        limit = AIProviderError("Wait", code="rate_limit", retry_after=21)
+        chat.side_effect = [limit, json.dumps(ANALYSIS), limit, generated(question()), limit]
+        with patch("ai.services.time.sleep") as sleep, self.assertRaises(AIProviderError) as error:
+            self.run_protocol()
+        self.assertEqual(error.exception.code, "rate_limit")
+        self.assertEqual(sleep.call_count, 2)
+        self.assertEqual(chat.call_count, 5)
+        self.assertFalse(QuizGenerationQuestion.objects.exists())
+        self.assertIsNone(self.service._quiz_deadline)
+
+    def test_quota_wait_cannot_exceed_remaining_deadline(self):
+        self.service._quiz_protocol_active = True
+        self.service._quiz_deadline = 1010
+        with patch("ai.services.time.monotonic", return_value=1000), patch("ai.services.time.sleep") as sleep:
+            self.assertFalse(self.service._maybe_wait_for_rate_limit(
+                AIProviderError("Wait", code="rate_limit", retry_after=21),
+            ))
+        sleep.assert_not_called()
+
+    @patch.object(AIService, "_chat")
     def test_unrecoverable_review_failure_never_restarts_quiz(self, chat):
         chat.side_effect = [
             json.dumps(ANALYSIS), generated(question()),

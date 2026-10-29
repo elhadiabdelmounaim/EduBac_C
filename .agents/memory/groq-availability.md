@@ -20,3 +20,9 @@ Evaluate speed by time to a complete, valid quiz, not just model throughput or t
 **Why:** The user approved performance work only without compromising question quality, relevance or diversity. Small output budgets can create partial responses and extra repairs; splitting large outputs can avoid truncation but add quota waits.
 
 **How to apply:** Account for the combined quota pressure of generation, corrections and optional semantic review. Report local processing benchmarks separately from measured provider latency, and retain fresh source reads rather than caching quiz answers.
+
+For the multi-stage teacher protocol, allow bounded recovery of short quota waits at the interrupted call, without restarting completed stages.
+
+**Why:** Analysis, generation and review share the provider quota. A single wait allowance designed for the former generation-only request can be exhausted before later mandatory checks finish.
+
+**How to apply:** Keep retry allowances shared across the entire request and subordinate to its overall deadline, rather than resetting them for every stage or question. Preserve completed batches and all quality checks; long or repeated limits must still stop explicitly.

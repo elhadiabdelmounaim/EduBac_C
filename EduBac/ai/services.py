@@ -135,6 +135,7 @@ def _repair_invalid_json_backslashes(raw: str) -> str:
 # One quiz HTTP request must finish even when the model is slow or a question is invalid.
 QUIZ_MAX_QUESTIONS = int(getattr(settings, "QUIZ_MAX_QUESTIONS", 20))
 QUIZ_GENERATION_DEADLINE = 50
+QUIZ_PROTOCOL_GENERATION_DEADLINE = 120
 QUIZ_CALL_TIMEOUT = 30
 QUESTION_MAX_ATTEMPTS = 2
 _QUIZ_DEADLINE_MARGIN = 5
@@ -354,6 +355,7 @@ Regles :
         self._provider = None
         self._quiz_deadline = None
         self._quiz_rate_limit_used = False
+        self._quiz_rate_limit_retries = 0
         # Compat : self.api utilisé encore par d'éventuels appels internes
         self.api = GroqAPI() if not provider or provider == "groq" else None
 
@@ -374,18 +376,24 @@ Regles :
             )
 
     def _maybe_wait_for_rate_limit(self, exc) -> bool:
-        """Wait once for a short Groq hint. A longer wait keeps the existing error."""
-        if self._quiz_rate_limit_used or getattr(exc, "code", "") != "rate_limit":
+        """Bound short quota waits across the entire request, never per question."""
+        protocol = getattr(self, "_quiz_protocol_active", False)
+        exhausted = self._quiz_rate_limit_retries >= 2 if protocol else self._quiz_rate_limit_used
+        if exhausted or getattr(exc, "code", "") != "rate_limit":
             return False
         delay = bounded_retry_after(_retry_after_value(exc))
         if delay is None:
             return False
+        if protocol:
+            delay += 0.35  # Do not wake just before the provider's reset boundary.
         if self._quiz_deadline is not None:
             remaining = self._quiz_deadline - time.monotonic() - _QUIZ_DEADLINE_MARGIN
             if delay > remaining:
                 return False
         self._quiz_rate_limit_used = True
-        logger.warning("generate_quiz API error: rate limit, one retry in %.1fs", delay)
+        self._quiz_rate_limit_retries += 1
+        logger.warning("generate_quiz API error: rate limit, retry %s/%s in %.1fs",
+                       self._quiz_rate_limit_retries, 2 if protocol else 1, delay)
         time.sleep(delay)
         return True
 
@@ -650,8 +658,11 @@ Regles :
             "generate_quiz start lesson=%s count=%s difficulty=%s",
             getattr(lesson, "pk", None), question_count, difficulty,
         )
-        self._quiz_deadline = time.monotonic() + QUIZ_GENERATION_DEADLINE
+        self._quiz_deadline = time.monotonic() + (
+            QUIZ_PROTOCOL_GENERATION_DEADLINE if enforce_protocol else QUIZ_GENERATION_DEADLINE
+        )
         self._quiz_rate_limit_used = False
+        self._quiz_rate_limit_retries = 0
         self._quiz_protocol_active = enforce_protocol
         started = time.monotonic()
         try:

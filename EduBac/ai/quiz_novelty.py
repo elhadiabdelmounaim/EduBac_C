@@ -32,19 +32,26 @@ _JSON_MODE_REJECTION = (
 
 def quiz_json_chat(service, messages, *, temperature, max_tokens):
     """Some providers reject JSON mode before returning any quiz."""
-    try:
-        return service._chat(messages, temperature=temperature, max_tokens=max_tokens, json_mode=True)
-    except AIProviderError as exc:
-        text = str(exc).lower()
-        rejected = (
-            exc.code in {"api_error", "bad_request", "not_found"}
-            and any(token in text for token in _JSON_MODE_REJECTION)
-        )
-        if not rejected:
+    json_mode = True
+    while True:
+        try:
+            return service._chat(
+                messages, temperature=temperature, max_tokens=max_tokens, json_mode=json_mode,
+            )
+        except AIProviderError as exc:
+            if (exc.code == "rate_limit" and getattr(service, "_quiz_protocol_active", False)
+                    and service._maybe_wait_for_rate_limit(exc)):
+                # Retry this exact batch/check, not the complete generation.
+                continue
+            rejected = (
+                json_mode and exc.code in {"api_error", "bad_request", "not_found"}
+                and any(token in str(exc).lower() for token in _JSON_MODE_REJECTION)
+            )
+            if rejected:
+                # Keep server-side validation even without provider JSON enforcement.
+                json_mode = False
+                continue
             raise
-        # Only bypass the provider's format enforcement. Server JSON, shape,
-        # question count and novelty validation remain mandatory.
-        return service._chat(messages, temperature=temperature, max_tokens=max_tokens, json_mode=False)
 
 
 def quiz_output_budget(question_count, messages, provider_name):
