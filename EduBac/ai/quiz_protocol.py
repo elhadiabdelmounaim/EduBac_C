@@ -187,6 +187,11 @@ def review_questions(service, questions, indexes, context, description, difficul
             "ÉTAPE 4 — Revue mathématique indépendante de la génération. Résous chaque "
             "question toi-même SANS connaître la réponse cochée. Vérifie toutes les options, "
             "les calculs, le domaine, les hypothèses, l'explication et l'indice. "
+            "Pour les équations polynomiales et tangentes horizontales, trouve TOUTES les "
+            "solutions réelles puis teste chaque option : vérifier qu'un seul point convient "
+            "ne suffit pas à conclure qu'il est unique. Si plusieurs points répondent à l'énoncé, "
+            "ou si une option correcte est omise, invalide ce QCM. Vérifie que chaque formule "
+            "LaTeX de l'explication représente bien l'opération mathématique décrite. "
             "Une question demandant une erreur dans une démarche correcte est INVALIDE. "
             "Le type des options doit répondre exactement au libellé : une simple valeur numérique "
             "ne répond pas à une demande de justifier ou vérifier une démarche. "
@@ -220,15 +225,24 @@ def review_questions(service, questions, indexes, context, description, difficul
                     or not isinstance(choices, list) or len(choices) != len(set(map(str, choices)))
                     or any(type(i) is not int or not 1 <= i <= len(questions[index]["choices"]) for i in choices)
                     or any(not isinstance(review.get(key), str) or not review[key].strip()
-                           or len(review[key]) > 1400 for key in ("reason", "solution", "competency"))):
+                           or len(review[key]) > 1400 for key in ("reason", "solution"))):
                 raise AIProviderError("Réponse du contrôle mathématique invalide ; aucun quiz enregistré.",
                                       code="protocol_validation_failed")
             marked = [i for i, choice in enumerate(questions[index]["choices"], 1) if choice["is_correct"]]
             exact = exact_answer_error(questions[index])
             valid = all(review[key] for key in flags) and len(choices) == 1 and choices == marked
+            competency = review.get("competency")
+            if not isinstance(competency, str) or not competency.strip() or len(competency) > 1400:
+                if valid:
+                    raise AIProviderError(
+                        "La revue d’une question correcte ne précise pas sa compétence ; "
+                        "aucun quiz enregistré.", code="protocol_validation_failed",
+                    )
+                # A rejected question is repaired, not approved or stored with this field.
+                competency = "Compétence à confirmer après correction."
             reason = exact or (review["reason"] if not valid else "")
             decisions[index] = {
-                "error": reason, "competency": review["competency"][:240],
+                "error": reason, "competency": competency[:240],
                 "verification": "rational_exact_and_ai" if exact == "" else "ai_cross_review",
             }
     return decisions

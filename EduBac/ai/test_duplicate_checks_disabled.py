@@ -16,6 +16,9 @@ from .quiz_novelty import (
 )
 from .quiz_validation import validate_question
 from .services import AIService
+from .services import repair_latex_escapes
+from .quiz_protocol import review_questions
+from .providers import AIProviderError
 from .test_quiz_protocol import ANALYSIS, generated, question, repaired, reviews
 
 
@@ -126,3 +129,60 @@ class DuplicateChecksDisabledTests(TestCase):
         invalid["choices"][1]["text"] = invalid["choices"][0]["text"]
         with self.assertRaises(ValueError):
             validate_question(invalid, 1)
+
+    def test_ai_latex_errors_from_real_generation_are_repaired_only_inside_math(self):
+        source = r"$u_{n+1}=q,u_n;\ v_n=v_0-ncdot3;\ n ge 0$ — ncdot3"
+        result = repair_latex_escapes(json.dumps({"text": source}))["text"]
+        self.assertEqual(
+            result, r"$u_{n+1}=q\,u_n;\ v_n=v_0-n\cdot3;\ n\ge 0$ — ncdot3",
+        )
+
+    @patch.object(AIService, "_chat", return_value=reviews())
+    def test_math_review_checks_every_polynomial_root_and_latex_operation(self, chat):
+        service = AIService()
+        with patch.object(
+            service, "_get_provider", return_value=SimpleNamespace(name="test", model="test"),
+        ):
+            review_questions(
+                service,
+                [question("Pour $g'(x)=2x^3-6x^2+5x-1$, où la tangente est-elle horizontale ?")],
+                [0], {"niveau": "1ère Bac"}, "", "moyen",
+            )
+        review_prompt = chat.call_args.args[0][0]["content"]
+        self.assertIn("toutes les solutions réelles", review_prompt.lower())
+        self.assertIn("vérifie que chaque formule", review_prompt.lower())
+
+    def test_math_rejection_without_a_competency_does_not_abort_the_entire_quiz(self):
+        response = json.loads(reviews(1, 2))
+        response["reviews"][0].update(
+            valid_question=False, valid_explanation=False, correct_choices=[],
+            reason="La question comporte plusieurs racines réelles.",
+            solution="Le polynôme dérivé possède trois racines réelles.",
+            competency=None,
+        )
+        service = AIService()
+        with patch.object(
+            service, "_get_provider", return_value=SimpleNamespace(name="test", model="test"),
+        ), patch.object(AIService, "_chat", return_value=json.dumps(response)):
+            result = review_questions(
+                service, [question(), question("Calculer $3+4$.", "7")], [0, 1],
+                {"niveau": "1ère Bac"}, "", "moyen",
+            )
+        self.assertIn("plusieurs racines", result[0]["error"])
+        self.assertEqual(
+            result[0]["competency"], "Compétence à confirmer après correction.",
+        )
+        self.assertFalse(result[1]["error"])
+        self.assertEqual(result[1]["competency"], "Effectuer un calcul justifié")
+
+    def test_missing_competency_for_a_accepted_question_still_fails_closed(self):
+        response = json.loads(reviews())
+        response["reviews"][0]["competency"] = None
+        service = AIService()
+        with patch.object(
+            service, "_get_provider", return_value=SimpleNamespace(name="test", model="test"),
+        ), patch.object(AIService, "_chat", return_value=json.dumps(response)):
+            with self.assertRaisesRegex(AIProviderError, "compétence"):
+                review_questions(
+                    service, [question()], [0], {"niveau": "Tronc Commun"}, "", "moyen",
+                )

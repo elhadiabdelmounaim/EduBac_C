@@ -33,6 +33,7 @@ _FINAL_CHANNEL = re.compile(
 )
 _CHANNEL_TOKEN = re.compile(r"<\|[^|>]+?\|>")
 _RETRY_AFTER_SECONDS = re.compile(r"try again in\s+([0-9]+(?:\.[0-9]+)?)s", re.IGNORECASE)
+_INLINE_LATEX = re.compile(r"(?<!\\)\$(?!\$)(.+?)(?<!\\)\$", re.DOTALL)
 _MAX_RATE_LIMIT_WAIT = 65.0
 _CONTROL_LATEX_COMMANDS = {
     "\x08": ("b", ("eta",)),
@@ -59,7 +60,23 @@ def _repair_parsed_latex_controls(value):
                 lambda match: "\\" + prefix + match.group(1),
                 value,
             )
-        return value
+        def repair_known_math_omissions(match):
+            math = match.group(1)
+            # Recover common, unambiguous missing separators from generated formulae.
+            math = re.sub(
+                r"u_\{n\+1\}\s*=\s*q\s*,\s*u_n",
+                lambda _: r"u_{n+1}=q\,u_n",
+                math,
+            )
+            math = re.sub(r"\bncdot(?=\s*(?:\d|[({]))", r"n\\cdot", math)
+            math = re.sub(
+                r"(?<![A-Za-z])n\s*ge\s*([+-]?\d)",
+                lambda match: "n\\ge " + match.group(1),
+                math,
+            )
+            return "$" + math + "$"
+
+        return _INLINE_LATEX.sub(repair_known_math_omissions, value)
     if isinstance(value, list):
         return [_repair_parsed_latex_controls(item) for item in value]
     if isinstance(value, dict):
