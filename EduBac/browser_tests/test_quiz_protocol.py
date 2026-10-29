@@ -1,5 +1,6 @@
 import json
 import shutil
+import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
@@ -12,7 +13,7 @@ from playwright.sync_api import expect, sync_playwright
 from accounts.models import User, TeacherProfile
 from education.models import Course, Lesson
 from education.media_library import chapter_relative
-from quizzes.models import Quiz, QuizGenerationQuestion
+from quizzes.models import Quiz, QuizGenerationQuestion, QuizGenerationRun
 from ai.services import AIService
 from ai.test_quiz_protocol import ANALYSIS, SECOND, question, generated, reviews
 
@@ -40,7 +41,7 @@ class QuizProtocolBrowserTests(StaticLiveServerTestCase):
                 if "ÉTAPE 1" in system:
                     stages.append("analysis")
                     context = json.loads(messages[1]["content"])["context"]
-                    source = context["contenu"]
+                    source = "\n".join(part["text"] for part in json.loads(messages[1]["content"])["source_segments"])
                     self.assertNotIn("SOURCE_NOT_SELECTED", source)
                     if source:
                         self.assertIn("SOURCE_SELECTED", source)
@@ -48,6 +49,7 @@ class QuizProtocolBrowserTests(StaticLiveServerTestCase):
                     return json.dumps({**ANALYSIS, "reference_questions": [example] if source else []})
                 if "ÉTAPE 4" in system:
                     stages.append("review")
+                    time.sleep(0.8)
                     payload = json.loads(messages[1]["content"])
                     self.assertNotIn("is_correct", json.dumps(payload["questions"]))
                     return reviews()
@@ -78,8 +80,12 @@ class QuizProtocolBrowserTests(StaticLiveServerTestCase):
                         "name": "Objectifs.txt", "mimeType": "text/plain",
                         "buffer": b"UPLOADED_GUIDANCE : calculs et situations concretes.",
                     })
-                    with page.expect_response(lambda r: r.request.method == "POST" and "/generer-envoyer/" in r.url):
-                        page.locator("#genBtn").click()
+                    with page.expect_response(lambda r: r.request.method == "POST" and "/suivi/" in r.url):
+                        with page.expect_response(lambda r: r.request.method == "POST" and "/generer-envoyer/" in r.url):
+                            page.locator("#genBtn").click()
+                            expect(page.locator("#genBtn")).to_be_disabled()
+                            expect(page.locator("[data-gen-status]")).to_contain_text("Vérification mathématique")
+                            page.locator("#genForm").evaluate("(form) => form.requestSubmit()")
                     report = page.get_by_role("status").filter(has_text="Analyse pédagogique effectuée")
                     expect(report).to_be_visible()
                     expect(report).to_contain_text("ne constitue pas une preuve mathématique générale")
@@ -92,8 +98,9 @@ class QuizProtocolBrowserTests(StaticLiveServerTestCase):
                     page.screenshot(path="/tmp/quiz-protocol-mobile.jpg")
                     page.select_option("#generationMode", "topic")
                     page.locator("#quizSubject").fill("Calcul numérique et situations concrètes")
-                    with page.expect_response(lambda r: r.request.method == "POST" and "/generer-envoyer/" in r.url):
-                        page.locator("#genBtn").click()
+                    with page.expect_response(lambda r: r.request.method == "POST" and "/suivi/" in r.url):
+                        with page.expect_response(lambda r: r.request.method == "POST" and "/generer-envoyer/" in r.url):
+                            page.locator("#genBtn").click()
                     expect(page.locator(".qb-detail-explain")).to_contain_text("douze")
                     expect(page.get_by_role("status").filter(has_text="Analyse pédagogique effectuée")).to_be_visible()
                     self.assertEqual(stages, ["analysis", "generation", "review", "diversity"] * 2)
@@ -101,3 +108,8 @@ class QuizProtocolBrowserTests(StaticLiveServerTestCase):
                     browser.close()
             self.assertEqual(Quiz.objects.count(), 2)
             self.assertEqual(QuizGenerationQuestion.objects.count(), 2)
+            runs = list(QuizGenerationRun.objects.order_by("created_at"))
+            self.assertEqual(len(runs), 2)
+            self.assertTrue(all(run.state == "complete" for run in runs))
+            self.assertTrue(all(run.metrics["browser"]["dom_ready_ms"] >=
+                                run.metrics["browser"]["html_received_ms"] for run in runs))

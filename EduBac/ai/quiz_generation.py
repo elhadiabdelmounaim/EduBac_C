@@ -4,6 +4,7 @@ import json
 from .prompts import QUIZ_LATEX_RULES
 from .providers import AIProviderError
 from .quiz_novelty import history_instruction, quiz_json_chat, quiz_output_budget
+from .quiz_metrics import timed_phase
 
 QUIZ_SYSTEM = (
     "Tu génères des QCM de mathématiques pour le lycée marocain, en français. "
@@ -19,6 +20,7 @@ QUESTION_RULES = (
 )
 
 
+@timed_phase("prompt", publish=False)
 def build_messages(context, count, difficulty, guide, focus, source, scope, history, request_id):
     prompt = (
         f"Niveau : {context['niveau']}\nCours : {context['cours']}\n"
@@ -43,6 +45,7 @@ def repair_context(messages):
     return [messages[0], {"role": "user", "content": prompt + "\n" + QUESTION_RULES + "\n" + QUIZ_LATEX_RULES}]
 
 
+@timed_phase("generation")
 def generate_batches(service, make_messages, count, temperature, history, retry_messages):
     data, accepted = None, []
     provider_name = service._get_provider().name
@@ -74,6 +77,7 @@ def generate_batches(service, make_messages, count, temperature, history, retry_
     return data
 
 
+@timed_phase("repair")
 def repair_batch(service, questions, invalid, valid, messages, history, *, replace_only=False):
     """Repair up to four invalid slots per call, preserving accepted slots verbatim."""
     from .quiz_novelty import validate_local

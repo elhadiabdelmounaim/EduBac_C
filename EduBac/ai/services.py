@@ -14,6 +14,7 @@ import logging
 import re
 import time
 import uuid
+from .quiz_metrics import current_trace, phase, timed_phase
 from collections import deque
 
 from django.conf import settings
@@ -394,21 +395,37 @@ Regles :
         self._quiz_rate_limit_retries += 1
         logger.warning("generate_quiz API error: rate limit, retry %s/%s in %.1fs",
                        self._quiz_rate_limit_retries, 2 if protocol else 1, delay)
-        time.sleep(delay)
+        with phase("quota_wait"):
+            time.sleep(delay)
         return True
 
     def _chat(self, messages, *, temperature=0.3, max_tokens=4096, json_mode=False, timeout=None) -> str:
         _ai_limiter.check()
         self._raise_if_quiz_deadline()
+        provider = self._get_provider()
+        reservation = None
+        if (getattr(self, "_quiz_protocol_active", False) and provider.name == "groq"
+                and self._quiz_deadline is not None):
+            from .quiz_quota import reserve
+            reservation, delay = reserve(
+                provider.model, sum(len(m.get("content") or "") for m in messages),
+                max_tokens, min(30, max(0, self._quiz_deadline - time.monotonic() - 10)),
+            )
+            if delay:
+                with phase("quota_wait"):
+                    time.sleep(delay)
         if self._quiz_deadline is not None:
             remaining = self._quiz_deadline - time.monotonic()
             timeout = min(
                 QUIZ_CALL_TIMEOUT if timeout is None else timeout,
                 max(1, remaining),
             )
-        provider = self._get_provider()
         started = time.monotonic()
         result = None
+        error_code = None
+        trace = current_trace.get()
+        if trace is not None:
+            trace.last_response = {}
         try:
             return_value = provider.chat(
                 messages, temperature=temperature, max_tokens=max_tokens,
@@ -416,7 +433,23 @@ Regles :
             )
             result = return_value
             return return_value
+        except AIProviderError as exc:
+            error_code = exc.code
+            raise
         finally:
+            if reservation is not None:
+                from .quiz_quota import release
+                release(provider.model, reservation)
+            trace = current_trace.get()
+            if trace is not None:
+                trace.calls.append({
+                    "phase": trace.phase, "provider": provider.name, "model": provider.model,
+                    "duration_ms": round((time.monotonic() - started) * 1000, 3),
+                    "input_chars": sum(len(m.get("content") or "") for m in messages),
+                    "output_chars": len(result) if result is not None else 0,
+                    "requested_tokens": max_tokens, "error_code": error_code,
+                    **getattr(trace, "last_response", {}),
+                })
             logger.info(
                 "quiz_api provider=%s model=%s input_chars=%s output_chars=%s "
                 "requested_tokens=%s json_mode=%s elapsed=%.3fs status=%s",
@@ -752,12 +785,12 @@ Regles :
                     if isinstance(e, AIProviderError):
                         logger.warning(
                             "generate_quiz API error attempt %s/%s: %s",
-                            attempt, self.MAX_RETRIES + 1, e,
+                            attempt, self.MAX_RETRIES + 1, e.code,
                         )
                     else:
                         logger.warning(
                             "generate_quiz invalid AI response attempt %s/%s: %s",
-                            attempt, self.MAX_RETRIES + 1, e,
+                            attempt, self.MAX_RETRIES + 1, type(e).__name__,
                         )
                     if attempt > self.MAX_RETRIES:
                         break
@@ -793,7 +826,7 @@ Regles :
         except Exception as exc:
             logger.warning(
                 "generate_quiz end status=error elapsed=%.1fs: %s",
-                time.monotonic() - started, exc,
+                time.monotonic() - started, getattr(exc, "code", type(exc).__name__),
             )
             raise
         finally:
@@ -924,6 +957,7 @@ Regles :
         # Check every question again before novelty checks, persistence or return.
         return self._validate_quiz_json(json.dumps(data, ensure_ascii=False), expected_count)
 
+    @timed_phase("repair")
     def _repair_quiz_question(self, question, number, error, messages, valid, history):
         from .quiz_novelty import quiz_json_chat, quiz_output_budget, validate_local
         from .quiz_generation import repair_context

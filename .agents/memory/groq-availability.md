@@ -26,3 +26,9 @@ For the multi-stage teacher protocol, allow bounded recovery of short quota wait
 **Why:** Analysis, generation and review share the provider quota. A single wait allowance designed for the former generation-only request can be exhausted before later mandatory checks finish.
 
 **How to apply:** Keep retry allowances shared across the entire request and subordinate to its overall deadline, rather than resetting them for every stage or question. Preserve completed batches and all quality checks; long or repeated limits must still stop explicitly.
+
+Compare completed quizzes separately from early failures when evaluating performance.
+
+**Why:** A live performance baseline included fast pedagogical refusals and quota failures. Completing those same requests after fixing recovery takes longer, but cannot honestly be described as a latency regression or a demonstrated speedup.
+
+**How to apply:** Report outcome, question count, API attempts and quota waiting alongside elapsed time. HTTP response-header timing is not time to the first generated token; the non-streamed quiz response does not expose that measurement.

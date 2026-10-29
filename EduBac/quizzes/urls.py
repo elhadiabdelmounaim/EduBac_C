@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .performance import generation_progress
 
 app_name = 'quizzes'
 
@@ -17,6 +18,7 @@ urlpatterns = [
     path('gestion/', views.manage_quizzes, name='manage'),
     path('creer/', views.create_quiz, name='create'),
     path('generer-envoyer/', views.teacher_ai_quiz, name='teacher_ai'),
+    path('generation/<uuid:generation_id>/suivi/', generation_progress, name='generation_progress'),
     path('affecter/', views.assign_quiz, name='assign'),
     path('affecter/<int:pk>/', views.assign_quiz, name='assign_quiz'),
     path('resultats-eleves/', views.student_results, name='student_results'),

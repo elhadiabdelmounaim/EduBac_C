@@ -5,6 +5,7 @@ import uuid
 
 from .providers import AIProviderError
 from .quiz_generation import repair_batch
+from .quiz_metrics import timed_phase, current_trace
 from .quiz_novelty import (
     QuizNoveltyError, _batches, previous_questions, quiz_json_chat,
     quiz_output_budget, validate_local, validate_semantic,
@@ -39,25 +40,43 @@ def _json_review(service, system, payload, tokens=1800):
         ) from exc
 
 
+@timed_phase("analysis")
 def analyze_context(service, context, description, *, related_knowledge, difficulty, count):
     has_sources = bool(context["contenu"].strip())
+    # Reference IDs avoid paying to regenerate verbatim excerpts already held locally.
+    segments = [part.strip() for part in re.split(
+        r"\n+|(?<=[.!?])\s+(?=[A-ZÀ-Ö])", context["contenu"],
+    ) if part.strip()]
+    analysis_context = {key: value for key, value in context.items() if key != "contenu"}
     result = _json_review(
         service,
         "ÉTAPE 1 — Analyse pédagogique AVANT toute génération. Ne génère aucune question. "
         "Analyse les définitions, propriétés, méthodes, compétences et exemples du contexte. "
         "Vérifie sa compatibilité avec le niveau, la leçon et les objectifs. "
-        "Si les ressources sont absentes, analyse le sujet et les consignes : elles sont facultatives. "
+        "L’absence de fichiers n’est JAMAIS un motif de refus : analyse le sujet et les consignes "
+        "à partir des connaissances mathématiques autorisées. Les fichiers sont facultatifs. "
         "Si complementary_knowledge est true, des connaissances complémentaires du même sujet "
         "et niveau sont autorisées ; ne limite pas le quiz aux seuls exemples fournis. "
         "Une ressource sans rapport ou inexploitable doit être refusée. "
-        "Retourne exactement {\"compatible\":true|false,\"reason\":\"motif\","
-        "\"skills\":[\"compétence\"],\"reference_questions\":[\"énoncé COPIÉ À L’IDENTIQUE "
-        "depuis les ressources, sans reformulation\"]}. reference_questions est vide sans sources. "
-        "Recense les exemples et questions présents pour éviter leur reproduction. "
+        "Retourne exactement {\"compatible\":true|false,\"reason\":\"motif en une phrase\","
+        "\"skills\":[\"compétence concise\"],\"reference_segments\":[1]}. "
+        "Résume les compétences principales en 4 à 8 entrées concises au maximum. "
+        "reference_segments contient les identifiants entiers des segments contenant un exemple "
+        "ou une question. Ne recopie aucun extrait. La liste est vide sans sources. "
         "N'invente ni référence, ni contenu absent des documents.",
-        {"context": context, "description": description, "difficulty": difficulty,
-         "count": count, "complementary_knowledge": related_knowledge},
+        {"context": analysis_context, "description": description, "difficulty": difficulty,
+         "source_segments": [{"index": i, "text": text} for i, text in enumerate(segments, 1)],
+         "has_sources": has_sources, "count": count, "complementary_knowledge": related_knowledge},
+        tokens=1000,
     )
+    if "reference_segments" in result:
+        indexes = result["reference_segments"]
+        if (not isinstance(indexes, list) or len(indexes) > 40
+                or any(type(i) is not int or not 1 <= i <= len(segments) for i in indexes)
+                or len(set(indexes)) != len(indexes)):
+            raise AIProviderError("Références du contrôle invalides ; aucun quiz enregistré.",
+                                  code="protocol_validation_failed")
+        result["reference_questions"] = [segments[i - 1] for i in indexes]
     skills, references = result.get("skills"), result.get("reference_questions")
     if (type(result.get("compatible")) is not bool
             or not isinstance(result.get("reason"), str) or not result["reason"].strip()
@@ -93,7 +112,10 @@ def analyze_context(service, context, description, *, related_knowledge, difficu
             re.IGNORECASE,
         ) or ("?" in line and not line.startswith("## ")):
             references.append(line.strip())
-    references = list(dict.fromkeys(references))
+    references = list(dict.fromkeys(re.sub(
+        r"^\s*(?:exemple|exercice|question|application|problème)\s*(?:\d+)?\s*[:.)–-]\s*",
+        "", text, flags=re.IGNORECASE,
+    ).strip() for text in references))
     if len(references) > 40 or any(len(text) > 2000 for text in references):
         raise AIProviderError(
             "Trop d’exemples à comparer dans le contexte : sélectionnez des passages plus ciblés.",
@@ -102,6 +124,7 @@ def analyze_context(service, context, description, *, related_knowledge, difficu
     return {"skills": skills, "reference_questions": references}
 
 
+@timed_phase("history")
 def load_history(lesson):
     try:
         return previous_questions(lesson)
@@ -114,6 +137,18 @@ def load_history(lesson):
 
 def exact_answer_error(question):
     """Only unambiguous direct arithmetic/linear exercises; never evaluate generated code."""
+    from whiteboard.tutor_math import check_linear
+    # Check explicit constant equalities even in otherwise unsupported word problems.
+    # A correct equality is NOT proof that the complete answer/reasoning is correct.
+    for formula in re.findall(r"\$([^$]+)\$", question.get("explanation", "")):
+        parts = formula.split("=")
+        if not 2 <= len(parts) <= 8:
+            continue
+        from .quiz_arithmetic import constant_value
+        constants = [value for part in parts if (value := constant_value(part)) is not None]
+        for left, right in zip(constants, constants[1:]):
+            if left != right:
+                return "Une égalité numérique de l’explication est fausse selon le calcul rationnel exact."
     match = re.fullmatch(
         r"\s*(Résoudre|Résous|Résolvez|Calculer|Calcule|Calculez)\s+"
         r"(?:l[’']équation\s+)?\$([^$]+)\$\s*[.?!]?\s*",
@@ -121,7 +156,6 @@ def exact_answer_error(question):
     )
     if not match:
         return None
-    from whiteboard.tutor_math import check_linear
     instruction, expression = match.groups()
     exercise = expression if instruction.lower().startswith("rés") else "x=" + expression
     outcomes = []
@@ -137,6 +171,7 @@ def exact_answer_error(question):
     return ""
 
 
+@timed_phase("math")
 def review_questions(service, questions, indexes, context, description, difficulty):
     """Solve without seeing selected answers; reject ambiguity, false premises and bad explanations."""
     decisions = {}
@@ -168,7 +203,7 @@ def review_questions(service, questions, indexes, context, description, difficul
             "\"solution\":\"résolution indépendante concise\",\"competency\":\"compétence évaluée\"}]}. "
             "Indices des choix à partir de 1. Une review pour CHAQUE index demandé, aucun autre.",
             {"context": context, "description": description, "difficulty": difficulty, "questions": batch},
-            tokens=2600,
+            tokens=min(2600, 1100 + 350 * len(batch)),
         )
         reviews = result.get("reviews")
         allowed = {item["index"] for item in batch}
@@ -206,6 +241,10 @@ def validate_and_repair(service, data, context, description, difficulty, message
     for attempt in range(3):
         reviewed = review_questions(service, questions, pending, context, description, difficulty)
         invalid = {i: info["error"] for i, info in reviewed.items() if info["error"]}
+        trace = current_trace.get()
+        if trace is not None:
+            trace.reject("math", invalid)
+        mathematical_invalid = set(invalid)
         approved.update({i: info for i, info in reviewed.items() if not info["error"]})
         # Canonical checks include source examples; semantic checks cover ALL accessible history.
         protected = [i for i in range(len(questions)) if i not in pending]
@@ -227,6 +266,8 @@ def validate_and_repair(service, data, context, description, difficulty, message
         )
         for index in semantic:
             invalid[positions[index - 1]] = "Question trop similaire : changer la situation ou le raisonnement."
+        if trace is not None:
+            trace.reject("novelty", set(invalid) - mathematical_invalid)
         if not invalid:
             for index, question in enumerate(questions):
                 question.update(

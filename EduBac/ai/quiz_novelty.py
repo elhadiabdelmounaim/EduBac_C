@@ -11,6 +11,7 @@ from difflib import SequenceMatcher
 from django.conf import settings
 from django.db import IntegrityError, OperationalError, transaction
 from .providers import AIProviderError
+from .quiz_metrics import timed_phase
 
 HISTORY_BATCH_SIZE = 25
 SEMANTIC_BATCH_CHARACTERS = 14000
@@ -94,6 +95,7 @@ def similarity(first, second):
     return max(direct, reordered)
 
 
+@timed_phase("history_query", publish=False)
 def previous_questions(lesson):
     if not getattr(lesson, "pk", None):
         return []
@@ -154,6 +156,7 @@ def _batches(items, *, max_items, character_budget):
         yield batch
 
 
+@timed_phase("novelty")
 def validate_semantic(service, questions, history, *, collect=False):
     """Review all history in bounded batches, plus pairs within the new quiz."""
     if not history and len(questions) < 2:
@@ -223,6 +226,7 @@ def validate_semantic(service, questions, history, *, collect=False):
     return refused if collect else None
 
 
+@timed_phase("reservation", publish=False)
 def reserve_questions(service, lesson, questions, checked_history):
     """Persist successful generations; the unique key also catches concurrent copies."""
     if not getattr(lesson, "pk", None):

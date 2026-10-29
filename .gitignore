@@ -4,3 +4,4 @@ __pycache__/
 .env
 *.sqlite3
 test-results/
+/generated-artifacts/

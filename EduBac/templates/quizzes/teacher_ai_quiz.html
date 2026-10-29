@@ -46,8 +46,10 @@
     <div class="alert alert-danger" role="alert">Échec de la génération : {{ error }}</div>
     {% endif %}
 
-    <form method="post" id="genForm" enctype="multipart/form-data">
+    <form method="post" id="genForm" enctype="multipart/form-data"
+          data-progress-url="{% url 'quizzes:generation_progress' generation_id %}">
         {% csrf_token %}
+        <input type="hidden" name="generation_id" value="{{ generation_id }}">
         <input type="hidden" name="resource_selection_present" value="1">
         <div class="qb-layout">
 
@@ -454,62 +456,11 @@
     syncDiff();
   }
 
-  var form = document.getElementById('genForm');
-  var genBtn = document.getElementById('genBtn');
-  var genLoading = document.getElementById('genLoading');
-  var generating = false;
-  if(form && genBtn){
-    form.addEventListener('submit', async function(e){
-      var act = (e.submitter && e.submitter.value) || 'generate';
-      if(act !== 'generate' || !genLoading) return;
-      // Native submission remains the fallback when fetch is unavailable.
-      if(!window.fetch) return;
-      e.preventDefault();
-      if(generating) return;
-      generating = true;
-      var payload = new FormData(form);
-      payload.set('action', 'generate');
-      genLoading.classList.remove('d-none');
-      var label = genLoading.querySelector('[data-gen-status]');
-       if(label) label.textContent = 'Analyse des ressources et de l’historique, génération puis contrôles des réponses et de la diversité. Vous pouvez continuer à consulter la page.';
-      genBtn.disabled = true;
-      genBtn.setAttribute('aria-busy', 'true');
-      var waitNotice = window.setTimeout(function(){
-        if(label) label.textContent = 'La génération prend plus de temps que prévu. La demande est toujours en cours ; ne la relancez pas.';
-      }, 60000);
-      try {
-        // A submit button named "action" shadows HTMLFormElement.action.
-        var response = await fetch(form.getAttribute('action') || window.location.href, {
-          method: 'POST', body: payload, credentials: 'same-origin',
-          headers: {'X-Requested-With': 'XMLHttpRequest'}
-        });
-        if(response.redirected) {
-          window.location.assign(response.url);
-          return;
-        }
-        if(!response.ok || !(response.headers.get('content-type') || '').includes('text/html')) {
-          throw new Error('Réponse du serveur indisponible.');
-        }
-        var html = await response.text();
-        if(label) label.textContent = 'Affichage du résultat…';
-        // Same-origin Django HTML, escaped by the existing templates. A full
-        // document replacement also reinitializes the source picker/math scripts.
-        document.open();
-        document.write(html);
-        document.close();
-      } catch(err) {
-        if(label) label.textContent = 'Connexion interrompue. Le serveur peut avoir enregistré le quiz : vérifiez « Mes quiz » avant de relancer.';
-        var recovery = document.getElementById('genRecovery');
-        if(recovery) recovery.hidden = false;
-      } finally {
-        window.clearTimeout(waitNotice);
-      }
-    });
-  }
 })();
 </script>
 
 <script src="{% static 'js/teacher-quiz-resources.js' %}?v=resources-2"></script>
+<script src="{% static 'js/teacher-quiz-generation.js' %}?v=timings-1"></script>
 
 <script>
 (function(){

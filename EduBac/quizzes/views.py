@@ -15,6 +15,10 @@ from education.models import Lesson, Course
 from classrooms.models import Classroom, ClassroomMember
 from .models import Quiz, Question, Choice, QuizAssignment, Attempt, StudentAnswer
 from .math_text import normalize_math_text
+from .performance import track_generation
+from ai.quiz_metrics import current_trace, timed_phase
+
+_render_generation = timed_phase("render")(render)
 
 
 def _sync_excel_after_submit(attempt):
@@ -673,6 +677,7 @@ def publish_quiz(request, pk):
 
 
 @teacher_required
+@track_generation
 def teacher_ai_quiz(request):
     """
     Page unique enseignant :
@@ -824,10 +829,16 @@ def teacher_ai_quiz(request):
                         created_by=request.user,
                     )
                     quiz_created = quiz
+                    trace = current_trace.get()
+                    if trace is not None:
+                        trace.quiz_id = quiz.pk
                     generation_report = data.get('_generation_report')
                     preview = quiz.get_questions().prefetch_related('choices')
                     messages.success(request, 'Quiz generated successfully')
                 except Exception as e:
+                    trace = current_trace.get()
+                    if trace is not None:
+                        trace.error = getattr(e, 'code', type(e).__name__)
                     from ai.services import public_quiz_error
                     error = public_quiz_error(e)
 
@@ -884,10 +895,16 @@ def teacher_ai_quiz(request):
                 return redirect('quizzes:manage')
 
     from ai.services import available_providers
-    from education.media_library import source_files_for_lessons
-    source_files_by_lesson = source_files_for_lessons(all_lessons)
+    # Reuse this request's fresh catalogue instead of scanning Sources_IA a second time.
+    source_files_by_lesson = {
+        key: [resource.name for resource in choices.values()
+              if resource.value == resource.name]
+        for key, choices in resources_by_lesson.items()
+    }
+    import uuid
+    generation_id = uuid.uuid4()
     classrooms = Classroom.objects.filter(teacher=request.user, is_active=True)
-    return render(request, 'quizzes/teacher_ai_quiz.html', {
+    return _render_generation(request, 'quizzes/teacher_ai_quiz.html', {
         'niveaux': niveaux,
         'selected_niveau': selected_niveau,
         'selected_lesson_id': selected_lesson_id,
@@ -913,6 +930,7 @@ def teacher_ai_quiz(request):
         'generation_submitted': request.method == 'POST' or restored_quiz is not None,
         'restored_quiz': restored_quiz is not None,
         'generation_report': generation_report,
+        'generation_id': generation_id,
         'selected_ai_provider': request.POST.get('ai_provider', ''),
         'selected_ai_model': request.POST.get('ai_model', ''),
         'classrooms': classrooms,

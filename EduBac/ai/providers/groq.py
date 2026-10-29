@@ -9,6 +9,7 @@ import re
 from django.conf import settings
 
 from .base import AIProviderError, BaseProvider, http_error_code
+from ..quiz_metrics import current_trace, provider_response
 
 logger = logging.getLogger(__name__)
 
@@ -218,7 +219,28 @@ class GroqProvider(BaseProvider):
                     raise AIProviderError("Timeout Groq.", code="timeout")
                 kwargs["timeout"] = remaining
                 try:
-                    response = client.chat.completions.create(**kwargs)
+                    trace = current_trace.get()
+                    if trace is None:
+                        response = client.chat.completions.create(**kwargs)
+                    else:
+                        trace.counts["provider_requests"] += 1
+                        started = time.perf_counter()
+                        # Measure headers separately from reading/parsing the complete body.
+                        # This is HTTP first response, NOT time to the first generated token.
+                        with client.chat.completions.with_streaming_response.create(**kwargs) as raw:
+                            headers_ms = (time.perf_counter() - started) * 1000
+                            response = raw.parse()
+                            try:
+                                from ..quiz_quota import observe
+                                reset = _seconds_from_retry_text(
+                                    "try again in " + raw.headers.get("x-ratelimit-reset-tokens", ""),
+                                )
+                                if reset:
+                                    observe(model_id, float(raw.headers["x-ratelimit-limit-tokens"]),
+                                            float(raw.headers["x-ratelimit-remaining-tokens"]), reset)
+                            except (KeyError, TypeError, ValueError):
+                                pass  # Headers are optional diagnostics, never a validation gate.
+                        provider_response(response, headers_ms=headers_ms)
                     if model_id != self.model:
                         logger.warning(
                             "Groq: modèle %s non utilisé, réponse via %s", self.model, model_id,

@@ -1,6 +1,19 @@
 from django.db import models
 from django.conf import settings
 from education.models import Lesson
+import uuid
+
+
+class QuizGenerationRun(models.Model):
+    """Short-lived progress only; never stores source files, prompts or answers."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    quiz = models.ForeignKey('Quiz', null=True, on_delete=models.SET_NULL)
+    state = models.CharField(max_length=12, default='running')
+    phase = models.CharField(max_length=24, default='request')
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    metrics = models.JSONField(default=dict)
 
 
 class Quiz(models.Model):

@@ -56,3 +56,17 @@ mtime_ms = 1791719361692
 storage_uri = "gcs://replit-rams-assets-reed/rams/assets/repl:5ed16b6e-938c-4494-bd84-1df591cabb5c/fff61d70-c73b-411f-9f73-0766944e714f/7770931f-d6bb-42f7-a82d-c2602d769253"
 storage_version_token = "1791719371521322"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "qTfLgvPKbmBnVFymxdXNz"
+uri = "file://generated-artifacts/quiz-performance-report.html"
+type = "html"
+title = "EduBac — rapport de performance de génération IA"
+description = "Diagnostic, mesures réelles avant/après, modifications, tests et limites restantes."
+logical_id = "a4d05bec-b295-4eed-961c-8ddcf6fa4307"
+content_hash = "sha256:ad26827d7e73f6f3294fef21fe7a967063731a04eefaf020ad870f70f65a94b9"
+size = 13637
+mtime_ms = 1793303018371
+storage_uri = "gcs://replit-rams-assets-reed/rams/assets/repl:5ed16b6e-938c-4494-bd84-1df591cabb5c/a4d05bec-b295-4eed-961c-8ddcf6fa4307/53cc23be-9d86-4cca-ab8f-67385bdb8246"
+storage_version_token = "1793303085279975"
+content_type = "text/html"

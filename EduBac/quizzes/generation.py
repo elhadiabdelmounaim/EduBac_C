@@ -1,6 +1,7 @@
 """Validated, atomic persistence for both AI quiz entry points."""
 import logging
 import time
+from ai.quiz_metrics import timed_phase
 
 from django.db import transaction
 
@@ -11,6 +12,7 @@ from .models import Choice, Question, Quiz
 logger = logging.getLogger(__name__)
 
 
+@timed_phase("persistence")
 def save_generated_quiz(data, **attributes):
     questions = [validate_question(item, index + 1)
                  for index, item in enumerate(data["questions"])]

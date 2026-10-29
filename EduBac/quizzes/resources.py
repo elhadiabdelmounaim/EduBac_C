@@ -11,6 +11,7 @@ from django.conf import settings
 from django.utils.text import slugify
 
 from education.media_library import chapter_relative, documents
+from ai.quiz_metrics import timed_phase
 
 ALLOWED_EXTENSIONS = {'.txt', '.md', '.pdf', '.docx'}
 MAX_UPLOADS = 5
@@ -39,6 +40,7 @@ class LessonResource:
                 yield handle
 
 
+@timed_phase("catalog")
 def resource_catalog(lessons):
     """List selectable files without opening any document or guessing a path."""
     lessons = list(lessons)
@@ -162,6 +164,7 @@ def extract_document(handle, name):
     return text.strip(), cut, size
 
 
+@timed_phase("resources")
 def prepare_resources(choices, selected, uploads):
     """Resolve exact selections first; each chosen document must be readable."""
     selected = list(dict.fromkeys(selected))

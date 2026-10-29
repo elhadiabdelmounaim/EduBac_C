@@ -285,6 +285,17 @@ class QuizProtocolTests(TestCase):
         equivalent["choices"][1]["text"] = "6.0"
         self.assertIn("contredit", exact_answer_error(equivalent))
 
+    def test_numeric_explanation_checks_catch_false_sums_without_claiming_general_proof(self):
+        wrong = question("Quelle est la somme de termes d’une suite ?", "6")
+        wrong["explanation"] = "La somme est $1+0+1+0+1+0+1+0+1+0=6$."
+        self.assertIn("égalité numérique", exact_answer_error(wrong))
+        wrong["explanation"] = "La somme vaut $4(1+3+3^2+3^3+3^4)=4cdot40=160$."
+        self.assertIn("égalité numérique", exact_answer_error(wrong))
+        wrong["explanation"] = "La somme vaut $4(1+3+3^2+3^3+3^4)=484$."
+        self.assertIsNone(exact_answer_error(wrong))
+        wrong["explanation"] = "On résout $x+1=2$ et on obtient $x=1$."
+        self.assertIsNone(exact_answer_error(wrong))
+
     @patch.object(AIService, "_chat")
     def test_teacher_route_saves_only_after_full_protocol_and_displays_honest_report(self, chat):
         teacher = User.objects.create_user(
