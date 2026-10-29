@@ -175,6 +175,40 @@ class DuplicateChecksDisabledTests(TestCase):
         self.assertFalse(result[1]["error"])
         self.assertEqual(result[1]["competency"], "Effectuer un calcul justifié")
 
+    @patch.object(AIService, "_get_provider", return_value=SimpleNamespace(name="test", model="test"))
+    def test_teacher_repairs_a_rejected_question_even_when_review_omits_competency(self, provider):
+        bad = question(answer="6")
+        rejection = json.loads(reviews(
+            valid_question=False, valid_explanation=False, correct_choices=[],
+            reason="La réponse numérique est incorrecte.",
+            solution="Le calcul donne cinq, non six.",
+            competency=None,
+        ))
+        calls = []
+
+        def response(messages, **kwargs):
+            system, prompt = messages[0]["content"], messages[-1]["content"]
+            if "ÉTAPE 1" in system:
+                calls.append("analysis")
+                return json.dumps(ANALYSIS)
+            if "ÉTAPE 4" in system:
+                calls.append("math")
+                return json.dumps(rejection) if calls.count("math") == 1 else reviews()
+            if prompt.startswith(("CORRIGE uniquement", "REMPLACE uniquement")):
+                calls.append("repair")
+                return repaired(question())
+            calls.append("generation")
+            return generated(bad)
+
+        service = AIService()
+        with patch.object(AIService, "_chat", side_effect=response):
+            data = service.generate_quiz_from_lesson(
+                self.lesson, 1, "moyen", resource_context="", allow_related_knowledge=True,
+                enforce_protocol=True,
+            )
+        self.assertEqual(calls, ["analysis", "generation", "math", "repair", "math"])
+        self.assertEqual(data["questions"][0]["correct_answer"], "5")
+
     def test_missing_competency_for_a_accepted_question_still_fails_closed(self):
         response = json.loads(reviews())
         response["reviews"][0]["competency"] = None
