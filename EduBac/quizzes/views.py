@@ -729,6 +729,7 @@ def teacher_ai_quiz(request):
 
     preview = restored_quiz.get_questions().prefetch_related('choices') if restored_quiz else None
     quiz_created = restored_quiz
+    generation_report = None
     error = None
     quiz_description = restored_quiz.description if restored_quiz else ''
     selected_source_file = request.POST.get('source_file', '')
@@ -807,6 +808,7 @@ def teacher_ai_quiz(request):
                         subject=quiz_subject,
                         resource_context=context_text,
                         allow_related_knowledge=True,
+                        enforce_protocol=True,
                     )
                     # Créer le quiz + questions
                     from .generation import save_generated_quiz
@@ -822,6 +824,7 @@ def teacher_ai_quiz(request):
                         created_by=request.user,
                     )
                     quiz_created = quiz
+                    generation_report = data.get('_generation_report')
                     preview = quiz.get_questions().prefetch_related('choices')
                     messages.success(request, 'Quiz generated successfully')
                 except Exception as e:
@@ -909,6 +912,7 @@ def teacher_ai_quiz(request):
         'selected_difficulty': difficulty,
         'generation_submitted': request.method == 'POST' or restored_quiz is not None,
         'restored_quiz': restored_quiz is not None,
+        'generation_report': generation_report,
         'selected_ai_provider': request.POST.get('ai_provider', ''),
         'selected_ai_model': request.POST.get('ai_model', ''),
         'classrooms': classrooms,

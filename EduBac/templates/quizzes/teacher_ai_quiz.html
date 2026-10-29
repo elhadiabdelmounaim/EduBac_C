@@ -32,6 +32,16 @@
     {% if quiz_created and not restored_quiz %}
     <div class="alert alert-success" role="status">Quiz généré avec succès.</div>
     {% endif %}
+    {% if generation_report %}
+    <div class="alert alert-info" role="status">
+        Analyse pédagogique effectuée ; historique consulté :
+        {{ generation_report.history_questions }} question(s).
+        {{ generation_report.reviewed_questions }} question(s) retenue(s) après contrôle des réponses
+        et de la diversité, y compris les exemples repérés dans les ressources.
+        La revue croisée par IA ne constitue pas une preuve mathématique générale :
+        relisez les questions, les réponses et les explications avant l’envoi.
+    </div>
+    {% endif %}
     {% if error %}
     <div class="alert alert-danger" role="alert">Échec de la génération : {{ error }}</div>
     {% endif %}
@@ -461,7 +471,7 @@
       payload.set('action', 'generate');
       genLoading.classList.remove('d-none');
       var label = genLoading.querySelector('[data-gen-status]');
-      if(label) label.textContent = 'L’IA génère et vérifie les questions. Vous pouvez continuer à consulter la page.';
+       if(label) label.textContent = 'Analyse des ressources et de l’historique, génération puis contrôles des réponses et de la diversité. Vous pouvez continuer à consulter la page.';
       genBtn.disabled = true;
       genBtn.setAttribute('aria-busy', 'true');
       var waitNotice = window.setTimeout(function(){

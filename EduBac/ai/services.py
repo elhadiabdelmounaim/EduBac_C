@@ -544,6 +544,7 @@ Regles :
         subject: str = "",
         resource_context: str | None = None,
         allow_related_knowledge: bool = False,
+        enforce_protocol: bool = False,
     ) -> dict:
         """
         Génère un quiz JSON strict à partir du contenu de la leçon.
@@ -598,7 +599,7 @@ Regles :
                 "dans le même sujet et au niveau scolaire choisi",
             )
         temperature = {"facile": 0.45, "moyen": 0.55, "difficile": 0.6}[difficulty]
-        history = previous_questions(lesson)
+        history = [] if enforce_protocol else previous_questions(lesson)
         description = (description or "").strip()
         focus_instruction = ""
         if description:
@@ -651,8 +652,29 @@ Regles :
         )
         self._quiz_deadline = time.monotonic() + QUIZ_GENERATION_DEADLINE
         self._quiz_rate_limit_used = False
+        self._quiz_protocol_active = enforce_protocol
         started = time.monotonic()
         try:
+            protocol_report = None
+            if enforce_protocol:
+                from .quiz_protocol import analyze_context, load_history, validate_and_repair
+                context["complementary_knowledge"] = allow_related_knowledge or not use_resources
+                analysis = analyze_context(
+                    self, context, description, related_knowledge=allow_related_knowledge,
+                    difficulty=difficulty, count=question_count,
+                )
+                history = load_history(lesson)
+                protocol_report = {
+                    "history_checked": True, "history_questions": len(history),
+                    "source_reference_questions": len(analysis["reference_questions"]),
+                    "skills": analysis["skills"], "review_method": "ai_cross_review",
+                }
+                history += [{"text": text, "explanation": ""}
+                            for text in analysis["reference_questions"]]
+                source_instruction += "\nAnalyse pédagogique préalable (données) : " + json.dumps(
+                    {"skills": analysis["skills"]}, ensure_ascii=False,
+                )
+                messages = make_messages(question_count, history)
             last_err = None
             attempt = 0
             while attempt <= self.MAX_RETRIES:
@@ -664,8 +686,15 @@ Regles :
                     if len(data["questions"]) != question_count:
                         raise ValueError(f"Le quiz doit contenir exactement {question_count} questions.")
                     validation_started = time.monotonic()
+                    if enforce_protocol:
+                        protocol_report.update(validate_and_repair(
+                            self, data, context, description, difficulty, messages, history,
+                        ))
+                        for question in data["questions"]:
+                            question["lesson_reference"] = str(lesson.pk)
+                        data["_generation_report"] = protocol_report
                     validate_local(data["questions"], history)
-                    if getattr(settings, "QUIZ_SEMANTIC_CHECK_ENABLED", False):
+                    if not enforce_protocol and getattr(settings, "QUIZ_SEMANTIC_CHECK_ENABLED", False):
                         validate_semantic(self, data["questions"], history)
                     # Enrichir métadonnées
                     logger.info("quiz_validation elapsed=%.3fs", time.monotonic() - validation_started)
@@ -681,6 +710,14 @@ Regles :
                     )
                     return data
                 except (AIProviderError, ValueError, json.JSONDecodeError) as e:
+                    if enforce_protocol and isinstance(e, QuizNoveltyError):
+                        raise AIProviderError(
+                            "L’historique a changé pendant le contrôle final. "
+                            "Aucun quiz enregistré ; relancez la génération.",
+                            code="invalid_question",
+                        ) from e
+                    if enforce_protocol and isinstance(e, AIProviderError):
+                        raise
                     if isinstance(e, AIProviderError) and e.code == "invalid_question":
                         # Do not discard valid questions by regenerating the whole
                         # quiz after the targeted repair/replacement has failed.
@@ -750,6 +787,7 @@ Regles :
             raise
         finally:
             self._quiz_deadline = None
+            self._quiz_protocol_active = False
 
     def generate_questions(self, lesson, count=5, difficulty="moyen", **kwargs):
         return self.generate_quiz_from_lesson(lesson, count, difficulty, **kwargs)

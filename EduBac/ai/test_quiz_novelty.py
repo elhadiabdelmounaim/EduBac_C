@@ -325,6 +325,8 @@ class QuizNoveltyTests(TestCase):
 
     @patch.object(AIService, "_chat")
     def test_teacher_clicks_save_two_different_quizzes_with_same_parameters(self, chat):
+        from .test_helpers import isolate_protocol_math
+        isolate_protocol_math(self)
         teacher = User.objects.create_user(
             username="novelty-teacher", email="novelty@example.test", role="teacher",
         )
@@ -335,8 +337,12 @@ class QuizNoveltyTests(TestCase):
         params = {"action": "generate", "niveau": self.course.niveau, "lesson": self.lesson.pk,
                   "question_count": 2, "seconds_per_question": 35, "difficulty": "difficile",
                   "description": "Varier les raisonnements sur les polynômes"}
+        replacements = json.loads(quiz_json(NEW))
+        for index, item in enumerate(replacements["questions"], 1):
+            item["index"] = index
         chat.side_effect = [quiz_json(OLD), '{"similar_questions":[]}',
-                            quiz_json(list(reversed(OLD))), quiz_json(NEW), '{"similar_questions":[]}']
+                            quiz_json(list(reversed(OLD))), json.dumps(replacements),
+                            '{"similar_questions":[]}']
         for _ in range(2):
             response = self.client.post(reverse("quizzes:teacher_ai"), params)
             self.assertEqual(response.status_code, 200)
@@ -357,6 +363,8 @@ class QuizNoveltyTests(TestCase):
 
     @patch.object(AIService, "_chat")
     def test_teacher_duplicate_failure_does_not_create_a_quiz(self, chat):
+        from .test_helpers import isolate_protocol_math
+        isolate_protocol_math(self)
         self.history()
         teacher = User.objects.create_user(
             username="novelty-refused", email="novelty-refused@example.test", role="teacher",
@@ -370,6 +378,6 @@ class QuizNoveltyTests(TestCase):
             "action": "generate", "niveau": self.course.niveau, "lesson": self.lesson.pk,
             "question_count": 2, "difficulty": "moyen", "description": "Conserver le sujet",
         })
-        self.assertContains(response, "Aucun quiz dupliqué")
+        self.assertContains(response, "correction ou remplacement impossible")
         self.assertEqual(Quiz.objects.count(), before)
         self.assertEqual(response.context["quiz_description"], "Conserver le sujet")

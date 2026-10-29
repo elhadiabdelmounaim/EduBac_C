@@ -70,6 +70,8 @@ def pdf_bytes():
 @override_settings(ALLOWED_HOSTS=['testserver'], QUIZ_SEMANTIC_CHECK_ENABLED=False)
 class TeacherResourceTests(TestCase):
     def setUp(self):
+        from ai.test_helpers import isolate_protocol_checks
+        isolate_protocol_checks(self)
         temporary = TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         settings = override_settings(MEDIA_ROOT=temporary.name)

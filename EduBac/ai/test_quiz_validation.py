@@ -237,6 +237,8 @@ class QuizQuestionValidationTests(TestCase):
 
     @patch.object(AIService, "_chat")
     def test_teacher_route_saves_only_valid_repaired_quiz(self, chat):
+        from .test_helpers import isolate_protocol_checks
+        isolate_protocol_checks(self)
         user = User.objects.create_user(username="qcm-teacher", email="qcm@example.test", role="teacher")
         session = self.client.session
         session["user_id"] = user.pk

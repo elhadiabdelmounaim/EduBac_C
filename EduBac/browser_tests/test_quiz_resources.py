@@ -23,6 +23,8 @@ from quizzes.test_resources import QUIZ_DATA
 @override_settings(QUIZ_SEMANTIC_CHECK_ENABLED=False)
 class QuizResourcesBrowserTests(StaticLiveServerTestCase):
     def setUp(self):
+        from ai.test_helpers import isolate_protocol_checks
+        isolate_protocol_checks(self)
         temporary = TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         settings = override_settings(MEDIA_ROOT=temporary.name)

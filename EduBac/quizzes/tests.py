@@ -225,6 +225,7 @@ class QuizLessonSelectionTests(TestCase):
             subject='',
             resource_context='',
             allow_related_knowledge=True,
+            enforce_protocol=True,
         )
 
 

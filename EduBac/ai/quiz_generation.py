@@ -74,13 +74,13 @@ def generate_batches(service, make_messages, count, temperature, history, retry_
     return data
 
 
-def repair_batch(service, questions, invalid, valid, messages, history):
+def repair_batch(service, questions, invalid, valid, messages, history, *, replace_only=False):
     """Repair up to four invalid slots per call, preserving accepted slots verbatim."""
     from .quiz_novelty import validate_local
     from .quiz_validation import validate_question
     for offset in range(0, len(invalid), 4):
         pending = dict(list(invalid.items())[offset:offset + 4])
-        for replace in (False, True):
+        for replace in ((True,) if replace_only else (False, True)):
             if not pending:
                 break
             instruction = "REMPLACE uniquement" if replace else "CORRIGE uniquement"
