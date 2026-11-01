@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 
 
@@ -119,7 +120,10 @@ class ChatMessage(models.Model):
             'sender_name': name,
             'sender_role': getattr(self.sender, 'role', ''),
             'is_teacher': getattr(self.sender, 'role', '') == 'teacher',
-            'attachment_url': self.attachment.url if self.attachment else '',
+            'attachment_url': (
+                reverse('chat:attachment', args=[self.pk])
+                if self.attachment else ''
+            ),
             'attachment_name': self.attachment_name,
             'is_image': self.is_image,
             'is_voice': self.is_voice,

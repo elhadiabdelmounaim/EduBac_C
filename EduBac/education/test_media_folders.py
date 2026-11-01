@@ -128,14 +128,16 @@ class MediaFoldersTests(TestCase):
             self.assertContains(self.client.get(level_url), 'Fichier bientôt disponible')
 
     @patch('education.views._ensure_curriculum_loaded')
-    def test_level_page_preserves_legacy_pdf_links(self, load):
+    def test_level_page_uses_a_django_route_for_legacy_pdfs(self, load):
         course = Course.objects.create(name='Mathématiques', niveau='1ere_bac_lettres')
-        Lesson.objects.create(course=course, title='Logique', order=1, pdf='ancien.pdf')
+        lesson = Lesson.objects.create(
+            course=course, title='Logique', order=1, pdf='ancien.pdf'
+        )
         with TemporaryDirectory() as media, override_settings(MEDIA_ROOT=media):
             (Path(media) / 'ancien.pdf').write_bytes(b'%PDF-1.4\nTest')
             self.assertContains(
                 self.client.get(reverse('education:niveau_detail', args=[course.niveau])),
-                '/media/ancien.pdf',
+                reverse('education:lesson_pdf', args=[lesson.pk]),
             )
 
     def test_all_lessons_have_folders_without_overwriting_files(self):

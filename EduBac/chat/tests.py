@@ -45,12 +45,28 @@ class VoiceMessageTests(TestCase):
         self.assertEqual(sent.status_code, 200)
         message = sent.json()['message']
         self.assertTrue(message['is_voice'])
-        self.assertTrue(message['attachment_url'].endswith('.wav'))
+        self.assertTrue(message['attachment_url'].startswith('/chat/attachments/'))
+        attachment = self.client.get(message['attachment_url'])
+        self.assertEqual(attachment.status_code, 200)
+        self.assertTrue(attachment['Content-Type'].startswith('audio/'))
+        self.assertEqual(attachment['Cache-Control'], 'private, no-store')
         self.login_as(self.teacher)
         received = self.client.get(f'/chat/api/classe/{self.room.pk}/messages/').json()['messages']
         self.assertEqual(received[0]['id'], message['id'])
         self.assertTrue(received[0]['is_voice'])
         self.assertEqual(received[0]['attachment_url'], message['attachment_url'])
+
+    def test_chat_attachment_is_not_downloadable_by_a_nonmember(self):
+        sent = self.client.post(f'/chat/api/classe/{self.room.pk}/send/', {
+            'attachment': self.audio_file(), 'is_voice': '1',
+        })
+        attachment_url = sent.json()['message']['attachment_url']
+        outsider = User.objects.create_user(
+            username='outsider', email='outsider@example.test'
+        )
+        self.login_as(outsider)
+        response = self.client.get(attachment_url)
+        self.assertEqual(response.status_code, 403)
 
     def test_uploaded_audio_is_recognized_without_recording_flag(self):
         response = self.client.post(f'/chat/api/classe/{self.room.pk}/send/', {

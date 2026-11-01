@@ -13,13 +13,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Charger les variables d'environnement depuis .env
 load_dotenv(BASE_DIR / '.env')
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-_1mw2(s926f#%sz4av8rks(#skvo=$s)6(lg!@kdqfg9szea9m')
+# Production must provide DJANGO_SECRET_KEY through its private environment.
+# SESSION_SECRET and the explicit fallback are development-only.
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY') or os.getenv('SESSION_SECRET')
+if not SECRET_KEY:
+    if os.getenv('DJANGO_PRODUCTION') == '1':
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured('DJANGO_SECRET_KEY est obligatoire en production.')
+    SECRET_KEY = 'development-only-not-for-production'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+    if host.strip()
+]
 
 # Allow the current development preview without accepting arbitrary hosts.
 if DEBUG and os.getenv('DJANGO_PRODUCTION') != '1':
@@ -106,10 +116,10 @@ USE_I18N = True
 USE_TZ = True
 
 # Static & Media
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

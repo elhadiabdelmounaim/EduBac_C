@@ -416,8 +416,8 @@ html[data-theme="dark"] #lessonContent.lesson-md--boxed .course-box--note {
         {% endfor %}
         {% if lesson.pdf %}
         <div class="mt-3 d-flex gap-2">
-            <a href="{{ lesson.pdf.url }}" class="btn btn-edubac btn-sm" target="_blank">Ouvrir le PDF</a>
-            <a href="{{ lesson.pdf.url }}" class="btn btn-outline-primary btn-sm" download>Télécharger</a>
+            <a href="{% url 'education:lesson_pdf' lesson.pk %}" class="btn btn-edubac btn-sm" target="_blank" rel="noopener">Ouvrir le PDF</a>
+            <a href="{% url 'education:lesson_pdf' lesson.pk %}?download=1" class="btn btn-outline-primary btn-sm">Télécharger</a>
         </div>
         {% endif %}
     </div>

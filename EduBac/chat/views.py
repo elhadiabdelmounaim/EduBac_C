@@ -1,6 +1,7 @@
 import json
+import mimetypes
 
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import FileResponse, Http404, JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_GET, require_POST
 from django.utils import timezone
@@ -142,6 +143,33 @@ def api_messages(request, classroom_id):
         'messages': [m.to_dict() for m in messages_list],
         'classroom_id': classroom.pk,
     })
+
+
+@login_required_simple
+@require_GET
+def attachment(request, message_id):
+    message = get_object_or_404(
+        ChatMessage.objects.select_related('room__classroom'),
+        pk=message_id,
+    )
+    _, _, err = _require_access(request, message.room.classroom_id)
+    if err:
+        return err
+    if not message.attachment:
+        raise Http404
+    try:
+        handle = message.attachment.open('rb')
+    except FileNotFoundError:
+        raise Http404
+    content_type = mimetypes.guess_type(message.attachment_name)[0]
+    response = FileResponse(
+        handle,
+        content_type=content_type or 'application/octet-stream',
+        filename=message.attachment_name,
+    )
+    response['Cache-Control'] = 'private, no-store'
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response
 
 
 @login_required_simple

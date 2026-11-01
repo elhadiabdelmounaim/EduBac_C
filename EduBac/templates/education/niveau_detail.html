@@ -53,13 +53,13 @@
                            class="btn btn-outline-primary btn-sm">Voir la leçon</a>
                         {% endif %}
                         {% if item.has_file %}
-                        <a href="{{ item.obj.pdf.url }}"
+                        <a href="{% url 'education:lesson_pdf' item.obj.pk %}"
                            class="btn btn-edubac btn-sm"
                            target="_blank"
                            rel="noopener">
                             <i class="bi bi-eye"></i> Ouvrir
                         </a>
-                        <a href="{{ item.obj.pdf.url }}"
+                        <a href="{% url 'education:lesson_pdf' item.obj.pk %}?download=1"
                            class="btn btn-outline-primary btn-sm"
                            download>
                             <i class="bi bi-download"></i> Télécharger

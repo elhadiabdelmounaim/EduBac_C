@@ -12,5 +12,6 @@ urlpatterns = [
     path('niveau/<str:niveau>/', views.niveau_detail, name='niveau_detail'),
     path('cours/<int:pk>/', views.course_detail, name='course_detail'),
     path('lecon/<int:pk>/', views.lesson_detail, name='lesson_detail'),
+    path('lecon/<int:pk>/pdf/', views.lesson_pdf, name='lesson_pdf'),
     path('lecon/<int:pk>/documents/<str:kind>/<str:filename>/', views.lesson_document, name='lesson_document'),
 ]

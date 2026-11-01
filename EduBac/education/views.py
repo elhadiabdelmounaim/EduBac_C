@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management import call_command
@@ -226,6 +228,28 @@ def lesson_document(request, pk, kind, filename):
     except FileNotFoundError:
         raise Http404
     response['X-Content-Type-Options'] = 'nosniff'
+    return response
+
+
+def lesson_pdf(request, pk):
+    from django.http import FileResponse, Http404
+
+    lesson = get_object_or_404(Lesson, pk=pk)
+    if not lesson.pdf:
+        raise Http404
+    try:
+        handle = lesson.pdf.open('rb')
+    except FileNotFoundError:
+        raise Http404
+    filename = Path(lesson.pdf.name).name
+    response = FileResponse(
+        handle,
+        content_type='application/pdf',
+        as_attachment=request.GET.get('download') == '1',
+        filename=filename,
+    )
+    response['X-Content-Type-Options'] = 'nosniff'
+    response['Cache-Control'] = 'private, no-store'
     return response
 
 
