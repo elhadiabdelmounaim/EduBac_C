@@ -77,6 +77,16 @@
                             {% endfor %}
                         </select>
                     </div>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold" for="quizDurationInput">
+                            Durée totale du quiz (minutes)
+                        </label>
+                        <input class="form-control" type="number" id="quizDurationInput"
+                               name="duration" min="1" max="600" step="1"
+                               value="{{ selected_duration|default:20 }}" required>
+                    </div>
                     <div class="col-md-4">
                         <label class="form-label fw-semibold" for="secondsPerQuestion">
                             Temps par question (secondes)
@@ -92,10 +102,12 @@
                        accept=".json,application/json" required>
                 <div class="form-text mt-2">
                     Fichier UTF-8, jusqu’à 1 Mio. Le niveau, le cours, la leçon et le temps se choisissent
-                    dans ce formulaire. Le fichier contient le titre, la durée totale et les questions.
+                    dans ce formulaire, ainsi que la durée totale du quiz. Le fichier contient le titre
+                    et les questions.
                     Les anciennes clés <code>level</code> et <code>lesson</code> restent acceptées si elles
-                    correspondent à vos choix. Les formules et le LaTeX restent inchangés ; aucun code
-                    contenu dans le fichier n’est exécuté.
+                    correspondent à vos choix ; l’ancienne clé <code>duration</code> est ignorée.
+                    Les formules et le LaTeX restent inchangés ; aucun code contenu dans le fichier
+                    n’est exécuté.
                 </div>
                 <button class="btn btn-edubac mt-3" type="submit">
                     <i class="bi bi-check2-circle"></i> Valider et créer le brouillon
@@ -105,14 +117,13 @@
             <details class="mt-4">
                 <summary class="fw-semibold">Voir le format attendu</summary>
                 <p class="form-text mt-2">
-                    Le niveau, le cours, la leçon et le temps par question sont sélectionnés dans le
-                    formulaire. Les niveaux de difficulté acceptés sont <code>easy</code>,
-                    <code>medium</code> et <code>hard</code>.
+                    Le niveau, le cours, la leçon, la durée totale et le temps par question sont
+                    sélectionnés dans le formulaire. Les niveaux de difficulté acceptés sont
+                    <code>easy</code>, <code>medium</code> et <code>hard</code>.
                 </p>
                 <pre class="bg-light border rounded p-3 small mb-0" style="white-space:pre-wrap;overflow-wrap:anywhere;">{
   "quiz": {
     "title": "Les fonctions numériques",
-    "duration": 20,
     "questions": [{
       "id": "Q001",
       "type": "multiple_choice",

@@ -58,6 +58,7 @@ class GenerationPerformanceTests(TestCase):
             "course": self.lesson.course_id,
             "lesson": self.lesson.pk,
             "seconds_per_question": "30",
+            "duration": "10",
             "generation_id": str(self.identifier),
             "quiz_json": SimpleUploadedFile(
                 "quiz.json", json.dumps(self.document, ensure_ascii=False).encode(),

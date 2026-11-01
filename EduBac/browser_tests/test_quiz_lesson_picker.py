@@ -59,6 +59,7 @@ class QuizJsonImportFormBrowserTests(StaticLiveServerTestCase):
                     "option.value && !option.hidden).map(option => option.value)",
                 )
                 self.assertEqual(available_lessons, [str(common_lesson.pk)])
+                expect(page.locator('#quizDurationInput')).to_have_value('20')
                 expect(page.locator('#secondsPerQuestion')).to_have_value('20')
                 expect(page.get_by_role(
                     'button', name='Valider et créer le brouillon',

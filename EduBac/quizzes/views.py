@@ -709,6 +709,7 @@ def teacher_ai_quiz(request):
     quiz_description = restored_quiz.description if restored_quiz else ''
     n_questions = restored_quiz.questions.count() if restored_quiz else 0
     sec = restored_quiz.seconds_per_question if restored_quiz else 20
+    total_duration = restored_quiz.duration if restored_quiz else 20
     difficulty = restored_quiz.difficulty if restored_quiz else 'moyen'
     generation_id = uuid.uuid4()
     if request.method == 'POST' and request.POST.get('action') == 'import_json':
@@ -716,6 +717,7 @@ def teacher_ai_quiz(request):
         selected_course_id = (request.POST.get('course') or '').strip()
         selected_lesson_id = (request.POST.get('lesson') or '').strip()
         sec = (request.POST.get('seconds_per_question') or '').strip()
+        total_duration = (request.POST.get('duration') or '').strip()
 
     if request.method == 'POST':
         action = request.POST.get('action', '')
@@ -747,6 +749,7 @@ def teacher_ai_quiz(request):
                     request.user,
                     selected_lesson=selected_lesson,
                     seconds_per_question=sec,
+                    duration_minutes=total_duration,
                 )
             except QuizImportError as exc:
                 error = str(exc)
@@ -837,6 +840,7 @@ def teacher_ai_quiz(request):
         quiz_description = quiz_created.description
         n_questions = quiz_created.questions.count()
         sec = quiz_created.seconds_per_question
+        total_duration = quiz_created.duration
         difficulty = quiz_created.difficulty
     classrooms = Classroom.objects.filter(
         teacher=request.user, is_active=True, niveau=selected_niveau,
@@ -857,6 +861,7 @@ def teacher_ai_quiz(request):
         'quiz_description': quiz_description,
         'selected_question_count': n_questions,
         'selected_seconds_per_question': sec,
+        'selected_duration': total_duration,
         'selected_difficulty': difficulty,
         'generation_submitted': request.method == 'POST' or restored_quiz is not None,
         'restored_quiz': restored_quiz is not None,

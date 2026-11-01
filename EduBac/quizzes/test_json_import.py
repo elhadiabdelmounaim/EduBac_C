@@ -82,7 +82,7 @@ class QuizJsonImportTests(TestCase):
 
     def post_json(
         self, document=None, *, filename='quiz.json', generation_id=None,
-        seconds_per_question=20, selected_lesson=None,
+        seconds_per_question=20, duration_minutes=20, selected_lesson=None,
     ):
         selected_lesson = selected_lesson or self.lesson
         content = json.dumps(
@@ -94,6 +94,7 @@ class QuizJsonImportTests(TestCase):
             'course': selected_lesson.course_id,
             'lesson': selected_lesson.pk,
             'seconds_per_question': seconds_per_question,
+            'duration': duration_minutes,
             'generation_id': str(generation_id or uuid.uuid4()),
             'quiz_json': SimpleUploadedFile(filename, content, content_type='application/json'),
         })
@@ -128,23 +129,31 @@ class QuizJsonImportTests(TestCase):
         generate.assert_not_called()
 
     @patch('ai.services.AIService.generate_quiz_from_lesson')
-    def test_form_selection_sets_question_time_without_json_level_or_lesson(self, generate):
+    def test_form_selections_set_durations_without_json_metadata(self, generate):
         document = json.loads(json.dumps(self.document))
         document['quiz'].pop('level')
         document['quiz'].pop('lesson')
+        document['quiz'].pop('duration')
 
-        response = self.post_json(document, seconds_per_question=45)
+        response = self.post_json(document, seconds_per_question=45, duration_minutes=25)
 
         self.assertEqual(response.status_code, 302)
         quiz = Quiz.objects.get()
         self.assertEqual(quiz.lesson, self.lesson)
         self.assertEqual(quiz.seconds_per_question, 45)
+        self.assertEqual(quiz.duration, 25)
         generate.assert_not_called()
 
     def test_invalid_question_time_is_rejected_without_creating_a_quiz(self):
         response = self.post_json(seconds_per_question='601')
 
         self.assertContains(response, 'entre 5 et 600 secondes')
+        self.assertFalse(Quiz.objects.exists())
+
+    def test_invalid_total_duration_is_rejected_without_creating_a_quiz(self):
+        response = self.post_json(duration_minutes='601')
+
+        self.assertContains(response, 'entre 1 et 600 minutes')
         self.assertFalse(Quiz.objects.exists())
 
     @patch('ai.services.AIService.generate_quiz_from_lesson')
@@ -190,6 +199,7 @@ class QuizJsonImportTests(TestCase):
             'course': self.course.pk,
             'lesson': self.lesson.pk,
             'seconds_per_question': '20',
+            'duration': '5',
             'generation_id': str(uuid.uuid4()),
             'quiz_json': SimpleUploadedFile('duplicate.json', duplicate),
         })

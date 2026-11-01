@@ -173,6 +173,7 @@ class QuizLessonSelectionTests(TestCase):
                 'course': self.course.pk,
                 'lesson': self.lesson.pk,
                 'seconds_per_question': '45',
+                'duration': '15',
             'quiz_json': SimpleUploadedFile(
                 'latex.json', json.dumps(document, ensure_ascii=False).encode(),
                 content_type='application/json',

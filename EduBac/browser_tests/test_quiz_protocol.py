@@ -93,6 +93,7 @@ class QuizJsonImportBrowserTests(StaticLiveServerTestCase):
                 teacher_page.locator('#quizLevel').select_option(course.niveau)
                 teacher_page.locator('#quizCourse').select_option(str(course.pk))
                 teacher_page.locator('#quizLesson').select_option(str(lesson.pk))
+                teacher_page.locator('#quizDurationInput').fill('25')
                 teacher_page.locator('#secondsPerQuestion').fill('45')
                 teacher_page.locator('#quizJsonFile').set_input_files({
                     'name': 'quiz.json',
@@ -106,6 +107,7 @@ class QuizJsonImportBrowserTests(StaticLiveServerTestCase):
                     re.escape(base_url + reverse('quizzes:teacher_ai')) + r'\?quiz=\d+',
                 ))
                 expect(teacher_page.get_by_role('heading', name='Quiz JSON')).to_be_visible()
+                expect(teacher_page.get_by_text('25 min')).to_be_visible()
                 expect(teacher_page.get_by_text('45 s/question')).to_be_visible()
                 expect(teacher_page.locator('math').first).to_be_visible()
                 expect(teacher_page.locator('math').first).to_contain_text('2')
