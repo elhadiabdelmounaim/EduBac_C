@@ -26,10 +26,22 @@
             <label class="form-label fw-semibold" for="quizTitle">Titre du quiz</label>
             <input type="text" name="quiz_title" id="quizTitle" class="form-control mb-3"
                    value="{{ quiz.title }}" maxlength="255" required>
-            <label class="form-label fw-semibold" for="quizDuration">Durée totale (minutes)</label>
-            <input type="number" name="duration" id="quizDuration" class="form-control"
-                   value="{{ quiz.duration }}" min="1" max="600" required>
-            <div class="form-text">Le temps par question est recalculé lorsque vous modifiez cette durée.</div>
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <label class="form-label fw-semibold" for="quizDuration">Durée totale (minutes)</label>
+                    <input type="number" name="duration" id="quizDuration" class="form-control"
+                           value="{{ quiz.duration }}" min="1" max="600" required>
+                </div>
+                <div class="col-sm-6">
+                    <label class="form-label fw-semibold" for="quizSecondsPerQuestion">
+                        Temps par question (secondes)
+                    </label>
+                    <input type="number" name="seconds_per_question" id="quizSecondsPerQuestion"
+                           class="form-control" value="{{ quiz.seconds_per_question }}"
+                           min="5" max="600" step="1" required>
+                </div>
+            </div>
+            <div class="form-text mt-2">La durée totale et le temps par question se règlent séparément.</div>
         </div>
     </div>
     {% for q in questions %}

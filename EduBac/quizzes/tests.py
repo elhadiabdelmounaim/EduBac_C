@@ -92,6 +92,10 @@ class QuizLessonSelectionTests(TestCase):
         self.assertContains(response, 'Importer un quiz')
         self.assertContains(response, 'name="quiz_json"')
         self.assertContains(response, 'accept=".json,application/json"')
+        self.assertContains(response, 'name="niveau"')
+        self.assertContains(response, 'name="course"')
+        self.assertContains(response, 'name="lesson"')
+        self.assertContains(response, 'name="seconds_per_question"')
         self.assertNotContains(response, 'aiProviderSelect')
         self.assertNotContains(response, 'Générer le quiz avec l’IA')
 
@@ -165,6 +169,10 @@ class QuizLessonSelectionTests(TestCase):
         }
         response = self.client.post(reverse('quizzes:teacher_ai'), {
             'action': 'import_json',
+                'niveau': self.course.niveau,
+                'course': self.course.pk,
+                'lesson': self.lesson.pk,
+                'seconds_per_question': '45',
             'quiz_json': SimpleUploadedFile(
                 'latex.json', json.dumps(document, ensure_ascii=False).encode(),
                 content_type='application/json',
@@ -174,6 +182,8 @@ class QuizLessonSelectionTests(TestCase):
         self.assertEqual(response.status_code, 302)
         quiz = Quiz.objects.get(title='Quiz LaTeX')
         self.assertEqual(quiz.description, 'Calculs sur les fractions.')
+        self.assertEqual(quiz.lesson, self.lesson)
+        self.assertEqual(quiz.seconds_per_question, 45)
         question = Question.objects.get(quiz=quiz)
         self.assertEqual(question.text, question_text)
         self.assertEqual(question.correct_answer, choice_text)

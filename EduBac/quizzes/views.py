@@ -1,5 +1,4 @@
 from datetime import timedelta
-import math
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
@@ -705,20 +704,49 @@ def teacher_ai_quiz(request):
     quiz_created = restored_quiz
     error = None
     selected_niveau = restored_quiz.lesson.course.niveau if restored_quiz else ''
+    selected_course_id = str(restored_quiz.lesson.course_id) if restored_quiz else ''
     selected_lesson_id = str(restored_quiz.lesson_id) if restored_quiz else ''
     quiz_description = restored_quiz.description if restored_quiz else ''
     n_questions = restored_quiz.questions.count() if restored_quiz else 0
     sec = restored_quiz.seconds_per_question if restored_quiz else 20
     difficulty = restored_quiz.difficulty if restored_quiz else 'moyen'
     generation_id = uuid.uuid4()
+    if request.method == 'POST' and request.POST.get('action') == 'import_json':
+        selected_niveau = (request.POST.get('niveau') or '').strip()
+        selected_course_id = (request.POST.get('course') or '').strip()
+        selected_lesson_id = (request.POST.get('lesson') or '').strip()
+        sec = (request.POST.get('seconds_per_question') or '').strip()
 
     if request.method == 'POST':
         action = request.POST.get('action', '')
         if action == 'import_json':
             from .json_import import QuizImportError, create_quiz_from_json
             try:
+                if selected_niveau not in dict(Course.NIVEAU_CHOICES):
+                    raise QuizImportError("Choisissez un niveau scolaire.")
+                selected_course = (
+                    Course.objects.filter(
+                        pk=selected_course_id, niveau=selected_niveau,
+                    ).first()
+                    if selected_course_id.isdecimal()
+                    else None
+                )
+                if selected_course is None:
+                    raise QuizImportError("Choisissez un cours du niveau sélectionné.")
+                selected_lesson = (
+                    Lesson.objects.filter(
+                        pk=selected_lesson_id, course=selected_course,
+                    ).select_related('course').first()
+                    if selected_lesson_id.isdecimal()
+                    else None
+                )
+                if selected_lesson is None:
+                    raise QuizImportError("Choisissez une leçon de ce cours.")
                 quiz_created = create_quiz_from_json(
-                    request.FILES.get('quiz_json'), request.user,
+                    request.FILES.get('quiz_json'),
+                    request.user,
+                    selected_lesson=selected_lesson,
+                    seconds_per_question=sec,
                 )
             except QuizImportError as exc:
                 error = str(exc)
@@ -804,6 +832,7 @@ def teacher_ai_quiz(request):
     )
     if quiz_created:
         selected_niveau = quiz_created.lesson.course.niveau
+        selected_course_id = str(quiz_created.lesson.course_id)
         selected_lesson_id = str(quiz_created.lesson_id)
         quiz_description = quiz_created.description
         n_questions = quiz_created.questions.count()
@@ -812,9 +841,16 @@ def teacher_ai_quiz(request):
     classrooms = Classroom.objects.filter(
         teacher=request.user, is_active=True, niveau=selected_niveau,
     ) if selected_niveau else Classroom.objects.none()
+    courses = Course.objects.order_by('niveau', 'order', 'name')
+    lessons = Lesson.objects.select_related('course').order_by(
+        'course__order', 'order', 'title',
+    )
     return _render_generation(request, 'quizzes/teacher_ai_quiz.html', {
         'niveaux': niveaux,
         'selected_niveau': selected_niveau,
+        'courses': courses,
+        'selected_course_id': selected_course_id,
+        'lessons': lessons,
         'selected_lesson_id': selected_lesson_id,
         'preview': preview,
         'quiz_created': quiz_created,
@@ -848,6 +884,13 @@ def edit_quiz_questions(request, pk):
                 duration = int(request.POST.get('duration', quiz.duration))
                 if not 1 <= duration <= 600:
                     raise ValueError("La durée doit être comprise entre 1 et 600 minutes.")
+                seconds_per_question = int(
+                    request.POST.get('seconds_per_question', quiz.seconds_per_question)
+                )
+                if not 5 <= seconds_per_question <= 600:
+                    raise ValueError(
+                        "Le temps par question doit être compris entre 5 et 600 secondes."
+                    )
                 quiz_title = request.POST.get('quiz_title', quiz.title).strip()
                 if not quiz_title or len(quiz_title) > 255:
                     raise ValueError("Le titre du quiz est obligatoire (255 caractères maximum).")
@@ -905,11 +948,8 @@ def edit_quiz_questions(request, pk):
                     'quiz': quiz, 'questions': questions, 'page_title': f'Modifier — {quiz.title}',
                 })
             with transaction.atomic():
-                if duration != quiz.duration:
-                    quiz.duration = duration
-                    quiz.seconds_per_question = max(
-                        1, math.ceil(duration * 60 / len(updates)),
-                    ) if updates else quiz.seconds_per_question
+                quiz.duration = duration
+                quiz.seconds_per_question = seconds_per_question
                 quiz.title = quiz_title
                 quiz.question_count = len(updates)
                 quiz.save(update_fields=[

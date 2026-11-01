@@ -59,6 +59,10 @@ class QuizJsonValidationBrowserTests(StaticLiveServerTestCase):
                 page.get_by_role('button', name='Se connecter', exact=True).click()
                 page.wait_for_url(self.live_server_url + reverse('accounts:dashboard'))
                 page.goto(self.live_server_url + reverse('quizzes:teacher_ai'))
+                page.locator('#quizLevel').select_option(course.niveau)
+                page.locator('#quizCourse').select_option(str(course.pk))
+                page.locator('#quizLesson').select_option(str(lesson.pk))
+                page.locator('#secondsPerQuestion').fill('30')
                 page.locator('#quizJsonFile').set_input_files({
                     'name': 'quiz-invalide.json',
                     'mimeType': 'application/json',

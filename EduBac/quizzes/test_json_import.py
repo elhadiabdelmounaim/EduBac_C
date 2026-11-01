@@ -80,12 +80,20 @@ class QuizJsonImportTests(TestCase):
         session['user_id'] = user.pk
         session.save()
 
-    def post_json(self, document=None, *, filename='quiz.json', generation_id=None):
+    def post_json(
+        self, document=None, *, filename='quiz.json', generation_id=None,
+        seconds_per_question=20, selected_lesson=None,
+    ):
+        selected_lesson = selected_lesson or self.lesson
         content = json.dumps(
             self.document if document is None else document, ensure_ascii=False,
         ).encode('utf-8')
         return self.client.post(self.url, {
             'action': 'import_json',
+            'niveau': selected_lesson.course.niveau,
+            'course': selected_lesson.course_id,
+            'lesson': selected_lesson.pk,
+            'seconds_per_question': seconds_per_question,
             'generation_id': str(generation_id or uuid.uuid4()),
             'quiz_json': SimpleUploadedFile(filename, content, content_type='application/json'),
         })
@@ -99,7 +107,7 @@ class QuizJsonImportTests(TestCase):
         self.assertEqual(quiz.title, 'Quiz importé')
         self.assertEqual(quiz.lesson, self.lesson)
         self.assertEqual(quiz.duration, 20)
-        self.assertEqual(quiz.seconds_per_question, 600)
+        self.assertEqual(quiz.seconds_per_question, 20)
         self.assertEqual(quiz.question_count, 2)
         self.assertEqual(quiz.difficulty, 'facile')
         self.assertEqual(quiz.status, 'draft')
@@ -118,6 +126,26 @@ class QuizJsonImportTests(TestCase):
         self.assertEqual(second.difficulty, 'difficile')
         self.assertTrue(QuizGenerationRun.objects.filter(pk=response['X-Quiz-Generation-ID']).exists())
         generate.assert_not_called()
+
+    @patch('ai.services.AIService.generate_quiz_from_lesson')
+    def test_form_selection_sets_question_time_without_json_level_or_lesson(self, generate):
+        document = json.loads(json.dumps(self.document))
+        document['quiz'].pop('level')
+        document['quiz'].pop('lesson')
+
+        response = self.post_json(document, seconds_per_question=45)
+
+        self.assertEqual(response.status_code, 302)
+        quiz = Quiz.objects.get()
+        self.assertEqual(quiz.lesson, self.lesson)
+        self.assertEqual(quiz.seconds_per_question, 45)
+        generate.assert_not_called()
+
+    def test_invalid_question_time_is_rejected_without_creating_a_quiz(self):
+        response = self.post_json(seconds_per_question='601')
+
+        self.assertContains(response, 'entre 5 et 600 secondes')
+        self.assertFalse(Quiz.objects.exists())
 
     @patch('ai.services.AIService.generate_quiz_from_lesson')
     def test_old_internal_generation_action_is_disabled(self, generate):
@@ -149,7 +177,7 @@ class QuizJsonImportTests(TestCase):
         invalid = json.loads(json.dumps(self.document))
         invalid['quiz']['lesson'] = 'Leçon inconnue'
         response = self.post_json(invalid)
-        self.assertContains(response, 'n’existe pas pour ce niveau')
+        self.assertContains(response, 'ne correspond pas à celle choisie')
         self.assertFalse(Quiz.objects.exists())
 
         duplicate = (
@@ -158,6 +186,10 @@ class QuizJsonImportTests(TestCase):
         )
         response = self.client.post(self.url, {
             'action': 'import_json',
+            'niveau': self.course.niveau,
+            'course': self.course.pk,
+            'lesson': self.lesson.pk,
+            'seconds_per_question': '20',
             'generation_id': str(uuid.uuid4()),
             'quiz_json': SimpleUploadedFile('duplicate.json', duplicate),
         })
@@ -201,7 +233,7 @@ class QuizJsonImportTests(TestCase):
         correct_choice.refresh_from_db()
         self.assertEqual(quiz.title, 'Quiz révisé')
         self.assertEqual(quiz.duration, 30)
-        self.assertEqual(quiz.seconds_per_question, 900)
+        self.assertEqual(quiz.seconds_per_question, 20)
         self.assertEqual(quiz.question_count, 2)
         self.assertEqual(first.text, 'Calculer $3+3$.')
         self.assertEqual(first.points, Decimal('3.00'))

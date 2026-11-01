@@ -14,7 +14,7 @@
     <nav class="steps-bar mb-4" aria-label="Étapes de création du quiz">
         <div class="step-item {% if not quiz_created %}active{% else %}done{% endif %}">
             <span class="step-num">{% if quiz_created %}<i class="bi bi-check"></i>{% else %}1{% endif %}</span>
-            <span class="step-label">Importer le JSON</span>
+                    <span class="step-label">Choisir et importer</span>
         </div>
         <div class="step-connector" aria-hidden="true"></div>
         <div class="step-item {% if quiz_created %}active{% endif %}">
@@ -41,13 +41,61 @@
                 {% csrf_token %}
                 <input type="hidden" name="action" value="import_json">
                 <input type="hidden" name="generation_id" value="{{ generation_id }}">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold" for="quizLevel">Niveau scolaire</label>
+                        <select class="form-select" id="quizLevel" name="niveau" required>
+                            <option value="">— Choisir un niveau —</option>
+                            {% for niveau in niveaux %}
+                            <option value="{{ niveau.code }}" {% if selected_niveau == niveau.code %}selected{% endif %}>
+                                {{ niveau.label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold" for="quizCourse">Cours</label>
+                        <select class="form-select" id="quizCourse" name="course" required>
+                            <option value="">— Choisir un cours —</option>
+                            {% for course in courses %}
+                            <option value="{{ course.pk }}" data-niveau="{{ course.niveau }}"
+                                    {% if selected_course_id == course.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ course.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold" for="quizLesson">Leçon / notion</label>
+                        <select class="form-select" id="quizLesson" name="lesson" required>
+                            <option value="">— Choisir une leçon —</option>
+                            {% for lesson in lessons %}
+                            <option value="{{ lesson.pk }}" data-course="{{ lesson.course_id }}"
+                                    {% if selected_lesson_id == lesson.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ lesson.title }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold" for="secondsPerQuestion">
+                            Temps par question (secondes)
+                        </label>
+                        <input class="form-control" type="number" id="secondsPerQuestion"
+                               name="seconds_per_question" min="5" max="600" step="1"
+                               value="{{ selected_seconds_per_question|default:20 }}" required>
+                        <div class="form-text">Ce temps s’applique à chaque question du quiz.</div>
+                    </div>
+                </div>
                 <label class="form-label fw-semibold" for="quizJsonFile">Choisir un fichier JSON</label>
                 <input class="form-control" type="file" id="quizJsonFile" name="quiz_json"
                        accept=".json,application/json" required>
                 <div class="form-text mt-2">
-                    Fichier UTF-8, jusqu’à 1 Mio. Il doit indiquer le niveau, le titre exact de la leçon,
-                    la durée et au moins une question à quatre choix distincts. Les formules et le LaTeX
-                    restent inchangés. Aucun code contenu dans le fichier n’est exécuté.
+                    Fichier UTF-8, jusqu’à 1 Mio. Le niveau, le cours, la leçon et le temps se choisissent
+                    dans ce formulaire. Le fichier contient le titre, la durée totale et les questions.
+                    Les anciennes clés <code>level</code> et <code>lesson</code> restent acceptées si elles
+                    correspondent à vos choix. Les formules et le LaTeX restent inchangés ; aucun code
+                    contenu dans le fichier n’est exécuté.
                 </div>
                 <button class="btn btn-edubac mt-3" type="submit">
                     <i class="bi bi-check2-circle"></i> Valider et créer le brouillon
@@ -57,16 +105,13 @@
             <details class="mt-4">
                 <summary class="fw-semibold">Voir le format attendu</summary>
                 <p class="form-text mt-2">
-                    Le niveau peut être un code EduBac (par exemple <code>1ere_bac_sc</code> ou
-                    <code>1BAC_SE</code>) ; la leçon doit correspondre à une leçon du programme.
-                    Les niveaux de difficulté acceptés sont <code>easy</code>, <code>medium</code>
-                    et <code>hard</code>.
+                    Le niveau, le cours, la leçon et le temps par question sont sélectionnés dans le
+                    formulaire. Les niveaux de difficulté acceptés sont <code>easy</code>,
+                    <code>medium</code> et <code>hard</code>.
                 </p>
                 <pre class="bg-light border rounded p-3 small mb-0" style="white-space:pre-wrap;overflow-wrap:anywhere;">{
   "quiz": {
     "title": "Les fonctions numériques",
-    "level": "1BAC_SE",
-    "lesson": "Généralités sur les fonctions numériques",
     "duration": 20,
     "questions": [{
       "id": "Q001",
@@ -98,7 +143,10 @@
                 </span>
             </div>
             <div class="qb-detail-card__actions d-flex flex-wrap gap-2 align-items-center">
-                <span class="qb-time-badge">{{ quiz_created.duration }} min · {{ preview|length }} question(s)</span>
+                <span class="qb-time-badge">
+                    {{ quiz_created.duration }} min · {{ preview|length }} question(s) ·
+                    {{ quiz_created.seconds_per_question }} s/question
+                </span>
                 <a href="{% url 'quizzes:edit_questions' quiz_created.pk %}" class="btn btn-sm btn-outline-primary">
                     <i class="bi bi-pencil"></i> Modifier le quiz
                 </a>
@@ -171,4 +219,43 @@
 {% endblock %}
 {% block extra_css %}
 {% include "includes/katex.html" %}
+{% endblock %}
+{% block extra_js %}
+<script>
+(() => {
+    const level = document.getElementById('quizLevel');
+    const course = document.getElementById('quizCourse');
+    const lesson = document.getElementById('quizLesson');
+    if (!level || !course || !lesson) return;
+
+    function filterOptions(select, attribute, value) {
+        let selectedOptionIsVisible = false;
+        for (const option of select.options) {
+            if (!option.value) {
+                option.hidden = false;
+                option.disabled = false;
+                continue;
+            }
+            const visible = option.dataset[attribute] === value;
+            option.hidden = !visible;
+            option.disabled = !visible;
+            if (visible && option.selected) selectedOptionIsVisible = true;
+        }
+        if (!selectedOptionIsVisible) select.value = '';
+    }
+
+    function updateCourses() {
+        filterOptions(course, 'niveau', level.value);
+        updateLessons();
+    }
+
+    function updateLessons() {
+        filterOptions(lesson, 'course', course.value);
+    }
+
+    level.addEventListener('change', updateCourses);
+    course.addEventListener('change', updateLessons);
+    updateCourses();
+})();
+</script>
 {% endblock %}

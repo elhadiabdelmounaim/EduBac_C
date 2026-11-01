@@ -182,7 +182,7 @@ def _parse_question(value, number, seen_ids):
     }
 
 
-def validate_quiz_json(upload):
+def validate_quiz_json(upload, selected_lesson=None):
     if upload is None:
         raise QuizImportError("Sélectionnez un fichier JSON à importer.")
     if not upload.name.lower().endswith('.json'):
@@ -210,8 +210,24 @@ def validate_quiz_json(upload):
         raise QuizImportError("Le fichier doit contenir un objet « quiz ».")
     quiz_data = document['quiz']
     title = _nonempty_text(quiz_data.get('title'), "Le titre du quiz", 255)
-    level_code = _resolve_level(quiz_data.get('level'))
-    lesson = _resolve_lesson(level_code, quiz_data.get('lesson'))
+    if selected_lesson is None:
+        level_code = _resolve_level(quiz_data.get('level'))
+        lesson = _resolve_lesson(level_code, quiz_data.get('lesson'))
+    else:
+        level_code = selected_lesson.course.niveau
+        lesson = selected_lesson
+        file_level = quiz_data.get('level')
+        if file_level not in (None, '') and _resolve_level(file_level) != level_code:
+            raise QuizImportError(
+                "Le niveau du fichier ne correspond pas au niveau choisi dans le formulaire."
+            )
+        file_lesson = quiz_data.get('lesson')
+        if file_lesson not in (None, ''):
+            file_lesson = _nonempty_text(file_lesson, "La leçon", 255)
+            if _normal(file_lesson) != _normal(selected_lesson.title):
+                raise QuizImportError(
+                    "La leçon du fichier ne correspond pas à celle choisie dans le formulaire."
+                )
 
     duration = quiz_data.get('duration')
     if type(duration) is not int or not 1 <= duration <= MAX_DURATION_MINUTES:
@@ -248,11 +264,31 @@ def validate_quiz_json(upload):
     }
 
 
-def create_quiz_from_json(upload, teacher):
+def _parse_seconds_per_question(value):
+    if isinstance(value, bool):
+        raise QuizImportError("Le temps par question doit être compris entre 5 et 600 secondes.")
+    if isinstance(value, int):
+        seconds = value
+    elif isinstance(value, str) and value.strip().isdecimal():
+        seconds = int(value.strip())
+    else:
+        raise QuizImportError("Indiquez un temps entier par question, entre 5 et 600 secondes.")
+    if not 5 <= seconds <= 600:
+        raise QuizImportError("Le temps par question doit être compris entre 5 et 600 secondes.")
+    return seconds
+
+
+def create_quiz_from_json(
+    upload, teacher, *, selected_lesson=None, seconds_per_question=None,
+):
     """Validate fully before atomically creating an editable draft, without an AI call."""
-    data = validate_quiz_json(upload)
+    data = validate_quiz_json(upload, selected_lesson=selected_lesson)
     question_count = len(data['questions'])
-    seconds_per_question = max(1, math.ceil(data['duration'] * 60 / question_count))
+    seconds_per_question = (
+        _parse_seconds_per_question(seconds_per_question)
+        if seconds_per_question is not None
+        else max(1, math.ceil(data['duration'] * 60 / question_count))
+    )
     with transaction.atomic():
         quiz = Quiz.objects.create(
             title=data['title'],

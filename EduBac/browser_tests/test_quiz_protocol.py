@@ -90,6 +90,10 @@ class QuizJsonImportBrowserTests(StaticLiveServerTestCase):
                 log_in(teacher_page, teacher.email)
                 teacher_page.goto(base_url + reverse('quizzes:teacher_ai'))
                 expect(teacher_page.get_by_role('heading', name='Importer un quiz')).to_be_visible()
+                teacher_page.locator('#quizLevel').select_option(course.niveau)
+                teacher_page.locator('#quizCourse').select_option(str(course.pk))
+                teacher_page.locator('#quizLesson').select_option(str(lesson.pk))
+                teacher_page.locator('#secondsPerQuestion').fill('45')
                 teacher_page.locator('#quizJsonFile').set_input_files({
                     'name': 'quiz.json',
                     'mimeType': 'application/json',
@@ -102,6 +106,7 @@ class QuizJsonImportBrowserTests(StaticLiveServerTestCase):
                     re.escape(base_url + reverse('quizzes:teacher_ai')) + r'\?quiz=\d+',
                 ))
                 expect(teacher_page.get_by_role('heading', name='Quiz JSON')).to_be_visible()
+                expect(teacher_page.get_by_text('45 s/question')).to_be_visible()
                 expect(teacher_page.locator('math').first).to_be_visible()
                 expect(teacher_page.locator('math').first).to_contain_text('2')
 
@@ -133,6 +138,7 @@ class QuizJsonImportBrowserTests(StaticLiveServerTestCase):
                     re.escape(base_url + reverse('quizzes:teacher_ai')) + r'\?quiz=\d+',
                 ))
                 expect(teacher_page.get_by_text('30 min')).to_be_visible()
+                expect(teacher_page.get_by_text('45 s/question')).to_be_visible()
 
                 teacher_page.locator('#classroomSelect').select_option(str(classroom.pk))
                 teacher_page.get_by_role('button', name='Publier et affecter').click()
@@ -164,6 +170,7 @@ class QuizJsonImportBrowserTests(StaticLiveServerTestCase):
 
         quiz = Quiz.objects.get(pk=quiz_id)
         self.assertEqual(Quiz.objects.count(), 1)
+        self.assertEqual(quiz.seconds_per_question, 45)
         self.assertEqual(quiz.status, 'published')
         self.assertEqual(quiz.classroom_id, classroom.pk)
         self.assertQuerySetEqual(

@@ -54,6 +54,10 @@ class GenerationPerformanceTests(TestCase):
     def generate(self):
         return self.client.post(reverse("quizzes:teacher_ai"), {
             "action": "import_json",
+            "niveau": self.lesson.course.niveau,
+            "course": self.lesson.course_id,
+            "lesson": self.lesson.pk,
+            "seconds_per_question": "30",
             "generation_id": str(self.identifier),
             "quiz_json": SimpleUploadedFile(
                 "quiz.json", json.dumps(self.document, ensure_ascii=False).encode(),
