@@ -61,18 +61,19 @@ class GenerationPerformanceTests(TestCase):
             ),
         })
 
-    def test_correlated_summary_is_private_and_records_render_and_persistence(self):
-        with self.assertLogs("ai.quiz_metrics", level="INFO") as logs:
+    def test_import_trace_is_private_and_does_not_call_the_ai_provider(self):
+        with patch("ai.services.AIService.generate_quiz_from_lesson") as ai_call, \
+                self.assertLogs("ai.quiz_metrics", level="INFO") as logs:
             response = self.generate()
         self.assertEqual(response.headers["X-Quiz-Generation-ID"], str(self.identifier))
         self.assertIn("quiz;dur=", response.headers["Server-Timing"])
         run = QuizGenerationRun.objects.get(pk=self.identifier)
         self.assertEqual(run.state, "complete")
         self.assertEqual(run.quiz_id, Quiz.objects.get().pk)
-        self.assertIn("render", run.metrics["phases_ms"])
-        self.assertNotIn("PRIVATE_SENTINEL", json.dumps(run.metrics))
+        self.assertEqual(run.metrics["phases_ms"], {})
         self.assertNotIn("PRIVATE_SENTINEL", json.dumps(run.metrics))
         self.assertNotIn("PRIVATE_SENTINEL", "\n".join(logs.output))
+        ai_call.assert_not_called()
 
     def test_duplicate_post_cannot_generate_or_save_twice(self):
         self.generate()

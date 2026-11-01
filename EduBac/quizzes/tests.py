@@ -101,7 +101,7 @@ class QuizLessonSelectionTests(TestCase):
         self.assertContains(response, 'multiple_choice')
         self.assertContains(response, 'correct_answer')
         self.assertContains(response, 'points')
-        self.assertContains(response, 'aucun service d’intelligence artificielle')
+        self.assertContains(response, 'n’appelle pas de service d’intelligence artificielle')
 
     @patch('ai.services.AIService.generate_quiz_from_lesson')
     def test_legacy_internal_generation_action_is_rejected_without_calling_ai(self, generate_quiz):
