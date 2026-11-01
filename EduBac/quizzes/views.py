@@ -709,7 +709,6 @@ def teacher_ai_quiz(request):
     quiz_description = restored_quiz.description if restored_quiz else ''
     n_questions = restored_quiz.questions.count() if restored_quiz else 0
     sec = restored_quiz.seconds_per_question if restored_quiz else 20
-    total_duration = restored_quiz.duration if restored_quiz else 20
     difficulty = restored_quiz.difficulty if restored_quiz else 'moyen'
     generation_id = uuid.uuid4()
     if request.method == 'POST' and request.POST.get('action') == 'import_json':
@@ -717,7 +716,6 @@ def teacher_ai_quiz(request):
         selected_course_id = (request.POST.get('course') or '').strip()
         selected_lesson_id = (request.POST.get('lesson') or '').strip()
         sec = (request.POST.get('seconds_per_question') or '').strip()
-        total_duration = (request.POST.get('duration') or '').strip()
 
     if request.method == 'POST':
         action = request.POST.get('action', '')
@@ -749,7 +747,6 @@ def teacher_ai_quiz(request):
                     request.user,
                     selected_lesson=selected_lesson,
                     seconds_per_question=sec,
-                    duration_minutes=total_duration,
                 )
             except QuizImportError as exc:
                 error = str(exc)
@@ -840,7 +837,6 @@ def teacher_ai_quiz(request):
         quiz_description = quiz_created.description
         n_questions = quiz_created.questions.count()
         sec = quiz_created.seconds_per_question
-        total_duration = quiz_created.duration
         difficulty = quiz_created.difficulty
     classrooms = Classroom.objects.filter(
         teacher=request.user, is_active=True, niveau=selected_niveau,
@@ -861,7 +857,6 @@ def teacher_ai_quiz(request):
         'quiz_description': quiz_description,
         'selected_question_count': n_questions,
         'selected_seconds_per_question': sec,
-        'selected_duration': total_duration,
         'selected_difficulty': difficulty,
         'generation_submitted': request.method == 'POST' or restored_quiz is not None,
         'restored_quiz': restored_quiz is not None,
@@ -886,9 +881,6 @@ def edit_quiz_questions(request, pk):
         if action == 'save':
             from decimal import Decimal, InvalidOperation
             try:
-                duration = int(request.POST.get('duration', quiz.duration))
-                if not 1 <= duration <= 600:
-                    raise ValueError("La durée doit être comprise entre 1 et 600 minutes.")
                 seconds_per_question = int(
                     request.POST.get('seconds_per_question', quiz.seconds_per_question)
                 )
@@ -953,7 +945,10 @@ def edit_quiz_questions(request, pk):
                     'quiz': quiz, 'questions': questions, 'page_title': f'Modifier — {quiz.title}',
                 })
             with transaction.atomic():
-                quiz.duration = duration
+                quiz.duration = max(
+                    1,
+                    (seconds_per_question * len(updates) + 59) // 60,
+                )
                 quiz.seconds_per_question = seconds_per_question
                 quiz.title = quiz_title
                 quiz.question_count = len(updates)
@@ -1227,7 +1222,10 @@ def duplicate_quiz(request, pk):
         return redirect('quizzes:manage')
     new_quiz = Quiz.objects.create(
         title=f'{quiz.title} (copie)',
-        duration=quiz.duration,
+        duration=max(
+            1,
+            (quiz.seconds_per_question * quiz.question_count + 59) // 60,
+        ),
         seconds_per_question=quiz.seconds_per_question,
         question_count=quiz.question_count,
         difficulty=quiz.difficulty,

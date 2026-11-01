@@ -93,7 +93,6 @@ class QuizJsonImportBrowserTests(StaticLiveServerTestCase):
                 teacher_page.locator('#quizLevel').select_option(course.niveau)
                 teacher_page.locator('#quizCourse').select_option(str(course.pk))
                 teacher_page.locator('#quizLesson').select_option(str(lesson.pk))
-                teacher_page.locator('#quizDurationInput').fill('25')
                 teacher_page.locator('#secondsPerQuestion').fill('45')
                 teacher_page.locator('#quizJsonFile').set_input_files({
                     'name': 'quiz.json',
@@ -107,7 +106,6 @@ class QuizJsonImportBrowserTests(StaticLiveServerTestCase):
                     re.escape(base_url + reverse('quizzes:teacher_ai')) + r'\?quiz=\d+',
                 ))
                 expect(teacher_page.get_by_role('heading', name='Quiz JSON')).to_be_visible()
-                expect(teacher_page.get_by_text('25 min')).to_be_visible()
                 expect(teacher_page.get_by_text('45 s/question')).to_be_visible()
                 expect(teacher_page.locator('math').first).to_be_visible()
                 expect(teacher_page.locator('math').first).to_contain_text('2')
@@ -115,7 +113,7 @@ class QuizJsonImportBrowserTests(StaticLiveServerTestCase):
                 quiz_id = int(re.search(r'\?quiz=(\d+)$', teacher_page.url).group(1))
                 teacher_page.get_by_role('link', name='Modifier le quiz').click()
                 teacher_page.locator('#quizTitle').fill('Quiz JSON révisé')
-                teacher_page.locator('#quizDuration').fill('30')
+                teacher_page.locator('#quizSecondsPerQuestion').fill('50')
                 teacher_page.locator('input[name$="_points"]').first.fill('2')
                 teacher_page.locator('input[name$="_points"]').nth(1).fill('3')
                 invalid_controls = teacher_page.locator('#editQuestionsForm').evaluate(
@@ -139,8 +137,7 @@ class QuizJsonImportBrowserTests(StaticLiveServerTestCase):
                 teacher_page.wait_for_url(re.compile(
                     re.escape(base_url + reverse('quizzes:teacher_ai')) + r'\?quiz=\d+',
                 ))
-                expect(teacher_page.get_by_text('30 min')).to_be_visible()
-                expect(teacher_page.get_by_text('45 s/question')).to_be_visible()
+                expect(teacher_page.get_by_text('50 s/question')).to_be_visible()
 
                 teacher_page.locator('#classroomSelect').select_option(str(classroom.pk))
                 teacher_page.get_by_role('button', name='Publier et affecter').click()
@@ -151,6 +148,7 @@ class QuizJsonImportBrowserTests(StaticLiveServerTestCase):
                 log_in(student_page, student.email)
                 student_page.goto(base_url + reverse('quizzes:detail', args=[quiz_id]))
                 expect(student_page.get_by_role('heading', name='Quiz JSON révisé')).to_be_visible()
+                expect(student_page.get_by_text('50 secondes par question')).to_be_visible()
                 student_page.goto(base_url + reverse('quizzes:start', args=[quiz_id]))
                 student_page.wait_for_url(re.compile(r'/quizzes/tentative/\d+/$'))
                 student_page.locator('input[name="answer"]').nth(0).check()
@@ -172,7 +170,8 @@ class QuizJsonImportBrowserTests(StaticLiveServerTestCase):
 
         quiz = Quiz.objects.get(pk=quiz_id)
         self.assertEqual(Quiz.objects.count(), 1)
-        self.assertEqual(quiz.seconds_per_question, 45)
+        self.assertEqual(quiz.seconds_per_question, 50)
+        self.assertEqual(quiz.duration, 2)
         self.assertEqual(quiz.status, 'published')
         self.assertEqual(quiz.classroom_id, classroom.pk)
         self.assertQuerySetEqual(

@@ -10,7 +10,7 @@
                 <h5 class="card-title">{{ q.title }}</h5>
                 <p class="small text-muted mb-2">{{ q.lesson.title }} · {{ q.lesson.course.name }}</p>
                 <span class="badge badge-difficulte-{{ q.difficulty }}">{{ q.get_difficulty_display }}</span>
-                <span class="badge bg-light text-dark">{{ q.duration }} min</span>
+                <span class="badge bg-light text-dark">{{ q.seconds_per_question }} s/question</span>
                 <div class="mt-3">
                     <a href="{% url 'quizzes:edit_questions' q.pk %}" class="btn btn-edubac btn-sm">Voir les questions</a>
                     <a href="{% url 'quizzes:delete' q.pk %}" class="btn btn-outline-danger btn-sm">Supprimer</a>

@@ -14,7 +14,6 @@ from .models import Choice, Question, Quiz
 
 MAX_JSON_BYTES = 1_000_000
 MAX_QUESTIONS = 100
-MAX_DURATION_MINUTES = 600
 MAX_POINTS = Decimal('100.00')
 DIFFICULTY_MAP = {
     'easy': 'facile', 'facile': 'facile',
@@ -182,7 +181,7 @@ def _parse_question(value, number, seen_ids):
     }
 
 
-def validate_quiz_json(upload, selected_lesson=None, selected_duration=None):
+def validate_quiz_json(upload, selected_lesson=None):
     if upload is None:
         raise QuizImportError("Sélectionnez un fichier JSON à importer.")
     if not upload.name.lower().endswith('.json'):
@@ -229,14 +228,6 @@ def validate_quiz_json(upload, selected_lesson=None, selected_duration=None):
                     "La leçon du fichier ne correspond pas à celle choisie dans le formulaire."
                 )
 
-    if selected_duration is None:
-        duration = quiz_data.get('duration')
-        if type(duration) is not int or not 1 <= duration <= MAX_DURATION_MINUTES:
-            raise QuizImportError(
-                "La durée du quiz doit être un nombre entier entre 1 et 600 minutes."
-            )
-    else:
-        duration = _parse_duration_minutes(selected_duration)
     questions_data = quiz_data.get('questions')
     if not isinstance(questions_data, list) or not 1 <= len(questions_data) <= MAX_QUESTIONS:
         raise QuizImportError(f"Le fichier doit contenir entre 1 et {MAX_QUESTIONS} questions.")
@@ -263,7 +254,6 @@ def validate_quiz_json(upload, selected_lesson=None, selected_duration=None):
         'description': description.strip(),
         'lesson': lesson,
         'level': level_code,
-        'duration': duration,
         'difficulty': overall_difficulty,
         'questions': questions,
     }
@@ -283,42 +273,24 @@ def _parse_seconds_per_question(value):
     return seconds
 
 
-def _parse_duration_minutes(value):
-    if isinstance(value, bool):
-        raise QuizImportError("La durée totale doit être comprise entre 1 et 600 minutes.")
-    if isinstance(value, int):
-        minutes = value
-    elif isinstance(value, str) and value.strip().isdecimal():
-        minutes = int(value.strip())
-    else:
-        raise QuizImportError("Indiquez une durée totale entière, entre 1 et 600 minutes.")
-    if not 1 <= minutes <= MAX_DURATION_MINUTES:
-        raise QuizImportError("La durée totale doit être comprise entre 1 et 600 minutes.")
-    return minutes
-
-
 def create_quiz_from_json(
     upload, teacher, *, selected_lesson=None, seconds_per_question=None,
-    duration_minutes=None,
 ):
     """Validate fully before atomically creating an editable draft, without an AI call."""
-    data = validate_quiz_json(
-        upload,
-        selected_lesson=selected_lesson,
-        selected_duration=duration_minutes,
-    )
+    data = validate_quiz_json(upload, selected_lesson=selected_lesson)
     question_count = len(data['questions'])
     seconds_per_question = (
         _parse_seconds_per_question(seconds_per_question)
         if seconds_per_question is not None
-        else max(1, math.ceil(data['duration'] * 60 / question_count))
+        else 20
     )
+    total_duration = max(1, math.ceil(seconds_per_question * question_count / 60))
     with transaction.atomic():
         quiz = Quiz.objects.create(
             title=data['title'],
             description=data['description'],
             lesson=data['lesson'],
-            duration=data['duration'],
+            duration=total_duration,
             seconds_per_question=seconds_per_question,
             question_count=question_count,
             difficulty=data['difficulty'],

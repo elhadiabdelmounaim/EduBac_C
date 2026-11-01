@@ -80,14 +80,6 @@
                 </div>
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
-                        <label class="form-label fw-semibold" for="quizDurationInput">
-                            Durée totale du quiz (minutes)
-                        </label>
-                        <input class="form-control" type="number" id="quizDurationInput"
-                               name="duration" min="1" max="600" step="1"
-                               value="{{ selected_duration|default:20 }}" required>
-                    </div>
-                    <div class="col-md-4">
                         <label class="form-label fw-semibold" for="secondsPerQuestion">
                             Temps par question (secondes)
                         </label>
@@ -101,11 +93,10 @@
                 <input class="form-control" type="file" id="quizJsonFile" name="quiz_json"
                        accept=".json,application/json" required>
                 <div class="form-text mt-2">
-                    Fichier UTF-8, jusqu’à 1 Mio. Le niveau, le cours, la leçon et le temps se choisissent
-                    dans ce formulaire, ainsi que la durée totale du quiz. Le fichier contient le titre
-                    et les questions.
+                    Fichier UTF-8, jusqu’à 1 Mio. Le niveau, le cours, la leçon et le temps par question
+                    se choisissent dans ce formulaire. Le fichier contient le titre et les questions.
                     Les anciennes clés <code>level</code> et <code>lesson</code> restent acceptées si elles
-                    correspondent à vos choix ; l’ancienne clé <code>duration</code> est ignorée.
+                    correspondent à vos choix ; la clé <code>duration</code> n’est pas utilisée.
                     Les formules et le LaTeX restent inchangés ; aucun code contenu dans le fichier
                     n’est exécuté.
                 </div>
@@ -117,8 +108,8 @@
             <details class="mt-4">
                 <summary class="fw-semibold">Voir le format attendu</summary>
                 <p class="form-text mt-2">
-                    Le niveau, le cours, la leçon, la durée totale et le temps par question sont
-                    sélectionnés dans le formulaire. Les niveaux de difficulté acceptés sont
+                    Le niveau, le cours, la leçon et le temps par question sont sélectionnés dans le
+                    formulaire. Les niveaux de difficulté acceptés sont
                     <code>easy</code>, <code>medium</code> et <code>hard</code>.
                 </p>
                 <pre class="bg-light border rounded p-3 small mb-0" style="white-space:pre-wrap;overflow-wrap:anywhere;">{
@@ -155,8 +146,7 @@
             </div>
             <div class="qb-detail-card__actions d-flex flex-wrap gap-2 align-items-center">
                 <span class="qb-time-badge">
-                    {{ quiz_created.duration }} min · {{ preview|length }} question(s) ·
-                    {{ quiz_created.seconds_per_question }} s/question
+                    {{ preview|length }} question(s) · {{ quiz_created.seconds_per_question }} s/question
                 </span>
                 <a href="{% url 'quizzes:edit_questions' quiz_created.pk %}" class="btn btn-sm btn-outline-primary">
                     <i class="bi bi-pencil"></i> Modifier le quiz

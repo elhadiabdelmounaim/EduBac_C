@@ -173,7 +173,6 @@ class QuizLessonSelectionTests(TestCase):
                 'course': self.course.pk,
                 'lesson': self.lesson.pk,
                 'seconds_per_question': '45',
-                'duration': '15',
             'quiz_json': SimpleUploadedFile(
                 'latex.json', json.dumps(document, ensure_ascii=False).encode(),
                 content_type='application/json',
@@ -194,7 +193,7 @@ class QuizLessonSelectionTests(TestCase):
             question.choices.order_by('order').first().text,
             choice_text,
         )
-        self.assertEqual(quiz.duration, 15)
+        self.assertEqual(quiz.duration, 1)
         generate_quiz.assert_not_called()
 
 

@@ -5,7 +5,7 @@
         <h1 class="h3">{{ quiz.title }}</h1>
         <p class="text-muted">Leçon : {{ quiz.lesson.title }} · {{ quiz.lesson.course.name }}</p>
         <ul class="list-unstyled">
-            <li><i class="bi bi-clock"></i> Durée : {{ quiz.duration }} min</li>
+            <li><i class="bi bi-clock"></i> {{ quiz.seconds_per_question }} secondes par question</li>
             <li><i class="bi bi-question-circle"></i> Questions : {{ quiz.question_count }}</li>
             <li><i class="bi bi-bar-chart"></i> Difficulté : <span class="badge badge-difficulte-{{ quiz.difficulty }}">{{ quiz.get_difficulty_display }}</span></li>
         </ul>

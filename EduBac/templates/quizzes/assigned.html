@@ -43,11 +43,7 @@
                     {% endif %}
                     <li><i class="bi bi-list-ol me-1"></i> {{ it.quiz.question_count }} question{{ it.quiz.question_count|pluralize }}</li>
                     <li><i class="bi bi-clock me-1"></i>
-                        {% if it.quiz.seconds_per_question %}
                         {{ it.quiz.seconds_per_question }} s / question
-                        {% else %}
-                        {{ it.quiz.duration }} min
-                        {% endif %}
                     </li>
                     {% if it.assignment.deadline %}
                     <li><i class="bi bi-calendar-event me-1"></i> Limite : {{ it.assignment.deadline|date:"d/m/Y H:i" }}</li>

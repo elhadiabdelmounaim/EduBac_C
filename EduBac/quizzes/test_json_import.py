@@ -82,7 +82,7 @@ class QuizJsonImportTests(TestCase):
 
     def post_json(
         self, document=None, *, filename='quiz.json', generation_id=None,
-        seconds_per_question=20, duration_minutes=20, selected_lesson=None,
+        seconds_per_question=20, selected_lesson=None,
     ):
         selected_lesson = selected_lesson or self.lesson
         content = json.dumps(
@@ -94,7 +94,6 @@ class QuizJsonImportTests(TestCase):
             'course': selected_lesson.course_id,
             'lesson': selected_lesson.pk,
             'seconds_per_question': seconds_per_question,
-            'duration': duration_minutes,
             'generation_id': str(generation_id or uuid.uuid4()),
             'quiz_json': SimpleUploadedFile(filename, content, content_type='application/json'),
         })
@@ -107,7 +106,7 @@ class QuizJsonImportTests(TestCase):
         quiz = Quiz.objects.get()
         self.assertEqual(quiz.title, 'Quiz importé')
         self.assertEqual(quiz.lesson, self.lesson)
-        self.assertEqual(quiz.duration, 20)
+        self.assertEqual(quiz.duration, 1)
         self.assertEqual(quiz.seconds_per_question, 20)
         self.assertEqual(quiz.question_count, 2)
         self.assertEqual(quiz.difficulty, 'facile')
@@ -129,31 +128,24 @@ class QuizJsonImportTests(TestCase):
         generate.assert_not_called()
 
     @patch('ai.services.AIService.generate_quiz_from_lesson')
-    def test_form_selections_set_durations_without_json_metadata(self, generate):
+    def test_form_selection_sets_question_time_without_total_duration(self, generate):
         document = json.loads(json.dumps(self.document))
         document['quiz'].pop('level')
         document['quiz'].pop('lesson')
-        document['quiz'].pop('duration')
 
-        response = self.post_json(document, seconds_per_question=45, duration_minutes=25)
+        response = self.post_json(document, seconds_per_question=45)
 
         self.assertEqual(response.status_code, 302)
         quiz = Quiz.objects.get()
         self.assertEqual(quiz.lesson, self.lesson)
         self.assertEqual(quiz.seconds_per_question, 45)
-        self.assertEqual(quiz.duration, 25)
+        self.assertEqual(quiz.duration, 2)
         generate.assert_not_called()
 
     def test_invalid_question_time_is_rejected_without_creating_a_quiz(self):
         response = self.post_json(seconds_per_question='601')
 
         self.assertContains(response, 'entre 5 et 600 secondes')
-        self.assertFalse(Quiz.objects.exists())
-
-    def test_invalid_total_duration_is_rejected_without_creating_a_quiz(self):
-        response = self.post_json(duration_minutes='601')
-
-        self.assertContains(response, 'entre 1 et 600 minutes')
         self.assertFalse(Quiz.objects.exists())
 
     @patch('ai.services.AIService.generate_quiz_from_lesson')
@@ -199,7 +191,6 @@ class QuizJsonImportTests(TestCase):
             'course': self.course.pk,
             'lesson': self.lesson.pk,
             'seconds_per_question': '20',
-            'duration': '5',
             'generation_id': str(uuid.uuid4()),
             'quiz_json': SimpleUploadedFile('duplicate.json', duplicate),
         })
@@ -215,7 +206,7 @@ class QuizJsonImportTests(TestCase):
         self.assertContains(self.client.get(self.url), 'déjà été reçu')
 
     @patch('ai.services.AIService.generate_quiz_from_lesson')
-    def test_teacher_can_edit_duration_points_difficulty_and_questions(self, generate):
+    def test_teacher_can_edit_question_time_points_difficulty_and_questions(self, generate):
         self.post_json()
         quiz = Quiz.objects.get()
         first, _second = quiz.get_questions()
@@ -224,7 +215,7 @@ class QuizJsonImportTests(TestCase):
         response = self.client.post(reverse('quizzes:edit_questions', args=[quiz.pk]), {
             'action': 'save',
             'quiz_title': 'Quiz révisé',
-            'duration': '30',
+            'seconds_per_question': '45',
             f'q_{first.pk}_text': 'Calculer $3+3$.',
             f'q_{first.pk}_correct': '6',
             f'q_{first.pk}_expl': 'On additionne les deux termes.',
@@ -242,8 +233,8 @@ class QuizJsonImportTests(TestCase):
         first.refresh_from_db()
         correct_choice.refresh_from_db()
         self.assertEqual(quiz.title, 'Quiz révisé')
-        self.assertEqual(quiz.duration, 30)
-        self.assertEqual(quiz.seconds_per_question, 20)
+        self.assertEqual(quiz.duration, 2)
+        self.assertEqual(quiz.seconds_per_question, 45)
         self.assertEqual(quiz.question_count, 2)
         self.assertEqual(first.text, 'Calculer $3+3$.')
         self.assertEqual(first.points, Decimal('3.00'))
