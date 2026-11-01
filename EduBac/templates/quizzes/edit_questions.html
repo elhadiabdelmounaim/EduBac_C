@@ -62,7 +62,7 @@
                 <div class="col-sm-6">
                     <label class="form-label small" for="points_{{ q.pk }}">Points</label>
                     <input type="number" name="q_{{ q.pk }}_points" id="points_{{ q.pk }}"
-                           class="form-control" value="{{ q.points }}" min="0.01" max="100"
+                           class="form-control" value="{{ q.points|floatformat:'2u' }}" min="0.01" max="100"
                            step="0.01" required>
                 </div>
             </div>

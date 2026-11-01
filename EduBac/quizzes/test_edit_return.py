@@ -94,7 +94,9 @@ class QuizEditReturnTests(TestCase):
 
     def test_saved_quiz_can_still_be_sent_to_teachers_class(self):
         self.client.post(self.edit_url, self.payload)
-        classroom = Classroom.objects.create(name='Classe de test', teacher=self.teacher)
+        classroom = Classroom.objects.create(
+            name='Classe de test', teacher=self.teacher, niveau=self.lesson.course.niveau,
+        )
         ClassroomMember.objects.create(classroom=classroom, user=self.student)
         response = self.client.post(self.preview_url, {
             'action': 'send', 'quiz_id': self.quiz.pk, 'lesson': self.lesson.pk,

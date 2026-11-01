@@ -62,7 +62,8 @@ class QuizLessonSelectionTests(TestCase):
         self.assertContains(response, 'Choisir une leçon')
         self.assertContains(response, 'Quiz nombres réels')
         self.assertNotContains(response, 'Quiz polynômes')
-        self.assertContains(response, f'?lesson={self.lesson.pk}')
+        self.assertEqual(response.context['selected_lesson_id'], str(self.lesson.pk))
+        self.assertContains(response, 'Importer un quiz')
 
     def test_my_quizzes_lessons_depend_on_the_selected_level(self):
         initial_response = self.client.get(reverse('quizzes:manage'))
@@ -117,6 +118,17 @@ class QuizLessonSelectionTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'génération interne est désactivée')
+        self.assertEqual(Quiz.objects.count(), 2)
+        generate_quiz.assert_not_called()
+
+    @patch('ai.services.AIService.generate_quiz_from_lesson')
+    def test_standalone_ai_quiz_route_redirects_to_json_import(self, generate_quiz):
+        response = self.client.post(
+            reverse('ai:generate_quiz', args=[self.lesson.pk]),
+            {'question_count': 1},
+        )
+
+        self.assertRedirects(response, reverse('quizzes:teacher_ai'))
         self.assertEqual(Quiz.objects.count(), 2)
         generate_quiz.assert_not_called()
 

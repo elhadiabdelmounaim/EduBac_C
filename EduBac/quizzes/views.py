@@ -932,6 +932,9 @@ def edit_quiz_questions(request, pk):
             return redirect(f"{reverse('quizzes:teacher_ai')}?quiz={quiz.pk}")
         if action == 'delete_q':
             qid = request.POST.get('question_id')
+            if quiz.questions.count() <= 1:
+                messages.error(request, 'Un quiz doit conserver au moins une question.')
+                return redirect('quizzes:edit_questions', pk=quiz.pk)
             Question.objects.filter(pk=qid, quiz=quiz).delete()
             quiz.question_count = quiz.questions.count()
             quiz.save(update_fields=['question_count'])

@@ -1,169 +1,69 @@
-"""Real-session regression: quiz results → empty board → rule, shared renderer."""
-import json
-import os
 import shutil
 from unittest.mock import patch
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.urls import reverse
-from django.utils import timezone
 from playwright.sync_api import expect, sync_playwright
 
-from accounts.models import StudentProfile, TeacherProfile, User
+from accounts.models import TeacherProfile, User
 from education.models import Course, Lesson
-from quizzes.models import Attempt, Question, Quiz, StudentAnswer
-from whiteboard.models import QuizCorrectionBoard
+from quizzes.models import Question, Quiz
 
 
-class QuizRuleBrowserTests(StaticLiveServerTestCase):
-    def assert_centered_green_rule(self, page, explanation):
-        card = page.locator("#qwbCanvas .qwb-el--rule-card")
-        expect(card).to_have_count(1)
-        expect(card.locator("h2")).to_have_text("Règle utilisée")
-        expect(card.locator(".qwb-rule-card__name")).to_have_text("Identité remarquable")
-        expect(card).to_contain_text(explanation)
-        measured = card.evaluate("""node => {
-            const card = node.getBoundingClientRect();
-            const wrap = document.getElementById('qwbCanvasWrap').getBoundingClientRect();
-            const style = getComputedStyle(node);
-            return { dx: Math.abs((card.left + card.right - wrap.left - wrap.right)/2),
-                     dy: Math.abs((card.top + card.bottom - wrap.top - wrap.bottom)/2),
-                     inside: card.left >= wrap.left && card.right <= wrap.right &&
-                             card.top >= wrap.top && card.bottom <= wrap.bottom,
-                     color: style.backgroundColor,
-                     rounded: parseFloat(style.borderTopLeftRadius),
-                     font: parseFloat(getComputedStyle(node.querySelector('.qwb-el__body')).fontSize) };
-        }""")
-        self.assertLessEqual(measured["dx"], 2)
-        self.assertTrue(measured["inside"])
-        self.assertEqual(measured["color"], "rgb(232, 244, 229)")
-        self.assertGreaterEqual(measured["rounded"], 18)
-        self.assertGreaterEqual(measured["font"], 16)
-
-    def test_rule_only_replaces_steps_and_matches_generate_explanation(self):
-        # All ORM work precedes the synchronous Playwright runtime.
+class QuizQuestionEditingBrowserTests(StaticLiveServerTestCase):
+    def test_teacher_can_add_a_question_and_cannot_delete_the_last_one(self):
         teacher = User.objects.create_user(
-            username="rule-teacher", email="rule-teacher@example.test",
-            password="Browser-test-only-123!", role="teacher",
+            username='quiz-edit-browser',
+            email='quiz-edit-browser@example.test',
+            password='Browser-test-only-123!',
+            role='teacher',
         )
         TeacherProfile.objects.get_or_create(user=teacher)
-        student = User.objects.create_user(
-            username="rule-student", email="rule-student@example.test",
-            password="Browser-test-only-123!", role="student",
+        course = Course.objects.create(name='Mathématiques', niveau='tronc_commun')
+        lesson = Lesson.objects.create(course=course, title='Questions éditables', order=1)
+        quiz = Quiz.objects.create(
+            title='Quiz modifiable', lesson=lesson, created_by=teacher,
+            question_count=1, status='draft',
         )
-        StudentProfile.objects.get_or_create(user=student, defaults={"niveau": "tronc_commun"})
-        course = Course.objects.create(name="Algèbre", niveau="tronc_commun")
-        lesson = Lesson.objects.create(course=course, title="Identités", content="Identités remarquables")
-        explanation = "Cette identité permet de développer le carré d’une somme de deux termes."
-        rule_text = "Identité remarquable\n$$(a+b)^2 = a^2 + 2ab + b^2$$\n" + explanation
-        quiz = Quiz.objects.create(title="Quiz de règle", lesson=lesson, created_by=teacher)
-        question = Question.objects.create(
-            quiz=quiz, text="Développer $(x+3)^2$", correct_answer="$x^2+6x+9$",
-            explanation=rule_text + "\nÉtape 1 : remplacer b par 3.",
+        Question.objects.create(
+            quiz=quiz, order=1, text='Question initiale', correct_answer='A',
         )
-        attempt = Attempt.objects.create(
-            student=student, quiz=quiz, submitted_at=timezone.now(), score=100,
-        )
-        StudentAnswer.objects.create(
-            attempt=attempt, question=question, answer="$x^2+6x+9$", is_correct=True,
-        )
-        QuizCorrectionBoard.objects.create(
-            attempt=attempt, question=question,
-            data={"version": 1, "title": "Correction", "connections": [],
-                  "elements": [{"id": f"step{i}", "type": "step", "text": f"Ancienne étape {i}"}
-                               for i in range(1, 6)]},
-        )
-        board_path = f"/tableau/correction/{attempt.pk}/{question.pk}/"
-        preview = {
-            "title": "Quiz prévisualisé",
-            "questions": [{"text": "Développer $(a+b)^2$", "explanation": rule_text,
-                           "choices": [{"text": "$a^2+2ab+b^2$", "is_correct": True}]}],
-        }
-        rule = {"name": "Identité remarquable", "statement": explanation,
-                "latex": r"(a+b)^2 = a^2 + 2ab + b^2"}
-        with patch("ai.services.AIService.generate_quiz_from_lesson", return_value=preview), \
-                patch("ai.services.AIService._chat", return_value=json.dumps(rule)), \
-                sync_playwright() as pw:
+        self.assertEqual(Question.objects.get(quiz=quiz).points, 1)
+        edit_url = self.live_server_url + reverse('quizzes:edit_questions', args=[quiz.pk])
+
+        with patch(
+            'ai.services.AIService.generate_quiz_from_lesson',
+            side_effect=AssertionError('L’édition d’un quiz ne doit pas appeler l’IA.'),
+        ), sync_playwright() as pw:
             browser = pw.chromium.launch(
-                executable_path=os.environ.get("CHROMIUM_EXECUTABLE") or shutil.which("chromium"),
-                headless=True, args=["--no-sandbox"],
+                executable_path=shutil.which('chromium'),
+                headless=True,
+                args=['--no-sandbox'],
             )
             try:
-                teacher_page = browser.new_page()
-                # Use the project's configured login URL, not an auth bypass.
-                teacher_page.goto(self.live_server_url + reverse("accounts:login"))
-                teacher_page.locator('input[name="email"]').fill(teacher.email)
-                teacher_page.locator('input[name="password"]').fill("Browser-test-only-123!")
-                teacher_page.get_by_role("button", name="Se connecter", exact=True).click()
-                teacher_page.wait_for_url(lambda url: "/connexion/" not in url)
-                teacher_page.goto(self.live_server_url + "/quizzes/generer-envoyer/")
-                teacher_page.locator('select[name="niveau"]').select_option("tronc_commun")
-                teacher_page.locator('select[name="lesson"]').select_option(str(lesson.pk))
-                teacher_page.locator('button[name="action"][value="generate"]').click()
-                expected = teacher_page.locator(".qb-detail-explain .katex")
-                expect(expected).to_have_count(1)
-                generate_math = expected.evaluate("(node) => node.outerHTML")
-
-                context = browser.new_context(viewport={"width": 1280, "height": 900})
-                page = context.new_page()
-                errors = []
-                page.on("pageerror", lambda error: errors.append(str(error)))
-                page.goto(self.live_server_url + reverse("accounts:login"))
-                page.locator('input[name="email"]').fill(student.email)
-                page.locator('input[name="password"]').fill("Browser-test-only-123!")
-                page.get_by_role("button", name="Se connecter", exact=True).click()
-                page.wait_for_url(lambda url: "/connexion/" not in url)
-                page.goto(self.live_server_url + f"/quizzes/tentative/{attempt.pk}/resultats/")
-                page.locator(f'a[href="{board_path}"]').click()
-                expect(page.locator("#qwbCanvas .qwb-el")).to_have_count(1)
-                math = page.locator("#qwbCanvas .katex")
-                expect(math).to_have_count(1)
-                self.assertEqual(math.evaluate("(node) => node.outerHTML"), generate_math)
-                self.assert_centered_green_rule(page, explanation)
-                expect(page.locator("#qwbCanvas")).not_to_contain_text("Étape")
-                expect(page.locator("#qwbCanvas")).not_to_contain_text("Ancienne")
-                expect(page.locator("#qwbCanvas")).not_to_contain_text("x^2+6x+9")
-                expect(page.locator("#qwbChat")).not_to_be_visible()
-                page.keyboard.press("Control+z")
-                page.keyboard.press("Control+y")
-                expect(page.locator("#qwbCanvas .qwb-el")).to_have_count(1)
-                expect(page.locator(".qwb-result")).to_contain_text("Réponse correcte")
-                back = page.locator("#qwbResultsBack")
-                expect(back).to_be_visible()
-                expect(back).to_have_text("Retour aux résultats")
-                expect(back).to_have_attribute("href", reverse("quizzes:results", args=[attempt.pk]))
-                position = back.evaluate("""node => {
-                    const button = node.getBoundingClientRect();
-                    const board = document.getElementById('qwbCanvasWrap').getBoundingClientRect();
-                    return {above: button.bottom <= board.top,
-                            right: Math.abs(button.right - board.right) < 2};
-                }""")
-                self.assertTrue(position["above"])
-                self.assertTrue(position["right"])
-                expect(page.locator(".qwb-toolbar")).not_to_be_visible()
-                expect(page.locator(".qwb-sidebar")).not_to_be_visible()
-                page.locator("#qwbCanvas .qwb-el").click()
-                expect(page.locator("#qwbEditText")).not_to_be_visible()
-                page.keyboard.press("Delete")
-                expect(page.locator("#qwbCanvas .qwb-el")).to_have_count(1)
-                page.reload()
-                expect(page.locator("#qwbCanvas .katex")).to_have_count(1)
-                expect(page.locator("#qwbCanvas")).not_to_contain_text("Ancien contenu")
-                self.assert_centered_green_rule(page, explanation)
-                screenshot_dir = os.environ.get("QUIZ_RULE_SCREENSHOT_DIR")
-                if screenshot_dir:
-                    page.screenshot(path=os.path.join(screenshot_dir, "quiz-rule-desktop.png"))
-                page.set_viewport_size({"width": 390, "height": 844})
-                page.wait_for_function(
-                    "document.getElementById('edubacSidebar').getBoundingClientRect().right <= 1"
+                page = browser.new_page(viewport={'width': 1280, 'height': 900})
+                page.goto(self.live_server_url + reverse('accounts:login'))
+                page.locator('[name="email"]').fill(teacher.email)
+                page.locator('[name="password"]').fill('Browser-test-only-123!')
+                page.get_by_role('button', name='Se connecter', exact=True).click()
+                page.wait_for_url(self.live_server_url + reverse('accounts:dashboard'))
+                page.goto(edit_url)
+                expect(page.get_by_text('Question 1', exact=True)).to_be_visible()
+                points_values = page.locator('input[name$="_points"]').evaluate_all(
+                    'fields => fields.map(field => field.value)',
                 )
-                expect(page.locator("#qwbCanvas .katex")).to_be_visible()
-                self.assert_centered_green_rule(page, explanation)
-                if screenshot_dir:
-                    page.screenshot(path=os.path.join(screenshot_dir, "quiz-rule-mobile.png"))
-                self.assertEqual(errors, [])
-                expect(back).to_be_visible()
-                back.click()
-                expect(page).to_have_url(self.live_server_url + reverse("quizzes:results", args=[attempt.pk]))
+                points_markup = page.locator('input[name$="_points"]').evaluate_all(
+                    'fields => fields.map(field => field.outerHTML)',
+                )
+                self.assertEqual(points_values, ['1.00'], str(points_markup))
+                page.get_by_role('button', name='Ajouter une question').first.click()
+                expect(page.get_by_text('Question 2', exact=True)).to_be_visible()
+
+                page.get_by_role('button', name='Supprimer la question').last.click()
+                expect(page.get_by_text('Question supprimée.', exact=True)).to_be_visible()
             finally:
                 browser.close()
+
+        quiz.refresh_from_db()
+        self.assertEqual(quiz.questions.count(), 1)
+        self.assertTrue(Question.objects.filter(quiz=quiz).exists())

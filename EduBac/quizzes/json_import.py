@@ -138,10 +138,10 @@ def _parse_question(value, number, seen_ids):
         )
         if choice_id in choice_ids:
             raise QuizImportError(f"Question {number} : les identifiants de choix doivent être uniques.")
-        if re.sub(r'\s+', ' ', choice_text).casefold() in choice_texts:
+        if re.sub(r'\s+', ' ', choice_text) in choice_texts:
             raise QuizImportError(f"Question {number} : les quatre choix doivent être différents.")
         choice_ids.add(choice_id)
-        choice_texts.add(re.sub(r'\s+', ' ', choice_text).casefold())
+        choice_texts.add(re.sub(r'\s+', ' ', choice_text))
         choices.append({'id': choice_id, 'text': choice_text})
 
     answer_id = _nonempty_text(

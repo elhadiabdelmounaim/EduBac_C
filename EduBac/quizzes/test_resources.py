@@ -119,26 +119,15 @@ class TeacherResourceTests(TestCase):
 
     @patch.object(AIService, '_get_provider', return_value=SimpleNamespace(name='test', model='test'))
     @patch.object(AIService, '_chat', return_value=json.dumps(QUIZ_DATA))
-    def test_form_reaches_actual_ai_transport_with_resources_description_and_related_knowledge(self, chat, provider):
-        with patch.object(Lesson, 'get_ai_help', side_effect=AssertionError('Hidden content must not be read')):
+    def test_legacy_generator_post_is_rejected_without_reading_resources_or_calling_ai(self, chat, provider):
+        with patch.object(Lesson, 'get_ai_help', side_effect=AssertionError('Import must not read lesson sources')):
             response = self.client.post(self.url, {
                 **self.payload, 'source_files': ['Règles.txt', 'Méthodes.txt'],
                 'resource_uploads': [upload(text='UPLOADED_SOURCE')],
             })
-        self.assertContains(response, 'Quiz généré avec succès.')
-        prompt = chat.call_args_list[0].args[0][1]['content']
-        for marker in ('SELECTED_SOURCE_A', 'SELECTED_SOURCE_B', 'UPLOADED_SOURCE', 'TEACHER_FOCUS'):
-            self.assertIn(marker, prompt)
-        self.assertIn('Tu peux compléter', prompt)
-        self.assertIn('jamais sortir du niveau scolaire', prompt)
-        self.assertNotIn('seule source', prompt)
-        self.assertNotIn('strictement dans le contenu', prompt)
-        self.assertNotIn('UNSELECTED_SOURCE', prompt)
-        self.assertNotIn('HIDDEN_LESSON_CONTENT', prompt)
-        self.assertEqual(Quiz.objects.get().created_by, self.teacher)
-        self.assertEqual(Quiz.objects.get().seconds_per_question, 35)
-        self.assertEqual(response.context['selected_source_files'], ['Règles.txt', 'Méthodes.txt'])
-        self.assertContains(response, 'sélectionnez à nouveau ces fichiers')
+        self.assertContains(response, 'génération interne est désactivée')
+        self.assertFalse(Quiz.objects.exists())
+        chat.assert_not_called()
 
     @patch.object(AIService, '_get_provider', return_value=SimpleNamespace(name='test', model='test'))
     @patch.object(AIService, '_chat', return_value=json.dumps(QUIZ_DATA))
@@ -155,38 +144,35 @@ class TeacherResourceTests(TestCase):
         self.assertIn('connaissances mathématiques liées', prompt)
 
     @patch.object(AIService, 'generate_quiz_from_lesson', return_value=QUIZ_DATA)
-    def test_no_resources_uses_description_not_implicit_lesson_sources(self, generate):
+    def test_old_no_resource_request_does_not_call_the_internal_generator(self, generate):
         response = self.client.post(self.url, self.payload)
-        self.assertContains(response, 'Quiz généré avec succès.')
-        kwargs = generate.call_args.kwargs
-        self.assertFalse(kwargs['use_resources'])
-        self.assertEqual(kwargs['resource_context'], '')
-        self.assertTrue(kwargs['allow_related_knowledge'])
-        self.assertIn('TEACHER_FOCUS', kwargs['description'])
+        self.assertContains(response, 'génération interne est désactivée')
+        self.assertFalse(Quiz.objects.exists())
+        generate.assert_not_called()
 
     @patch.object(AIService, 'generate_quiz_from_lesson', return_value=QUIZ_DATA)
-    def test_upload_only_generation(self, generate):
+    def test_old_upload_only_request_does_not_generate_a_quiz(self, generate):
         response = self.client.post(self.url, {
             **self.payload, 'description': '', 'resource_uploads': [upload()],
         })
-        self.assertContains(response, 'Quiz généré avec succès.')
-        self.assertTrue(generate.call_args.kwargs['use_resources'])
-        self.assertIn('isoler x', generate.call_args.kwargs['resource_context'])
+        self.assertContains(response, 'génération interne est désactivée')
+        self.assertFalse(Quiz.objects.exists())
+        generate.assert_not_called()
 
     @patch.object(AIService, 'generate_quiz_from_lesson', return_value=QUIZ_DATA)
-    def test_topic_mode_ignores_selected_files_and_uploads(self, generate):
+    def test_old_topic_mode_does_not_generate_a_quiz(self, generate):
         response = self.client.post(self.url, {
             **self.payload, 'generation_mode': 'topic', 'subject': 'Équations',
             'source_files': ['missing.txt'], 'resource_uploads': [upload('bad.exe')],
         })
-        self.assertContains(response, 'Quiz généré avec succès.')
-        self.assertEqual(generate.call_args.kwargs['resource_context'], '')
-        self.assertFalse(generate.call_args.kwargs['use_resources'])
+        self.assertContains(response, 'génération interne est désactivée')
+        self.assertFalse(Quiz.objects.exists())
+        generate.assert_not_called()
 
     @patch.object(AIService, 'generate_quiz_from_lesson')
     def test_no_resources_and_no_instructions_is_rejected_before_ai(self, generate):
         response = self.client.post(self.url, {**self.payload, 'description': ''})
-        self.assertContains(response, 'Sans ressources, indiquez un sujet ou une description')
+        self.assertContains(response, 'génération interne est désactivée')
         generate.assert_not_called()
         self.assertFalse(Quiz.objects.exists())
 
@@ -196,19 +182,16 @@ class TeacherResourceTests(TestCase):
             response = self.client.post(self.url, {
                 **self.payload, 'source_files': ['Règles.txt', value],
             })
-            self.assertContains(response, 'introuvable pour cette leçon')
+            self.assertContains(response, 'génération interne est désactivée')
         generate.assert_not_called()
         self.assertFalse(Quiz.objects.exists())
 
     @patch.object(AIService, 'generate_quiz_from_lesson')
-    def test_invalid_upload_keeps_form_parameters_and_never_saves_partial_quiz(self, generate):
+    def test_old_resource_upload_field_cannot_create_a_partial_quiz(self, generate):
         response = self.client.post(self.url, {
             **self.payload, 'source_files': ['Règles.txt'], 'resource_uploads': [upload('script.exe')],
         })
-        self.assertContains(response, 'format non accepté')
-        self.assertEqual(response.context['selected_source_files'], ['Règles.txt'])
-        self.assertEqual(response.context['quiz_description'], self.payload['description'])
-        self.assertEqual(response.context['selected_seconds_per_question'], 35)
+        self.assertContains(response, 'génération interne est désactivée')
         generate.assert_not_called()
         self.assertFalse(Quiz.objects.exists())
 
@@ -302,22 +285,22 @@ class TeacherResourceTests(TestCase):
         generate.assert_not_called()
 
     @patch.object(AIService, 'generate_quiz_from_lesson', side_effect=ValueError('Provider unavailable'))
-    def test_provider_failure_does_not_persist_quiz_or_upload(self, generate):
+    def test_import_route_does_not_call_the_internal_provider(self, generate):
         response = self.client.post(self.url, {
             **self.payload, 'resource_uploads': [upload('Private.txt', 'PRIVATE_MARKER')],
         })
-        self.assertContains(response, 'Provider unavailable')
+        self.assertContains(response, 'génération interne est désactivée')
+        generate.assert_not_called()
         self.assertFalse(Quiz.objects.exists())
         self.assertEqual(len(list(self.media.rglob('Private.txt'))), 0)
 
-    def test_form_exposes_multiple_uploads_and_selection(self):
+    def test_form_exposes_json_import_instead_of_ai_or_resource_controls(self):
         response = self.client.get(self.url)
         self.assertContains(response, 'enctype="multipart/form-data"')
-        self.assertContains(response, 'name="source_files"')
-        self.assertContains(response, 'name="resource_uploads"')
-        self.assertIn('Règles.txt', [
-            item['value'] for item in response.context['resource_options_by_lesson'][str(self.lesson.pk)]
-        ])
+        self.assertContains(response, 'name="quiz_json"')
+        self.assertNotContains(response, 'name="source_files"')
+        self.assertNotContains(response, 'name="resource_uploads"')
+        self.assertNotContains(response, 'aiProviderSelect')
 
     @patch.object(AIService, 'generate_quiz_from_lesson')
     def test_invalid_lesson_and_numeric_parameters_never_raise_server_errors(self, generate):

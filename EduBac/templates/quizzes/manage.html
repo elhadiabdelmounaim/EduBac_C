@@ -3,9 +3,9 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">Mes quiz</h1>
     <div class="d-flex gap-2">
-        <a href="{% url 'quizzes:teacher_ai' %}{% if selected_lesson %}?lesson={{ selected_lesson.pk }}{% elif selected_niveau %}?niveau={{ selected_niveau }}{% endif %}" class="btn btn-edubac btn-sm">
+        <a href="{% url 'quizzes:teacher_ai' %}" class="btn btn-edubac btn-sm">
             <i class="bi bi-plus-circle"></i>
-            {% if selected_lesson %}Générer pour cette leçon{% elif selected_niveau %}Générer pour ce niveau{% else %}Générer (IA){% endif %}
+            Importer un quiz
         </a>
         <a href="{% url 'quizzes:assign' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-send"></i> Affecter</a>
         <a href="{% url 'quizzes:teacher_stats' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-graph-up"></i> Statistiques</a>
@@ -84,12 +84,12 @@
             <td colspan="6" class="text-muted">
                 {% if selected_lesson %}
                     Aucun quiz pour « {{ selected_lesson.title }} ».
-                    <a href="{% url 'quizzes:teacher_ai' %}?lesson={{ selected_lesson.pk }}">Générer un quiz pour cette leçon</a>
+                    <a href="{% url 'quizzes:teacher_ai' %}">Importer un quiz JSON</a>
                 {% elif selected_niveau %}
                     Aucun quiz pour ce niveau.
-                    <a href="{% url 'quizzes:teacher_ai' %}?niveau={{ selected_niveau }}">Générer un quiz pour ce niveau</a>
+                    <a href="{% url 'quizzes:teacher_ai' %}">Importer un quiz JSON</a>
                 {% else %}
-                    Aucun quiz. <a href="{% url 'quizzes:teacher_ai' %}">Générer avec l'IA</a>
+                    Aucun quiz. <a href="{% url 'quizzes:teacher_ai' %}">Importer un quiz JSON</a>
                 {% endif %}
             </td>
         </tr>

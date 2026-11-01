@@ -45,7 +45,12 @@ class QuizEditReturnBrowserTests(StaticLiveServerTestCase):
                     page.get_by_role('button', name='Se connecter', exact=True).click()
                     page.wait_for_url(self.live_server_url + reverse('accounts:dashboard'))
                     page.goto(preview_url)
-                    page.get_by_role('link', name=re.compile(r'Modifier$')).click()
+                    if page.get_by_role('link', name='Modifier le quiz').count() == 0:
+                        self.fail(
+                            'La page du brouillon ne s’affiche pas : '
+                            + page.locator('main').first.inner_text()
+                        )
+                    page.get_by_role('link', name='Modifier le quiz').click()
                     page.locator(f'[name="q_{question.pk}_text"]').fill('Résoudre $2x=12$.')
                     page.locator(f'[name="q_{question.pk}_correct"]').fill('6')
                     page.locator(f'[name="q_{question.pk}_expl"]').fill('DOUZE divisé par deux donne six.')
@@ -54,12 +59,10 @@ class QuizEditReturnBrowserTests(StaticLiveServerTestCase):
                     expect(page).to_have_url(preview_url)
                     expect(page.get_by_text('Questions enregistrées.', exact=True)).to_be_visible()
                     expect(page.locator('.qb-detail-explain')).to_contain_text('DOUZE')
-                    expect(page.locator('#secondsPerQ')).to_have_value('35')
-                    expect(page.locator('#difficultySelect')).to_have_value('difficile')
                     expect(page.locator('#sendQuizForm')).to_be_visible()
                     page.reload()
                     expect(page.locator('.qb-detail-explain')).to_contain_text('DOUZE')
-                    page.get_by_role('link', name=re.compile(r'Modifier$')).click()
+                    page.get_by_role('link', name='Modifier le quiz').click()
                     expect(page.locator(f'[name="q_{question.pk}_correct"]')).to_have_value('6')
                     page.get_by_role('link', name='Retour au quiz', exact=True).click()
                     expect(page).to_have_url(preview_url)
@@ -73,3 +76,5 @@ class QuizEditReturnBrowserTests(StaticLiveServerTestCase):
             self.assertEqual(Quiz.objects.count(), 1)
             self.assertEqual(question.correct_answer, '6')
             self.assertEqual(quiz.status, 'draft')
+            self.assertEqual(quiz.seconds_per_question, 35)
+            self.assertEqual(quiz.difficulty, 'difficile')

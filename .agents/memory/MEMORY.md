@@ -13,3 +13,4 @@
 - [Classroom removal](classroom-removal.md) — Rejeter removes only the selected class membership; student accounts and results must remain intact.
 - [Quiz actions stay in the site](quiz-actions.md) — the user rejects quiz-management buttons that open Django Admin.
 - [Teacher quiz grounding](teacher-quiz-grounding.md) — combine chosen resources, teacher objectives and relevant prior knowledge; resources are optional.
+- [HTML number inputs and French locales](quiz-number-localization.md) — emit dot decimals; French formatting can turn a valid Django `Decimal` into an empty browser number field.

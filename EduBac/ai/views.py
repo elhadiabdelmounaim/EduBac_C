@@ -6,9 +6,7 @@ from django.http import Http404
 from django.urls import reverse
 import logging
 from education.models import Lesson, Course
-from quizzes.models import Quiz, Question, Choice
-from quizzes.math_text import normalize_math_text
-from .services import AIService, QUIZ_MAX_QUESTIONS, public_quiz_error
+from .services import AIService
 from .models import AIConversation, AIMessage
 from .providers import AIProviderError
 
@@ -141,26 +139,6 @@ def generate_quiz(request, lesson_id):
     if not (hasattr(request.user, 'role') and request.user.role == 'teacher'):
         messages.error(request, 'Réservé aux enseignants.')
         return redirect('education:home')
-    lesson = get_object_or_404(Lesson.objects.select_related('course'), pk=lesson_id)
-    if request.method == 'POST':
-        count = max(1, min(int(request.POST.get('question_count', 5)), QUIZ_MAX_QUESTIONS))
-        difficulty = request.POST.get('difficulty', 'moyen')
-        try:
-            service = AIService()
-            data = service.generate_quiz_from_lesson(lesson, count, difficulty)
-            from quizzes.generation import save_generated_quiz
-            quiz = save_generated_quiz(data,
-                title=data.get('title', f'Quiz IA — {lesson.title}'),
-                duration=30,
-                question_count=len(data['questions']),
-                difficulty=difficulty,
-                status='draft',
-                lesson=lesson,
-                created_by=request.user,
-            )
-            messages.success(request, 'Quiz generated successfully')
-            return redirect('quizzes:edit_questions', pk=quiz.pk)
-        except Exception as e:
-            logger.warning("generate_quiz API error: %s", e)
-            messages.error(request, f'Generation failed: {public_quiz_error(e)}')
+    get_object_or_404(Lesson, pk=lesson_id)
+    messages.info(request, 'Importez un fichier JSON pour créer un quiz.')
     return redirect('quizzes:teacher_ai')
