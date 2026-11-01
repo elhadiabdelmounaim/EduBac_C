@@ -1,6 +1,8 @@
 from pathlib import Path
+import json
 from unittest.mock import patch
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import NoReverseMatch, Resolver404, resolve, reverse
 
@@ -79,44 +81,30 @@ class QuizLessonSelectionTests(TestCase):
         self.assertContains(response, f'data-niveau="{self.course.niveau}"')
         self.assertContains(response, 'name="niveau"')
 
-    def test_selected_lesson_opens_preselected_in_quiz_generator(self):
+    def test_quiz_creation_page_uses_external_json_instead_of_internal_generation(self):
         response = self.client.get(
             reverse('quizzes:teacher_ai'),
             {'lesson': self.lesson.pk},
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['selected_niveau'], self.course.niveau)
-        self.assertEqual(response.context['selected_lesson_id'], str(self.lesson.pk))
-        self.assertRegex(
-            response.content.decode(),
-            rf'<option value="{self.lesson.pk}" data-niveau="{self.course.niveau}"[^>]*selected',
-        )
+        self.assertContains(response, 'Importer un quiz')
+        self.assertContains(response, 'name="quiz_json"')
+        self.assertContains(response, 'accept=".json,application/json"')
+        self.assertNotContains(response, 'aiProviderSelect')
+        self.assertNotContains(response, 'Générer le quiz avec l’IA')
 
-    def test_generator_form_has_optional_description_textarea(self):
+    def test_teacher_creation_page_explains_the_external_json_format(self):
         response = self.client.get(reverse('quizzes:teacher_ai'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, '<label for="quizDescription" class="mb-0">Description du quiz</label>', html=True)
-        self.assertContains(
-            response,
-            'Décrivez les notions, compétences ou types de questions sur lesquels le quiz doit se concentrer...',
-        )
-        rendered_form = response.content.decode()
-        self.assertRegex(rendered_form, r'<textarea[^>]*name="description"[^>]*rows="5"')
-        self.assertNotRegex(rendered_form, r'<textarea[^>]*name="description"[^>]*required')
-        self.assertContains(response, 'Préparation du quiz…')
-        self.assertContains(response, 'data-gen-status')
-        self.assertNotContains(response, 'data-loading')
+        self.assertContains(response, 'multiple_choice')
+        self.assertContains(response, 'correct_answer')
+        self.assertContains(response, 'points')
+        self.assertContains(response, 'aucun service d’intelligence artificielle')
 
     @patch('ai.services.AIService.generate_quiz_from_lesson')
-    def test_generator_shows_a_clear_failure_without_saving_a_quiz(self, generate_quiz):
-        from ai.providers import AIProviderError
-        generate_quiz.side_effect = AIProviderError(
-            'Rate limit Groq', code='rate_limit', retry_after=20,
-        )
-
-        before = Quiz.objects.count()
+    def test_legacy_internal_generation_action_is_rejected_without_calling_ai(self, generate_quiz):
         response = self.client.post(reverse('quizzes:teacher_ai'), {
             'action': 'generate',
             'niveau': self.course.niveau,
@@ -128,48 +116,52 @@ class QuizLessonSelectionTests(TestCase):
         })
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Échec de la génération')
-        self.assertContains(response, 'IA atteinte')
-        self.assertContains(response, '20 secondes')
-        self.assertEqual(Quiz.objects.count(), before)
+        self.assertContains(response, 'génération interne est désactivée')
+        self.assertEqual(Quiz.objects.count(), 2)
+        generate_quiz.assert_not_called()
 
     @patch('ai.services.AIService.generate_quiz_from_lesson')
-    def test_teacher_generator_stores_latex_fields_without_plain_text_conversion(
-        self, generate_quiz,
-    ):
+    def test_json_import_stores_latex_and_optional_description_without_ai(self, generate_quiz):
         question_text = r'Calculer $\frac{1}{2}$.'
         choice_text = r'$\frac{1}{2}$'
         explanation = r'$\frac{1}{2} = 0.5$'
         hint = r'Réduis $\frac{2}{4}$.'
-        generate_quiz.return_value = {
-            'title': 'Quiz LaTeX',
-            'questions': [{
-                'text': question_text,
-                'correct_answer': choice_text,
-                'explanation': explanation,
-                'hint': hint,
-                'choices': [
-                    {'text': choice_text, 'is_correct': True},
-                    {'text': '1', 'is_correct': False},
-                    {'text': '2', 'is_correct': False},
-                    {'text': '4', 'is_correct': False},
-                ],
-            }],
+        document = {
+            'quiz': {
+                'title': 'Quiz LaTeX',
+                'description': 'Calculs sur les fractions.',
+                'level': 'tronc_commun',
+                'lesson': self.lesson.title,
+                'duration': 15,
+                'questions': [{
+                    'id': 'Q-LATEX',
+                    'type': 'multiple_choice',
+                    'statement': question_text,
+                    'correct_answer': 'A',
+                    'difficulty': 'medium',
+                    'points': 1,
+                    'explanation': explanation,
+                    'hint': hint,
+                    'choices': [
+                        {'id': 'A', 'text': choice_text},
+                        {'id': 'B', 'text': '1'},
+                        {'id': 'C', 'text': '2'},
+                        {'id': 'D', 'text': '4'},
+                    ],
+                }],
+            },
         }
-
         response = self.client.post(reverse('quizzes:teacher_ai'), {
-            'action': 'generate',
-            'niveau': self.course.niveau,
-            'lesson': self.lesson.pk,
-            'question_count': 1,
-            'seconds_per_question': 20,
-            'difficulty': 'moyen',
-            'subject': 'Calculs sur les fractions',
+            'action': 'import_json',
+            'quiz_json': SimpleUploadedFile(
+                'latex.json', json.dumps(document, ensure_ascii=False).encode(),
+                content_type='application/json',
+            ),
         })
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
         quiz = Quiz.objects.get(title='Quiz LaTeX')
-        self.assertEqual(quiz.description, '')
+        self.assertEqual(quiz.description, 'Calculs sur les fractions.')
         question = Question.objects.get(quiz=quiz)
         self.assertEqual(question.text, question_text)
         self.assertEqual(question.correct_answer, choice_text)
@@ -179,54 +171,8 @@ class QuizLessonSelectionTests(TestCase):
             question.choices.order_by('order').first().text,
             choice_text,
         )
-        self.assertContains(response, r'\frac')
-
-    @patch('ai.services.AIService.generate_quiz_from_lesson')
-    def test_teacher_generator_saves_and_forwards_description(self, generate_quiz):
-        generate_quiz.return_value = {
-            'title': 'Quiz ciblé',
-            'questions': [{
-                'text': 'Calculer 2 + 2',
-                'correct_answer': '4',
-                'explanation': 'Addition directe.',
-                'hint': 'Additionne les deux termes.',
-                'choices': [
-                    {'text': '4', 'is_correct': True},
-                    {'text': '3', 'is_correct': False},
-                ],
-            }],
-        }
-        description = 'Prioriser les additions avec plusieurs étapes.'
-
-        response = self.client.post(reverse('quizzes:teacher_ai'), {
-            'action': 'generate',
-            'niveau': self.course.niveau,
-            'lesson': self.lesson.pk,
-            'question_count': 1,
-            'seconds_per_question': 20,
-            'difficulty': 'moyen',
-            'description': description,
-        })
-
-        self.assertEqual(response.status_code, 200)
-        quiz = Quiz.objects.get(title='Quiz ciblé')
-        self.assertEqual(quiz.description, description)
-        self.assertEqual(response.context['quiz_description'], description)
-        self.assertContains(response, description)
-        generate_quiz.assert_called_once_with(
-            self.lesson,
-            1,
-            'moyen',
-            provider=None,
-            model=None,
-            description=description,
-            source_file=None,
-            use_resources=False,
-            subject='',
-            resource_context='',
-            allow_related_knowledge=True,
-            enforce_protocol=True,
-        )
+        self.assertEqual(quiz.duration, 15)
+        generate_quiz.assert_not_called()
 
 
 class MathTextNormalizationTests(TestCase):

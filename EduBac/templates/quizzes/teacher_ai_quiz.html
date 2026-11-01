@@ -1,356 +1,128 @@
 {% extends "base.html" %}
 {% load markdown_extras static %}
-{% block content %}
-<div class="quiz-builder fade-up">
 
-    {# ---- En-tête de page ---- #}
-    <header class="qb-page-header">
-        <div class="qb-page-header__text">
-            <h1 class="quiz-builder-title">Générer un quiz intelligent avec l’IA</h1>
-            <p class="qb-page-subtitle">Paramètres → génération de quiz → envoi aux élèves</p>
-        </div>
+{% block content %}
+<main class="quiz-builder fade-up">
+    <header class="mb-4">
+        <h1 class="quiz-builder-title">Importer un quiz</h1>
+        <p class="qb-page-subtitle mb-0">
+            Importez un fichier JSON, relisez le brouillon, puis affectez-le à une classe.
+            EduBac n’appelle pas de service d’intelligence artificielle pendant l’import.
+        </p>
     </header>
 
-    {# ---- Barre d’étapes ---- #}
-    <nav class="steps-bar fade-up fade-up-delay-1" aria-label="Étapes de création">
+    <nav class="steps-bar mb-4" aria-label="Étapes de création du quiz">
         <div class="step-item {% if not quiz_created %}active{% else %}done{% endif %}">
             <span class="step-num">{% if quiz_created %}<i class="bi bi-check"></i>{% else %}1{% endif %}</span>
-            <span class="step-label">Paramètres</span>
-        </div>
-        <div class="step-connector" aria-hidden="true"></div>
-        <div class="step-item {% if not quiz_created %}active{% else %}done{% endif %}">
-            <span class="step-num">{% if quiz_created %}<i class="bi bi-check"></i>{% else %}2{% endif %}</span>
-            <span class="step-label">Générer (IA)</span>
+            <span class="step-label">Importer le JSON</span>
         </div>
         <div class="step-connector" aria-hidden="true"></div>
         <div class="step-item {% if quiz_created %}active{% endif %}">
-            <span class="step-num">3</span>
-            <span class="step-label">Envoyer</span>
+            <span class="step-num">2</span><span class="step-label">Relire et modifier</span>
+        </div>
+        <div class="step-connector" aria-hidden="true"></div>
+        <div class="step-item {% if quiz_created %}active{% endif %}">
+            <span class="step-num">3</span><span class="step-label">Affecter à une classe</span>
         </div>
     </nav>
 
-    {% if quiz_created and not restored_quiz %}
-    <div class="alert alert-success" role="status">Quiz généré avec succès.</div>
-    {% endif %}
-    {% if generation_report %}
-    <div class="alert alert-info" role="status">
-        {% if generation_report.history_checked %}
-        Analyse pédagogique effectuée ; historique consulté :
-        {{ generation_report.history_questions }} question(s).
-        {{ generation_report.reviewed_questions }} question(s) retenue(s) après contrôle des réponses
-        et de la diversité, y compris les exemples repérés dans les ressources.
-        {% else %}
-        Analyse pédagogique effectuée.
-        {{ generation_report.reviewed_questions }} question(s) retenue(s) après contrôle des réponses.
-        Le contrôle de répétition des questions est désactivé.
-        {% endif %}
-        La revue croisée par IA ne constitue pas une preuve mathématique générale :
-        relisez les questions, les réponses et les explications avant l’envoi.
-    </div>
-    {% endif %}
     {% if error %}
-    <div class="alert alert-danger" role="alert">Échec de la génération : {{ error }}</div>
+    <div class="alert alert-danger" role="alert">{{ error }}</div>
     {% endif %}
 
-    <form method="post" id="genForm" enctype="multipart/form-data"
-          data-progress-url="{% url 'quizzes:generation_progress' generation_id %}">
-        {% csrf_token %}
-        <input type="hidden" name="generation_id" value="{{ generation_id }}">
-        <input type="hidden" name="resource_selection_present" value="1">
-        <div class="qb-layout">
-
-            {# ======== Colonne configuration (65%) ======== #}
-            <section class="qb-config-panel">
-                <div class="qb-section-card">
-                    <div class="qb-section-card__head">
-                        <span class="qb-section-card__title">
-                            <i class="bi bi-sliders"></i>
-                            Configuration du quiz
-                        </span>
-                        <span class="qb-section-card__badge">65%</span>
-                    </div>
-
-                    <div class="qb-section-card__body">
-                        <div class="qb-fields-grid">
-
-                            <div class="qb-card">
-                                <div class="qb-card-head">
-                                    <i class="bi bi-mortarboard-fill"></i>
-                                    <span>Niveau scolaire</span>
-                                </div>
-                                <div class="qb-card-body">
-                                    <select name="niveau" id="niveauSelect" class="form-select" required>
-                                        <option value="">— Choisir —</option>
-                                        {% for n in niveaux %}
-                                        <option value="{{ n.code }}" {% if selected_niveau == n.code %}selected{% endif %}>{{ n.label }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="qb-card">
-                                <div class="qb-card-head">
-                                    <i class="bi bi-book-fill"></i>
-                                    <span>Leçon / Sujet</span>
-                                </div>
-                                <div class="qb-card-body">
-                                    <select name="lesson" id="lessonSelect" class="form-select" required>
-                                        <option value="">— Choisir —</option>
-                                        {% for l in all_lessons %}
-                                        <option value="{{ l.pk }}" data-niveau="{{ l.course.niveau }}" {% if not selected_niveau or selected_niveau != l.course.niveau %}hidden disabled{% endif %} {% if selected_lesson_id == l.pk|stringformat:"s" %}selected{% endif %}>{{ l.order }}. {{ l.title }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="qb-card">
-                                <div class="qb-card-head">
-                                    <label for="generationMode">Mode de génération</label>
-                                </div>
-                                <div class="qb-card-body">
-                                    <select name="generation_mode" id="generationMode" class="form-select">
-                                        <option value="resources" {% if generation_mode != 'topic' %}selected{% endif %}>À partir des ressources de la leçon</option>
-                                        <option value="topic" {% if generation_mode == 'topic' %}selected{% endif %}>Sujet et consignes — sans fichier source</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="qb-card" id="topicCard" {% if generation_mode != 'topic' %}hidden{% endif %}>
-                                <div class="qb-card-head"><label for="quizSubject">Sujet du quiz</label></div>
-                                <div class="qb-card-body">
-                                    <input type="text" name="subject" id="quizSubject" class="form-control"
-                                           maxlength="200" value="{{ quiz_subject }}" placeholder="Ex. : résoudre des équations du second degré">
-                                    <div class="form-text">Indiquez le sujet à traiter. Les ressources de la leçon et les fichiers ajoutés sont désactivés dans ce mode.</div>
-                                </div>
-                            </div>
-                            <div class="qb-card qb-resources-card">
-                                <div class="qb-card-head">
-                                    <i class="bi bi-folder2-open"></i>
-                                    <label for="sourceFileSelect" class="mb-0">Ressources de la leçon</label>
-                                </div>
-                                <div class="qb-card-body">
-                                    <p class="form-text mt-0 mb-2" id="sourceFileHint">
-                                        Choisissez une leçon pour afficher ses ressources. Sélection multiple : Ctrl (Windows) ou Cmd (Mac), puis clic.
-                                    </p>
-                                    <select name="source_files" id="sourceFileSelect" class="form-select qb-resource-select"
-                                            aria-describedby="sourceFileHint resourceSelectionSummary" multiple size="5" disabled>
-                                        <option value="">— Choisir d’abord une leçon —</option>
-                                    </select>
-                                    <div class="qb-resource-actions">
-                                        <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllResources" disabled>Tout sélectionner</button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="clearResources" disabled>Tout effacer</button>
-                                    </div>
-                                    <div class="form-text mt-2" id="resourceSelectionSummary" aria-live="polite">Aucune ressource sélectionnée.</div>
-
-                                    <div class="qb-upload-divider"><span>ou compléter avec vos fichiers</span></div>
-                                    <label for="quizResourceUploads" class="form-label fw-semibold">Ajouter des fichiers pour cette génération</label>
-                                    <input type="file" id="quizResourceUploads" name="resource_uploads" class="form-control"
-                                           accept=".txt,.md,.pdf,.docx" multiple aria-describedby="uploadHint uploadFileSummary">
-                                    <div class="form-text mt-2" id="uploadHint">
-                                        TXT, Markdown, PDF textuels ou DOCX. Jusqu’à 5 fichiers, 10 Mio chacun et 25 Mio au total ; 12 ressources au maximum avec la sélection ci-dessus.
-                                        Les PDF numérisés, images et OCR ne sont pas pris en charge. Ces fichiers servent uniquement à cette génération et ne sont pas ajoutés à la bibliothèque publique.
-                                    </div>
-                                    <div class="form-text mt-1" id="uploadFileSummary" aria-live="polite">Aucun nouveau fichier choisi.</div>
-                                    <div class="alert alert-warning py-2 mt-2 mb-0" id="resourceValidationMessage" role="alert" hidden></div>
-                                    {% if uploaded_resource_names %}
-                                    <div class="qb-upload-notice mt-3" role="status">
-                                        <strong>Fichiers reçus pour cette génération :</strong>
-                                        <ul class="mb-1 mt-1">
-                                            {% for filename in uploaded_resource_names %}<li>{{ filename }}</li>{% endfor %}
-                                        </ul>
-                                        Le navigateur réinitialise le champ fichier après l’envoi. Pour une nouvelle génération, sélectionnez à nouveau ces fichiers.
-                                    </div>
-                                    {% endif %}
-                                    {% if resource_warnings %}
-                                    <div class="alert alert-warning mt-3 mb-0" role="alert">
-                                        <strong>À vérifier dans les ressources :</strong>
-                                        <ul class="mb-0 mt-1">{% for warning in resource_warnings %}<li>{{ warning }}</li>{% endfor %}</ul>
-                                    </div>
-                                    {% endif %}
-                                    <p class="qb-resource-guidance mb-0 mt-3">
-                                        Les ressources sélectionnées et votre description orientent le quiz. L’agent peut les compléter avec des connaissances mathématiques liées au même sujet et au niveau scolaire choisi. Aucune ressource n’est obligatoire si vous décrivez le quiz.
-                                    </p>
-                                    <span class="visually-hidden" id="topicResourceNote">En mode sujet, les ressources et fichiers ne seront pas envoyés.</span>
-                                </div>
-                            </div>
-
-                            <div class="qb-card qb-description-card">
-                                <div class="qb-card-head">
-                                    <i class="bi bi-card-text"></i>
-                                    <label for="quizDescription" class="mb-0">Description du quiz</label>
-                                </div>
-                                <div class="qb-card-body">
-                                    <textarea
-                                        name="description"
-                                        id="quizDescription"
-                                        class="form-control"
-                                        rows="5"
-                                        placeholder="Décrivez les notions, compétences ou types de questions sur lesquels le quiz doit se concentrer..."
-                                    >{{ quiz_description }}</textarea>
-                                    <div class="form-text mt-2">
-                                        Avec des ressources, précisez les notions et compétences à privilégier. Sans ressource, indiquez ici vos consignes ou un sujet explicite.
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="qb-card">
-                                <div class="qb-card-head">
-                                    <i class="bi bi-stars"></i>
-                                    <span>Niveau de difficulté</span>
-                                </div>
-                                <div class="qb-card-body">
-                                    <select name="difficulty" id="difficultySelect" class="form-select">
-                                        <option value="facile" {% if selected_difficulty == 'facile' %}selected{% endif %}>Facile — application directe</option>
-                                        <option value="moyen" {% if selected_difficulty == 'moyen' %}selected{% endif %}>Moyen — 2–3 étapes</option>
-                                        <option value="difficile" {% if selected_difficulty == 'difficile' %}selected{% endif %}>Difficile — type examen</option>
-                                    </select>
-                                    <div class="form-text mt-1" id="difficultyHint">Questions avec raisonnement standard du cours (2–3 étapes).</div>
-                                </div>
-                            </div>
-
-                            <div class="qb-card">
-                                <div class="qb-card-head">
-                                    <i class="bi bi-hourglass-split"></i>
-                                    <span>Temps par question</span>
-                                </div>
-                                <div class="qb-card-body">
-                                    <div class="input-group">
-                                        <input type="number" name="seconds_per_question" id="secondsPerQ" class="form-control" value="{{ selected_seconds_per_question }}" min="5" max="120" {% if generation_submitted %}data-manual="1"{% endif %}>
-                                        <span class="input-group-text">sec</span>
-                                    </div>
-                                    <div class="form-text">Durée allouée à chaque question.</div>
-                                </div>
-                            </div>
-
-                            <div class="qb-card">
-                                <div class="qb-card-head">
-                                    <i class="bi bi-list-ol"></i>
-                                    <span>Nombre de questions</span>
-                                </div>
-                                <div class="qb-card-body">
-                                    <input type="number" name="question_count" id="questionCount" class="form-control" value="{{ selected_question_count }}" min="1" max="20">
-                                </div>
-                            </div>
-
-                            <div class="qb-card">
-                                <div class="qb-card-head">
-                                    <i class="bi bi-cpu"></i>
-                                    <span>Modèle IA</span>
-                                </div>
-                                <div class="qb-card-body">
-                                    <select name="ai_provider" id="aiProviderSelect" class="form-select mb-2">
-                                        {% for p in ai_providers %}
-                                        <option value="{{ p.id }}" {% if p.id == selected_ai_provider %}selected{% endif %} {% if not p.configured %}disabled{% endif %}>
-                                            {{ p.label }}{% if not p.configured %} (clé non configurée){% endif %}
-                                        </option>
-                                        {% empty %}
-                                        <option value="groq">Groq</option>
-                                        {% endfor %}
-                                    </select>
-                                    <select name="ai_model" id="aiModelSelect" class="form-select" data-selected-model="{{ selected_ai_model }}">
-                                        <option value="">— Défaut du provider —</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                        </div>{# /.qb-fields-grid #}
-
-                        <div class="qb-generate-wrap">
-                            <button type="submit" name="action" value="generate" class="qb-generate-btn" id="genBtn">
-                                <i class="bi bi-magic"></i>
-                                <span>Générer le quiz avec l’IA</span>
-                            </button>
-                            <div id="genLoading" class="d-none qb-loading-status" role="status">
-                                <div class="small text-muted" data-gen-status>Préparation du quiz…</div>
-                                <div class="qb-loading-bar"><span></span></div>
-                                <a id="genRecovery" class="small" href="{% url 'quizzes:manage' %}" hidden>Vérifier mes quiz avant de relancer</a>
-                            </div>
-                        </div>
-                    </div>{# /.qb-section-card__body #}
-                </div>{# /.qb-section-card #}
-            </section>
-
-            {# ======== Colonne aperçu (35%) ======== #}
-            <aside class="qb-preview-panel">
-                <div class="qb-preview" id="livePreview">
-                    <div class="qb-preview__head">
-                        <h3 class="qb-preview__title">
-                            <i class="bi bi-eye"></i>
-                            Aperçu dynamique
-                        </h3>
-                        <span class="qb-preview__badge">35%</span>
-                    </div>
-
-                    <div class="qb-preview__meta" id="pvMeta">
-                        <div class="qb-preview-row">
-                            <span class="qb-preview-label">Sujet</span>
-                            <strong id="pvTitle">—</strong>
-                        </div>
-                        <div class="qb-preview-row">
-                            <span class="qb-preview-label">Niveau</span>
-                            <strong id="pvNiveau">—</strong>
-                        </div>
-                        <div class="qb-preview-row">
-                            <span class="qb-preview-label">Difficulté</span>
-                            <strong id="pvDiff">{{ selected_difficulty|capfirst }}</strong>
-                        </div>
-                        <div class="qb-preview-row">
-                            <span class="qb-preview-label">Temps / question</span>
-                            <strong><span id="pvSec">{{ selected_seconds_per_question }}</span> s</strong>
-                        </div>
-                        <div class="qb-preview-row">
-                            <span class="qb-preview-label">Questions</span>
-                            <strong id="pvCount">{{ selected_question_count }}</strong>
-                        </div>
-                    </div>
-
-                    {% if quiz_created and preview %}
-                        <div class="qb-preview__questions">
-                            {% for q in preview|slice:":4" %}
-                            <div class="qb-preview-q">{{ q.text|truncatechars:90|latex }}</div>
-                            {% endfor %}
-                            {% if preview|length > 4 %}
-                            <div class="qb-preview-more">+ {{ preview|length|add:"-4" }} autres…</div>
-                            {% endif %}
-                        </div>
-                    {% else %}
-                        <div class="qb-preview-empty" id="pvEmpty">
-                            <i class="bi bi-info-circle"></i>
-                            <p>Guide : Configurez et générez.</p>
-                        </div>
-                    {% endif %}
+    <section class="qb-section-card mb-4" aria-labelledby="import-title">
+        <div class="qb-section-card__head">
+            <h2 class="qb-section-card__title h5 mb-0" id="import-title">
+                <i class="bi bi-file-earmark-arrow-up"></i> Fichier du quiz
+            </h2>
+        </div>
+        <div class="qb-section-card__body">
+            <form method="post" enctype="multipart/form-data" id="quizImportForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="import_json">
+                <input type="hidden" name="generation_id" value="{{ generation_id }}">
+                <label class="form-label fw-semibold" for="quizJsonFile">Choisir un fichier JSON</label>
+                <input class="form-control" type="file" id="quizJsonFile" name="quiz_json"
+                       accept=".json,application/json" required>
+                <div class="form-text mt-2">
+                    Fichier UTF-8, jusqu’à 1 Mio. Il doit indiquer le niveau, le titre exact de la leçon,
+                    la durée et au moins une question à quatre choix distincts. Les formules et le LaTeX
+                    restent inchangés. Aucun code contenu dans le fichier n’est exécuté.
                 </div>
-            </aside>
+                <button class="btn btn-edubac mt-3" type="submit">
+                    <i class="bi bi-check2-circle"></i> Valider et créer le brouillon
+                </button>
+            </form>
 
-        </div>{# /.qb-layout #}
-    </form>
+            <details class="mt-4">
+                <summary class="fw-semibold">Voir le format attendu</summary>
+                <p class="form-text mt-2">
+                    Le niveau peut être un code EduBac (par exemple <code>1ere_bac_sc</code> ou
+                    <code>1BAC_SE</code>) ; la leçon doit correspondre à une leçon du programme.
+                    Les niveaux de difficulté acceptés sont <code>easy</code>, <code>medium</code>
+                    et <code>hard</code>.
+                </p>
+                <pre class="bg-light border rounded p-3 small mb-0" style="white-space:pre-wrap;overflow-wrap:anywhere;">{
+  "quiz": {
+    "title": "Les fonctions numériques",
+    "level": "1BAC_SE",
+    "lesson": "Généralités sur les fonctions numériques",
+    "duration": 20,
+    "questions": [{
+      "id": "Q001",
+      "type": "multiple_choice",
+      "statement": "Soit $f(x)=2x+3$. Calculer $f(2)$.",
+      "choices": [
+        {"id": "A", "text": "5"},
+        {"id": "B", "text": "7"},
+        {"id": "C", "text": "8"},
+        {"id": "D", "text": "6"}
+      ],
+      "correct_answer": "B",
+      "difficulty": "easy",
+      "points": 1
+    }]
+  }
+}</pre>
+            </details>
+        </div>
+    </section>
 
     {% if quiz_created and preview %}
-    <div class="qb-detail-card fade-up">
+    <section class="qb-detail-card fade-up mb-4" aria-labelledby="quiz-preview-title">
         <div class="qb-detail-card__head">
-            <span><i class="bi bi-card-checklist"></i> Aperçu détaillé — {{ quiz_created.title }}</span>
-            <div class="qb-detail-card__actions">
+            <div>
+                <h2 class="h5 mb-1" id="quiz-preview-title">{{ quiz_created.title }}</h2>
+                <span class="text-muted">
+                    {{ quiz_created.lesson.course.get_niveau_display }} · {{ quiz_created.lesson.title }}
+                </span>
+            </div>
+            <div class="qb-detail-card__actions d-flex flex-wrap gap-2 align-items-center">
+                <span class="qb-time-badge">{{ quiz_created.duration }} min · {{ preview|length }} question(s)</span>
                 <a href="{% url 'quizzes:edit_questions' quiz_created.pk %}" class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-pencil"></i> Modifier
+                    <i class="bi bi-pencil"></i> Modifier le quiz
                 </a>
-                <a href="{% url 'quizzes:delete' quiz_created.pk %}" class="btn btn-sm btn-outline-danger">Supprimer</a>
-                <span class="qb-time-badge">{{ quiz_created.seconds_per_question }} s / question</span>
+                <a href="{% url 'quizzes:schedule' quiz_created.pk %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-clock"></i> Programmer
+                </a>
             </div>
         </div>
         <div class="qb-detail-card__body">
             <ol class="qb-detail-list">
                 {% for q in preview %}
-                <li>
+                <li class="mb-4">
                     <div class="qb-detail-q">{{ q.text|latex }}</div>
-                    {% if q.choices.all %}
+                    <div class="small text-muted mb-2">
+                        {{ q.get_difficulty_display }} · {{ q.points }} point(s)
+                    </div>
                     <ul class="qb-option-list">
-                        {% for c in q.choices.all %}
-                        <li class="{% if c.is_correct %}is-selected{% endif %}">
-                            {% if c.is_correct %}<i class="bi bi-check-circle-fill"></i>{% else %}<i class="bi bi-circle"></i>{% endif %}
-                            {{ c.text|latex }}
+                        {% for choice in q.choices.all %}
+                        <li class="{% if choice.is_correct %}is-selected{% endif %}">
+                            {% if choice.is_correct %}<i class="bi bi-check-circle-fill"></i>{% else %}<i class="bi bi-circle"></i>{% endif %}
+                            {{ choice.text|latex }}
                         </li>
                         {% endfor %}
                     </ul>
-                    {% endif %}
                     {% if q.explanation %}
                     <div class="qb-detail-explain"><strong>Explication :</strong> {{ q.explanation|latex }}</div>
                     {% endif %}
@@ -358,14 +130,11 @@
                 {% endfor %}
             </ol>
         </div>
-
         <div class="qb-detail-card__foot">
             <form method="post" id="sendQuizForm">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="send">
                 <input type="hidden" name="quiz_id" value="{{ quiz_created.pk }}">
-                <input type="hidden" name="niveau" value="{{ selected_niveau }}">
-                <input type="hidden" name="lesson" value="{{ quiz_created.lesson_id }}">
                 <div class="row g-3 mb-3 align-items-end">
                     <div class="col-md-5">
                         <label class="form-label small fw-semibold" for="classroomSelect">
@@ -373,129 +142,33 @@
                         </label>
                         <select name="classroom" id="classroomSelect" class="form-select" required>
                             <option value="">— Choisir une classe —</option>
-                            {% for c in classrooms %}
-                            <option value="{{ c.pk }}">{{ c.name }} ({{ c.code }})</option>
+                            {% for classroom in classrooms %}
+                            <option value="{{ classroom.pk }}">{{ classroom.name }} ({{ classroom.code }})</option>
                             {% empty %}
-                            <option value="" disabled>Aucune classe — créez-en une d’abord</option>
+                            <option value="" disabled>Aucune classe à ce niveau — créez-en une d’abord</option>
                             {% endfor %}
                         </select>
-                        <div class="form-text">Seuls les élèves de cette classe recevront le quiz.</div>
+                        <div class="form-text">Seuls les élèves inscrits dans cette classe recevront le quiz.</div>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label small fw-semibold" for="deadlineInput">Date limite (optionnel)</label>
+                        <label class="form-label small fw-semibold" for="deadlineInput">Date limite (facultative)</label>
                         <input type="datetime-local" name="deadline" id="deadlineInput" class="form-control">
                     </div>
-                    <div class="col-md-3 d-flex flex-wrap gap-2">
-                        <button type="submit" class="btn btn-edubac flex-grow-1">
-                            <i class="bi bi-send"></i> Envoyer le quiz
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-edubac w-100">
+                            <i class="bi bi-send"></i> Publier et affecter
                         </button>
                     </div>
                 </div>
                 <a href="{% url 'quizzes:edit_questions' quiz_created.pk %}" class="btn btn-outline-primary btn-sm">
-                    <i class="bi bi-pencil"></i> Ajuster les questions
+                    <i class="bi bi-pencil"></i> Modifier avant publication
                 </a>
             </form>
         </div>
-    </div>
+    </section>
     {% endif %}
-
-</div>{# /.quiz-builder #}
-
-{{ source_files_by_lesson|json_script:"source-files-data" }}
-{{ resource_options_by_lesson|json_script:"resource-options-data" }}
-{{ selected_source_files|json_script:"selected-source-files-data" }}
-<script>
-(function(){
-  var hints = {
-    facile: 'Questions d\'application immédiate du cours.',
-    moyen: 'Questions avec raisonnement standard du cours (2–3 étapes).',
-    difficile: 'Questions type examen, multi-étapes et pièges classiques.'
-  };
-  var secs = { facile: 15, moyen: 20, difficile: 30 };
-  var sel = document.getElementById('difficultySelect');
-  var hint = document.getElementById('difficultyHint');
-  var sec = document.getElementById('secondsPerQ') || document.querySelector('input[name="seconds_per_question"]');
-  var count = document.getElementById('questionCount');
-  var niveau = document.getElementById('niveauSelect');
-  var lesson = document.getElementById('lessonSelect');
-  var pvDiff = document.getElementById('pvDiff');
-  var pvSec = document.getElementById('pvSec');
-  var pvCount = document.getElementById('pvCount');
-  var pvNiveau = document.getElementById('pvNiveau');
-  var pvTitle = document.getElementById('pvTitle');
-  var mode = document.getElementById('generationMode');
-  var subject = document.getElementById('quizSubject');
-
-  function syncPreview(){
-    if(pvDiff && sel) {
-      var t = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : 'Moyen';
-      pvDiff.textContent = t.split('—')[0].trim() || 'Moyen';
-    }
-    if(pvSec && sec) pvSec.textContent = sec.value || '20';
-    if(pvCount && count) pvCount.textContent = count.value || '5';
-    if(pvNiveau && niveau) {
-      var opt = niveau.options[niveau.selectedIndex];
-      pvNiveau.textContent = (opt && opt.value) ? opt.text : '—';
-    }
-    if(pvTitle && lesson) {
-      var lo = lesson.options[lesson.selectedIndex];
-      if(lo && lo.value) pvTitle.textContent = lo.text.replace(/^\d+\.\s*/, '');
-      else pvTitle.textContent = '—';
-      if(mode && mode.value === 'topic' && subject && subject.value.trim()) pvTitle.textContent = subject.value.trim();
-    }
-  }
-
-  function syncDiff(){
-    var v = sel ? sel.value : 'moyen';
-    if(hint) hint.textContent = hints[v] || '';
-    if(sec && !sec.dataset.manual) sec.value = secs[v] || 20;
-    syncPreview();
-  }
-  if(sel){
-    sel.addEventListener('change', syncDiff);
-    if(sec) sec.addEventListener('input', function(){ sec.dataset.manual = '1'; syncPreview(); });
-    if(count) count.addEventListener('input', syncPreview);
-    if(niveau) niveau.addEventListener('change', syncPreview);
-    if(lesson) lesson.addEventListener('change', syncPreview);
-    if(subject) subject.addEventListener('input', syncPreview);
-    if(mode) mode.addEventListener('change', syncPreview);
-    syncDiff();
-  }
-
-})();
-</script>
-
-<script src="{% static 'js/teacher-quiz-resources.js' %}?v=resources-2"></script>
-<script src="{% static 'js/teacher-quiz-generation.js' %}?v=timings-1"></script>
-
-<script>
-(function(){
-  var providers = {
-{% for p in ai_providers %}
-    "{{ p.id }}": [{% for m in p.models %}{"id":"{{ m.id }}","label":"{{ m.label|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]{% if not forloop.last %},{% endif %}
-{% endfor %}
-  };
-  var prov = document.getElementById('aiProviderSelect');
-  var model = document.getElementById('aiModelSelect');
-  function fill(selected){
-    if(!prov || !model) return;
-    var list = providers[prov.value] || [];
-    model.innerHTML = '<option value="">— Défaut du provider —</option>';
-    list.forEach(function(m){
-      var o = document.createElement('option');
-      o.value = m.id; o.textContent = m.label;
-      model.appendChild(o);
-    });
-    if(selected) model.value = selected;
-  }
-  if(prov){
-    prov.addEventListener('change', function(){ fill(''); });
-    fill(model ? model.dataset.selectedModel : '');
-  }
-})();
-</script>
+</main>
 {% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/teacher-quiz-resources.css' %}?v=resources-2">
 {% include "includes/katex.html" %}
 {% endblock %}

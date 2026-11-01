@@ -1,6 +1,8 @@
 from django.db import models
 from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from education.models import Lesson
+from decimal import Decimal
 import uuid
 
 
@@ -143,6 +145,19 @@ class Question(models.Model):
     text = models.TextField(verbose_name='Énoncé')
     explanation = models.TextField(blank=True, verbose_name='Explication')
     hint = models.TextField(blank=True, verbose_name='Indice')
+    difficulty = models.CharField(
+        max_length=20,
+        choices=Quiz.DIFFICULTY_CHOICES,
+        default='moyen',
+        verbose_name='Difficulté',
+    )
+    points = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('1.00'),
+        validators=[MinValueValidator(Decimal('0.01')), MaxValueValidator(Decimal('100.00'))],
+        verbose_name='Points',
+    )
     correct_answer = models.CharField(
         max_length=500,
         blank=True,
@@ -269,13 +284,18 @@ class Attempt(models.Model):
         return f"{self.student.username} — {self.quiz.title} ({self.score or 'en cours'}%)"
 
     def calculate_score(self):
-        answers = self.answers.all()
-        if not answers.exists():
+        answers = list(self.answers.select_related('question'))
+        if not answers:
             self.score = 0.0
         else:
-            correct = answers.filter(is_correct=True).count()
-            total = answers.count()
-            self.score = round((correct / total) * 100, 2)
+            total_points = sum((answer.question.points for answer in answers), Decimal('0'))
+            earned_points = sum(
+                (answer.question.points for answer in answers if answer.is_correct), Decimal('0'),
+            )
+            self.score = (
+                round(float(earned_points / total_points * 100), 2)
+                if total_points > 0 else 0.0
+            )
         self.save(update_fields=['score'])
         return self.score
 

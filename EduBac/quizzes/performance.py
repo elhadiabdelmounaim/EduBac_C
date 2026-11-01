@@ -8,6 +8,8 @@ from datetime import timedelta
 from functools import wraps
 
 from django.http import JsonResponse
+from django.contrib import messages
+from django.shortcuts import redirect
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
@@ -31,7 +33,8 @@ class GenerationTimingMiddleware:
 def track_generation(function):
     @wraps(function)
     def wrapped(request, *args, **kwargs):
-        if request.method != "POST" or request.POST.get("action", "generate") != "generate":
+        action = request.POST.get("action", "generate")
+        if request.method != "POST" or action not in ("generate", "import_json"):
             return function(request, *args, **kwargs)
         try:
             identifier = uuid.UUID(request.POST["generation_id"]) if request.POST.get("generation_id") else uuid.uuid4()
@@ -43,6 +46,12 @@ def track_generation(function):
             pk=identifier, defaults={"owner": request.user},
         )
         if not created:
+            if action == "import_json":
+                messages.info(
+                    request,
+                    "Ce fichier a déjà été reçu. Vérifiez « Mes quiz » avant de l’importer à nouveau.",
+                )
+                return redirect("quizzes:teacher_ai")
             return JsonResponse(
                 {"error": "Cette demande a déjà été reçue. Vérifiez « Mes quiz » avant de relancer."},
                 status=409,

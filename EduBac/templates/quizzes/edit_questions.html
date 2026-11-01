@@ -21,6 +21,17 @@
     {% csrf_token %}
     <input type="hidden" name="action" id="formAction" value="save">
     <input type="hidden" name="question_id" id="questionIdField" value="">
+    <div class="card shadow-sm mb-3 border-0" style="border-radius:14px;">
+        <div class="card-body">
+            <label class="form-label fw-semibold" for="quizTitle">Titre du quiz</label>
+            <input type="text" name="quiz_title" id="quizTitle" class="form-control mb-3"
+                   value="{{ quiz.title }}" maxlength="255" required>
+            <label class="form-label fw-semibold" for="quizDuration">Durée totale (minutes)</label>
+            <input type="number" name="duration" id="quizDuration" class="form-control"
+                   value="{{ quiz.duration }}" min="1" max="600" required>
+            <div class="form-text">Le temps par question est recalculé lorsque vous modifiez cette durée.</div>
+        </div>
+    </div>
     {% for q in questions %}
     <div class="card shadow-sm mb-3 border-0" style="border-radius:14px;">
         <div class="card-body">
@@ -38,6 +49,22 @@
             <div class="mb-2">
                 <label class="form-label small">Explication</label>
                 <textarea name="q_{{ q.pk }}_expl" class="form-control" rows="2">{{ q.explanation }}</textarea>
+            </div>
+            <div class="row g-2 mb-3">
+                <div class="col-sm-6">
+                    <label class="form-label small" for="difficulty_{{ q.pk }}">Difficulté</label>
+                    <select name="q_{{ q.pk }}_difficulty" id="difficulty_{{ q.pk }}" class="form-select">
+                        {% for value, label in quiz.DIFFICULTY_CHOICES %}
+                        <option value="{{ value }}" {% if q.difficulty == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-sm-6">
+                    <label class="form-label small" for="points_{{ q.pk }}">Points</label>
+                    <input type="number" name="q_{{ q.pk }}_points" id="points_{{ q.pk }}"
+                           class="form-control" value="{{ q.points }}" min="0.01" max="100"
+                           step="0.01" required>
+                </div>
             </div>
             <label class="form-label small">Choix (cochez la bonne réponse)</label>
             {% for c in q.choices.all %}

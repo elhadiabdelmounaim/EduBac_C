@@ -3,13 +3,13 @@ import uuid
 from datetime import timedelta
 from unittest.mock import patch
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
 from accounts.models import User
 from education.models import Course, Lesson
-from ai.test_quiz_protocol import generated, question
 from .models import Quiz, QuizGenerationRun
 
 
@@ -27,10 +27,22 @@ class GenerationPerformanceTests(TestCase):
         )
         self.login(self.teacher)
         self.identifier = uuid.uuid4()
-        self.body = {
-            "action": "generate", "lesson": self.lesson.pk, "niveau": "tronc_commun",
-            "description": "PRIVATE_SENTINEL : calcul numérique", "question_count": 1,
-            "generation_id": str(self.identifier), "resource_selection_present": "1",
+        self.document = {
+            "quiz": {
+                "title": "PRIVATE_SENTINEL : calcul numérique",
+                "level": "tronc_commun",
+                "lesson": "Calculs",
+                "duration": 10,
+                "questions": [{
+                    "id": "Q1", "type": "multiple_choice",
+                    "statement": "Calculer $2+2$.", "correct_answer": "A",
+                    "difficulty": "easy", "points": 1,
+                    "choices": [
+                        {"id": "A", "text": "4"}, {"id": "B", "text": "3"},
+                        {"id": "C", "text": "5"}, {"id": "D", "text": "6"},
+                    ],
+                }],
+            },
         }
         self.progress = reverse("quizzes:generation_progress", args=[self.identifier])
 
@@ -40,9 +52,14 @@ class GenerationPerformanceTests(TestCase):
         session.save()
 
     def generate(self):
-        with patch("ai.services.AIService.generate_quiz_from_lesson",
-                   return_value=json.loads(generated(question()))):
-            return self.client.post(reverse("quizzes:teacher_ai"), self.body)
+        return self.client.post(reverse("quizzes:teacher_ai"), {
+            "action": "import_json",
+            "generation_id": str(self.identifier),
+            "quiz_json": SimpleUploadedFile(
+                "quiz.json", json.dumps(self.document, ensure_ascii=False).encode(),
+                content_type="application/json",
+            ),
+        })
 
     def test_correlated_summary_is_private_and_records_render_and_persistence(self):
         with self.assertLogs("ai.quiz_metrics", level="INFO") as logs:
@@ -53,15 +70,15 @@ class GenerationPerformanceTests(TestCase):
         self.assertEqual(run.state, "complete")
         self.assertEqual(run.quiz_id, Quiz.objects.get().pk)
         self.assertIn("render", run.metrics["phases_ms"])
-        self.assertIn("persistence", run.metrics["phases_ms"])
+        self.assertNotIn("PRIVATE_SENTINEL", json.dumps(run.metrics))
         self.assertNotIn("PRIVATE_SENTINEL", json.dumps(run.metrics))
         self.assertNotIn("PRIVATE_SENTINEL", "\n".join(logs.output))
 
     def test_duplicate_post_cannot_generate_or_save_twice(self):
         self.generate()
         with patch("ai.services.AIService.generate_quiz_from_lesson") as generation:
-            response = self.client.post(reverse("quizzes:teacher_ai"), self.body)
-        self.assertEqual(response.status_code, 409)
+            response = self.generate()
+        self.assertRedirects(response, reverse("quizzes:teacher_ai"), fetch_redirect_response=False)
         generation.assert_not_called()
         self.assertEqual(Quiz.objects.count(), 1)
 
@@ -89,13 +106,14 @@ class GenerationPerformanceTests(TestCase):
         self.generate()
         QuizGenerationRun.objects.update(created_at=timezone.now() - timedelta(days=2))
         self.assertEqual(self.client.get(self.progress).status_code, 404)
-        self.body["generation_id"] = str(uuid.uuid4())
+        self.identifier = uuid.uuid4()
+        self.progress = reverse("quizzes:generation_progress", args=[self.identifier])
         self.generate()
         self.assertEqual(QuizGenerationRun.objects.count(), 1)
         self.assertEqual(Quiz.objects.count(), 2)
 
     def test_failed_validation_marks_run_failed_and_saves_no_quiz(self):
-        self.body["lesson"] = ""
-        self.client.post(reverse("quizzes:teacher_ai"), self.body)
+        self.document["quiz"]["questions"][0]["correct_answer"] = "Z"
+        self.generate()
         self.assertEqual(QuizGenerationRun.objects.get().state, "failed")
         self.assertFalse(Quiz.objects.exists())

@@ -1,4 +1,5 @@
 from datetime import timedelta
+import math
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
@@ -538,8 +539,8 @@ def manage_quizzes(request):
 
 @teacher_required
 def create_quiz(request):
-    """Création manuelle désactivée — uniquement via l'IA."""
-    messages.info(request, "La création de quiz se fait uniquement avec l'IA.")
+    """Route historique : rediriger vers l’import JSON intégré au flux enseignant."""
+    messages.info(request, "Importez un fichier JSON pour créer un quiz.")
     return redirect('quizzes:teacher_ai')
 
 
@@ -679,15 +680,12 @@ def publish_quiz(request, pk):
 @teacher_required
 @track_generation
 def teacher_ai_quiz(request):
-    """
-    Page unique enseignant :
-    niveau → leçon → nb questions → secondes/question → Generate (IA) → Envoyer au niveau.
-    """
+    """Importer un quiz JSON, relire le brouillon et l’affecter à une classe."""
+    import logging
+    import uuid
+    from datetime import datetime
+    from django.utils.dateparse import parse_datetime
     from education.curriculum import CURRICULUM
-    from education.models import Lesson, Course
-    from accounts.models import User, StudentProfile
-    from ai.services import AIService
-
     restored_quiz = None
     if request.method == 'GET' and request.GET.get('quiz'):
         quiz_id = request.GET['quiz']
@@ -697,230 +695,127 @@ def teacher_ai_quiz(request):
         restored_quiz = get_object_or_404(
             accessible, pk=quiz_id if quiz_id.isdecimal() else 0,
         )
-
-    niveaux = CURRICULUM
-    selected_niveau = request.GET.get('niveau') or request.POST.get('niveau') or ''
-    selected_lesson_id = (
-        request.POST.get('lesson', '')
-        if request.method == 'POST'
-        else request.GET.get('lesson', '')
-    )
-    selected_lesson_id = str(selected_lesson_id).strip()
     if restored_quiz:
-        selected_niveau = restored_quiz.lesson.course.niveau
-        selected_lesson_id = str(restored_quiz.lesson_id)
-    selected_lesson = None
-    if selected_lesson_id.isdecimal():
-        selected_lesson = (
-            Lesson.objects.select_related('course')
-            .filter(pk=selected_lesson_id)
-            .first()
+        restored_quiz = (
+            Quiz.objects.select_related('lesson__course')
+            .prefetch_related('questions__choices')
+            .get(pk=restored_quiz.pk)
         )
-        if selected_lesson and not selected_niveau:
-            selected_niveau = selected_lesson.course.niveau
-
-    all_lessons = Lesson.objects.select_related('course').order_by(
-        'course__order', 'order', 'title'
-    ).prefetch_related('resources')
-    from .resources import resource_catalog, prepare_resources
-    resources_by_lesson = resource_catalog(all_lessons)
-    lessons = Lesson.objects.none()
-    if selected_niveau:
-        lessons = Lesson.objects.filter(course__niveau=selected_niveau).order_by('order')
-    if selected_lesson_id and (
-        not selected_lesson_id.isdecimal() or not lessons.filter(pk=selected_lesson_id).exists()
-    ):
-        selected_lesson_id = ''
-
     preview = restored_quiz.get_questions().prefetch_related('choices') if restored_quiz else None
     quiz_created = restored_quiz
-    generation_report = None
     error = None
+    selected_niveau = restored_quiz.lesson.course.niveau if restored_quiz else ''
+    selected_lesson_id = str(restored_quiz.lesson_id) if restored_quiz else ''
     quiz_description = restored_quiz.description if restored_quiz else ''
-    selected_source_file = request.POST.get('source_file', '')
-    selected_source_files = request.POST.getlist('source_files')
-    # Older clients still submit a single Sources_IA filename.
-    if not request.POST.get('resource_selection_present') and not selected_source_files:
-        selected_source_files = [selected_source_file] if selected_source_file else []
-    resource_warnings = []
-    uploaded_resource_names = []
-    generation_mode = request.POST.get('generation_mode', 'resources')
-    quiz_subject = (request.POST.get('subject') or '').strip()[:200]
-    if generation_mode == 'topic':
-        selected_source_file = ''
-        selected_source_files = []
-    n_questions = restored_quiz.questions.count() if restored_quiz else 5
+    n_questions = restored_quiz.questions.count() if restored_quiz else 0
     sec = restored_quiz.seconds_per_question if restored_quiz else 20
     difficulty = restored_quiz.difficulty if restored_quiz else 'moyen'
+    generation_id = uuid.uuid4()
 
     if request.method == 'POST':
-        action = request.POST.get('action', 'generate')
-        niveau = request.POST.get('niveau', '').strip()
-        lesson_id = request.POST.get('lesson')
-        quiz_description = (request.POST.get('description') or '').strip()
-        invalid_numbers = False
-        try:
-            n_questions = int(request.POST.get('question_count') or 5)
-            sec = int(request.POST.get('seconds_per_question') or 20)
-        except (ValueError, TypeError):
-            n_questions, sec = 5, 20
-            invalid_numbers = True
-        difficulty = request.POST.get('difficulty', 'moyen')
-        from ai.services import QUIZ_MAX_QUESTIONS
-        n_questions = max(1, min(n_questions, QUIZ_MAX_QUESTIONS))
-        sec = max(5, min(sec, 120))
-
-        selected_niveau = niveau
-        lessons = Lesson.objects.filter(course__niveau=niveau).order_by('order') if niveau else Lesson.objects.none()
-        if selected_lesson_id and (
-            not selected_lesson_id.isdecimal() or not lessons.filter(pk=selected_lesson_id).exists()
-        ):
-            selected_lesson_id = ''
-
-        if invalid_numbers:
-            error = 'Indiquez un nombre de questions et une durée valides.'
-        elif generation_mode not in ('resources', 'topic'):
-            error = 'Veuillez choisir un mode de génération valide.'
-        elif not lesson_id:
-            error = 'Veuillez choisir une leçon.'
-        elif not str(lesson_id).isdecimal() or not lessons.filter(pk=lesson_id).exists():
-            error = 'Veuillez choisir une leçon appartenant au niveau sélectionné.'
-        else:
-            lesson = get_object_or_404(Lesson.objects.select_related('course'), pk=lesson_id)
-
-            if action == 'generate':
-                try:
-                    uploads = request.FILES.getlist('resource_uploads') if generation_mode != 'topic' else []
-                    if generation_mode == 'topic':
-                        context_text = ''
-                    else:
-                        choices = resources_by_lesson[str(lesson.pk)]
-                        context_text, resource_warnings, uploaded_resource_names = prepare_resources(
-                            choices, selected_source_files, uploads,
-                        )
-                    if not context_text and not (quiz_description or quiz_subject):
-                        raise ValueError('Sans ressources, indiquez un sujet ou une description pour guider le quiz.')
-                    from ai.providers import AIProviderError
-                    provider = (request.POST.get('ai_provider') or '').strip() or None
-                    model = (request.POST.get('ai_model') or '').strip() or None
-                    ai = AIService(provider=provider, model=model)
-                    data = ai.generate_quiz_from_lesson(
-                        lesson, n_questions, difficulty,
-                        provider=provider, model=model,
-                        description=quiz_description,
-                        source_file=selected_source_file or None,
-                        use_resources=bool(context_text),
-                        subject=quiz_subject,
-                        resource_context=context_text,
-                        allow_related_knowledge=True,
-                        enforce_protocol=True,
-                    )
-                    # Créer le quiz + questions
-                    from .generation import save_generated_quiz
-                    quiz = save_generated_quiz(data,
-                        title=data.get('title') or f'Quiz — {lesson.title}',
-                        description=quiz_description,
-                        lesson=lesson,
-                        duration=max(1, (n_questions * sec) // 60 + 1),
-                        seconds_per_question=sec,
-                        question_count=n_questions,
-                        difficulty=difficulty,
-                        status='draft',
-                        created_by=request.user,
-                    )
-                    quiz_created = quiz
-                    trace = current_trace.get()
-                    if trace is not None:
-                        trace.quiz_id = quiz.pk
-                    generation_report = data.get('_generation_report')
-                    preview = quiz.get_questions().prefetch_related('choices')
-                    messages.success(request, 'Quiz generated successfully')
-                except Exception as e:
-                    trace = current_trace.get()
-                    if trace is not None:
-                        trace.error = getattr(e, 'code', type(e).__name__)
-                    from ai.services import public_quiz_error
-                    error = public_quiz_error(e)
-
-            elif action == 'send':
-                quiz_id = request.POST.get('quiz_id')
-                quiz = get_object_or_404(Quiz, pk=quiz_id, created_by=request.user)
-                classroom_id = (request.POST.get('classroom') or '').strip()
-                deadline_raw = request.POST.get('deadline') or None
-                deadline = None
-                if deadline_raw:
+        action = request.POST.get('action', '')
+        if action == 'import_json':
+            from .json_import import QuizImportError, create_quiz_from_json
+            try:
+                quiz_created = create_quiz_from_json(
+                    request.FILES.get('quiz_json'), request.user,
+                )
+            except QuizImportError as exc:
+                error = str(exc)
+                trace = current_trace.get()
+                if trace is not None:
+                    trace.error = 'invalid_json'
+            except Exception:
+                logging.getLogger(__name__).exception(
+                    "Quiz JSON import failed for teacher=%s", request.user.pk,
+                )
+                error = "Le quiz n’a pas pu être enregistré. Vérifiez le fichier puis réessayez."
+                trace = current_trace.get()
+                if trace is not None:
+                    trace.error = 'import_failed'
+            else:
+                trace = current_trace.get()
+                if trace is not None:
+                    trace.quiz_id = quiz_created.pk
+                messages.success(
+                    request,
+                    "Quiz importé. Vérifiez les questions et modifiez le brouillon avant de l’envoyer.",
+                )
+                return redirect(f"{reverse('quizzes:teacher_ai')}?quiz={quiz_created.pk}")
+        elif action == 'send':
+            quiz = get_object_or_404(Quiz, pk=request.POST.get('quiz_id'), created_by=request.user)
+            classroom_id = (request.POST.get('classroom') or '').strip()
+            if not classroom_id:
+                messages.error(request, "Sélectionnez une classe destinataire avant d’envoyer le quiz.")
+                return redirect(f"{reverse('quizzes:teacher_ai')}?quiz={quiz.pk}")
+            classroom = get_object_or_404(
+                Classroom, pk=classroom_id, teacher=request.user, is_active=True,
+            )
+            if classroom.niveau != quiz.lesson.course.niveau:
+                messages.error(request, "La classe sélectionnée n’appartient pas au niveau de ce quiz.")
+                return redirect(f"{reverse('quizzes:teacher_ai')}?quiz={quiz.pk}")
+            deadline_raw = (request.POST.get('deadline') or '').strip()
+            deadline = None
+            if deadline_raw:
+                deadline = parse_datetime(deadline_raw)
+                if deadline is None:
                     try:
-                        deadline = timezone.datetime.fromisoformat(deadline_raw)
-                        if timezone.is_naive(deadline):
-                            deadline = timezone.make_aware(deadline)
+                        deadline = datetime.strptime(deadline_raw, '%Y-%m-%dT%H:%M')
                     except ValueError:
-                        deadline = None
-
-                # Classe obligatoire : uniquement les classes du professeur connecté
-                if not classroom_id:
-                    messages.error(
-                        request,
-                        "Sélectionnez une classe destinataire avant d'envoyer le quiz."
-                    )
-                    return redirect('quizzes:teacher_ai')
-                classroom = get_object_or_404(
-                    Classroom, pk=classroom_id, teacher=request.user, is_active=True
+                        messages.error(request, "La date limite n’est pas valide.")
+                        return redirect(f"{reverse('quizzes:teacher_ai')}?quiz={quiz.pk}")
+                if timezone.is_naive(deadline):
+                    deadline = timezone.make_aware(deadline)
+            student_ids = ClassroomMember.objects.filter(
+                classroom=classroom,
+            ).values_list('user_id', flat=True)
+            student_list = list(User.objects.filter(pk__in=student_ids, role='student'))
+            if not student_list:
+                messages.error(
+                    request,
+                    f"La classe « {classroom.name} » ne contient aucun élève.",
                 )
-                member_ids = list(
-                    ClassroomMember.objects.filter(classroom=classroom)
-                    .values_list('user_id', flat=True)
-                )
-                student_list = list(
-                    User.objects.filter(id__in=member_ids, role='student')
-                )
-                if not student_list:
-                    messages.warning(
-                        request,
-                        f"La classe « {classroom.name} » n'a aucun élève. "
-                        "Faites rejoindre vos élèves avec le code d'invitation."
-                    )
-                    return redirect('quizzes:teacher_ai')
-
+                return redirect(f"{reverse('quizzes:teacher_ai')}?quiz={quiz.pk}")
+            with transaction.atomic():
                 quiz.status = 'published'
                 quiz.question_count = quiz.questions.count()
                 quiz.classroom = classroom
                 quiz.save(update_fields=['status', 'question_count', 'classroom'])
-
                 created = _notify_assignments(quiz, student_list, deadline=deadline)
-                messages.success(
-                    request,
-                    f'Quiz « {quiz.title} » envoyé à la classe {classroom.name} '
-                    f'({created} élève(s) notifié(s)).'
-                )
-                return redirect('quizzes:manage')
+            messages.success(
+                request,
+                f'Quiz « {quiz.title} » envoyé à la classe {classroom.name} '
+                f'({created} élève(s) notifié(s)).',
+            )
+            return redirect('quizzes:manage')
+        else:
+            error = (
+                "La génération interne est désactivée pour les quiz. "
+                "Importez un fichier JSON validé."
+            )
+            trace = current_trace.get()
+            if trace is not None:
+                trace.error = 'unsupported_action'
 
-    from ai.services import available_providers
-    # Reuse this request's fresh catalogue instead of scanning Sources_IA a second time.
-    source_files_by_lesson = {
-        key: [resource.name for resource in choices.values()
-              if resource.value == resource.name]
-        for key, choices in resources_by_lesson.items()
-    }
-    import uuid
-    generation_id = uuid.uuid4()
-    classrooms = Classroom.objects.filter(teacher=request.user, is_active=True)
+    niveaux = CURRICULUM
+    preview = (
+        quiz_created.get_questions().prefetch_related('choices')
+        if quiz_created else None
+    )
+    if quiz_created:
+        selected_niveau = quiz_created.lesson.course.niveau
+        selected_lesson_id = str(quiz_created.lesson_id)
+        quiz_description = quiz_created.description
+        n_questions = quiz_created.questions.count()
+        sec = quiz_created.seconds_per_question
+        difficulty = quiz_created.difficulty
+    classrooms = Classroom.objects.filter(
+        teacher=request.user, is_active=True, niveau=selected_niveau,
+    ) if selected_niveau else Classroom.objects.none()
     return _render_generation(request, 'quizzes/teacher_ai_quiz.html', {
         'niveaux': niveaux,
         'selected_niveau': selected_niveau,
         'selected_lesson_id': selected_lesson_id,
-        'source_files_by_lesson': source_files_by_lesson,
-        'selected_source_file': selected_source_file,
-        'selected_source_files': selected_source_files,
-        'resource_options_by_lesson': {
-            key: [{'value': resource.value, 'label': resource.label} for resource in choices.values()]
-            for key, choices in resources_by_lesson.items()
-        },
-        'resource_warnings': resource_warnings,
-        'uploaded_resource_names': uploaded_resource_names,
-        'generation_mode': generation_mode,
-        'quiz_subject': quiz_subject,
-        'lessons': lessons,
-        'all_lessons': all_lessons,
         'preview': preview,
         'quiz_created': quiz_created,
         'quiz_description': quiz_description,
@@ -929,14 +824,10 @@ def teacher_ai_quiz(request):
         'selected_difficulty': difficulty,
         'generation_submitted': request.method == 'POST' or restored_quiz is not None,
         'restored_quiz': restored_quiz is not None,
-        'generation_report': generation_report,
         'generation_id': generation_id,
-        'selected_ai_provider': request.POST.get('ai_provider', ''),
-        'selected_ai_model': request.POST.get('ai_model', ''),
         'classrooms': classrooms,
         'error': error,
-        'ai_providers': available_providers(),
-        'page_title': 'Générer un quiz',
+        'page_title': 'Importer un quiz',
     })
 
 
@@ -952,21 +843,91 @@ def edit_quiz_questions(request, pk):
     if request.method == 'POST':
         action = request.POST.get('action')
         if action == 'save':
-            for q in questions:
-                text = request.POST.get(f'q_{q.pk}_text', '').strip()
-                correct = request.POST.get(f'q_{q.pk}_correct', '').strip()
-                expl = request.POST.get(f'q_{q.pk}_expl', '').strip()
-                if text:
-                    q.text = text
-                    q.correct_answer = correct
-                    q.explanation = expl
-                    q.save()
-                for c in q.choices.all():
-                    ctext = request.POST.get(f'c_{c.pk}_text', '').strip()
-                    if ctext:
-                        c.text = ctext
-                        c.is_correct = (ctext == correct) or (request.POST.get(f'c_{c.pk}_ok') == 'on')
-                        c.save()
+            from decimal import Decimal, InvalidOperation
+            try:
+                duration = int(request.POST.get('duration', quiz.duration))
+                if not 1 <= duration <= 600:
+                    raise ValueError("La durée doit être comprise entre 1 et 600 minutes.")
+                quiz_title = request.POST.get('quiz_title', quiz.title).strip()
+                if not quiz_title or len(quiz_title) > 255:
+                    raise ValueError("Le titre du quiz est obligatoire (255 caractères maximum).")
+                updates = []
+                for q in questions:
+                    text = request.POST.get(f'q_{q.pk}_text', q.text).strip()
+                    correct = request.POST.get(f'q_{q.pk}_correct', q.correct_answer).strip()
+                    explanation = request.POST.get(f'q_{q.pk}_expl', q.explanation).strip()
+                    difficulty = request.POST.get(f'q_{q.pk}_difficulty', q.difficulty)
+                    try:
+                        points = Decimal(request.POST.get(f'q_{q.pk}_points', str(q.points)))
+                    except (InvalidOperation, ValueError):
+                        raise ValueError(f"Question {q.order} : les points doivent être un nombre valide.")
+                    if not points.is_finite() or not Decimal('0.01') <= points <= Decimal('100.00'):
+                        raise ValueError(f"Question {q.order} : les points doivent être compris entre 0,01 et 100.")
+                    if points.as_tuple().exponent < -2:
+                        raise ValueError(f"Question {q.order} : les points ne peuvent pas avoir plus de deux décimales.")
+                    if difficulty not in dict(Quiz.DIFFICULTY_CHOICES):
+                        raise ValueError(f"Question {q.order} : choisissez une difficulté valide.")
+                    if not text or len(text) > 20_000:
+                        raise ValueError(f"Question {q.order} : l’énoncé est obligatoire.")
+                    if len(explanation) > 20_000:
+                        raise ValueError(f"Question {q.order} : l’explication est trop longue.")
+                    choice_updates = []
+                    choices = list(q.choices.all())
+                    if choices:
+                        selected = []
+                        normalized_texts = []
+                        for choice in choices:
+                            choice_text = request.POST.get(
+                                f'c_{choice.pk}_text', choice.text,
+                            ).strip()
+                            if not choice_text or len(choice_text) > 500:
+                                raise ValueError(f"Question {q.order} : les choix ne peuvent pas être vides.")
+                            normalized = ' '.join(choice_text.split())
+                            if normalized in normalized_texts:
+                                raise ValueError(f"Question {q.order} : les choix doivent être différents.")
+                            normalized_texts.append(normalized)
+                            is_correct = (
+                                choice_text == correct
+                                or request.POST.get(f'c_{choice.pk}_ok') == 'on'
+                            )
+                            if is_correct:
+                                selected.append(choice_text)
+                            choice_updates.append((choice, choice_text, is_correct))
+                        if len(selected) != 1:
+                            raise ValueError(f"Question {q.order} : sélectionnez une seule bonne réponse.")
+                        correct = selected[0]
+                    elif not correct:
+                        raise ValueError(f"Question {q.order} : indiquez la réponse correcte.")
+                    updates.append((q, text, correct, explanation, difficulty, points, choice_updates))
+            except (ValueError, ValidationError) as exc:
+                messages.error(request, str(exc))
+                return render(request, 'quizzes/edit_questions.html', {
+                    'quiz': quiz, 'questions': questions, 'page_title': f'Modifier — {quiz.title}',
+                })
+            with transaction.atomic():
+                if duration != quiz.duration:
+                    quiz.duration = duration
+                    quiz.seconds_per_question = max(
+                        1, math.ceil(duration * 60 / len(updates)),
+                    ) if updates else quiz.seconds_per_question
+                quiz.title = quiz_title
+                quiz.question_count = len(updates)
+                quiz.save(update_fields=[
+                    'title', 'duration', 'seconds_per_question', 'question_count',
+                ])
+                for q, text, correct, explanation, difficulty, points, choice_updates in updates:
+                    q.text = normalize_math_text(text)
+                    q.correct_answer = normalize_math_text(correct)
+                    q.explanation = normalize_math_text(explanation)
+                    q.difficulty = difficulty
+                    q.points = points
+                    q.save(update_fields=[
+                        'text', 'correct_answer', 'explanation', 'difficulty', 'points',
+                    ])
+                    for choice, choice_text, is_correct in choice_updates:
+                        choice.text = normalize_math_text(choice_text)
+                        choice.is_correct = is_correct
+                        choice.save(update_fields=['text', 'is_correct'])
             messages.success(request, 'Questions enregistrées.')
             return redirect(f"{reverse('quizzes:teacher_ai')}?quiz={quiz.pk}")
         if action == 'delete_q':
@@ -985,6 +946,8 @@ def edit_quiz_questions(request, pk):
                 correct_answer='',
                 explanation='',
                 order=next_order,
+                difficulty='moyen',
+                points=1,
             )
             # 4 choix vides par défaut (QCM)
             for i, label in enumerate(['A', 'B', 'C', 'D']):
