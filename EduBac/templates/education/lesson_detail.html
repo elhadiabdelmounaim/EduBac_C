@@ -394,18 +394,24 @@ html[data-theme="dark"] #lessonContent.lesson-md--boxed .course-box--note {
         {% else %}
         <p class="text-muted mb-0">Contenu à venir. Tu pourras coller du Markdown + LaTeX ici, et joindre un PDF.</p>
         {% endif %}
+        {% if course_markdown_description %}
+        <p class="small text-muted mt-2">{{ course_markdown_description }}</p>
+        {% endif %}
         {% for group in document_groups %}
         <section class="mt-4" aria-label="{{ group.kind }}">
             <h3 class="h5">{{ group.kind }} — PDF</h3>
             <ul class="list-group">
-                {% for filename in group.files %}
+                {% for file in group.files %}
                 <li class="list-group-item d-flex flex-wrap align-items-center justify-content-between gap-2">
-                    <span class="text-break">{{ filename }}</span>
+                    <span class="text-break">
+                        {{ file.filename }}
+                        {% if file.description %}<small class="d-block text-muted">{{ file.description }}</small>{% endif %}
+                    </span>
                     <span class="d-flex gap-2">
                         <a class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener"
-                           href="{% url 'education:lesson_document' lesson.pk group.kind filename %}">Ouvrir</a>
+                           href="{% url 'education:lesson_document' lesson.pk group.kind file.filename %}">Ouvrir</a>
                         <a class="btn btn-sm btn-outline-secondary"
-                           href="{% url 'education:lesson_document' lesson.pk group.kind filename %}?download=1">Télécharger</a>
+                           href="{% url 'education:lesson_document' lesson.pk group.kind file.filename %}?download=1">Télécharger</a>
                     </span>
                 </li>
                 {% empty %}
@@ -420,7 +426,10 @@ html[data-theme="dark"] #lessonContent.lesson-md--boxed .course-box--note {
             <ul class="list-group">
                 {% for resource in attached_resources %}
                 <li class="list-group-item d-flex flex-wrap align-items-center justify-content-between gap-2">
-                    <span class="text-break">{{ resource.name }} <small class="text-muted">({{ resource.get_type_display }})</small></span>
+                    <span class="text-break">
+                        {{ resource.name }} <small class="text-muted">({{ resource.get_type_display }})</small>
+                        {% if resource.description %}<small class="d-block text-muted">{{ resource.description }}</small>{% endif %}
+                    </span>
                     <span class="d-flex gap-2">
                         <a class="btn btn-sm btn-outline-primary"
                            href="{% url 'education:resource_download' lesson.pk resource.pk %}" target="_blank" rel="noopener">

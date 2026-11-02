@@ -326,18 +326,22 @@ def _matching_existing_file(lesson, category, extension, digest):
     return None
 
 
-def _save_resource_record(lesson, relative_path, title, resource_type):
+def _save_resource_record(
+    lesson, relative_path, title, resource_type, description='',
+):
     existing = Resources.objects.select_for_update().filter(file=relative_path).first()
     if existing and existing.lesson_id != lesson.pk:
         raise FileManagerError('Cette ressource est déjà associée à une autre leçon.')
     if existing:
         existing.name = title
+        existing.description = description
         existing.type = resource_type
         existing.lesson = lesson
-        existing.save(update_fields=('name', 'type', 'lesson'))
+        existing.save(update_fields=('name', 'description', 'type', 'lesson'))
         return existing
     return Resources.objects.create(
         name=title,
+        description=description,
         type=resource_type,
         lesson=lesson,
         file=relative_path,
@@ -389,6 +393,7 @@ def save_upload(
     *,
     confirm_replace,
     replacement_selection='',
+    description='',
 ):
     extension = validate_upload(upload, category)
     relative_path = (
@@ -430,17 +435,14 @@ def save_upload(
             ) from exc
     if same_content and same_content != relative_path:
         return {'status': 'duplicate', 'path': same_content}
-    if (
-        same_content == relative_path
-        and not replacement_selection
-        and CATEGORY_CONFIG[category]['folder'] is None
-    ):
+    if same_content == relative_path:
         with transaction.atomic():
             _save_resource_record(
                 lesson,
-                relative_path,
+                same_content,
                 title,
                 _resource_type(category, extension),
+                description,
             )
         return {'status': 'duplicate', 'path': relative_path}
 
@@ -470,14 +472,14 @@ def save_upload(
     try:
         if not (target_exists and same_content == relative_path):
             backup = _write_uploaded_file(upload, target)
-        if CATEGORY_CONFIG[category]['folder'] is None:
-            with transaction.atomic():
-                _save_resource_record(
-                    lesson,
-                    relative_path,
-                    title,
-                    _resource_type(category, extension),
-                )
+        with transaction.atomic():
+            _save_resource_record(
+                lesson,
+                relative_path,
+                title,
+                _resource_type(category, extension),
+                description,
+            )
     except Exception as exc:
         try:
             if backup and backup.exists():
@@ -534,6 +536,7 @@ def existing_items(lesson, category):
                     continue
                 items.append({
                     'name': resource.name,
+                    'description': resource.description,
                     'filename': path.name,
                     'size': size,
                     'resource_id': resource.pk,
@@ -544,6 +547,11 @@ def existing_items(lesson, category):
     folder = _category_directory(lesson, category)
     if not folder.is_dir():
         return []
+    resource_metadata = {
+        resource.file.name: resource
+        for resource in Resources.objects.filter(lesson=lesson)
+        if resource.file and resource.file.name
+    }
     items = []
     for path in sorted(folder.iterdir(), key=lambda item: item.name.casefold()):
         if (
@@ -558,12 +566,15 @@ def existing_items(lesson, category):
             size = path.stat().st_size
         except OSError:
             continue
+        relative_path = path.relative_to(_media_root()).as_posix()
+        resource = resource_metadata.get(relative_path)
         items.append({
-            'name': path.name,
+            'name': resource.name if resource else path.name,
+            'description': resource.description if resource else '',
             'filename': path.name,
             'size': size,
             'resource_id': None,
-            'relative_path': path.relative_to(_media_root()).as_posix(),
+            'relative_path': relative_path,
         })
     return items
 
@@ -621,7 +632,13 @@ def delete_managed_file(
         raise FileManagerError(
             'Ce fichier est lié au champ PDF historique de la leçon; il n’a pas été supprimé.'
         )
+    related_resources = Resources.objects.filter(file=relative_path)
+    if related_resources.exclude(lesson=lesson).exists():
+        raise FileManagerError(
+            'Ce fichier est aussi associé à une autre leçon; il n’a pas été supprimé.'
+        )
     path.unlink()
+    related_resources.filter(lesson=lesson).delete()
     logger.warning(
         'Admin user %s deleted lesson resource %s',
         admin_user_id,

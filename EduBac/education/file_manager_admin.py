@@ -93,6 +93,7 @@ def file_manager_view(request, model_admin):
                     category,
                     form.cleaned_data['titre'],
                     form.cleaned_data['fichier'],
+                    description=form.cleaned_data['description'],
                     confirm_replace=form.cleaned_data['confirmer_remplacement'],
                     replacement_selection=form.cleaned_data['remplacer_fichier'],
                 )

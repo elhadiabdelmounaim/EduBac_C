@@ -23,6 +23,12 @@ class FileManagerForm(forms.Form):
         max_length=200,
         help_text='Sert de nom de fichier; les caractères spéciaux sont normalisés.',
     )
+    description = forms.CharField(
+        label='Description (facultative)',
+        required=False,
+        max_length=2000,
+        widget=forms.Textarea(attrs={'rows': 3}),
+    )
     fichier = forms.FileField(
         label='Fichier à importer',
         help_text='Taille maximale : 20 Mo. Les formats acceptés dépendent de la catégorie.',

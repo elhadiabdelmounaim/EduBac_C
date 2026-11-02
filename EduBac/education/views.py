@@ -158,7 +158,7 @@ def course_detail(request, pk):
 
 def lesson_detail(request, pk):
     lesson = get_object_or_404(Lesson, pk=pk)
-    from .media_library import documents
+    from .media_library import chapter_relative, documents
     course_content_error = ''
     try:
         course_content = lesson.get_content()
@@ -166,6 +166,22 @@ def lesson_detail(request, pk):
         course_content = ''
         course_content_error = str(exc)
     course = lesson.course
+    resources = list(lesson.resources.all().order_by('name', 'pk'))
+    resource_descriptions = {
+        resource.file.name: resource.description
+        for resource in resources
+        if resource.file and resource.file.name and resource.description
+    }
+    chapter_path = chapter_relative(lesson).as_posix()
+    markdown_resource = next(
+        (
+            resource for resource in resources
+            if resource.file
+            and resource.file.name.startswith(f'{chapter_path}/Cours/')
+            and resource.file.name.lower().endswith('.md')
+        ),
+        None,
+    )
     # Leçon suivante / précédente
     next_lesson = Lesson.objects.filter(course=course, order__gt=lesson.order).order_by('order').first()
     prev_lesson = Lesson.objects.filter(course=course, order__lt=lesson.order).order_by('-order').first()
@@ -207,10 +223,28 @@ def lesson_detail(request, pk):
         'is_fav': is_fav,
         'faq_items': faq_items,
         'document_groups': [
-            {'kind': kind, 'files': [p.name for p in documents(lesson, kind)]}
+            {
+                'kind': kind,
+                'files': [
+                    {
+                        'filename': path.name,
+                        'description': resource_descriptions.get(
+                            path.relative_to(Path(settings.MEDIA_ROOT).resolve()).as_posix(),
+                            '',
+                        ),
+                    }
+                    for path in documents(lesson, kind)
+                ],
+            }
             for kind in ('Cours', 'Exercices')
         ],
-        'attached_resources': lesson.resources.all().order_by('name', 'pk'),
+        'attached_resources': [
+            resource for resource in resources
+            if resource.file and resource.file.name.startswith('resources/')
+        ],
+        'course_markdown_description': (
+            markdown_resource.description if markdown_resource else ''
+        ),
         'page_title': lesson.title,
     })
 

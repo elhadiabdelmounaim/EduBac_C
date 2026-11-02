@@ -87,6 +87,7 @@ class AdminFileManagerTests(TestCase):
             'Cours complet',
             'upload.pdf',
             b'%PDF-1.4\nCours EduBac',
+            description='Support du chapitre, avec les définitions principales.',
         )
         path = (
             Path(self.temp_media.name)
@@ -97,10 +98,14 @@ class AdminFileManagerTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(path.is_file())
         self.assertEqual(path.read_bytes(), b'%PDF-1.4\nCours EduBac')
-        self.assertContains(
-            self.client.get(reverse('education:lesson_detail', args=[self.lesson.pk])),
-            'cours-complet.pdf',
+        resource = Resources.objects.get(file=path.relative_to(self.temp_media.name).as_posix())
+        self.assertEqual(
+            resource.description,
+            'Support du chapitre, avec les définitions principales.',
         )
+        page = self.client.get(reverse('education:lesson_detail', args=[self.lesson.pk]))
+        self.assertContains(page, 'cours-complet.pdf')
+        self.assertContains(page, 'Support du chapitre, avec les définitions principales.')
 
     def test_exercise_correction_is_sorted_into_the_existing_exercises_folder(self):
         response = self.upload(
@@ -128,6 +133,7 @@ class AdminFileManagerTests(TestCase):
             'Règles de calcul',
             'source.txt',
             'قاعدة رياضية\nUne formule : $x^2+1$.'.encode(),
+            description='Contexte utilisé uniquement par l’assistant IA.',
         )
         path = (
             Path(self.temp_media.name)
@@ -138,8 +144,14 @@ class AdminFileManagerTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(path.is_file())
         self.assertIn('قاعدة رياضية', ai_source_text(self.lesson, 'regles-de-calcul.txt'))
+        resource = Resources.objects.get(file=path.relative_to(self.temp_media.name).as_posix())
+        self.assertEqual(
+            resource.description,
+            'Contexte utilisé uniquement par l’assistant IA.',
+        )
         page = self.client.get(reverse('education:lesson_detail', args=[self.lesson.pk]))
         self.assertNotContains(page, 'regles-de-calcul.txt')
+        self.assertNotContains(page, 'Contexte utilisé uniquement par l’assistant IA.')
 
     def test_image_resource_is_linked_and_downloaded_through_django(self):
         image = Image.new('RGB', (2, 2), color='navy')
@@ -150,6 +162,7 @@ class AdminFileManagerTests(TestCase):
             'Illustration du chapitre',
             'illustration.png',
             buffer.getvalue(),
+            description='Schéma de repérage.',
         )
         resource = Resources.objects.get(lesson=self.lesson)
         stored = Path(self.temp_media.name) / resource.file.name
@@ -158,6 +171,7 @@ class AdminFileManagerTests(TestCase):
         self.assertEqual(resource.name, 'Illustration du chapitre')
         page = self.client.get(reverse('education:lesson_detail', args=[self.lesson.pk]))
         self.assertContains(page, 'Illustration du chapitre')
+        self.assertContains(page, 'Schéma de repérage.')
         download = self.client.get(
             reverse(
                 'education:resource_download',
@@ -178,6 +192,10 @@ class AdminFileManagerTests(TestCase):
             sorted(path.name for path in folder.glob('*.pdf')),
             ['premier-nom.pdf'],
         )
+        resource = Resources.objects.get(
+            file=f'{chapter_relative(self.lesson).as_posix()}/Cours/premier-nom.pdf',
+        )
+        self.assertEqual(resource.name, 'Premier nom')
         self.assertContains(response, 'Aucun doublon n’a été créé')
 
     def test_replacement_options_endpoint_is_limited_to_the_selected_lesson(self):
@@ -232,9 +250,12 @@ class AdminFileManagerTests(TestCase):
             'two.pdf',
             replacement,
             remplacer_fichier='file:cours-a-garder.pdf',
+            description='Version mise à jour.',
         )
         self.assertEqual(path.read_bytes(), replacement)
         self.assertContains(response, 'Fichier remplacé')
+        resource = Resources.objects.get(file=path.relative_to(self.temp_media.name).as_posix())
+        self.assertEqual(resource.description, 'Version mise à jour.')
 
     def test_invalid_format_and_cross_level_lesson_are_rejected(self):
         response = self.upload(
@@ -358,6 +379,11 @@ class AdminFileManagerTests(TestCase):
             follow=True,
         )
         self.assertFalse(path.exists())
+        self.assertFalse(
+            Resources.objects.filter(
+                file=path.relative_to(self.temp_media.name).as_posix(),
+            ).exists()
+        )
         self.assertContains(response, 'Fichier supprimé')
 
     def test_resource_download_cannot_be_reused_for_another_lesson(self):

@@ -18,7 +18,7 @@
     .file-manager__field { margin-bottom: 16px; }
     .file-manager__field label { display: block; font-weight: 600; margin-bottom: 6px; }
     .file-manager__field select, .file-manager__field input[type="text"],
-    .file-manager__field input[type="file"] {
+    .file-manager__field input[type="file"], .file-manager__field textarea {
         box-sizing: border-box; max-width: 100%; width: 100%;
     }
     .file-manager__field select, .file-manager__field input[type="text"] { min-height: 38px; }
@@ -94,6 +94,12 @@
             </div>
 
             <div class="file-manager__field">
+                <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+                {{ form.description }}
+                {% for error in form.description.errors %}<p class="file-manager__error">{{ error }}</p>{% endfor %}
+            </div>
+
+            <div class="file-manager__field">
                 <label class="file-manager__dropzone" for="{{ form.fichier.id_for_label }}" id="dropzone">
                     <strong>Déposez le fichier ici ou sélectionnez-le</strong>
                     <span class="file-manager__hint" id="acceptedFormats">Choisissez d’abord une catégorie.</span>
@@ -159,6 +165,9 @@
                     <div>
                         <strong>{{ item.name }}</strong>
                         <div class="file-manager__hint">{{ item.relative_path }} · {{ item.size|filesizeformat }}</div>
+                        {% if item.description %}
+                        <div class="file-manager__hint">{{ item.description }}</div>
+                        {% endif %}
                     </div>
                     {% if item.resource_id %}
                     <a class="button" href="{% url 'education:resource_download' selected_lesson.pk item.resource_id %}">

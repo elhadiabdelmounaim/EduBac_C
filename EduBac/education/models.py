@@ -195,6 +195,11 @@ class Resources(models.Model):
     ]
 
     name = models.CharField(max_length=200, verbose_name='Nom')
+    description = models.TextField(
+        blank=True,
+        default='',
+        verbose_name='Description',
+    )
     file = models.FileField(upload_to='resources/', verbose_name='Fichier')
     type = models.CharField(
         max_length=20,
