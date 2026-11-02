@@ -1,0 +1,26 @@
+{% extends "admin/index.html" %}
+
+{% block content %}
+<div class="module" style="margin-bottom: 20px;">
+    {% if perms.education.change_course and perms.education.change_resources %}
+    <table>
+        <caption>
+            <a href="{% url 'admin:education_course_file_manager' %}" class="section">
+                Gestionnaire intelligent des fichiers
+            </a>
+        </caption>
+        <tbody>
+            <tr>
+                <th scope="row">
+                    <a href="{% url 'admin:education_course_file_manager' %}">
+                        Importer et classer une ressource pédagogique
+                    </a>
+                </th>
+                <td>Choisir un niveau, une leçon et la destination détectée</td>
+            </tr>
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+{{ block.super }}
+{% endblock %}

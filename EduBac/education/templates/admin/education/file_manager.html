@@ -1,0 +1,417 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate "Home" %}</a>
+    › <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    › <a href="{{ course_changelist_url }}">{{ opts.verbose_name_plural|capfirst }}</a>
+    › Gestionnaire intelligent des fichiers
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+    .file-manager { max-width: 1100px; }
+    .file-manager__intro { color: var(--body-quiet-color, #666); max-width: 850px; }
+    .file-manager__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .file-manager__field { margin-bottom: 16px; }
+    .file-manager__field label { display: block; font-weight: 600; margin-bottom: 6px; }
+    .file-manager__field select, .file-manager__field input[type="text"],
+    .file-manager__field input[type="file"] {
+        box-sizing: border-box; max-width: 100%; width: 100%;
+    }
+    .file-manager__field select, .file-manager__field input[type="text"] { min-height: 38px; }
+    .file-manager__hint { color: var(--body-quiet-color, #666); font-size: 12px; margin: 5px 0 0; }
+    .file-manager__error { color: var(--error-fg, #ba2121); margin: 4px 0 0; }
+    .file-manager__panel { background: var(--darkened-bg, #f8f8f8); border: 1px solid var(--hairline-color, #ddd); border-radius: 6px; margin: 18px 0; padding: 18px; }
+    .file-manager__dropzone { align-items: center; border: 2px dashed var(--primary, #417690); border-radius: 6px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; justify-content: center; min-height: 120px; padding: 18px; text-align: center; }
+    .file-manager__dropzone.is-dragging { background: var(--selected-bg, #e8f1f5); }
+    .file-manager__dropzone input { margin-top: 8px; max-width: 360px; }
+    .file-manager__destination { background: var(--body-bg, #fff); border: 1px solid var(--hairline-color, #ddd); border-radius: 4px; display: block; margin-top: 8px; overflow-wrap: anywhere; padding: 10px; }
+    .file-manager__preview { display: none; margin-top: 14px; }
+    .file-manager__preview img, .file-manager__preview iframe { border: 1px solid var(--hairline-color, #ddd); display: block; margin-top: 8px; max-height: 320px; max-width: 100%; width: 100%; }
+    .file-manager__preview [hidden] { display: none !important; }
+    .file-manager__preview img { object-fit: contain; width: auto; }
+    .file-manager__confirm { margin: 16px 0; }
+    .file-manager__confirm label { font-weight: 600; }
+    .file-manager__warning { border-left: 4px solid #ba2121; padding-left: 12px; }
+    .file-manager__existing { margin-top: 28px; }
+    .file-manager__item { align-items: center; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; }
+    .file-manager__delete { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .file-manager__delete label { color: var(--body-quiet-color, #666); font-size: 12px; }
+    @media (max-width: 767px) {
+        .file-manager__grid { grid-template-columns: 1fr; }
+        .file-manager__panel { padding: 12px; }
+    }
+</style>
+
+<div class="file-manager">
+    <h1>Gestionnaire intelligent des fichiers</h1>
+    <p class="file-manager__intro">
+        Importez une ressource attachée à une leçon. Les niveaux et les leçons viennent de la base actuelle;
+        le chemin est calculé selon les dossiers réellement utilisés par EduBac.
+    </p>
+    <p class="file-manager__intro">
+        Ce gestionnaire traite uniquement les ressources pédagogiques. Les fichiers de chat, les images de tableaux
+        partagés et les résultats de classe restent gérés par leurs fonctionnalités respectives.
+    </p>
+
+    <div class="file-manager__panel">
+        <form method="post" enctype="multipart/form-data" action="{{ manager_url }}" id="fileManagerForm">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="upload">
+
+            <div class="file-manager__grid">
+                <div class="file-manager__field">
+                    <label for="{{ form.niveau.id_for_label }}">{{ form.niveau.label }}</label>
+                    {{ form.niveau }}
+                    {% for error in form.niveau.errors %}<p class="file-manager__error">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="file-manager__field">
+                    <label for="{{ form.lecon.id_for_label }}">{{ form.lecon.label }}</label>
+                    {{ form.lecon }}
+                    {% for error in form.lecon.errors %}<p class="file-manager__error">{{ error }}</p>{% endfor %}
+                </div>
+            </div>
+
+            <div class="file-manager__grid">
+                <div class="file-manager__field">
+                    <label for="{{ form.categorie.id_for_label }}">{{ form.categorie.label }}</label>
+                    {{ form.categorie }}
+                    {% for error in form.categorie.errors %}<p class="file-manager__error">{{ error }}</p>{% endfor %}
+                    <p class="file-manager__hint" id="categoryHelp">
+                        Cours et résumés vont dans « Cours »; exercices, séries, devoirs et corrections dans
+                        « Exercices »; les TXT réservés à la génération IA dans « Sources_IA ».
+                    </p>
+                </div>
+                <div class="file-manager__field">
+                    <label for="{{ form.titre.id_for_label }}">{{ form.titre.label }}</label>
+                    {{ form.titre }}
+                    {% if form.titre.help_text %}<p class="file-manager__hint">{{ form.titre.help_text }}</p>{% endif %}
+                    {% for error in form.titre.errors %}<p class="file-manager__error">{{ error }}</p>{% endfor %}
+                </div>
+            </div>
+
+            <div class="file-manager__field">
+                <label class="file-manager__dropzone" for="{{ form.fichier.id_for_label }}" id="dropzone">
+                    <strong>Déposez le fichier ici ou sélectionnez-le</strong>
+                    <span class="file-manager__hint" id="acceptedFormats">Choisissez d’abord une catégorie.</span>
+                    {{ form.fichier }}
+                </label>
+                {% if form.fichier.help_text %}<p class="file-manager__hint">{{ form.fichier.help_text }}</p>{% endif %}
+                {% for error in form.fichier.errors %}<p class="file-manager__error">{{ error }}</p>{% endfor %}
+                <div class="file-manager__preview" id="filePreview" aria-live="polite">
+                    <strong id="previewName"></strong>
+                    <span class="file-manager__hint" id="previewSize"></span>
+                    <img id="previewImage" alt="Aperçu de l’image sélectionnée" hidden>
+                    <iframe id="previewPdf" title="Aperçu du PDF sélectionné" hidden></iframe>
+                </div>
+            </div>
+
+            <div class="file-manager__field">
+                <label for="{{ form.remplacer_fichier.id_for_label }}">{{ form.remplacer_fichier.label }}</label>
+                {{ form.remplacer_fichier }}
+                {% if form.remplacer_fichier.help_text %}<p class="file-manager__hint">{{ form.remplacer_fichier.help_text }}</p>{% endif %}
+                {% for error in form.remplacer_fichier.errors %}<p class="file-manager__error">{{ error }}</p>{% endfor %}
+            </div>
+
+            <div class="file-manager__panel">
+                <strong>Destination détectée</strong>
+                <code class="file-manager__destination" id="destination" aria-live="polite">
+                    Sélectionnez le niveau, la leçon, la catégorie et le fichier.
+                </code>
+                <p class="file-manager__hint" id="destinationNote"></p>
+            </div>
+
+            <div class="file-manager__confirm file-manager__warning">
+                {{ form.confirmer_remplacement }}
+                <label for="{{ form.confirmer_remplacement.id_for_label }}">
+                    {{ form.confirmer_remplacement.label }}
+                </label>
+                {% for error in form.confirmer_remplacement.errors %}<p class="file-manager__error">{{ error }}</p>{% endfor %}
+                <p class="file-manager__hint">
+                    Sélectionnez le fichier existant dans la liste pour le remplacer. La confirmation est alors
+                    obligatoire; un doublon identique n’est pas réécrit.
+                </p>
+            </div>
+
+            {% if form.non_field_errors %}
+            <div class="file-manager__error">{{ form.non_field_errors }}</div>
+            {% endif %}
+            <button type="submit" class="default">Importer le fichier</button>
+        </form>
+    </div>
+
+    {% if selected_lesson and selected_category %}
+    <section class="file-manager__existing">
+                <h2>Fichiers déjà présents dans cette destination</h2>
+        <p class="file-manager__intro">
+            {{ selected_lesson.course.get_niveau_display }} · {{ selected_lesson.title }}
+            · {{ selected_category_label }}
+            {% if selected_folder %}· Dossier « {{ selected_folder }} »{% else %}· Ressources liées à la leçon{% endif %}
+        </p>
+        {% if existing_items %}
+        <ul class="object-tools" style="float:none; margin: 0; padding: 0;">
+            {% for item in existing_items %}
+            <li class="file-manager__panel" style="list-style:none;">
+                <div class="file-manager__item">
+                    <div>
+                        <strong>{{ item.name }}</strong>
+                        <div class="file-manager__hint">{{ item.relative_path }} · {{ item.size|filesizeformat }}</div>
+                    </div>
+                    {% if item.resource_id %}
+                    <a class="button" href="{% url 'education:resource_download' selected_lesson.pk item.resource_id %}">
+                        Ouvrir
+                    </a>
+                    {% elif selected_folder == 'Cours' and item.filename|lower|slice:"-4:" == ".pdf" %}
+                    <a class="button" href="{% url 'education:lesson_document' selected_lesson.pk 'Cours' item.filename %}" target="_blank" rel="noopener">
+                        Ouvrir
+                    </a>
+                    {% elif selected_folder == 'Exercices' and item.filename|lower|slice:"-4:" == ".pdf" %}
+                    <a class="button" href="{% url 'education:lesson_document' selected_lesson.pk 'Exercices' item.filename %}" target="_blank" rel="noopener">
+                        Ouvrir
+                    </a>
+                    {% endif %}
+                </div>
+                <form method="post" action="{{ manager_url }}" class="file-manager__delete">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="lecon" value="{{ selected_lesson.pk }}">
+                    <input type="hidden" name="categorie" value="{{ selected_category }}">
+                    <input type="hidden" name="filename" value="{{ item.filename }}">
+                    {% if item.resource_id %}
+                    <input type="hidden" name="resource_id" value="{{ item.resource_id }}">
+                    {% endif %}
+                    <label>
+                        <input type="checkbox" name="confirmer_suppression" value="yes" required>
+                        Je confirme la suppression définitive de ce fichier.
+                    </label>
+                    <button type="submit" class="deletelink"
+                            onclick="return confirm('Supprimer définitivement ce fichier pédagogique ? Cette action ne peut pas être annulée.');">
+                        Supprimer
+                    </button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>Aucun fichier dans cette catégorie pour le moment.</p>
+        {% endif %}
+    </section>
+    {% endif %}
+</div>
+
+{{ lesson_catalogue|json_script:"file-manager-lessons" }}
+{{ category_catalogue|json_script:"file-manager-categories" }}
+{{ replacement_targets|json_script:"file-manager-replacements" }}
+<script>
+(function () {
+    "use strict";
+    const lessonRows = JSON.parse(document.getElementById("file-manager-lessons").textContent);
+    const categories = JSON.parse(document.getElementById("file-manager-categories").textContent);
+    let replacementTargets = JSON.parse(document.getElementById("file-manager-replacements").textContent);
+    const levelSelect = document.getElementById("id_niveau");
+    const lessonSelect = document.getElementById("id_lecon");
+    const categorySelect = document.getElementById("id_categorie");
+    const titleInput = document.getElementById("id_titre");
+    const fileInput = document.getElementById("id_fichier");
+    const replaceSelect = document.getElementById("id_remplacer_fichier");
+    const replaceConfirmation = document.getElementById("id_confirmer_remplacement");
+    const replacementOptionsUrl = "{{ replacement_options_url|escapejs }}";
+    const destination = document.getElementById("destination");
+    const destinationNote = document.getElementById("destinationNote");
+    const formatHint = document.getElementById("acceptedFormats");
+    const dropzone = document.getElementById("dropzone");
+    const preview = document.getElementById("filePreview");
+    const previewName = document.getElementById("previewName");
+    const previewSize = document.getElementById("previewSize");
+    const previewImage = document.getElementById("previewImage");
+    const previewPdf = document.getElementById("previewPdf");
+    let previewUrl = null;
+
+    function selectedLesson() {
+        return lessonRows.find(function (row) {
+            return String(row.id) === String(lessonSelect.value);
+        });
+    }
+
+    function slugify(value) {
+        return (value || "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase().replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "").slice(0, 140) || "document";
+    }
+
+    function refreshLessons() {
+        const oldValue = lessonSelect.value;
+        const selectedLevel = levelSelect.value;
+        lessonSelect.replaceChildren(new Option("— Choisir une leçon —", ""));
+        lessonRows.filter(function (row) {
+            return row.level === selectedLevel;
+        }).forEach(function (row) {
+            lessonSelect.add(new Option(row.label + " · " + row.course, String(row.id)));
+        });
+        if ([...lessonSelect.options].some(function (option) { return option.value === oldValue; })) {
+            lessonSelect.value = oldValue;
+        }
+        refreshDestination();
+    }
+
+    function refreshDestination() {
+        const lesson = selectedLesson();
+        const category = categories.find(function (item) {
+            return item.code === categorySelect.value;
+        });
+        const selectedFile = fileInput.files && fileInput.files[0];
+        if (!lesson || !category || !titleInput.value.trim()) {
+            destination.textContent = "Sélectionnez le niveau, la leçon, la catégorie et indiquez un titre.";
+            destinationNote.textContent = "";
+            return;
+        }
+        const replacement = replacementTargets.find(function (item) {
+            return item.value === replaceSelect.value;
+        });
+        replaceConfirmation.required = Boolean(replacement);
+        if (replacement) {
+            destination.textContent = "media/" + replacement.path;
+            destinationNote.textContent = "Le fichier sélectionné sera remplacé à son emplacement actuel après confirmation.";
+            return;
+        }
+        const extension = selectedFile ? "." + selectedFile.name.split(".").pop().toLowerCase() : (category.extensions[0] || "");
+        let folder = category.folder
+            ? lesson.chapter_path + "/" + category.folder
+            : "resources";
+        let prefix = category.prefix ? category.prefix + "-" : "";
+        if (!category.folder) {
+            prefix = "lesson-" + lesson.id + "-";
+        }
+        destination.textContent = "media/" + folder + "/" + prefix + slugify(titleInput.value) + extension;
+        destinationNote.textContent = category.code === "course_markdown"
+            ? "Le cours Markdown s’affichera dans le contenu de la leçon. Une seule source Markdown est admise par leçon."
+            : category.code === "ai_source"
+                ? "Ce TXT est réservé aux outils pédagogiques IA; il n’est pas affiché comme document public."
+                : category.folder
+                    ? "Ce dossier existe déjà pour les leçons recensées; il ne sera créé que s’il manque."
+                    : "Le fichier sera associé à cette leçon via la ressource Django existante.";
+    }
+
+    function refreshCategory() {
+        const category = categories.find(function (item) {
+            return item.code === categorySelect.value;
+        });
+        const extensions = category ? category.extensions : [];
+        fileInput.accept = extensions.join(",");
+        formatHint.textContent = extensions.length
+            ? "Formats acceptés : " + extensions.join(", ")
+            : "Choisissez d’abord une catégorie.";
+        refreshDestination();
+    }
+
+    let replacementRequest = 0;
+    async function refreshReplacementOptions() {
+        const requestId = ++replacementRequest;
+        const oldValue = replaceSelect.value;
+        const lessonId = lessonSelect.value;
+        const category = categorySelect.value;
+        replacementTargets = [];
+        replaceSelect.replaceChildren(new Option("— Créer un nouveau fichier —", ""));
+        if (!lessonId || !category) {
+            refreshDestination();
+            return;
+        }
+        replaceSelect.disabled = true;
+        try {
+            const url = new URL(replacementOptionsUrl, window.location.href);
+            url.searchParams.set("lecon", lessonId);
+            url.searchParams.set("categorie", category);
+            const response = await fetch(url.toString(), {
+                headers: {"X-Requested-With": "XMLHttpRequest"},
+                credentials: "same-origin"
+            });
+            if (!response.ok) throw new Error("Impossible de charger les fichiers existants.");
+            const payload = await response.json();
+            if (requestId !== replacementRequest) return;
+            replacementTargets = payload.options || [];
+            replacementTargets.forEach(function (item) {
+                replaceSelect.add(new Option(item.label, item.value));
+            });
+            if ([...replaceSelect.options].some(function (option) { return option.value === oldValue; })) {
+                replaceSelect.value = oldValue;
+            }
+        } catch (error) {
+            if (requestId === replacementRequest) {
+                destinationNote.textContent = "La liste des fichiers existants n’a pas pu être actualisée.";
+            }
+        } finally {
+            if (requestId === replacementRequest) {
+                replaceSelect.disabled = false;
+                refreshDestination();
+            }
+        }
+    }
+
+    function showFile(file) {
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        previewUrl = URL.createObjectURL(file);
+        preview.style.display = "block";
+        previewName.textContent = file.name;
+        previewSize.textContent = (file.size / 1024 / 1024).toFixed(2) + " Mo";
+        previewImage.hidden = true;
+        previewPdf.hidden = true;
+        const extension = file.name.split(".").pop().toLowerCase();
+        if (["jpg", "jpeg", "png", "gif", "webp"].includes(extension)) {
+            previewImage.src = previewUrl;
+            previewImage.hidden = false;
+        } else if (extension === "pdf") {
+            previewPdf.src = previewUrl;
+            previewPdf.hidden = false;
+        }
+        refreshDestination();
+    }
+
+    levelSelect.addEventListener("change", function () {
+        refreshLessons();
+        refreshReplacementOptions();
+    });
+    lessonSelect.addEventListener("change", function () {
+        refreshDestination();
+        refreshReplacementOptions();
+    });
+    categorySelect.addEventListener("change", function () {
+        refreshCategory();
+        refreshReplacementOptions();
+    });
+    replaceSelect.addEventListener("change", refreshDestination);
+    titleInput.addEventListener("input", refreshDestination);
+    fileInput.addEventListener("change", function () {
+        if (fileInput.files && fileInput.files[0]) showFile(fileInput.files[0]);
+    });
+    ["dragenter", "dragover"].forEach(function (eventName) {
+        dropzone.addEventListener(eventName, function (event) {
+            event.preventDefault();
+            dropzone.classList.add("is-dragging");
+        });
+    });
+    ["dragleave", "drop"].forEach(function (eventName) {
+        dropzone.addEventListener(eventName, function (event) {
+            event.preventDefault();
+            dropzone.classList.remove("is-dragging");
+        });
+    });
+    dropzone.addEventListener("drop", function (event) {
+        const files = event.dataTransfer && event.dataTransfer.files;
+        if (files && files.length) {
+            const transfer = new DataTransfer();
+            transfer.items.add(files[0]);
+            fileInput.files = transfer.files;
+            showFile(files[0]);
+        }
+    });
+
+    refreshLessons();
+    refreshCategory();
+    const currentFile = fileInput.files && fileInput.files[0];
+    if (currentFile) showFile(currentFile);
+})();
+</script>
+{% endblock %}

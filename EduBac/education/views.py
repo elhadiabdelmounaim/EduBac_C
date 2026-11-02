@@ -1,10 +1,13 @@
+import mimetypes
 from pathlib import Path
 
+from django.conf import settings
+from django.http import FileResponse, Http404
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management import call_command
 from django.db.models import Count
-from .models import Course, Lesson
+from .models import Course, Lesson, Resources
 from .curriculum import CURRICULUM
 
 
@@ -207,9 +210,46 @@ def lesson_detail(request, pk):
             {'kind': kind, 'files': [p.name for p in documents(lesson, kind)]}
             for kind in ('Cours', 'Exercices')
         ],
+        'attached_resources': lesson.resources.all().order_by('name', 'pk'),
         'page_title': lesson.title,
     })
 
+
+
+def resource_download(request, pk, resource_id):
+    """Serve lesson resources through Django instead of exposing MEDIA_ROOT."""
+    lesson = get_object_or_404(Lesson, pk=pk)
+    resource = get_object_or_404(Resources, pk=resource_id, lesson=lesson)
+    relative = Path(resource.file.name)
+    if (
+        relative.is_absolute()
+        or '..' in relative.parts
+        or len(relative.parts) < 2
+        or relative.parts[0] != 'resources'
+    ):
+        raise Http404
+    root = Path(settings.MEDIA_ROOT).resolve()
+    candidate = root / relative
+    if candidate.is_symlink():
+        raise Http404
+    try:
+        file_path = candidate.resolve(strict=True)
+        if not file_path.is_relative_to(root) or not file_path.is_file():
+            raise Http404
+        handle = file_path.open('rb')
+    except (FileNotFoundError, OSError):
+        raise Http404
+    filename = file_path.name
+    content_type = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+    response = FileResponse(
+        handle,
+        content_type=content_type,
+        as_attachment=resource.type == 'doc' or request.GET.get('download') == '1',
+        filename=filename,
+    )
+    response['X-Content-Type-Options'] = 'nosniff'
+    response['Cache-Control'] = 'private, no-store'
+    return response
 
 
 def lesson_document(request, pk, kind, filename):

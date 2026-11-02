@@ -14,4 +14,5 @@ urlpatterns = [
     path('lecon/<int:pk>/', views.lesson_detail, name='lesson_detail'),
     path('lecon/<int:pk>/pdf/', views.lesson_pdf, name='lesson_pdf'),
     path('lecon/<int:pk>/documents/<str:kind>/<str:filename>/', views.lesson_document, name='lesson_document'),
+    path('lecon/<int:pk>/ressources/<int:resource_id>/', views.resource_download, name='resource_download'),
 ]
