@@ -1,0 +1,3 @@
+-r requirements.txt
+daphne>=4.0
+playwright>=1.63.0

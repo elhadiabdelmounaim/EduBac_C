@@ -1,5 +1,7 @@
 # Déployer EduBac sur PythonAnywhere
 
+> Guide historique. Le guide maintenu et vérifié est [PYTHONANYWHERE_DEPLOYMENT.md](./PYTHONANYWHERE_DEPLOYMENT.md). Utilisez-le pour les commandes actuelles.
+
 Guide établi à partir de l’arborescence actuelle d’EduBac. Le compte PythonAnywhere n’étant pas encore identifié comme gratuit ou payant, les choix dépendant de l’offre sont indiqués séparément.
 
 ## 1. Architecture vérifiée
@@ -12,7 +14,7 @@ Guide établi à partir de l’arborescence actuelle d’EduBac. Le compte Pytho
 - Les statiques source sont dans `static/`; la collecte les copie vers `staticfiles/`.
 - `channels` et `config.asgi` sont utilisés par le chat et le tableau blanc. La couche Channels actuelle est en mémoire.
 - L’authentification opérationnelle du site est personnalisée. `django-allauth` n’est ni dans les dépendances ni dans `INSTALLED_APPS`; les adaptateurs présents ne rendent donc pas Google OAuth opérationnel.
-- Les dépendances applicatives comprennent Django, Pillow, Groq, Channels/Daphne, `openpyxl`, `pypdf`, Markdown et `pylatexenc`. Playwright ne sert qu’aux tests navigateur. Uvicorn et `mysqlclient` sont fournis comme dépendances optionnelles ci-dessous.
+- Les dépendances de production comprennent Django, Pillow, Groq, Channels, `openpyxl`, `pypdf`, Markdown et `pylatexenc`. Daphne et Playwright sont réservés au fichier `requirements-dev.txt`. Uvicorn et `mysqlclient` sont fournis comme dépendances optionnelles ci-dessous.
 
 ## 2. Choisir le mode d’hébergement
 
@@ -124,14 +126,12 @@ python manage.py loaddata "$HOME/backups/edubac/edubac-data.json"
 
 Ne lancez pas `load_curriculum` avant cette importation. Testez d’abord l’export/import sur une base de préproduction; le fichier de fixture contient les données des comptes et doit être protégé comme une sauvegarde. Transférez séparément tous les médias. Ne lancez jamais `loaddata` sur une base déjà peuplée.
 
-Sauvegardez la base et les fichiers avant toute mise à jour :
+Sauvegardez la base et les fichiers avant toute mise à jour. Pour SQLite, utilisez la commande Django : elle crée une copie cohérente même si SQLite utilise WAL, dans `~/backups/edubac/`, hors du dépôt.
 
 ```bash
 cd "$HOME/EduBac/EduBac"
+python manage.py backup_db
 mkdir -p "$HOME/backups/edubac"
-if [ -f db.sqlite3 ]; then
-  cp -p db.sqlite3 "$HOME/backups/edubac/db.sqlite3.$(date +%Y%m%d-%H%M%S)"
-fi
 if [ -d media ]; then
   tar -czf "$HOME/backups/edubac/media.$(date +%Y%m%d-%H%M%S).tar.gz" media
 fi

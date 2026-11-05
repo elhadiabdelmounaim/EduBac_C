@@ -32,7 +32,7 @@ def send_notification_email(recipient, title, message, link='', type_code='syste
         return False
     email = getattr(recipient, 'email', '') or ''
     if not email or '@' not in email:
-        logger.debug('Pas d’e-mail pour %s', getattr(recipient, 'username', recipient))
+        logger.debug('Notification ignorée : adresse e-mail absente.')
         return False
 
     context = {
@@ -60,8 +60,12 @@ def send_notification_email(recipient, title, message, link='', type_code='syste
             msg.send(fail_silently=False)
         else:
             send_mail(title, text, from_email, [email], fail_silently=False)
-        logger.info('E-mail envoyé à %s : %s', email, title)
+        logger.info('E-mail de notification envoyé.')
         return True
-    except Exception as e:
-        logger.exception('Échec envoi e-mail à %s : %s', email, e)
+    except Exception as exc:
+        # SMTP exception text can include recipient addresses or message data.
+        logger.error(
+            'Échec envoi e-mail de notification (%s).',
+            type(exc).__name__,
+        )
         return False
