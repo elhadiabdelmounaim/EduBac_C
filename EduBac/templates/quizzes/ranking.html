@@ -3,6 +3,7 @@
 <h1 class="h3 fw-bold mb-3" style="color:var(--edubac-navy);">Classement</h1>
 {% if classroom %}
 <p class="text-muted">Classe : <strong>{{ classroom.name }}</strong></p>
+<div class="table-responsive">
 <table class="table shadow-sm bg-white">
 <thead class="table-light"><tr><th>#</th><th>Élève</th><th>Moyenne</th><th>Quiz</th></tr></thead>
 <tbody>
@@ -18,6 +19,7 @@
 {% endfor %}
 </tbody>
 </table>
+</div>
 {% else %}
 <div class="empty-state">
     <div class="empty-icon">👥</div>

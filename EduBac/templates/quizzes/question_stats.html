@@ -2,6 +2,7 @@
 {% load markdown_extras %}
 {% block content %}
 <h1 class="h3 fw-bold mb-3">Stats par question — {{ quiz.title }}</h1>
+<div class="table-responsive">
 <table class="table table-hover bg-white shadow-sm">
     <thead class="table-light"><tr><th>#</th><th>Question</th><th>Réponses</th><th>Correctes</th><th>Réussite</th></tr></thead>
     <tbody>
@@ -25,6 +26,7 @@
     {% endfor %}
     </tbody>
 </table>
+</div>
 <a href="{% url 'quizzes:manage' %}" class="btn btn-outline-primary btn-sm">Retour</a>
 {% endblock %}
 {% block extra_css %}{% include "includes/katex.html" %}{% endblock %}

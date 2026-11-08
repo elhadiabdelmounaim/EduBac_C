@@ -1,0 +1,268 @@
+/* Shared responsive safeguards, loaded after page and notebook styles. */
+html,
+body {
+    max-width: 100%;
+}
+
+body {
+    min-width: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+.edubac-layout,
+.edubac-main,
+main.container-fluid,
+.container,
+.container-fluid,
+.row > *,
+.card,
+.card-body,
+.modal-content,
+.list-group-item {
+    min-width: 0;
+}
+
+img,
+picture,
+video,
+iframe,
+svg {
+    max-width: 100%;
+}
+
+img,
+video {
+    height: auto;
+}
+
+form,
+.input-group,
+.input-group > * {
+    min-width: 0;
+}
+
+.form-control,
+.form-select,
+form :is(
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="tel"],
+    input[type="url"],
+    input[type="search"],
+    input[type="date"],
+    input[type="datetime-local"],
+    input[type="time"],
+    input[type="file"],
+    select,
+    textarea
+) {
+    box-sizing: border-box;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.table-responsive {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive > .table {
+    margin-bottom: 0;
+}
+
+.table th,
+.table td {
+    overflow-wrap: anywhere;
+    vertical-align: middle;
+}
+
+.katex-display {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0 0.125rem 0.3rem;
+    -webkit-overflow-scrolling: touch;
+}
+
+.katex-display > .katex {
+    white-space: nowrap;
+}
+
+pre,
+.alert,
+.breadcrumb,
+.list-group-item,
+.card,
+.modal-content {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
+pre {
+    overflow-x: auto;
+    white-space: pre;
+}
+
+.modal-dialog {
+    max-width: min(100% - 1rem, var(--bs-modal-width));
+}
+
+@media (max-width: 991.98px) {
+    .edubac-sidebar {
+        height: 100vh;
+        height: 100dvh;
+    }
+
+    body.has-sidebar .edubac-main {
+        padding-bottom: calc(76px + env(safe-area-inset-bottom));
+    }
+}
+
+@media (max-width: 767.98px) {
+    .table-responsive > .table {
+        white-space: normal;
+    }
+
+    .quiz-header-bar {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .quiz-take-shell,
+    .qb-section-card,
+    .qb-detail-card {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .wb-board-viewport {
+        max-width: 100%;
+        overflow: auto;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+@media (max-width: 575.98px) {
+    main.container-fluid {
+        padding: 1rem 0.75rem 1.25rem !important;
+    }
+
+    .auth-page {
+        min-height: calc(100vh - var(--navbar-height));
+        min-height: calc(100dvh - var(--navbar-height));
+        padding: 1rem 0.75rem;
+    }
+
+    .auth-card {
+        width: 100%;
+        max-width: 100%;
+        padding: 1.25rem;
+    }
+
+    .card-body.p-4 {
+        padding: 1rem !important;
+    }
+
+    .form-control,
+    .form-select,
+    form :is(
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="number"],
+        input[type="tel"],
+        input[type="url"],
+        input[type="search"],
+        input[type="date"],
+        input[type="datetime-local"],
+        input[type="time"],
+        input[type="file"],
+        select,
+        textarea
+    ) {
+        min-height: 44px;
+        font-size: 16px;
+    }
+
+    .btn {
+        min-height: 44px;
+        line-height: 1.25;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .btn-group {
+        flex-wrap: wrap;
+    }
+
+    .btn-group > .btn {
+        flex: 1 1 auto;
+    }
+
+    .modal-dialog {
+        width: calc(100% - 1rem);
+        max-width: none;
+        margin: 0.5rem auto;
+    }
+
+    .modal-dialog-scrollable .modal-content {
+        max-height: calc(100dvh - 1rem);
+    }
+
+    .dropdown-menu {
+        max-width: calc(100vw - 1rem);
+        overflow-wrap: anywhere;
+    }
+
+    .quiz-timer-ring {
+        flex: 0 0 72px;
+        width: 72px;
+        height: 72px;
+    }
+
+    .quiz-timer-ring::before {
+        inset: 6px;
+    }
+
+    .edubac-stats {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr));
+    }
+}
+
+@media (max-width: 380px) {
+    main.container-fluid {
+        padding-inline: 0.75rem !important;
+    }
+
+    .auth-card {
+        padding: 1rem;
+    }
+
+    .card-body.p-4 {
+        padding: 0.875rem !important;
+    }
+
+    .table th,
+    .table td {
+        padding-inline: 0.5rem;
+    }
+
+    .quiz-timer-ring {
+        flex-basis: 64px;
+        width: 64px;
+        height: 64px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+}

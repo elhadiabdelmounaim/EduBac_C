@@ -9,6 +9,7 @@
 - [Question repetition allowed](quiz-diversity.md) — duplicate-question checks disabled by user; retain mathematical validation and duplicate-request protection.
 - [QCM answer integrity](quiz-qcm-validity.md) — repair invalid questions in place; never invent the correct answer or discard valid questions to fix missing choices.
 - [Site-wide visual direction](site-wide-design.md) — keep the approved notebook style consistent across all user-facing pages, not just Accueil.
+- [Static CSS cache versions](static-css-cache.md) — bump versioned stylesheet URLs after CSS edits to avoid stale preview layouts.
 - [Removed features](removed-features.md) — the user does not want weak-points analysis or its links anywhere in the project.
 - [Classroom removal](classroom-removal.md) — Rejeter removes only the selected class membership; student accounts and results must remain intact.
 - [Quiz actions stay in the site](quiz-actions.md) — the user rejects quiz-management buttons that open Django Admin.

@@ -10,7 +10,7 @@ Run this check before publishing navbar/template/CSS changes. It exits nonzero
 on failure and is also registered as the `navbar-browser` validation command.
 This does not deploy the application.
 
-Python dependencies, including Playwright, are in `EduBac/requirements.txt`.
+Python dependencies, including Playwright, are in `EduBac/requirements-dev.txt`.
 Chromium is available in Replit; elsewhere install the matching browser with
 `python -m playwright install chromium` (and its OS dependencies), or set
 `CHROMIUM_EXECUTABLE` to an installed Chromium binary.

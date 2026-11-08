@@ -160,13 +160,20 @@ html[data-theme="dark"] .home-page {
 /* This stylesheet is loaded on Accueil only. Keep the shared shell's
    appearance and behavior, but make its text meet the bold-text request. */
 body :is(.edubac-navbar, .edubac-sidebar, .footer, .bottom-nav, .breadcrumb, .alert) :where(p, a, span, small, strong, button, input, li, div) { font-weight: 700 !important; }
-@media (max-width: 767.98px) {
-    .home-page .home-hero, .home-page .home-guide, .home-page .home-level-grid { grid-template-columns: 1fr; }
+@media (max-width: 991.98px) {
+    .home-page .home-hero, .home-page .home-guide { grid-template-columns: 1fr; }
     .home-page .home-hero { gap: 1.8rem; }
-    .home-page .home-notebook { max-width: 420px; width: 100%; }
+    .home-page .home-notebook { max-width: 420px; width: 100%; margin-inline: auto; }
     .home-page .home-guide { gap: .85rem; }
     .home-page .home-levels { margin-top: 2rem; }
     .home-page .home-level-card { padding: 1.15rem 1.25rem; }
+}
+@media (max-width: 767.98px) {
+    .home-page .home-level-grid { grid-template-columns: 1fr; }
+}
+.home-page .home-equation {
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+    white-space: nowrap;
 }
 @media (prefers-reduced-motion: reduce) {
     .home-page .home-button, .home-page .home-level-card { transition: none; }
