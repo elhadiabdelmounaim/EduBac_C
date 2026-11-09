@@ -67,6 +67,7 @@ class BrevoAPIEmailBackend(BaseEmailBackend):
                 BREVO_ACCOUNT_ENDPOINT,
                 headers=self._headers(),
                 timeout=self.timeout,
+                allow_redirects=False,
             )
         except requests.RequestException:
             raise BrevoAPIError() from None
@@ -103,6 +104,7 @@ class BrevoAPIEmailBackend(BaseEmailBackend):
                     json=payload,
                     headers=self._headers(),
                     timeout=self.timeout,
+                    allow_redirects=False,
                 )
             except requests.RequestException:
                 # Do not retry an ambiguous timeout: Brevo may already have

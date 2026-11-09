@@ -1,8 +1,10 @@
+from io import StringIO
 from types import SimpleNamespace
-from unittest.mock import call, patch
+from unittest.mock import patch
 
 import requests
 from django.core.mail import EmailMultiAlternatives, EmailMessage
+from django.core.management import call_command
 from django.test import SimpleTestCase, override_settings
 
 from config.email_backend import (
@@ -35,6 +37,7 @@ class BrevoAPIEmailBackendTests(SimpleTestCase):
                 'content-type': 'application/json',
             },
             timeout=7,
+            allow_redirects=False,
         )
 
     def test_multipart_message_preserves_sender_recipients_and_templates(self):
@@ -68,6 +71,7 @@ class BrevoAPIEmailBackendTests(SimpleTestCase):
             },
         )
         self.assertEqual(post.call_args.kwargs['timeout'], 7)
+        self.assertFalse(post.call_args.kwargs['allow_redirects'])
 
     def test_only_http_201_counts_as_sent(self):
         response = SimpleNamespace(status_code=202, headers={})
@@ -84,7 +88,7 @@ class BrevoAPIEmailBackendTests(SimpleTestCase):
 
     def test_rate_limit_gets_one_bounded_retry(self):
         responses = [
-            SimpleNamespace(status_code=429, headers={'Retry-After': '0'}),
+            SimpleNamespace(status_code=429, headers={'Retry-After': '99'}),
             SimpleNamespace(status_code=201, headers={}),
         ]
         with (
@@ -100,7 +104,7 @@ class BrevoAPIEmailBackendTests(SimpleTestCase):
 
         self.assertEqual(sent, 1)
         self.assertEqual(post.call_count, 2)
-        sleep.assert_not_called()
+        sleep.assert_called_once_with(2)
 
     def test_http_errors_do_not_expose_response_body_or_count_as_sent(self):
         response = SimpleNamespace(
@@ -159,3 +163,30 @@ class BrevoAPIEmailBackendTests(SimpleTestCase):
                 0,
             )
         post.assert_not_called()
+
+    def test_management_command_can_send_a_real_test_to_verified_sender(self):
+        output = StringIO()
+        with (
+            patch(
+                'config.email_backend.requests.get',
+                return_value=SimpleNamespace(status_code=200),
+            ) as get,
+            patch(
+                'config.email_backend.requests.post',
+                return_value=SimpleNamespace(status_code=201, headers={}),
+            ) as post,
+        ):
+            call_command(
+                'check_brevo_email',
+                '--send-test',
+                stdout=output,
+            )
+
+        self.assertEqual(get.call_count, 1)
+        self.assertEqual(post.call_count, 1)
+        self.assertEqual(
+            post.call_args.kwargs['json']['to'],
+            [{'email': 'sender@example.test'}],
+        )
+        self.assertIn('Connexion à l’API Brevo vérifiée', output.getvalue())
+        self.assertIn('E-mail de test accepté par Brevo', output.getvalue())

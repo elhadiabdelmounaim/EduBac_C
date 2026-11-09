@@ -3,7 +3,7 @@
 from email.utils import parseaddr
 
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 from django.core.management.base import BaseCommand, CommandError
 
 from config.email_backend import BrevoAPIEmailBackend, BrevoAPIError
@@ -43,16 +43,17 @@ class Command(BaseCommand):
             )
 
         try:
-            sent = send_mail(
+            message = EmailMultiAlternatives(
                 subject='Test EduBac — API Brevo',
-                message=(
+                body=(
                     'Ce message confirme le test d’envoi EduBac via '
                     'l’API Brevo.'
                 ),
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[recipient],
-                fail_silently=False,
+                to=[recipient],
+                connection=backend,
             )
+            sent = message.send(fail_silently=False)
         except BrevoAPIError as exc:
             raise CommandError(str(exc)) from None
 
