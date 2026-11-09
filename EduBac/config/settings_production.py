@@ -29,9 +29,16 @@ def _csv(name):
 
 DEBUG = False
 
-# Never expose verification links in production logs through the console backend.
-if EMAIL_BACKEND == 'django.core.mail.backends.console.EmailBackend':
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# Production mail must use Brevo's HTTPS API, never SMTP or the console backend.
+EMAIL_BACKEND = 'config.email_backend.BrevoAPIEmailBackend'
+if not BREVO_API_KEY:
+    raise ImproperlyConfigured(
+        'Définissez BREVO_API_KEY dans l’environnement privé de production.'
+    )
+if not os.getenv('DEFAULT_FROM_EMAIL', '').strip():
+    raise ImproperlyConfigured(
+        'Définissez DEFAULT_FROM_EMAIL avec un expéditeur vérifié dans Brevo.'
+    )
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', '').strip()
 if (
