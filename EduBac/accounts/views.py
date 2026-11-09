@@ -1,10 +1,18 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.views.decorators.http import require_http_methods
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from django.views.decorators.http import require_GET, require_POST
 from django.db.models import Count, Avg, Q
+from django.core import signing
 
 from .models import User, StudentProfile, TeacherProfile
 from .decorators import login_required_simple, student_required, teacher_required
+from .email_verification import (
+    get_user_from_verification_token,
+    send_verification_email,
+    verification_expiry_label,
+)
 from .services import compute_student_progress
 
 
@@ -54,6 +62,36 @@ def _authenticate(request):
     return user, None
 
 
+def _valid_email(value):
+    try:
+        validate_email(value)
+    except ValidationError:
+        return False
+    return True
+
+
+def _send_verification_after_signup(request, user):
+    request.session['email_verification_pending'] = user.email
+    status = send_verification_email(request, user)
+    if status == 'sent':
+        messages.info(
+            request,
+            f'Compte créé. Un lien de vérification a été envoyé à {user.email}.',
+        )
+    elif status == 'rate_limited':
+        messages.warning(
+            request,
+            'Compte créé. L’envoi est temporairement limité ; réessaie dans un instant.',
+        )
+    else:
+        messages.error(
+            request,
+            'Compte créé, mais le message n’a pas pu être envoyé. '
+            'Vérifie l’adresse et réessaie depuis cette page.',
+        )
+    return redirect('accounts:email_verification_pending')
+
+
 def _login_session(request, user):
     request.session['user_id'] = user.id
     request.session['role'] = user.role
@@ -71,6 +109,13 @@ def login_view(request):
     if request.method == 'POST':
         user, error = _authenticate(request)
         if user:
+            if not user.email_verified:
+                request.session['email_verification_pending'] = user.email
+                messages.warning(
+                    request,
+                    'Cette adresse e-mail n’est pas encore vérifiée.',
+                )
+                return redirect('accounts:email_verification_pending')
             _login_session(request, user)
             messages.success(
                 request,
@@ -123,6 +168,8 @@ def register_student(request):
         if full_name and not (first_name or last_name):
             first_name, last_name = _split_name(full_name)
         email = (request.POST.get('email') or '').strip()
+        if email:
+            email = email.lower()
         password = request.POST.get('password') or ''
         password2 = request.POST.get('password2') or ''
         niveau = request.POST.get('niveau', 'tronc_commun')
@@ -134,6 +181,8 @@ def register_student(request):
             error = 'Le nom est obligatoire.'
         elif not email or not password:
             error = 'E-mail et mot de passe sont obligatoires.'
+        elif not _valid_email(email):
+            error = 'Saisis une adresse e-mail valide.'
         elif password != password2:
             error = 'Les mots de passe ne correspondent pas.'
         elif len(password) < 6:
@@ -145,6 +194,7 @@ def register_student(request):
             user = User(
                 username=username,
                 email=email,
+                email_verified=False,
                 role='student',  # forcé backend
                 first_name=first_name or full_name or email.split('@')[0],
                 last_name=last_name,
@@ -152,9 +202,7 @@ def register_student(request):
             user.set_password(password)
             user.save()
             StudentProfile.objects.create(user=user, niveau=niveau)
-            _login_session(request, user)
-            messages.success(request, 'Compte élève créé. Bienvenue sur EduBac !')
-            return redirect('accounts:dashboard')
+            return _send_verification_after_signup(request, user)
 
     return render(request, 'accounts/register_student.html', {
         'page_title': 'Inscription élève',
@@ -178,6 +226,8 @@ def register_teacher(request):
         if full_name and not (first_name or last_name):
             first_name, last_name = _split_name(full_name)
         email = (request.POST.get('email') or '').strip()
+        if email:
+            email = email.lower()
         password = request.POST.get('password') or ''
         password2 = request.POST.get('password2') or ''
 
@@ -185,6 +235,8 @@ def register_teacher(request):
             error = 'Le nom est obligatoire.'
         elif not email or not password:
             error = 'E-mail et mot de passe sont obligatoires.'
+        elif not _valid_email(email):
+            error = 'Saisis une adresse e-mail valide.'
         elif password != password2:
             error = 'Les mots de passe ne correspondent pas.'
         elif len(password) < 6:
@@ -196,6 +248,7 @@ def register_teacher(request):
             user = User(
                 username=username,
                 email=email,
+                email_verified=False,
                 role='teacher',  # forcé backend
                 first_name=first_name or full_name or email.split('@')[0],
                 last_name=last_name,
@@ -203,13 +256,80 @@ def register_teacher(request):
             user.set_password(password)
             user.save()
             TeacherProfile.objects.create(user=user, subject='Mathématiques')
-            _login_session(request, user)
-            messages.success(request, 'Compte enseignant créé. Bienvenue !')
-            return redirect('accounts:dashboard')
+            return _send_verification_after_signup(request, user)
 
     return render(request, 'accounts/register_teacher.html', {
         'page_title': 'Inscription enseignant',
         'error': error,
+    })
+
+
+@require_GET
+def email_verification_pending(request):
+    return render(request, 'accounts/email_verification_pending.html', {
+        'page_title': 'Vérification de l’e-mail',
+        'email': request.session.get('email_verification_pending', ''),
+        'expiry_label': verification_expiry_label(),
+        'link_expired': request.GET.get('expired') == '1',
+        'invalid_link': request.GET.get('invalid') == '1',
+    })
+
+
+@require_POST
+def resend_verification(request):
+    email = (request.POST.get('email') or '').strip().lower()
+    if not _valid_email(email):
+        messages.error(request, 'Saisis une adresse e-mail valide.')
+        return redirect('accounts:email_verification_pending')
+
+    request.session['email_verification_pending'] = email
+    user = User.objects.filter(email__iexact=email).first()
+    if user and not user.email_verified:
+        send_verification_email(request, user)
+
+    # Keep the same response for unknown, verified, and unverified addresses.
+    messages.success(
+        request,
+        'Si cette adresse correspond à un compte non vérifié, '
+        'un nouveau lien a été envoyé si la demande est autorisée. '
+        'Vérifie aussi les courriers indésirables.',
+    )
+    return redirect('accounts:email_verification_pending')
+
+
+@require_GET
+def confirm_email(request, token):
+    try:
+        user = get_user_from_verification_token(token)
+    except signing.SignatureExpired:
+        return render(request, 'accounts/email_verification_pending.html', {
+            'page_title': 'Lien expiré',
+            'email': request.session.get('email_verification_pending', ''),
+            'expiry_label': verification_expiry_label(),
+            'link_expired': True,
+        })
+    except (signing.BadSignature, User.DoesNotExist, KeyError, TypeError, ValueError):
+        return render(
+            request,
+            'accounts/email_verification_pending.html',
+            {
+                'page_title': 'Lien invalide',
+                'email': request.session.get('email_verification_pending', ''),
+                'expiry_label': verification_expiry_label(),
+                'invalid_link': True,
+            },
+            status=400,
+        )
+
+    already_verified = user.email_verified
+    if not already_verified:
+        user.email_verified = True
+        user.save(update_fields=['email_verified'])
+    if request.session.get('email_verification_pending', '').casefold() == user.email.casefold():
+        request.session.pop('email_verification_pending', None)
+    return render(request, 'accounts/email_verified.html', {
+        'page_title': 'Adresse e-mail vérifiée',
+        'already_verified': already_verified,
     })
 
 

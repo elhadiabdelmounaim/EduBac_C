@@ -20,6 +20,10 @@ class User(AbstractUser):
         verbose_name='Rôle',
     )
     email = models.EmailField(unique=True, verbose_name='Adresse e-mail')
+    email_verified = models.BooleanField(
+        default=True,
+        verbose_name='Adresse e-mail vérifiée',
+    )
 
     class Meta:
         verbose_name = 'Utilisateur'

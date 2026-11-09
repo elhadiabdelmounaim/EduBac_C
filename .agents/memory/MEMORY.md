@@ -16,3 +16,4 @@
 - [Teacher quiz grounding](teacher-quiz-grounding.md) — combine chosen resources, teacher objectives and relevant prior knowledge; resources are optional.
 - [HTML number inputs and French locales](quiz-number-localization.md) — emit dot decimals; French formatting can turn a valid Django `Decimal` into an empty browser number field.
 - [Private uploaded media](private-uploaded-media.md) — never expose the whole media directory publicly; classroom uploads and results need Django permission checks.
+- [Email verification compatibility](email-verification.md) — existing accounts stay verified; only new password signups require email confirmation.

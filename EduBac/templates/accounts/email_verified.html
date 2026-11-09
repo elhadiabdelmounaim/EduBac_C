@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="auth-page">
+    <section class="auth-card position-relative text-center" style="max-width: 520px;" aria-labelledby="verified-title">
+        <div class="auth-brand">
+            <img src="/static/img/edubac-logo.png" alt="EduBac" class="auth-logo">
+            <h1 id="verified-title" class="h4 fw-bold mb-1" style="color:var(--edubac-navy);">
+                Adresse e-mail vérifiée
+            </h1>
+            <p class="text-muted small mb-0">
+                {% if already_verified %}
+                    Cette adresse était déjà vérifiée.
+                {% else %}
+                    Ton adresse est confirmée. Tu peux maintenant te connecter à EduBac.
+                {% endif %}
+            </p>
+        </div>
+        <a href="{% url 'accounts:login' %}" class="btn btn-edubac w-100 py-2">
+            Se connecter
+        </a>
+    </section>
+</div>
+{% endblock %}

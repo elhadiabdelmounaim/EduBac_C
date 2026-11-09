@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="fr">
+<body style="margin:0;padding:24px;background:#f7f3e8;color:#263449;font-family:Arial,sans-serif;">
+    <main style="max-width:560px;margin:0 auto;padding:32px;background:#fcfaf4;border:1px solid #d9d9cb;border-radius:16px;">
+        <h1 style="margin:0 0 16px;color:#185f60;font-size:24px;">Vérifie ton adresse e-mail</h1>
+        <p>Bonjour {{ user.get_full_name }},</p>
+        <p>Confirme ton adresse pour activer ton compte EduBac.</p>
+        <p style="margin:28px 0;">
+            <a href="{{ verification_url }}" style="display:inline-block;padding:14px 20px;background:#185f60;color:#fff;text-decoration:none;border-radius:8px;">
+                Vérifier mon adresse
+            </a>
+        </p>
+        <p>Ce lien expire après {{ expiry_label }}.</p>
+        <p style="color:#566268;font-size:13px;">Si tu n’as pas créé de compte EduBac, ignore ce message.</p>
+    </main>
+</body>
+</html>

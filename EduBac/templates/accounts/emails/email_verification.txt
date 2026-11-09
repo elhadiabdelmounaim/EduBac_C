@@ -1,0 +1,7 @@
+Bonjour {{ user.get_full_name }},
+
+Confirme ton adresse e-mail pour activer ton compte EduBac :
+{{ verification_url }}
+
+Ce lien expire après {{ expiry_label }}.
+Si tu n’as pas créé de compte EduBac, ignore ce message.

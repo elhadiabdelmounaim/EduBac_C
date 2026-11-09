@@ -17,10 +17,16 @@ class SimpleSessionAuthMiddleware:
         if uid:
             try:
                 user = User.objects.get(pk=uid)
-                request.edubac_user = user
-                # Pour les pages EduBac, request.user = utilisateur session
-                if not request.path.startswith('/admin/'):
-                    request.user = user
+                if not user.email_verified:
+                    request.session.pop('user_id', None)
+                    request.session.pop('role', None)
+                    if not request.path.startswith('/admin/'):
+                        request.user = AnonymousEduBacUser()
+                else:
+                    request.edubac_user = user
+                    # Pour les pages EduBac, request.user = utilisateur session
+                    if not request.path.startswith('/admin/'):
+                        request.user = user
             except User.DoesNotExist:
                 request.session.pop('user_id', None)
                 request.session.pop('role', None)

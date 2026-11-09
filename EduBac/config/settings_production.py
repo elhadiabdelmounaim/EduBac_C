@@ -29,6 +29,10 @@ def _csv(name):
 
 DEBUG = False
 
+# Never expose verification links in production logs through the console backend.
+if EMAIL_BACKEND == 'django.core.mail.backends.console.EmailBackend':
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', '').strip()
 if (
     not SECRET_KEY

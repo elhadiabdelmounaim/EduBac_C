@@ -159,25 +159,41 @@ OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'gpt-4o-mini')
 XAI_API_KEY = os.getenv('XAI_API_KEY', '')
 XAI_MODEL = os.getenv('XAI_MODEL', 'grok-3-mini')
 
-# Email (console pour le développement)
+# E-mail : console en développement, SMTP par défaut en production.
 # ---------------------------------------------------------------------------
-# Configuration e-mail
-# ---------------------------------------------------------------------------
-# En développement : affiche les e-mails dans la console
-# En production : configurer SMTP via les variables d'environnement
+_DEFAULT_EMAIL_BACKEND = (
+    'django.core.mail.backends.smtp.EmailBackend'
+    if os.getenv('DJANGO_PRODUCTION') == '1'
+    else 'django.core.mail.backends.console.EmailBackend'
+)
 EMAIL_BACKEND = os.getenv(
     'EMAIL_BACKEND',
-    'django.core.mail.backends.console.EmailBackend'
+    _DEFAULT_EMAIL_BACKEND,
 )
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False').lower() in ('true', '1', 'yes')
+EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', '15'))
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'EduBac <noreply@edubac.ma>')
+DEFAULT_FROM_EMAIL = (
+    os.getenv('DEFAULT_FROM_EMAIL')
+    or EMAIL_HOST_USER
+    or 'EduBac <noreply@edubac.ma>'
+)
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 EMAIL_NOTIFICATIONS_ENABLED = os.getenv('EMAIL_NOTIFICATIONS_ENABLED', 'True').lower() in ('true', '1', 'yes')
 SITE_URL = os.getenv('SITE_URL', 'http://127.0.0.1:8000')
+EMAIL_VERIFICATION_TOKEN_MAX_AGE = max(
+    60, int(os.getenv('EMAIL_VERIFICATION_TOKEN_MAX_AGE', '86400'))
+)
+EMAIL_VERIFICATION_RESEND_COOLDOWN = max(
+    0, int(os.getenv('EMAIL_VERIFICATION_RESEND_COOLDOWN', '60'))
+)
+EMAIL_VERIFICATION_IP_HOURLY_LIMIT = max(
+    1, int(os.getenv('EMAIL_VERIFICATION_IP_HOURLY_LIMIT', '10'))
+)
 
 
 # ---- Production helpers ----
