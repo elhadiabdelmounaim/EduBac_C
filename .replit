@@ -12,6 +12,15 @@ expertMode = true
 [userenv.shared]
 GROQ_MODEL = "openai/gpt-oss-20b"
 
+[userenv.production]
+DEFAULT_FROM_EMAIL = "elhadiabdelmounaim18@gmail.com"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp-relay.brevo.com"
+EMAIL_PORT = "587"
+EMAIL_TIMEOUT = "15"
+EMAIL_USE_SSL = "False"
+EMAIL_USE_TLS = "True"
+
 [workflows]
 runButton = "Project"
 
