@@ -8,6 +8,8 @@ import requests
 from django.conf import settings
 from django.core.mail.backends.base import BaseEmailBackend
 
+from .email_context import email_attempt_id
+
 
 logger = logging.getLogger(__name__)
 BREVO_API_BASE_URL = 'https://api.brevo.com/v3'
@@ -82,10 +84,21 @@ class BrevoAPIEmailBackend(BaseEmailBackend):
 
         sent = 0
         for message in email_messages:
+            stage = 'api_key_check'
             try:
                 self._require_api_key()
-                self._send_message(self._build_payload(message))
+                stage = 'payload_build'
+                payload = self._build_payload(message)
+                stage = 'api_request'
+                self._send_message(payload)
             except (BrevoAPIError, TypeError, ValueError) as exc:
+                self._log_diagnostic(
+                    logging.ERROR,
+                    stage=stage,
+                    outcome='failed',
+                    exception_type=type(exc).__name__,
+                    http_status=getattr(exc, 'status_code', None),
+                )
                 if not self.fail_silently:
                     raise
                 logger.warning(
@@ -96,8 +109,40 @@ class BrevoAPIEmailBackend(BaseEmailBackend):
             sent += 1
         return sent
 
+    @staticmethod
+    def _log_diagnostic(
+        level,
+        *,
+        stage,
+        outcome,
+        exception_type=None,
+        http_status=None,
+        retry=None,
+    ):
+        attempt_id = email_attempt_id.get()
+        if attempt_id == '-':
+            return
+        logger.log(
+            level,
+            'brevo_email attempt_id=%s stage=%s outcome=%s '
+            'http_status=%s retry=%s exception_type=%s',
+            attempt_id,
+            stage,
+            outcome,
+            http_status if http_status is not None else '-',
+            retry if retry is not None else '-',
+            exception_type or '-',
+        )
+
     def _send_message(self, payload):
         for attempt in range(MAX_RATE_LIMIT_RETRIES + 1):
+            retry_number = attempt + 1
+            self._log_diagnostic(
+                logging.INFO,
+                stage='api_request',
+                outcome='started',
+                retry=retry_number,
+            )
             try:
                 response = requests.post(
                     BREVO_EMAIL_ENDPOINT,
@@ -106,21 +151,56 @@ class BrevoAPIEmailBackend(BaseEmailBackend):
                     timeout=self.timeout,
                     allow_redirects=False,
                 )
-            except requests.RequestException:
+            except requests.RequestException as exc:
                 # Do not retry an ambiguous timeout: Brevo may already have
                 # accepted the message, so retrying could send a duplicate.
+                self._log_diagnostic(
+                    logging.WARNING,
+                    stage='api_request',
+                    outcome='network_error',
+                    retry=retry_number,
+                    exception_type=type(exc).__name__,
+                )
                 raise BrevoAPIError() from None
 
+            self._log_diagnostic(
+                logging.INFO,
+                stage='api_response',
+                outcome='received',
+                http_status=response.status_code,
+                retry=retry_number,
+            )
             if response.status_code == 201:
+                self._log_diagnostic(
+                    logging.INFO,
+                    stage='api_response',
+                    outcome='accepted',
+                    http_status=response.status_code,
+                    retry=retry_number,
+                )
                 return
 
             if (
                 response.status_code == 429
                 and attempt < MAX_RATE_LIMIT_RETRIES
             ):
+                self._log_diagnostic(
+                    logging.WARNING,
+                    stage='api_response',
+                    outcome='retrying_rate_limit',
+                    http_status=response.status_code,
+                    retry=retry_number,
+                )
                 self._wait_before_retry(response.headers.get('Retry-After'))
                 continue
 
+            self._log_diagnostic(
+                logging.ERROR,
+                stage='api_response',
+                outcome='rejected',
+                http_status=response.status_code,
+                retry=retry_number,
+            )
             raise BrevoAPIError(status_code=response.status_code)
 
     @staticmethod

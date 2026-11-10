@@ -1,6 +1,7 @@
 """Secure, expiring email-verification links and resend throttling."""
 import hashlib
 import logging
+import uuid
 
 from django.conf import settings
 from django.core import signing
@@ -8,6 +9,8 @@ from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.urls import reverse
+
+from config.email_context import email_attempt_id
 
 from .models import User
 
@@ -62,9 +65,26 @@ def _claim_send_slot(email, remote_addr):
     return True, email_key
 
 
-def send_verification_email(request, user):
+def send_verification_email(request, user, *, attempt_id=None):
     """Send one signed link, returning sent, rate_limited, or failed."""
+    attempt_id = attempt_id or uuid.uuid4().hex[:12]
+    context_token = email_attempt_id.set(attempt_id)
+    try:
+        return _send_verification_email(request, user, attempt_id)
+    finally:
+        email_attempt_id.reset(context_token)
+
+
+def _send_verification_email(request, user, attempt_id):
+    logger.info(
+        'verification_email attempt_id=%s stage=start outcome=started',
+        attempt_id,
+    )
     if user.email_verified:
+        logger.info(
+            'verification_email attempt_id=%s stage=eligibility outcome=already_verified',
+            attempt_id,
+        )
         return 'already_verified'
 
     allowed, email_key = _claim_send_slot(
@@ -72,41 +92,87 @@ def send_verification_email(request, user):
         request.META.get('REMOTE_ADDR', ''),
     )
     if not allowed:
+        reason = 'ip_limit' if email_key is None else 'email_cooldown'
+        logger.info(
+            'verification_email attempt_id=%s stage=throttle outcome=blocked reason=%s',
+            attempt_id,
+            reason,
+        )
         return 'rate_limited'
 
+    stage = 'token_generation'
     try:
         token = signing.dumps(
             {'user_id': user.pk, 'email': user.email},
             salt=TOKEN_SALT,
             compress=True,
         )
+        logger.info(
+            'verification_email attempt_id=%s stage=token_generation outcome=complete',
+            attempt_id,
+        )
+        stage = 'verification_url'
         verification_url = request.build_absolute_uri(
             reverse('accounts:confirm_email', kwargs={'token': token})
+        )
+        logger.info(
+            'verification_email attempt_id=%s stage=verification_url outcome=complete',
+            attempt_id,
         )
         context = {
             'user': user,
             'verification_url': verification_url,
             'expiry_label': verification_expiry_label(),
         }
+        stage = 'template_rendering'
+        text_body = render_to_string(
+            'accounts/emails/email_verification.txt',
+            context,
+        ).strip()
+        html_body = render_to_string(
+            'accounts/emails/email_verification.html',
+            context,
+        )
+        logger.info(
+            'verification_email attempt_id=%s stage=template_rendering outcome=complete',
+            attempt_id,
+        )
+        stage = 'message_construction'
         message = EmailMultiAlternatives(
             subject='Vérifie ton adresse e-mail — EduBac',
-            body=render_to_string(
-                'accounts/emails/email_verification.txt',
-                context,
-            ).strip(),
+            body=text_body,
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[user.email],
         )
         message.attach_alternative(
-            render_to_string('accounts/emails/email_verification.html', context),
+            html_body,
             'text/html',
         )
-        if message.send(fail_silently=False) != 1:
+        logger.info(
+            'verification_email attempt_id=%s stage=message_construction outcome=complete',
+            attempt_id,
+        )
+        stage = 'django_mail_send'
+        logger.info(
+            'verification_email attempt_id=%s stage=django_mail_send outcome=started',
+            attempt_id,
+        )
+        sent = message.send(fail_silently=False)
+        if sent != 1:
             raise RuntimeError('Le fournisseur e-mail n’a confirmé aucun envoi.')
+        logger.info(
+            'verification_email attempt_id=%s stage=django_mail_send outcome=backend_returned_one',
+            attempt_id,
+        )
         return 'sent'
-    except Exception:
+    except Exception as exc:
         cache.delete(email_key)
-        logger.exception('Échec de l’envoi du message de vérification.')
+        logger.error(
+            'verification_email attempt_id=%s stage=%s outcome=failed exception_type=%s',
+            attempt_id,
+            stage,
+            type(exc).__name__,
+        )
         return 'failed'
 
 

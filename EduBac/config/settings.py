@@ -237,9 +237,35 @@ CHANNEL_LAYERS = {
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'handlers': {'quiz_console': {'class': 'logging.StreamHandler'}},
+    'formatters': {
+        'email_trace': {
+            'format': '%(asctime)s %(levelname)s %(name)s %(message)s',
+        },
+    },
+    'handlers': {
+        'quiz_console': {'class': 'logging.StreamHandler'},
+        'email_console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'email_trace',
+        },
+    },
     'loggers': {
         'ai.services': {'handlers': ['quiz_console'], 'level': 'INFO', 'propagate': False},
         'quizzes.generation': {'handlers': ['quiz_console'], 'level': 'INFO', 'propagate': False},
+        'accounts.views': {
+            'handlers': ['email_console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'accounts.email_verification': {
+            'handlers': ['email_console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'config.email_backend': {
+            'handlers': ['email_console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }

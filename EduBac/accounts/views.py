@@ -1,3 +1,6 @@
+import logging
+import uuid
+
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.exceptions import ValidationError
@@ -14,6 +17,9 @@ from .email_verification import (
     verification_expiry_label,
 )
 from .services import compute_student_progress
+
+
+logger = logging.getLogger(__name__)
 
 
 def _split_name(full_name: str):
@@ -277,22 +283,59 @@ def email_verification_pending(request):
 
 @require_POST
 def resend_verification(request):
+    attempt_id = uuid.uuid4().hex[:12]
+    logger.info(
+        'verification_resend attempt_id=%s stage=request outcome=received',
+        attempt_id,
+    )
     email = (request.POST.get('email') or '').strip().lower()
     if not _valid_email(email):
+        logger.warning(
+            'verification_resend attempt_id=%s stage=input outcome=invalid',
+            attempt_id,
+        )
         messages.error(request, 'Saisis une adresse e-mail valide.')
         return redirect('accounts:email_verification_pending')
 
     request.session['email_verification_pending'] = email
     user = User.objects.filter(email__iexact=email).first()
-    if user and not user.email_verified:
-        send_verification_email(request, user)
+    if user is None:
+        logger.info(
+            'verification_resend attempt_id=%s stage=user_lookup outcome=not_found',
+            attempt_id,
+        )
+    elif user.email_verified:
+        logger.info(
+            'verification_resend attempt_id=%s stage=user_lookup outcome=already_verified',
+            attempt_id,
+        )
+    else:
+        logger.info(
+            'verification_resend attempt_id=%s stage=user_lookup outcome=eligible',
+            attempt_id,
+        )
+        send_result = send_verification_email(
+            request,
+            user,
+            attempt_id=attempt_id,
+        )
+        logger.info(
+            'verification_resend attempt_id=%s stage=send_service outcome=%s',
+            attempt_id,
+            send_result,
+        )
 
     # Keep the same response for unknown, verified, and unverified addresses.
+    # This also intentionally avoids exposing transport results to the browser.
     messages.success(
         request,
         'Si cette adresse correspond à un compte non vérifié, '
         'un nouveau lien a été envoyé si la demande est autorisée. '
         'Vérifie aussi les courriers indésirables.',
+    )
+    logger.info(
+        'verification_resend attempt_id=%s stage=response outcome=redirect',
+        attempt_id,
     )
     return redirect('accounts:email_verification_pending')
 
