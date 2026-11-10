@@ -12,6 +12,9 @@ expertMode = true
 [userenv.shared]
 GROQ_MODEL = "openai/gpt-oss-20b"
 
+[userenv.development]
+EMAIL_DIAGNOSTIC_TRACEBACK = "True"
+
 
 [workflows]
 runButton = "Project"
