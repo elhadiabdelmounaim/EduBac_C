@@ -1,11 +1,17 @@
 """Verify Gmail SMTP authentication and optionally send one test email."""
 
+import logging
+
 from django.conf import settings
 from django.core.mail import EmailMessage, get_connection
 from django.core.management.base import BaseCommand, CommandError
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 
+from config.email_diagnostics import log_email_exception
+
+
+logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     help = (
@@ -31,11 +37,25 @@ class Command(BaseCommand):
             raise CommandError(
                 'EMAIL_HOST_USER et EMAIL_HOST_PASSWORD doivent être configurés.'
             )
+        for setting_name, sender in (
+            ('EMAIL_HOST_USER', settings.EMAIL_HOST_USER),
+            ('DEFAULT_FROM_EMAIL', settings.DEFAULT_FROM_EMAIL),
+        ):
+            try:
+                validate_email(sender)
+            except ValidationError:
+                raise CommandError(f'{setting_name} doit contenir une adresse valide.') from None
 
         connection = get_connection(fail_silently=False)
         try:
             connection.open()
         except Exception as exc:
+            log_email_exception(
+                logger,
+                event='smtp_test',
+                stage='connection_authentication',
+                exc=exc,
+            )
             raise CommandError(
                 'Connexion ou authentification Gmail SMTP échouée '
                 f'({type(exc).__name__}).'
@@ -62,6 +82,12 @@ class Command(BaseCommand):
             )
             sent = message.send(fail_silently=False)
         except Exception as exc:
+            log_email_exception(
+                logger,
+                event='smtp_test',
+                stage='send_test',
+                exc=exc,
+            )
             raise CommandError(
                 f'Échec de l’envoi SMTP ({type(exc).__name__}).'
             ) from None

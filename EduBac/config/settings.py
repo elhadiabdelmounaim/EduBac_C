@@ -169,6 +169,9 @@ EMAIL_USE_SSL = False
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '').strip()
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '').strip()
 EMAIL_TIMEOUT = 20
+EMAIL_DIAGNOSTIC_TRACEBACK = os.getenv(
+    'EMAIL_DIAGNOSTIC_TRACEBACK', 'False'
+).strip().lower() in ('true', '1', 'yes')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 SERVER_EMAIL = EMAIL_HOST_USER
 EMAIL_NOTIFICATIONS_ENABLED = os.getenv('EMAIL_NOTIFICATIONS_ENABLED', 'True').lower() in ('true', '1', 'yes')

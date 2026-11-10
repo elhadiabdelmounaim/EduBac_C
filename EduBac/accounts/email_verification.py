@@ -12,6 +12,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 
+from config.email_diagnostics import log_email_exception
 from config.email_context import email_attempt_id
 
 from .models import User
@@ -243,11 +244,12 @@ def _send_verification_email(request, user, attempt_id):
             raise RuntimeError('Le fournisseur e-mail n’a confirmé aucun envoi.')
     except Exception as exc:
         _release_send_lock(reservation, attempt_id)
-        logger.error(
-            'verification_email attempt_id=%s stage=%s outcome=failed exception_type=%s',
-            attempt_id,
-            stage,
-            type(exc).__name__,
+        log_email_exception(
+            logger,
+            event='verification_email',
+            attempt_id=attempt_id,
+            stage=stage,
+            exc=exc,
         )
         return 'failed'
 
