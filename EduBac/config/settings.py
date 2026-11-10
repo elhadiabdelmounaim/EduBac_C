@@ -186,7 +186,11 @@ SERVER_EMAIL = (
     os.getenv('SERVER_EMAIL', '').strip() or DEFAULT_FROM_EMAIL
 )
 EMAIL_NOTIFICATIONS_ENABLED = os.getenv('EMAIL_NOTIFICATIONS_ENABLED', 'True').lower() in ('true', '1', 'yes')
-SITE_URL = os.getenv('SITE_URL', 'http://127.0.0.1:8000').rstrip('/')
+_site_url_default = 'http://127.0.0.1:8000'
+_replit_dev_domain = os.getenv('REPLIT_DEV_DOMAIN', '').strip().strip('/')
+if os.getenv('DJANGO_PRODUCTION') != '1' and _replit_dev_domain:
+    _site_url_default = f'https://{_replit_dev_domain}'
+SITE_URL = os.getenv('SITE_URL', _site_url_default).strip().rstrip('/')
 _email_expiry_hours = os.getenv('EMAIL_VERIFICATION_EXPIRY_HOURS')
 _email_token_max_age = os.getenv('EMAIL_VERIFICATION_TOKEN_MAX_AGE')
 if _email_expiry_hours is not None:
