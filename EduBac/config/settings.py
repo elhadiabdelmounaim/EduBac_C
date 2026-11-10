@@ -161,24 +161,42 @@ XAI_MODEL = os.getenv('XAI_MODEL', 'grok-3-mini')
 
 # E-mail : Gmail SMTP pour les vérifications, notifications et réinitialisations.
 # ---------------------------------------------------------------------------
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
+EMAIL_BACKEND = os.getenv(
+    'EMAIL_BACKEND',
+    'django.core.mail.backends.smtp.EmailBackend',
+).strip()
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com').strip()
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').strip().lower() in (
+    'true', '1', 'yes',
+)
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False').strip().lower() in (
+    'true', '1', 'yes',
+)
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '').strip()
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '').strip()
-EMAIL_TIMEOUT = 20
+EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', '20'))
 EMAIL_DIAGNOSTIC_TRACEBACK = os.getenv(
     'EMAIL_DIAGNOSTIC_TRACEBACK', 'False'
 ).strip().lower() in ('true', '1', 'yes')
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-SERVER_EMAIL = EMAIL_HOST_USER
-EMAIL_NOTIFICATIONS_ENABLED = os.getenv('EMAIL_NOTIFICATIONS_ENABLED', 'True').lower() in ('true', '1', 'yes')
-SITE_URL = os.getenv('SITE_URL', 'http://127.0.0.1:8000')
-EMAIL_VERIFICATION_TOKEN_MAX_AGE = max(
-    60, int(os.getenv('EMAIL_VERIFICATION_TOKEN_MAX_AGE', '86400'))
+DEFAULT_FROM_EMAIL = (
+    os.getenv('DEFAULT_FROM_EMAIL', '').strip() or EMAIL_HOST_USER
 )
+SERVER_EMAIL = (
+    os.getenv('SERVER_EMAIL', '').strip() or DEFAULT_FROM_EMAIL
+)
+EMAIL_NOTIFICATIONS_ENABLED = os.getenv('EMAIL_NOTIFICATIONS_ENABLED', 'True').lower() in ('true', '1', 'yes')
+SITE_URL = os.getenv('SITE_URL', 'http://127.0.0.1:8000').rstrip('/')
+_email_expiry_hours = os.getenv('EMAIL_VERIFICATION_EXPIRY_HOURS')
+_email_token_max_age = os.getenv('EMAIL_VERIFICATION_TOKEN_MAX_AGE')
+if _email_expiry_hours is not None:
+    EMAIL_VERIFICATION_TOKEN_MAX_AGE = max(
+        60, int(_email_expiry_hours) * 60 * 60
+    )
+else:
+    EMAIL_VERIFICATION_TOKEN_MAX_AGE = max(
+        60, int(_email_token_max_age or '172800')
+    )
 EMAIL_VERIFICATION_RESEND_COOLDOWN = max(
     0, int(os.getenv('EMAIL_VERIFICATION_RESEND_COOLDOWN', '60'))
 )
