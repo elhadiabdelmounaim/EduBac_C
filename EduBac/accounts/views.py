@@ -5,6 +5,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 from django.db.models import Count, Avg, Q
 from django.core import signing
@@ -178,23 +179,10 @@ def _register_account(
 def _send_verification_after_signup(request, user):
     request.session['email_verification_pending'] = user.email
     status = send_verification_email(request, user)
-    if status == 'sent':
-        messages.info(
-            request,
-            f'Compte créé. Un lien de vérification a été envoyé à {user.email}.',
-        )
-    elif status == 'rate_limited':
-        messages.warning(
-            request,
-            'Compte créé. L’envoi est temporairement limité ; réessaie dans un instant.',
-        )
-    else:
-        messages.error(
-            request,
-            'Compte créé, mais le message n’a pas pu être envoyé. '
-            'Vérifie l’adresse et réessaie depuis cette page.',
-        )
-    return redirect('accounts:email_verification_pending')
+    if status not in {'sent', 'rate_limited', 'failed'}:
+        status = 'failed'
+    pending_url = reverse('accounts:email_verification_pending')
+    return redirect(f'{pending_url}?status={status}')
 
 
 def _login_session(request, user):
@@ -358,9 +346,13 @@ def register_teacher(request):
 
 @require_GET
 def email_verification_pending(request):
+    send_status = request.GET.get('status', '')
+    if send_status not in {'sent', 'rate_limited', 'failed'}:
+        send_status = ''
     return render(request, 'accounts/email_verification_pending.html', {
         'page_title': 'Vérification de l’e-mail',
         'email': request.session.get('email_verification_pending', ''),
+        'send_status': send_status,
         'expiry_label': verification_expiry_label(),
         'link_expired': request.GET.get('expired') == '1',
         'invalid_link': request.GET.get('invalid') == '1',

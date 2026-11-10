@@ -5,10 +5,16 @@
         <div class="auth-brand">
             <img src="/static/img/edubac-logo.png" alt="EduBac" class="auth-logo">
             <h1 id="verification-title" class="h4 fw-bold mb-1" style="color:var(--edubac-navy);">
-                {% if link_expired %}Le lien a expiré{% elif invalid_link %}Lien invalide{% else %}Vérifie ta boîte mail{% endif %}
+                {% if send_status == 'failed' %}Compte créé, e-mail non envoyé{% elif send_status == 'rate_limited' %}Envoi temporairement limité{% elif link_expired %}Le lien a expiré{% elif invalid_link %}Lien invalide{% else %}Vérifie ta boîte mail{% endif %}
             </h1>
             <p class="text-muted small mb-0">
-                {% if link_expired %}
+                {% if send_status == 'failed' %}
+                    Le courriel de vérification n’a pas pu être envoyé. Réessaie plus tard ou demande un nouveau lien ci-dessous.
+                {% elif send_status == 'rate_limited' %}
+                    L’envoi du lien est temporairement limité. Réessaie dans un instant.
+                {% elif send_status == 'sent' %}
+                    Le lien de vérification a été envoyé. Clique dessus pour confirmer ton adresse avant de te connecter.
+                {% elif link_expired %}
                     Ce lien de vérification n’est plus valide. Demande-en un nouveau ci-dessous.
                 {% elif invalid_link %}
                     Ce lien de vérification est invalide. Tu peux demander un nouveau lien.

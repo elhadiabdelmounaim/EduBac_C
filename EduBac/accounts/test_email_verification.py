@@ -59,7 +59,7 @@ class EmailVerificationTests(TestCase):
                 response = self.register(role=role, email=email)
                 self.assertRedirects(
                     response,
-                    reverse('accounts:email_verification_pending'),
+                    f"{reverse('accounts:email_verification_pending')}?status=sent",
                     fetch_redirect_response=False,
                 )
                 user = User.objects.get(email=email)
@@ -421,11 +421,33 @@ class EmailVerificationTests(TestCase):
 
         self.assertRedirects(
             response,
-            reverse('accounts:email_verification_pending'),
+            f"{reverse('accounts:email_verification_pending')}?status=sent",
             fetch_redirect_response=False,
         )
         self.assertTrue(
             User.objects.filter(email='csrf-valid@example.test').exists()
+        )
+
+    def test_signup_email_failure_is_visible_on_the_pending_page(self):
+        with patch(
+            'accounts.email_verification.EmailMultiAlternatives.send',
+            side_effect=OSError('private SMTP failure'),
+        ):
+            response = self.register(email='preview-mail-failure@example.test')
+
+        pending_url = (
+            f"{reverse('accounts:email_verification_pending')}?status=failed"
+        )
+        self.assertRedirects(
+            response,
+            pending_url,
+            fetch_redirect_response=False,
+        )
+        pending_response = self.client.get(pending_url)
+        self.assertContains(pending_response, 'Compte créé, e-mail non envoyé')
+        self.assertContains(
+            pending_response,
+            'Le courriel de vérification n’a pas pu être envoyé.',
         )
 
     def test_registration_rejects_an_existing_verified_email_without_changing_account(self):
@@ -519,7 +541,10 @@ class EmailVerificationTests(TestCase):
         pending = self.client.get(response['Location'])
         user = User.objects.get(email='mail-failure@example.test')
         self.assertEqual(pending.status_code, 200)
-        self.assertContains(pending, 'le message n’a pas pu être envoyé')
+        self.assertContains(
+            pending,
+            'Le courriel de vérification n’a pas pu être envoyé.',
+        )
         self.assertFalse(user.email_verified)
         self.assertNotIn('user_id', self.client.session)
 
