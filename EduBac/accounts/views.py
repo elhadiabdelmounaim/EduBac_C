@@ -8,6 +8,7 @@ from django.core.validators import validate_email
 from django.views.decorators.http import require_GET, require_POST
 from django.db.models import Count, Avg, Q
 from django.core import signing
+from django.db import IntegrityError, transaction
 
 from .models import User, StudentProfile, TeacherProfile
 from .decorators import login_required_simple, student_required, teacher_required
@@ -74,6 +75,104 @@ def _valid_email(value):
     except ValidationError:
         return False
     return True
+
+
+def _find_user_by_email(email):
+    return User.objects.filter(email__iexact=email).first()
+
+
+def _duplicate_registration_response(request, user, role):
+    if not user.email_verified:
+        request.session['email_verification_pending'] = user.email
+        messages.info(
+            request,
+            'Cette adresse correspond déjà à un compte non vérifié. '
+            'Aucun nouveau compte n’a été créé. Tu peux demander un nouveau '
+            'lien de vérification ci-dessous.',
+        )
+        return redirect('accounts:email_verification_pending')
+
+    context = {
+        'page_title': (
+            'Inscription élève' if role == 'student'
+            else 'Inscription enseignant'
+        ),
+        'error': (
+            'Cette adresse e-mail est déjà utilisée. Connecte-toi avec ce '
+            'compte ou utilise une autre adresse e-mail.'
+        ),
+    }
+    if role == 'student':
+        context['niveaux'] = StudentProfile.NIVEAU_CHOICES
+        template = 'accounts/register_student.html'
+    else:
+        template = 'accounts/register_teacher.html'
+    return render(request, template, context)
+
+
+def _create_registration_account(
+    email,
+    password,
+    first_name,
+    last_name,
+    role,
+    niveau='tronc_commun',
+):
+    user = User(
+        username=_make_username(first_name, last_name, email),
+        email=email,
+        email_verified=False,
+        role=role,
+        first_name=first_name or email.split('@')[0],
+        last_name=last_name,
+    )
+    user.set_password(password)
+
+    # Keep the user and its role-specific profile as one database operation.
+    with transaction.atomic():
+        user.save()
+        if role == 'student':
+            StudentProfile.objects.create(user=user, niveau=niveau)
+        else:
+            TeacherProfile.objects.create(
+                user=user,
+                subject='Mathématiques',
+            )
+    return user
+
+
+def _register_account(
+    request,
+    *,
+    email,
+    password,
+    first_name,
+    last_name,
+    role,
+    niveau='tronc_commun',
+):
+    existing = _find_user_by_email(email)
+    if existing is not None:
+        return _duplicate_registration_response(request, existing, role)
+
+    try:
+        user = _create_registration_account(
+            email,
+            password,
+            first_name,
+            last_name,
+            role,
+            niveau,
+        )
+    except IntegrityError:
+        # Another request may have inserted this address after the lookup.
+        # Catch outside atomic(), then re-read the committed winner.
+        existing = _find_user_by_email(email)
+        if existing is None:
+            raise
+        return _duplicate_registration_response(request, existing, role)
+
+    return _send_verification_after_signup(request, user)
 
 
 def _send_verification_after_signup(request, user):
@@ -193,22 +292,16 @@ def register_student(request):
             error = 'Les mots de passe ne correspondent pas.'
         elif len(password) < 6:
             error = 'Le mot de passe doit contenir au moins 6 caractères.'
-        elif User.objects.filter(email__iexact=email).exists():
-            error = 'Cet e-mail est déjà utilisé.'
         else:
-            username = _make_username(first_name, last_name, email)
-            user = User(
-                username=username,
+            return _register_account(
+                request,
                 email=email,
-                email_verified=False,
-                role='student',  # forcé backend
-                first_name=first_name or full_name or email.split('@')[0],
+                password=password,
+                first_name=first_name or full_name,
                 last_name=last_name,
+                role='student',
+                niveau=niveau,
             )
-            user.set_password(password)
-            user.save()
-            StudentProfile.objects.create(user=user, niveau=niveau)
-            return _send_verification_after_signup(request, user)
 
     return render(request, 'accounts/register_student.html', {
         'page_title': 'Inscription élève',
@@ -247,22 +340,15 @@ def register_teacher(request):
             error = 'Les mots de passe ne correspondent pas.'
         elif len(password) < 6:
             error = 'Le mot de passe doit contenir au moins 6 caractères.'
-        elif User.objects.filter(email__iexact=email).exists():
-            error = 'Cet e-mail est déjà utilisé.'
         else:
-            username = _make_username(first_name, last_name, email)
-            user = User(
-                username=username,
+            return _register_account(
+                request,
                 email=email,
-                email_verified=False,
-                role='teacher',  # forcé backend
-                first_name=first_name or full_name or email.split('@')[0],
+                password=password,
+                first_name=first_name or full_name,
                 last_name=last_name,
+                role='teacher',
             )
-            user.set_password(password)
-            user.save()
-            TeacherProfile.objects.create(user=user, subject='Mathématiques')
-            return _send_verification_after_signup(request, user)
 
     return render(request, 'accounts/register_teacher.html', {
         'page_title': 'Inscription enseignant',

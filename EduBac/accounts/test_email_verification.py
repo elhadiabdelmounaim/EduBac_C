@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from django.core import mail
 from django.core.cache import cache
+from django.db import IntegrityError
 from django.test import Client, RequestFactory, TestCase, override_settings
 from django.urls import reverse
 
@@ -385,6 +386,86 @@ class EmailVerificationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Saisis une adresse e-mail valide')
         self.assertFalse(User.objects.filter(email='not-an-email').exists())
+
+    def test_registration_rejects_an_existing_verified_email_without_changing_account(self):
+        existing = User.objects.create_user(
+            username='existing_verified_registration',
+            email='already-used@example.test',
+            password='OriginalPass123!',
+        )
+        original_password = existing.password
+
+        response = self.register(email='ALREADY-USED@example.test')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Cette adresse e-mail est déjà utilisée')
+        self.assertContains(response, 'Connecte-toi avec ce compte')
+        self.assertEqual(User.objects.filter(email__iexact=existing.email).count(), 1)
+        existing.refresh_from_db()
+        self.assertEqual(existing.password, original_password)
+        self.assertTrue(existing.check_password('OriginalPass123!'))
+
+    def test_registration_existing_unverified_email_offers_safe_resend_flow(self):
+        existing = User.objects.create_user(
+            username='existing_unverified_registration',
+            email='pending-registration@example.test',
+            password='OriginalPass123!',
+            email_verified=False,
+        )
+
+        response = self.register(email=existing.email.upper())
+
+        self.assertRedirects(
+            response,
+            reverse('accounts:email_verification_pending'),
+            fetch_redirect_response=False,
+        )
+        pending = self.client.get(response['Location'])
+        self.assertContains(pending, 'Aucun nouveau compte n’a été créé')
+        self.assertContains(pending, existing.email)
+        self.assertEqual(User.objects.filter(email__iexact=existing.email).count(), 1)
+        self.assertEqual(len(mail.outbox), 0)
+
+        resend_response = self.client.post(
+            reverse('accounts:resend_verification'),
+            {'email': existing.email},
+        )
+        self.assertEqual(resend_response.status_code, 302)
+        self.assertEqual(len(mail.outbox), 1)
+        existing.refresh_from_db()
+        self.assertFalse(existing.email_verified)
+        self.assertTrue(existing.check_password('OriginalPass123!'))
+
+    def test_registration_catches_integrity_error_from_simultaneous_signup(self):
+        existing = User.objects.create_user(
+            username='race_winner',
+            email='race-winner@example.test',
+            password='WinnerPass123!',
+            email_verified=False,
+        )
+
+        # Model the other request committing after the initial lookup and
+        # before this request attempts its atomic insert.
+        with (
+            patch(
+                'accounts.views._find_user_by_email',
+                side_effect=[None, existing],
+            ),
+            patch(
+                'accounts.views._create_registration_account',
+                side_effect=IntegrityError('duplicate email'),
+            ),
+        ):
+            response = self.register(email=existing.email)
+
+        self.assertRedirects(
+            response,
+            reverse('accounts:email_verification_pending'),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(User.objects.filter(email__iexact=existing.email).count(), 1)
+        self.assertEqual(len(mail.outbox), 0)
+        self.assertNotIn('user_id', self.client.session)
 
     @patch(
         'accounts.email_verification.EmailMultiAlternatives.send',
