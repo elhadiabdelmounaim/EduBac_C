@@ -7,6 +7,7 @@ from django.core.mail import EmailMultiAlternatives, EmailMessage
 from django.core.management import call_command
 from django.test import SimpleTestCase, override_settings
 
+from config.email_context import email_attempt_id
 from config.email_backend import (
     BREVO_ACCOUNT_ENDPOINT,
     BREVO_EMAIL_ENDPOINT,
@@ -112,17 +113,67 @@ class BrevoAPIEmailBackendTests(SimpleTestCase):
             headers={},
             text='private provider response',
         )
+        trace_token = email_attempt_id.set('trace-http-401')
         with patch(
             'config.email_backend.requests.post',
             return_value=response,
         ):
-            with self.assertRaises(BrevoAPIError) as raised:
-                BrevoAPIEmailBackend().send_messages(
-                    [EmailMessage('Subject', 'Body', to=['to@example.test'])]
-                )
+            try:
+                with self.assertLogs(
+                    'config.email_backend',
+                    level='INFO',
+                ) as diagnostics:
+                    with self.assertRaises(BrevoAPIError) as raised:
+                        BrevoAPIEmailBackend().send_messages(
+                            [EmailMessage(
+                                'Private subject',
+                                'Private body',
+                                to=['private-recipient@example.test'],
+                            )]
+                        )
+            finally:
+                email_attempt_id.reset(trace_token)
 
         self.assertEqual(raised.exception.status_code, 401)
         self.assertNotIn('private provider response', str(raised.exception))
+        log_output = '\n'.join(diagnostics.output)
+        self.assertIn('http_status=401', log_output)
+        self.assertIn('outcome=rejected', log_output)
+        self.assertNotIn('private-recipient@example.test', log_output)
+        self.assertNotIn('Private subject', log_output)
+        self.assertNotIn('Private body', log_output)
+
+    def test_accepted_response_logs_http_status_without_message_data(self):
+        response = SimpleNamespace(status_code=201, headers={})
+        trace_token = email_attempt_id.set('trace-http-201')
+        try:
+            with (
+                patch(
+                    'config.email_backend.requests.post',
+                    return_value=response,
+                ),
+                self.assertLogs(
+                    'config.email_backend',
+                    level='INFO',
+                ) as diagnostics,
+            ):
+                sent = BrevoAPIEmailBackend().send_messages(
+                    [EmailMessage(
+                        'Private success subject',
+                        'Private success body',
+                        to=['private-success@example.test'],
+                    )]
+                )
+        finally:
+            email_attempt_id.reset(trace_token)
+
+        self.assertEqual(sent, 1)
+        log_output = '\n'.join(diagnostics.output)
+        self.assertIn('http_status=201', log_output)
+        self.assertIn('outcome=accepted', log_output)
+        self.assertNotIn('private-success@example.test', log_output)
+        self.assertNotIn('Private success subject', log_output)
+        self.assertNotIn('Private success body', log_output)
 
     def test_network_failure_is_safe_and_not_retried(self):
         with patch(

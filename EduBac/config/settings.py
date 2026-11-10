@@ -233,7 +233,7 @@ CHANNEL_LAYERS = {
     },
 }
 
-# Quiz timing logs contain counts/durations only, never prompts or API keys.
+# Quiz and email diagnostics exclude prompts, credentials, tokens, and recipients.
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

@@ -179,6 +179,79 @@ class EmailVerificationTests(TestCase):
             'un nouveau lien a été envoyé si la demande est autorisée',
         )
 
+    def test_resend_logs_safe_stages_without_email_or_token(self):
+        email = 'safe-log-resend@example.test'
+        user = User.objects.create_user(
+            username='safe_log_resend',
+            email=email,
+            password='LongPass123!',
+            email_verified=False,
+        )
+
+        with (
+            self.assertLogs('accounts.views', level='INFO') as view_logs,
+            self.assertLogs(
+                'accounts.email_verification',
+                level='INFO',
+            ) as service_logs,
+        ):
+            response = self.client.post(
+                reverse('accounts:resend_verification'),
+                {'email': user.email},
+                follow=True,
+            )
+
+        diagnostics = '\n'.join(view_logs.output + service_logs.output)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('stage=user_lookup outcome=eligible', diagnostics)
+        self.assertIn('stage=send_service outcome=sent', diagnostics)
+        self.assertIn(
+            'stage=django_mail_send outcome=backend_returned_one',
+            diagnostics,
+        )
+        self.assertNotIn(email, diagnostics)
+        self.assertNotIn(self.verification_path().split('/')[-2], diagnostics)
+        self.assertContains(
+            response,
+            'Si cette adresse correspond à un compte non vérifié',
+        )
+
+    @patch(
+        'accounts.email_verification.EmailMultiAlternatives.send',
+        side_effect=OSError('private diagnostic detail'),
+    )
+    def test_resend_failure_logs_stage_and_type_without_private_details(self, _send):
+        email = 'safe-log-failure@example.test'
+        User.objects.create_user(
+            username='safe_log_failure',
+            email=email,
+            password='LongPass123!',
+            email_verified=False,
+        )
+
+        with self.assertLogs(
+            'accounts.email_verification',
+            level='ERROR',
+        ) as service_logs:
+            response = self.client.post(
+                reverse('accounts:resend_verification'),
+                {'email': email},
+                follow=True,
+            )
+
+        diagnostics = '\n'.join(service_logs.output)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            'stage=django_mail_send outcome=failed exception_type=OSError',
+            diagnostics,
+        )
+        self.assertNotIn(email, diagnostics)
+        self.assertNotIn('private diagnostic detail', diagnostics)
+        self.assertContains(
+            response,
+            'Si cette adresse correspond à un compte non vérifié',
+        )
+
     @override_settings(EMAIL_VERIFICATION_RESEND_COOLDOWN=0)
     def test_resend_can_send_again_after_cooldown(self):
         user = User.objects.create_user(
