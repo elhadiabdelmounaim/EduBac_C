@@ -1,5 +1,7 @@
 import re
 import time
+from datetime import datetime, timedelta, timezone as datetime_timezone
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.core import mail
@@ -166,17 +168,36 @@ class EmailVerificationTests(TestCase):
             email_verified=False,
         )
         url = reverse('accounts:resend_verification')
-        response = self.client.post(url, {'email': user.email}, follow=True)
+        response = self.client.post(
+            url,
+            {'email': user.email},
+            follow=True,
+        )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertIn('Si cette adresse correspond à un compte non vérifié', response.content.decode())
+        self.assertIn(
+            'Si cette adresse correspond à un compte non vérifié',
+            response.content.decode(),
+        )
 
-        response = self.client.post(url, {'email': user.email}, follow=True)
+        with self.assertLogs(
+            'accounts.email_verification',
+            level='INFO',
+        ) as throttle_logs:
+            response = self.client.post(
+                url,
+                {'email': user.email},
+                follow=True,
+            )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(mail.outbox), 1)
         self.assertContains(
             response,
             'un nouveau lien a été envoyé si la demande est autorisée',
+        )
+        self.assertIn(
+            'reason=email_cooldown remaining_seconds=',
+            '\n'.join(throttle_logs.output),
         )
 
     def test_resend_logs_safe_stages_without_email_or_token(self):
@@ -264,6 +285,100 @@ class EmailVerificationTests(TestCase):
         self.client.post(url, {'email': user.email})
         self.client.post(url, {'email': user.email})
         self.assertEqual(len(mail.outbox), 2)
+
+    @override_settings(EMAIL_VERIFICATION_RESEND_COOLDOWN=60)
+    @patch('accounts.email_verification.timezone.now')
+    def test_resend_is_allowed_as_soon_as_cooldown_expires(self, mock_now):
+        user = User.objects.create_user(
+            username='resend_after_expiry',
+            email='resend-after-expiry@example.test',
+            password='LongPass123!',
+            email_verified=False,
+        )
+        url = reverse('accounts:resend_verification')
+        current_time = datetime(
+            2026,
+            11,
+            10,
+            12,
+            0,
+            tzinfo=datetime_timezone.utc,
+        )
+        mock_now.return_value = current_time
+
+        first_response = self.client.post(url, {'email': user.email})
+        mock_now.return_value = current_time + timedelta(seconds=61)
+        second_response = self.client.post(url, {'email': user.email})
+
+        self.assertEqual(first_response.status_code, 302)
+        self.assertEqual(second_response.status_code, 302)
+        self.assertEqual(len(mail.outbox), 2)
+
+    def test_brevo_acceptance_starts_the_configured_email_cooldown(self):
+        user = User.objects.create_user(
+            username='brevo_acceptance_cooldown',
+            email='brevo-accepted@example.test',
+            password='LongPass123!',
+            email_verified=False,
+        )
+        url = reverse('accounts:resend_verification')
+
+        with (
+            override_settings(
+                EMAIL_BACKEND='config.email_backend.BrevoAPIEmailBackend',
+                BREVO_API_KEY='test-api-key',
+                EMAIL_VERIFICATION_RESEND_COOLDOWN=60,
+            ),
+            patch(
+                'config.email_backend.requests.post',
+                return_value=SimpleNamespace(status_code=201, headers={}),
+            ) as brevo_post,
+        ):
+            first_response = self.client.post(url, {'email': user.email})
+            with self.assertLogs(
+                'accounts.email_verification',
+                level='INFO',
+            ) as throttle_logs:
+                second_response = self.client.post(url, {'email': user.email})
+
+        self.assertEqual(first_response.status_code, 302)
+        self.assertEqual(second_response.status_code, 302)
+        self.assertEqual(brevo_post.call_count, 1)
+        self.assertIn(
+            'reason=email_cooldown remaining_seconds=',
+            '\n'.join(throttle_logs.output),
+        )
+
+    def test_brevo_rejection_does_not_start_email_cooldown(self):
+        user = User.objects.create_user(
+            username='brevo_rejection_retry',
+            email='brevo-retry@example.test',
+            password='LongPass123!',
+            email_verified=False,
+        )
+        url = reverse('accounts:resend_verification')
+        responses = [
+            SimpleNamespace(status_code=401, headers={}),
+            SimpleNamespace(status_code=201, headers={}),
+        ]
+
+        with (
+            override_settings(
+                EMAIL_BACKEND='config.email_backend.BrevoAPIEmailBackend',
+                BREVO_API_KEY='test-api-key',
+                EMAIL_VERIFICATION_RESEND_COOLDOWN=60,
+            ),
+            patch(
+                'config.email_backend.requests.post',
+                side_effect=responses,
+            ) as brevo_post,
+        ):
+            failed_response = self.client.post(url, {'email': user.email})
+            retry_response = self.client.post(url, {'email': user.email})
+
+        self.assertEqual(failed_response.status_code, 302)
+        self.assertEqual(retry_response.status_code, 302)
+        self.assertEqual(brevo_post.call_count, 2)
 
     def test_invalid_email_is_rejected_without_creating_an_account(self):
         response = self.register(email='not-an-email')
