@@ -93,7 +93,9 @@ Avec `SECURE_HSTS_SECONDS=0`, `check --deploy` signale l’absence de HSTS. C’
 
 Les clés IA sont facultatives pour le fonctionnement du site, mais la génération IA exige une clé du fournisseur choisi (`GROQ_API_KEY` par défaut; alternatives dans `.env.example`). Les comptes PythonAnywhere gratuits peuvent limiter les connexions sortantes : vérifiez l’accès aux domaines des API utilisées avant d’activer cette fonction. Le modèle ne contient aucune clé.
 
-Les courriels réels ne sont pas configurés par défaut : le backend initial affiche les messages dans la console. Pour envoyer des courriels, configurez un serveur SMTP autorisé par votre offre et renseignez ses paramètres privés dans `.env`; ne mettez pas de mot de passe dans Git.
+Les courriels utilisent Gmail SMTP (`smtp.gmail.com`, port `587`, TLS). Configurez `EMAIL_HOST_USER` avec l’adresse Gmail du compte et `EMAIL_HOST_PASSWORD` avec son mot de passe d’application Google — jamais le mot de passe habituel du compte. Renseignez ces valeurs uniquement dans l’environnement privé, et non dans Git.
+
+PythonAnywhere peut limiter les connexions sortantes SMTP selon l’offre et le compte. Depuis l’environnement PythonAnywhere, lancez `python manage.py check_email` pour vérifier la connexion et l’authentification sans envoyer de message. Après réussite, un administrateur peut envoyer un seul test avec `python manage.py check_email --send-test adresse-de-test@example.com`. Ne considérez pas la livraison comme vérifiée tant que ce test réel n’a pas été accepté par Gmail et reçu à l’adresse choisie.
 
 ## 5. Base de données et conservation des fichiers
 

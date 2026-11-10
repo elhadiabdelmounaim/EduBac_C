@@ -12,11 +12,6 @@ expertMode = true
 [userenv.shared]
 GROQ_MODEL = "openai/gpt-oss-20b"
 
-[userenv.production]
-DEFAULT_FROM_EMAIL = "elhadiabdelmounaim18@gmail.com"
-
-[userenv.development]
-EMAIL_BACKEND = "config.email_backend.BrevoAPIEmailBackend"
 
 [workflows]
 runButton = "Project"

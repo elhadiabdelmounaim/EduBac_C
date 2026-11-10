@@ -29,15 +29,9 @@ def _csv(name):
 
 DEBUG = False
 
-# Production mail must use Brevo's HTTPS API, never SMTP or the console backend.
-EMAIL_BACKEND = 'config.email_backend.BrevoAPIEmailBackend'
-if not BREVO_API_KEY:
+if not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD:
     raise ImproperlyConfigured(
-        'Définissez BREVO_API_KEY dans l’environnement privé de production.'
-    )
-if not os.getenv('DEFAULT_FROM_EMAIL', '').strip():
-    raise ImproperlyConfigured(
-        'Définissez DEFAULT_FROM_EMAIL avec un expéditeur vérifié dans Brevo.'
+        'Définissez EMAIL_HOST_USER et EMAIL_HOST_PASSWORD dans l’environnement privé.'
     )
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', '').strip()

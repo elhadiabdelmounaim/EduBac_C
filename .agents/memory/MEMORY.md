@@ -17,4 +17,4 @@
 - [HTML number inputs and French locales](quiz-number-localization.md) — emit dot decimals; French formatting can turn a valid Django `Decimal` into an empty browser number field.
 - [Private uploaded media](private-uploaded-media.md) — never expose the whole media directory publicly; classroom uploads and results need Django permission checks.
 - [Email verification compatibility](email-verification.md) — existing accounts stay verified; only new password signups require email confirmation.
-- [Brevo email API](brevo-api-email.md) — use Brevo REST over HTTPS; configure `BREVO_API_KEY` separately on PythonAnywhere.
+- [Gmail SMTP email](gmail-smtp-email.md) — use Gmail SMTP with an App Password from environment secrets; test each host before claiming delivery works.

@@ -99,7 +99,9 @@ Générez une clé avec `python -c "from django.core.management.utils import get
 
 Ajoutez les domaines exacts à `ALLOWED_HOSTS` et les origines HTTPS complètes à `CSRF_TRUSTED_ORIGINS`, séparés par des virgules. Activez et vérifiez HTTPS avant de garder `SECURE_SSL_REDIRECT=True`. Laissez HSTS à zéro jusqu’à ce que HTTPS et le périmètre des sous-domaines soient confirmés; n’activez pas `includeSubDomains` ou `preload` uniquement pour supprimer un avertissement.
 
-La génération IA nécessite une clé privée du fournisseur choisi (`GROQ_API_KEY` par défaut). Les courriels réels nécessitent un serveur SMTP autorisé par l’offre. Aucun des deux services n’est requis pour les pages de base.
+La génération IA nécessite une clé privée du fournisseur choisi (`GROQ_API_KEY` par défaut). Les courriels utilisent Gmail SMTP et nécessitent `EMAIL_HOST_USER` ainsi qu’un mot de passe d’application Google stocké dans `EMAIL_HOST_PASSWORD`. Aucun des deux services n’est requis pour les pages de base.
+
+L’accès sortant à `smtp.gmail.com:587` dépend de l’offre et de la configuration du compte PythonAnywhere. Vérifiez-le depuis cet environnement avec `python manage.py check_email`, qui n’envoie aucun message. Si la connexion et l’authentification réussissent, un administrateur peut envoyer un seul test à l’adresse choisie avec `python manage.py check_email --send-test adresse-de-test@example.com`. La livraison n’est confirmée qu’après réception du message.
 
 ## 5. Transférer la base et les médias sans perte
 

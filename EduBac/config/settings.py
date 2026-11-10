@@ -159,25 +159,18 @@ OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'gpt-4o-mini')
 XAI_API_KEY = os.getenv('XAI_API_KEY', '')
 XAI_MODEL = os.getenv('XAI_MODEL', 'grok-3-mini')
 
-# E-mail : console en développement, API Brevo en production.
+# E-mail : Gmail SMTP pour les vérifications, notifications et réinitialisations.
 # ---------------------------------------------------------------------------
-_DEFAULT_EMAIL_BACKEND = (
-    'config.email_backend.BrevoAPIEmailBackend'
-    if os.getenv('DJANGO_PRODUCTION') == '1'
-    else 'django.core.mail.backends.console.EmailBackend'
-)
-EMAIL_BACKEND = os.getenv(
-    'EMAIL_BACKEND',
-    _DEFAULT_EMAIL_BACKEND,
-)
-BREVO_API_KEY = os.getenv('BREVO_API_KEY', '').strip()
-BREVO_API_TIMEOUT = max(1, int(os.getenv('BREVO_API_TIMEOUT', '15')))
-EMAIL_SENDER_NAME = os.getenv('EMAIL_SENDER_NAME', 'EduBac').strip() or 'EduBac'
-DEFAULT_FROM_EMAIL = os.getenv(
-    'DEFAULT_FROM_EMAIL',
-    'EduBac <noreply@edubac.ma>',
-).strip()
-SERVER_EMAIL = DEFAULT_FROM_EMAIL
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '').strip()
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '').strip()
+EMAIL_TIMEOUT = 20
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+SERVER_EMAIL = EMAIL_HOST_USER
 EMAIL_NOTIFICATIONS_ENABLED = os.getenv('EMAIL_NOTIFICATIONS_ENABLED', 'True').lower() in ('true', '1', 'yes')
 SITE_URL = os.getenv('SITE_URL', 'http://127.0.0.1:8000')
 EMAIL_VERIFICATION_TOKEN_MAX_AGE = max(

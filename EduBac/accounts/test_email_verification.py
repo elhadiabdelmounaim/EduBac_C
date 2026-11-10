@@ -1,7 +1,6 @@
 import re
 import time
 from datetime import datetime, timedelta, timezone as datetime_timezone
-from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.core import mail
@@ -315,10 +314,10 @@ class EmailVerificationTests(TestCase):
         self.assertEqual(second_response.status_code, 302)
         self.assertEqual(len(mail.outbox), 2)
 
-    def test_brevo_acceptance_starts_the_configured_email_cooldown(self):
+    def test_successful_email_starts_the_configured_email_cooldown(self):
         user = User.objects.create_user(
-            username='brevo_acceptance_cooldown',
-            email='brevo-accepted@example.test',
+            username='smtp_acceptance_cooldown',
+            email='smtp-accepted@example.test',
             password='LongPass123!',
             email_verified=False,
         )
@@ -326,14 +325,12 @@ class EmailVerificationTests(TestCase):
 
         with (
             override_settings(
-                EMAIL_BACKEND='config.email_backend.BrevoAPIEmailBackend',
-                BREVO_API_KEY='test-api-key',
                 EMAIL_VERIFICATION_RESEND_COOLDOWN=60,
             ),
             patch(
-                'config.email_backend.requests.post',
-                return_value=SimpleNamespace(status_code=201, headers={}),
-            ) as brevo_post,
+                'accounts.email_verification.EmailMultiAlternatives.send',
+                return_value=1,
+            ) as email_send,
         ):
             first_response = self.client.post(url, {'email': user.email})
             with self.assertLogs(
@@ -344,42 +341,36 @@ class EmailVerificationTests(TestCase):
 
         self.assertEqual(first_response.status_code, 302)
         self.assertEqual(second_response.status_code, 302)
-        self.assertEqual(brevo_post.call_count, 1)
+        self.assertEqual(email_send.call_count, 1)
         self.assertIn(
             'reason=email_cooldown remaining_seconds=',
             '\n'.join(throttle_logs.output),
         )
 
-    def test_brevo_rejection_does_not_start_email_cooldown(self):
+    def test_smtp_rejection_does_not_start_email_cooldown(self):
         user = User.objects.create_user(
-            username='brevo_rejection_retry',
-            email='brevo-retry@example.test',
+            username='smtp_rejection_retry',
+            email='smtp-retry@example.test',
             password='LongPass123!',
             email_verified=False,
         )
         url = reverse('accounts:resend_verification')
-        responses = [
-            SimpleNamespace(status_code=401, headers={}),
-            SimpleNamespace(status_code=201, headers={}),
-        ]
 
         with (
             override_settings(
-                EMAIL_BACKEND='config.email_backend.BrevoAPIEmailBackend',
-                BREVO_API_KEY='test-api-key',
                 EMAIL_VERIFICATION_RESEND_COOLDOWN=60,
             ),
             patch(
-                'config.email_backend.requests.post',
-                side_effect=responses,
-            ) as brevo_post,
+                'accounts.email_verification.EmailMultiAlternatives.send',
+                side_effect=[RuntimeError('private SMTP response'), 1],
+            ) as email_send,
         ):
             failed_response = self.client.post(url, {'email': user.email})
             retry_response = self.client.post(url, {'email': user.email})
 
         self.assertEqual(failed_response.status_code, 302)
         self.assertEqual(retry_response.status_code, 302)
-        self.assertEqual(brevo_post.call_count, 2)
+        self.assertEqual(email_send.call_count, 2)
 
     def test_invalid_email_is_rejected_without_creating_an_account(self):
         response = self.register(email='not-an-email')
