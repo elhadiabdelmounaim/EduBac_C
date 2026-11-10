@@ -387,6 +387,56 @@ class EmailVerificationTests(TestCase):
         self.assertContains(response, 'Saisis une adresse e-mail valide')
         self.assertFalse(User.objects.filter(email='not-an-email').exists())
 
+    def test_registration_without_csrf_cookie_is_rejected_before_view(self):
+        csrf_client = Client(enforce_csrf_checks=True)
+        with self.assertLogs('django.security.csrf', level='WARNING') as csrf_logs:
+            response = csrf_client.post(
+                reverse('accounts:register_student'),
+                {
+                    'name': 'Amina El Amrani',
+                    'email': 'csrf-missing@example.test',
+                    'niveau': 'tronc_commun',
+                    'password': 'LongPass123!',
+                    'password2': 'LongPass123!',
+                },
+            )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(
+            User.objects.filter(email='csrf-missing@example.test').exists()
+        )
+        self.assertIn('CSRF cookie not set', '\n'.join(csrf_logs.output))
+
+    def test_registration_with_rendered_csrf_token_succeeds(self):
+        csrf_client = Client(enforce_csrf_checks=True)
+        url = reverse('accounts:register_student')
+
+        form_response = csrf_client.get(url)
+        self.assertEqual(form_response.status_code, 200)
+        self.assertContains(form_response, 'name="csrfmiddlewaretoken"')
+        csrf_token = csrf_client.cookies['csrftoken'].value
+
+        response = csrf_client.post(
+            url,
+            {
+                'name': 'Amina El Amrani',
+                'email': 'csrf-valid@example.test',
+                'niveau': 'tronc_commun',
+                'password': 'LongPass123!',
+                'password2': 'LongPass123!',
+                'csrfmiddlewaretoken': csrf_token,
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('accounts:email_verification_pending'),
+            fetch_redirect_response=False,
+        )
+        self.assertTrue(
+            User.objects.filter(email='csrf-valid@example.test').exists()
+        )
+
     def test_registration_rejects_an_existing_verified_email_without_changing_account(self):
         existing = User.objects.create_user(
             username='existing_verified_registration',
