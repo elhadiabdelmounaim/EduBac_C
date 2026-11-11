@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+    <header class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <p class="text-uppercase small fw-semibold text-muted mb-1">Espace administrateur</p>
+            <h1 class="h3 mb-0">Administration EduBac</h1>
+        </div>
+        {% if user.is_teacher %}
+        <a href="{% url 'classrooms:list' %}" class="btn btn-outline-primary">Gérer les classes</a>
+        {% endif %}
+    </header>
+
+    <section class="card border-0 shadow-sm" aria-labelledby="pending-title">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 id="pending-title" class="h5 mb-0">Demandes d’inscription</h2>
+                <span class="badge text-bg-primary">{{ pending_count }} en attente</span>
+            </div>
+
+            {% if registrations %}
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">Élève</th>
+                            <th scope="col">Nom d’utilisateur</th>
+                            <th scope="col">Classe</th>
+                            <th scope="col">Reçue le</th>
+                            <th scope="col">Décision</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for registration in registrations %}
+                        <tr>
+                            <td>{{ registration.user.get_full_name }}</td>
+                            <td>{{ registration.user.username }}</td>
+                            <td>
+                                {% if registration.membership %}
+                                    {{ registration.membership.classroom.name }}
+                                {% else %}
+                                    <span class="text-danger">Classe non associée</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ registration.user.date_joined|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <form method="post" action="{% url 'accounts:review_registration' registration.user.pk %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="approve">
+                                        <button type="submit" class="btn btn-sm btn-success">Accepter</button>
+                                    </form>
+                                    <form method="post" action="{% url 'accounts:review_registration' registration.user.pk %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="reject">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Refuser et supprimer</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">Aucune demande d’inscription en attente.</p>
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}

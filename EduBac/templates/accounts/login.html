@@ -7,15 +7,15 @@
         <div class="auth-brand">
             <img src="/static/img/edubac-logo.png" alt="EduBac" class="auth-logo float-soft">
             <h1 class="h4 fw-bold mb-1" style="color:var(--edubac-navy);">Connexion</h1>
-            <p class="text-muted small mb-0">E-mail et mot de passe — le rôle est détecté automatiquement</p>
+            <p class="text-muted small mb-0">Nom d’utilisateur ou e-mail et mot de passe</p>
         </div>
         {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
         <form method="post" action="{% url 'accounts:login' %}">
             {% csrf_token %}
             <div class="mb-3">
-                <label class="form-label small fw-semibold">E-mail</label>
-                <input type="email" name="email" class="form-control" required autofocus
-                       placeholder="votre@email.com" autocomplete="username">
+                <label class="form-label small fw-semibold">Nom d’utilisateur ou e-mail</label>
+                <input type="text" name="username" class="form-control" required autofocus
+                       placeholder="Votre nom d’utilisateur" autocomplete="username">
             </div>
             <div class="mb-3">
                 <label class="form-label small fw-semibold">Mot de passe</label>
@@ -33,8 +33,6 @@
         <p class="text-center small mb-0 text-muted">
             Pas encore de compte ?
             <a href="{% url 'accounts:register_student' %}" class="fw-semibold">Inscription élève</a>
-            ·
-            <a href="{% url 'accounts:register_teacher' %}" class="fw-semibold">Inscription enseignant</a>
         </p>
     </div>
 </div>

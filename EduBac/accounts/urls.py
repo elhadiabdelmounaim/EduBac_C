@@ -18,6 +18,12 @@ urlpatterns = [
     path('inscription/choix/', views.register_choice, name='register_choice'),
     path('inscription/eleve/', views.register_student, name='register_student'),
     path('inscription/professeur/', views.register_teacher, name='register_teacher'),
+    path('administration/', views.admin_dashboard, name='admin_dashboard'),
+    path(
+        'administration/inscriptions/<int:user_id>/',
+        views.review_registration,
+        name='review_registration',
+    ),
     path('profil/', views.profile, name='profile'),
     path('tableau-de-bord/', views.dashboard, name='dashboard'),
     path('progression/', views.my_progress, name='progress'),

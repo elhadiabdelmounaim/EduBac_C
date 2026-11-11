@@ -12,6 +12,10 @@ class User(AbstractUser):
         ('student', 'Élève'),
         ('teacher', 'Enseignant'),
     ]
+    APPROVAL_STATUS_CHOICES = [
+        ('pending', 'En attente'),
+        ('approved', 'Approuvé'),
+    ]
 
     role = models.CharField(
         max_length=20,
@@ -19,10 +23,21 @@ class User(AbstractUser):
         default='student',
         verbose_name='Rôle',
     )
-    email = models.EmailField(unique=True, verbose_name='Adresse e-mail')
+    email = models.EmailField(
+        unique=True,
+        blank=True,
+        null=True,
+        verbose_name='Adresse e-mail',
+    )
     email_verified = models.BooleanField(
         default=True,
         verbose_name='Adresse e-mail vérifiée',
+    )
+    approval_status = models.CharField(
+        max_length=20,
+        choices=APPROVAL_STATUS_CHOICES,
+        default='approved',
+        verbose_name='Statut d’approbation',
     )
 
     class Meta:

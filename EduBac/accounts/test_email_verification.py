@@ -5,11 +5,10 @@ from unittest.mock import patch
 
 from django.core import mail
 from django.core.cache import cache
-from django.db import IntegrityError
 from django.test import Client, RequestFactory, TestCase, override_settings
 from django.urls import reverse
 
-from .models import StudentProfile, TeacherProfile, User
+from .models import User
 
 
 @override_settings(
@@ -22,22 +21,6 @@ class EmailVerificationTests(TestCase):
         cache.clear()
         mail.outbox.clear()
 
-    def register(self, role='student', email='amina@example.test'):
-        url_name = (
-            'accounts:register_teacher'
-            if role == 'teacher'
-            else 'accounts:register_student'
-        )
-        data = {
-            'name': 'Amina El Amrani',
-            'email': email,
-            'password': 'LongPass123!',
-            'password2': 'LongPass123!',
-        }
-        if role == 'student':
-            data['niveau'] = 'tronc_commun'
-        return self.client.post(reverse(url_name), data)
-
     def verification_path(self, message=None):
         body = message or mail.outbox[-1].body
         match = re.search(
@@ -48,31 +31,16 @@ class EmailVerificationTests(TestCase):
         token = match.group(1).rstrip('/')
         return reverse('accounts:confirm_email', kwargs={'token': token})
 
-    def test_student_and_teacher_registration_send_links_without_logging_in(self):
-        for role, email, profile_model in (
-            ('student', 'student@example.test', StudentProfile),
-            ('teacher', 'teacher@example.test', TeacherProfile),
-        ):
-            with self.subTest(role=role):
-                cache.clear()
-                mail.outbox.clear()
-                response = self.register(role=role, email=email)
-                self.assertRedirects(
-                    response,
-                    f"{reverse('accounts:email_verification_pending')}?status=sent",
-                    fetch_redirect_response=False,
-                )
-                user = User.objects.get(email=email)
-                self.assertFalse(user.email_verified)
-                self.assertTrue(profile_model.objects.filter(user=user).exists())
-                self.assertNotIn('user_id', self.client.session)
-                self.assertEqual(len(mail.outbox), 1)
-                self.assertIn(email, mail.outbox[0].to)
-                self.assertIn('Vérifie ton adresse e-mail', mail.outbox[0].subject)
-
     def test_verification_link_confirms_email_and_then_login_succeeds(self):
-        self.register(email='verified@example.test')
-        user = User.objects.get(email='verified@example.test')
+        user = User.objects.create_user(
+            username='legacy_verified_email',
+            email='verified@example.test',
+            password='LongPass123!',
+            email_verified=False,
+        )
+        from .email_verification import send_verification_email
+
+        self.assertEqual(send_verification_email(self._request(), user), 'sent')
         response = self.client.get(self.verification_path())
         self.assertEqual(response.status_code, 200)
         user.refresh_from_db()
@@ -371,182 +339,6 @@ class EmailVerificationTests(TestCase):
         self.assertEqual(failed_response.status_code, 302)
         self.assertEqual(retry_response.status_code, 302)
         self.assertEqual(email_send.call_count, 2)
-
-    def test_invalid_email_is_rejected_without_creating_an_account(self):
-        response = self.register(email='not-an-email')
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Saisis une adresse e-mail valide')
-        self.assertFalse(User.objects.filter(email='not-an-email').exists())
-
-    def test_registration_without_csrf_cookie_is_rejected_before_view(self):
-        csrf_client = Client(enforce_csrf_checks=True)
-        with self.assertLogs('django.security.csrf', level='WARNING') as csrf_logs:
-            response = csrf_client.post(
-                reverse('accounts:register_student'),
-                {
-                    'name': 'Amina El Amrani',
-                    'email': 'csrf-missing@example.test',
-                    'niveau': 'tronc_commun',
-                    'password': 'LongPass123!',
-                    'password2': 'LongPass123!',
-                },
-            )
-
-        self.assertEqual(response.status_code, 403)
-        self.assertFalse(
-            User.objects.filter(email='csrf-missing@example.test').exists()
-        )
-        self.assertIn('CSRF cookie not set', '\n'.join(csrf_logs.output))
-
-    def test_registration_with_rendered_csrf_token_succeeds(self):
-        csrf_client = Client(enforce_csrf_checks=True)
-        url = reverse('accounts:register_student')
-
-        form_response = csrf_client.get(url)
-        self.assertEqual(form_response.status_code, 200)
-        self.assertContains(form_response, 'name="csrfmiddlewaretoken"')
-        csrf_token = csrf_client.cookies['csrftoken'].value
-
-        response = csrf_client.post(
-            url,
-            {
-                'name': 'Amina El Amrani',
-                'email': 'csrf-valid@example.test',
-                'niveau': 'tronc_commun',
-                'password': 'LongPass123!',
-                'password2': 'LongPass123!',
-                'csrfmiddlewaretoken': csrf_token,
-            },
-        )
-
-        self.assertRedirects(
-            response,
-            f"{reverse('accounts:email_verification_pending')}?status=sent",
-            fetch_redirect_response=False,
-        )
-        self.assertTrue(
-            User.objects.filter(email='csrf-valid@example.test').exists()
-        )
-
-    def test_signup_email_failure_is_visible_on_the_pending_page(self):
-        with patch(
-            'accounts.email_verification.EmailMultiAlternatives.send',
-            side_effect=OSError('private SMTP failure'),
-        ):
-            response = self.register(email='preview-mail-failure@example.test')
-
-        pending_url = (
-            f"{reverse('accounts:email_verification_pending')}?status=failed"
-        )
-        self.assertRedirects(
-            response,
-            pending_url,
-            fetch_redirect_response=False,
-        )
-        pending_response = self.client.get(pending_url)
-        self.assertContains(pending_response, 'Compte créé, e-mail non envoyé')
-        self.assertContains(
-            pending_response,
-            'Le courriel de vérification n’a pas pu être envoyé.',
-        )
-
-    def test_registration_rejects_an_existing_verified_email_without_changing_account(self):
-        existing = User.objects.create_user(
-            username='existing_verified_registration',
-            email='already-used@example.test',
-            password='OriginalPass123!',
-        )
-        original_password = existing.password
-
-        response = self.register(email='ALREADY-USED@example.test')
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Cette adresse e-mail est déjà utilisée')
-        self.assertContains(response, 'Connecte-toi avec ce compte')
-        self.assertEqual(User.objects.filter(email__iexact=existing.email).count(), 1)
-        existing.refresh_from_db()
-        self.assertEqual(existing.password, original_password)
-        self.assertTrue(existing.check_password('OriginalPass123!'))
-
-    def test_registration_existing_unverified_email_offers_safe_resend_flow(self):
-        existing = User.objects.create_user(
-            username='existing_unverified_registration',
-            email='pending-registration@example.test',
-            password='OriginalPass123!',
-            email_verified=False,
-        )
-
-        response = self.register(email=existing.email.upper())
-
-        self.assertRedirects(
-            response,
-            reverse('accounts:email_verification_pending'),
-            fetch_redirect_response=False,
-        )
-        pending = self.client.get(response['Location'])
-        self.assertContains(pending, 'Aucun nouveau compte n’a été créé')
-        self.assertContains(pending, existing.email)
-        self.assertEqual(User.objects.filter(email__iexact=existing.email).count(), 1)
-        self.assertEqual(len(mail.outbox), 0)
-
-        resend_response = self.client.post(
-            reverse('accounts:resend_verification'),
-            {'email': existing.email},
-        )
-        self.assertEqual(resend_response.status_code, 302)
-        self.assertEqual(len(mail.outbox), 1)
-        existing.refresh_from_db()
-        self.assertFalse(existing.email_verified)
-        self.assertTrue(existing.check_password('OriginalPass123!'))
-
-    def test_registration_catches_integrity_error_from_simultaneous_signup(self):
-        existing = User.objects.create_user(
-            username='race_winner',
-            email='race-winner@example.test',
-            password='WinnerPass123!',
-            email_verified=False,
-        )
-
-        # Model the other request committing after the initial lookup and
-        # before this request attempts its atomic insert.
-        with (
-            patch(
-                'accounts.views._find_user_by_email',
-                side_effect=[None, existing],
-            ),
-            patch(
-                'accounts.views._create_registration_account',
-                side_effect=IntegrityError('duplicate email'),
-            ),
-        ):
-            response = self.register(email=existing.email)
-
-        self.assertRedirects(
-            response,
-            reverse('accounts:email_verification_pending'),
-            fetch_redirect_response=False,
-        )
-        self.assertEqual(User.objects.filter(email__iexact=existing.email).count(), 1)
-        self.assertEqual(len(mail.outbox), 0)
-        self.assertNotIn('user_id', self.client.session)
-
-    @patch(
-        'accounts.email_verification.EmailMultiAlternatives.send',
-        side_effect=OSError('SMTP is unavailable'),
-    )
-    def test_smtp_failure_keeps_the_account_pending_and_allows_retry(self, _send):
-        with self.assertLogs('accounts.email_verification', level='ERROR'):
-            response = self.register(email='mail-failure@example.test')
-        self.assertEqual(response.status_code, 302)
-        pending = self.client.get(response['Location'])
-        user = User.objects.get(email='mail-failure@example.test')
-        self.assertEqual(pending.status_code, 200)
-        self.assertContains(
-            pending,
-            'Le courriel de vérification n’a pas pu être envoyé.',
-        )
-        self.assertFalse(user.email_verified)
-        self.assertNotIn('user_id', self.client.session)
 
     @override_settings(
         EMAIL_VERIFICATION_RESEND_COOLDOWN=0,

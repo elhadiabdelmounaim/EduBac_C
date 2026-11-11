@@ -5,7 +5,7 @@
         <div class="auth-brand">
             <img src="/static/img/edubac-logo.png" alt="EduBac" class="auth-logo float-soft">
             <h1 class="h4 fw-bold mb-1" style="color:var(--edubac-navy);">Inscription élève</h1>
-            <p class="text-muted small mb-0">Crée ton compte et choisis ton niveau. Un lien de vérification sera envoyé par e-mail.</p>
+            <p class="text-muted small mb-0">Crée ton compte avec le code de ta classe. Il sera activé après validation de l’administrateur.</p>
         </div>
         {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
         <form method="post">
@@ -16,16 +16,14 @@
                        placeholder="Prénom et nom" autocomplete="name">
             </div>
             <div class="mb-2">
-                <label class="form-label small fw-semibold">E-mail *</label>
-                <input type="email" name="email" class="form-control" required autocomplete="email">
+                <label class="form-label small fw-semibold">Nom d’utilisateur *</label>
+                <input type="text" name="username" class="form-control" required maxlength="150"
+                       autocomplete="username">
             </div>
             <div class="mb-2">
-                <label class="form-label small fw-semibold">Niveau scolaire *</label>
-                <select name="niveau" class="form-select" required>
-                    {% for val, label in niveaux %}
-                    <option value="{{ val }}">{{ label }}</option>
-                    {% endfor %}
-                </select>
+                <label class="form-label small fw-semibold">Code de classe *</label>
+                <input type="text" name="class_code" class="form-control" required maxlength="12"
+                       autocomplete="off" autocapitalize="characters">
             </div>
             <div class="mb-2">
                 <label class="form-label small fw-semibold">Mot de passe *</label>
@@ -41,24 +39,11 @@
                     <button type="button" class="password-toggle" data-target="p2"><i class="bi bi-eye"></i></button>
                 </div>
             </div>
-            <button type="submit" class="btn btn-accent w-100 py-2 mb-3">Créer mon compte</button>
+            <button type="submit" class="btn btn-accent w-100 py-2 mb-3">Envoyer ma demande</button>
         </form>
         <p class="text-center small mb-0 text-muted">
             Déjà un compte ? <a href="{% url 'accounts:login' %}" class="fw-semibold">Connexion</a>
         </p>
     </div>
 </div>
-{% endblock %}
-{% block extra_js %}
-<script>
-document.querySelectorAll('.password-toggle').forEach(function(btn){
-  btn.addEventListener('click', function(){
-    var input = document.getElementById(btn.getAttribute('data-target'));
-    var icon = btn.querySelector('i');
-    if (!input) return;
-    if (input.type === 'password') { input.type = 'text'; if (icon) icon.className = 'bi bi-eye-slash'; }
-    else { input.type = 'password'; if (icon) icon.className = 'bi bi-eye'; }
-  });
-});
-</script>
 {% endblock %}

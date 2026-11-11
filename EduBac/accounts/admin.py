@@ -5,13 +5,20 @@ from .models import User, StudentProfile, TeacherProfile
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ('username', 'email', 'role', 'is_staff', 'is_active')
-    list_filter = ('role', 'is_staff', 'is_active')
+    list_display = (
+        'username',
+        'email',
+        'role',
+        'approval_status',
+        'is_staff',
+        'is_active',
+    )
+    list_filter = ('role', 'approval_status', 'is_staff', 'is_active')
     fieldsets = BaseUserAdmin.fieldsets + (
-        ('EduBac', {'fields': ('role',)}),
+        ('EduBac', {'fields': ('role', 'approval_status', 'email_verified')}),
     )
     add_fieldsets = BaseUserAdmin.add_fieldsets + (
-        ('EduBac', {'fields': ('role', 'email')}),
+        ('EduBac', {'fields': ('role', 'approval_status', 'email', 'email_verified')}),
     )
     search_fields = ('username', 'email', 'first_name', 'last_name')
 

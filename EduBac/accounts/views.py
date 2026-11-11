@@ -12,7 +12,12 @@ from django.core import signing
 from django.db import IntegrityError, transaction
 
 from .models import User, StudentProfile, TeacherProfile
-from .decorators import login_required_simple, student_required, teacher_required
+from .decorators import (
+    admin_required,
+    login_required_simple,
+    student_required,
+    teacher_required,
+)
 from .email_verification import (
     get_user_from_verification_token,
     send_verification_email,
@@ -65,6 +70,8 @@ def _authenticate(request):
         user = User.objects.filter(username=identifiant).first()
     if user is None or not user.check_password(password):
         return None, 'E-mail ou mot de passe incorrect.'
+    if user.approval_status == 'pending':
+        return None, 'Votre demande d’inscription attend la validation de l’administrateur.'
     if not user.is_active:
         return None, 'Ce compte est désactivé.'
     return user, None
@@ -202,6 +209,9 @@ def login_view(request):
     if request.method == 'POST':
         user, error = _authenticate(request)
         if user:
+            if user.is_staff or user.is_superuser:
+                _login_session(request, user)
+                return redirect('accounts:admin_dashboard')
             if not user.email_verified:
                 request.session['email_verification_pending'] = user.email
                 messages.warning(
@@ -248,100 +258,100 @@ def register_choice(request):
 
 def register_student(request):
     """
-    Inscription élève : Nom, Email, Password, Confirm, Niveau.
-    Rôle forcé student côté backend.
+    Inscription élève : nom complet, nom d’utilisateur, mot de passe et code classe.
+    Le compte reste inaccessible jusqu’à son approbation par l’administrateur.
     """
     if getattr(request, 'edubac_user', None):
         return redirect('accounts:dashboard')
     error = None
     if request.method == 'POST':
         full_name = (request.POST.get('name') or request.POST.get('full_name') or '').strip()
-        first_name = (request.POST.get('first_name') or '').strip()
-        last_name = (request.POST.get('last_name') or '').strip()
-        if full_name and not (first_name or last_name):
-            first_name, last_name = _split_name(full_name)
-        email = (request.POST.get('email') or '').strip()
-        if email:
-            email = email.lower()
+        username = (request.POST.get('username') or '').strip()
         password = request.POST.get('password') or ''
         password2 = request.POST.get('password2') or ''
-        niveau = request.POST.get('niveau', 'tronc_commun')
-        valid_niveaux = {c[0] for c in StudentProfile.NIVEAU_CHOICES}
-        if niveau not in valid_niveaux:
-            niveau = 'tronc_commun'
+        class_code = (request.POST.get('class_code') or '').strip().upper()
 
-        if not (first_name or last_name or full_name):
+        if not full_name:
             error = 'Le nom est obligatoire.'
-        elif not email or not password:
-            error = 'E-mail et mot de passe sont obligatoires.'
-        elif not _valid_email(email):
-            error = 'Saisis une adresse e-mail valide.'
+        elif not username:
+            error = 'Le nom d’utilisateur est obligatoire.'
+        elif len(username) > 150:
+            error = 'Le nom d’utilisateur ne peut pas dépasser 150 caractères.'
+        elif User.objects.filter(username__iexact=username).exists():
+            error = 'Ce nom d’utilisateur est déjà utilisé.'
+        elif not password:
+            error = 'Le mot de passe est obligatoire.'
         elif password != password2:
             error = 'Les mots de passe ne correspondent pas.'
         elif len(password) < 6:
             error = 'Le mot de passe doit contenir au moins 6 caractères.'
+        elif not class_code:
+            error = 'Le code de classe est obligatoire.'
         else:
-            return _register_account(
-                request,
-                email=email,
-                password=password,
-                first_name=first_name or full_name,
-                last_name=last_name,
-                role='student',
-                niveau=niveau,
-            )
+            try:
+                User._meta.get_field('username').clean(username, None)
+            except ValidationError:
+                error = 'Le nom d’utilisateur contient des caractères non autorisés.'
+
+            if not error:
+                from classrooms.models import Classroom, ClassroomMember
+
+                classroom = Classroom.objects.filter(
+                    code__iexact=class_code,
+                ).first()
+                if classroom is None:
+                    error = (
+                        'Classe introuvable. Veuillez vérifier le code de classe '
+                        'et réessayer.'
+                    )
+                elif not classroom.is_active:
+                    error = (
+                        "Ce code de classe n'est plus actif. Veuillez contacter "
+                        "l'administrateur."
+                    )
+                else:
+                    first_name, last_name = _split_name(full_name)
+                    try:
+                        with transaction.atomic():
+                            user = User(
+                                username=username,
+                                email=None,
+                                email_verified=True,
+                                approval_status='pending',
+                                is_active=False,
+                                role='student',
+                                first_name=first_name,
+                                last_name=last_name,
+                            )
+                            user.set_password(password)
+                            user.save()
+                            StudentProfile.objects.create(
+                                user=user,
+                                niveau=classroom.niveau,
+                            )
+                            ClassroomMember.objects.create(
+                                classroom=classroom,
+                                user=user,
+                            )
+                    except IntegrityError:
+                        error = 'Ce nom d’utilisateur est déjà utilisé.'
+                    else:
+                        messages.success(
+                            request,
+                            'Votre demande a été envoyée. Connectez-vous après '
+                            'son approbation par l’administrateur.',
+                        )
+                        return redirect('accounts:login')
 
     return render(request, 'accounts/register_student.html', {
         'page_title': 'Inscription élève',
         'error': error,
-        'niveaux': StudentProfile.NIVEAU_CHOICES,
     })
 
 
 def register_teacher(request):
-    """
-    Inscription enseignant : Nom, Email, Password, Confirm.
-    Aucun code. Rôle forcé teacher côté backend.
-    """
-    if getattr(request, 'edubac_user', None):
-        return redirect('accounts:dashboard')
-    error = None
-    if request.method == 'POST':
-        full_name = (request.POST.get('name') or request.POST.get('full_name') or '').strip()
-        first_name = (request.POST.get('first_name') or '').strip()
-        last_name = (request.POST.get('last_name') or '').strip()
-        if full_name and not (first_name or last_name):
-            first_name, last_name = _split_name(full_name)
-        email = (request.POST.get('email') or '').strip()
-        if email:
-            email = email.lower()
-        password = request.POST.get('password') or ''
-        password2 = request.POST.get('password2') or ''
-
-        if not (first_name or last_name or full_name):
-            error = 'Le nom est obligatoire.'
-        elif not email or not password:
-            error = 'E-mail et mot de passe sont obligatoires.'
-        elif not _valid_email(email):
-            error = 'Saisis une adresse e-mail valide.'
-        elif password != password2:
-            error = 'Les mots de passe ne correspondent pas.'
-        elif len(password) < 6:
-            error = 'Le mot de passe doit contenir au moins 6 caractères.'
-        else:
-            return _register_account(
-                request,
-                email=email,
-                password=password,
-                first_name=first_name or full_name,
-                last_name=last_name,
-                role='teacher',
-            )
-
-    return render(request, 'accounts/register_teacher.html', {
-        'page_title': 'Inscription enseignant',
-        'error': error,
-    })
+    """Retired public teacher signup; all public registrations are for students."""
+    return redirect('accounts:register_student')
 
 
 @require_GET
@@ -468,9 +478,67 @@ def profile(request):
 
 @login_required_simple
 def dashboard(request):
+    if request.edubac_user.is_staff or request.edubac_user.is_superuser:
+        return redirect('accounts:admin_dashboard')
     if request.edubac_user.role == 'teacher':
         return teacher_dashboard(request)
     return student_dashboard(request)
+
+
+@admin_required
+def admin_dashboard(request):
+    from classrooms.models import ClassroomMember
+
+    pending_users = User.objects.filter(
+        role='student',
+        approval_status='pending',
+    ).order_by('date_joined')
+    registrations = [
+        {
+            'user': user,
+            'membership': ClassroomMember.objects.filter(
+                user=user,
+            ).select_related('classroom').first(),
+        }
+        for user in pending_users
+    ]
+    return render(request, 'accounts/dashboard_admin.html', {
+        'page_title': 'Administration EduBac',
+        'registrations': registrations,
+        'pending_count': len(registrations),
+    })
+
+
+@admin_required
+@require_POST
+def review_registration(request, user_id):
+    action = request.POST.get('action')
+    if action not in {'approve', 'reject'}:
+        return redirect('accounts:admin_dashboard')
+
+    with transaction.atomic():
+        user = User.objects.select_for_update().filter(
+            pk=user_id,
+            role='student',
+            approval_status='pending',
+        ).first()
+        if user is None:
+            messages.warning(request, 'Cette demande a déjà été traitée.')
+            return redirect('accounts:admin_dashboard')
+
+        if action == 'approve':
+            user.approval_status = 'approved'
+            user.is_active = True
+            user.save(update_fields=['approval_status', 'is_active'])
+            messages.success(
+                request,
+                f'Le compte de {user.get_full_name()} a été approuvé.',
+            )
+        else:
+            user.delete()
+            messages.success(request, 'La demande et le compte élève ont été supprimés.')
+
+    return redirect('accounts:admin_dashboard')
 
 
 @student_required

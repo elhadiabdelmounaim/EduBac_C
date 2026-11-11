@@ -26,6 +26,19 @@ def teacher_required(view_func):
     return _wrapped
 
 
+def admin_required(view_func):
+    """Require a Django staff or superuser account for administration."""
+    @login_required_simple
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        user = request.edubac_user
+        if not user or not (user.is_staff or user.is_superuser):
+            messages.error(request, 'Accès réservé à l’administrateur.')
+            return redirect('education:home')
+        return view_func(request, *args, **kwargs)
+    return _wrapped
+
+
 def student_required(view_func):
     @login_required_simple
     @wraps(view_func)

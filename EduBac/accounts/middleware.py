@@ -17,7 +17,11 @@ class SimpleSessionAuthMiddleware:
         if uid:
             try:
                 user = User.objects.get(pk=uid)
-                if not user.email_verified:
+                if (
+                    not user.email_verified
+                    or user.approval_status == 'pending'
+                    or not user.is_active
+                ):
                     request.session.pop('user_id', None)
                     request.session.pop('role', None)
                     if not request.path.startswith('/admin/'):
