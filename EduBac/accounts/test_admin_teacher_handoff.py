@@ -16,14 +16,16 @@ class AdminTeacherHandoffTests(TestCase):
             is_superuser=True,
         )
 
-    def test_admin_index_shows_teacher_area_button(self):
+    def test_admin_view_site_link_points_to_teacher_area(self):
         self.client.force_login(self.admin)
 
         response = self.client.get(reverse('admin:index'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Ouvrir l’espace professeur')
-        self.assertContains(response, reverse('admin_teacher_dashboard'))
+        self.assertContains(
+            response,
+            f'<a href="{reverse("admin_teacher_dashboard")}">Voir le site</a>',
+        )
 
     def test_button_handoff_opens_teacher_dashboard_for_same_account(self):
         self.client.force_login(self.admin)

@@ -27,19 +27,6 @@
 
 {% block content %}
 <div class="module" style="margin-bottom: 20px;">
-    {% if user.is_staff and user.role == "teacher" %}
-    <table>
-        <caption><a href="{% url 'admin_teacher_dashboard' %}" class="section">Espace pédagogique</a></caption>
-        <tbody>
-            <tr>
-                <th scope="row">
-                    <a href="{% url 'admin_teacher_dashboard' %}">Ouvrir l’espace professeur</a>
-                </th>
-                <td>Accéder aux classes, aux quiz et aux outils pédagogiques</td>
-            </tr>
-        </tbody>
-    </table>
-    {% endif %}
     {% if perms.education.change_course and perms.education.change_resources %}
     <table>
         <caption>
