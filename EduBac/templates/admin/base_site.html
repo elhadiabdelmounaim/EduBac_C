@@ -12,7 +12,7 @@
 
 {% block userlinks %}
     {% if site_url %}
-        {% if user.is_staff and user.role == "teacher" %}
+        {% if user.is_staff %}
             <a href="{% url 'admin_teacher_dashboard' %}">Voir le site</a> /
         {% else %}
             <a href="{{ site_url }}">Voir le site</a> /

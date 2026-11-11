@@ -204,7 +204,7 @@ def login_view(request):
     Login unique : e-mail + mot de passe.
     Le backend détermine le rôle et redirige.
     """
-    if getattr(request, 'edubac_user', None):
+    if getattr(request, 'edubac_user', None) and request.method != 'POST':
         return redirect('accounts:dashboard')
     error = None
     if request.method == 'POST':
@@ -212,7 +212,7 @@ def login_view(request):
         if user:
             if user.is_staff or user.is_superuser:
                 _login_session(request, user)
-                return redirect('accounts:admin_dashboard')
+                return redirect('accounts:teacher_portal')
             if not user.email_verified:
                 request.session['email_verification_pending'] = user.email
                 messages.warning(
@@ -252,7 +252,7 @@ def admin_teacher_dashboard(request):
     user = request.user
     if not getattr(user, 'is_authenticated', False):
         return redirect('admin:login')
-    if not (user.is_staff or user.is_superuser) or user.role != 'teacher':
+    if not (user.is_staff or user.is_superuser):
         return HttpResponseForbidden('Accès réservé au compte administrateur enseignant.')
 
     request.session['user_id'] = user.pk
@@ -493,9 +493,7 @@ def profile(request):
 
 @login_required_simple
 def dashboard(request):
-    if request.edubac_user.is_staff or request.edubac_user.is_superuser:
-        return redirect('accounts:admin_dashboard')
-    if request.edubac_user.role == 'teacher':
+    if request.edubac_user.is_teacher():
         return teacher_dashboard(request)
     return student_dashboard(request)
 
@@ -613,19 +611,24 @@ def teacher_dashboard(request):
     from education.models import Course, Lesson
 
     user = request.edubac_user
-    classrooms = Classroom.objects.filter(teacher=user).annotate(nb_eleves=Count('members'))
-    total_students = ClassroomMember.objects.filter(classroom__teacher=user).values('user').distinct().count()
-    my_quizzes = Quiz.objects.filter(created_by=user).annotate(
+    is_admin = user.is_staff or user.is_superuser
+    classrooms_qs = Classroom.objects.all() if is_admin else Classroom.objects.filter(teacher=user)
+    memberships = ClassroomMember.objects.all() if is_admin else ClassroomMember.objects.filter(classroom__teacher=user)
+    quizzes_qs = Quiz.objects.all() if is_admin else Quiz.objects.filter(created_by=user)
+    classrooms = classrooms_qs.annotate(nb_eleves=Count('members'))
+    total_students = memberships.values('user').distinct().count()
+    my_quizzes = quizzes_qs.annotate(
         nb_q=Count('questions'), nb_att=Count('attempts'),
     ).order_by('-created_at')[:8]
-    recent_attempts = (
-        Attempt.objects
-        .filter(Q(quiz__created_by=user) | Q(student__classroom_memberships__classroom__teacher=user))
-        .filter(submitted_at__isnull=False)
-        .select_related('student', 'quiz')
-        .distinct()
-        .order_by('-submitted_at')[:8]
-    )
+    recent_attempts = Attempt.objects.filter(
+        submitted_at__isnull=False,
+    ).select_related('student', 'quiz')
+    if not is_admin:
+        recent_attempts = recent_attempts.filter(
+            Q(quiz__created_by=user)
+            | Q(student__classroom_memberships__classroom__teacher=user)
+        )
+    recent_attempts = recent_attempts.distinct().order_by('-submitted_at')[:8]
     avg_score = recent_attempts.aggregate(a=Avg('score'))['a']
 
     return render(request, 'accounts/dashboard_teacher.html', {

@@ -19,7 +19,7 @@ def teacher_required(view_func):
     @wraps(view_func)
     def _wrapped(request, *args, **kwargs):
         user = request.edubac_user
-        if not user or user.role != 'teacher':
+        if not user or not user.is_teacher():
             messages.error(request, 'Accès réservé aux enseignants.')
             return redirect('education:home')
         return view_func(request, *args, **kwargs)
@@ -44,7 +44,7 @@ def student_required(view_func):
     @wraps(view_func)
     def _wrapped(request, *args, **kwargs):
         user = request.edubac_user
-        if not user or user.role != 'student':
+        if not user or not user.is_student():
             messages.error(request, 'Accès réservé aux élèves.')
             return redirect('education:home')
         return view_func(request, *args, **kwargs)

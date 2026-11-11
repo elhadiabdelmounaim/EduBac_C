@@ -48,10 +48,18 @@ class User(AbstractUser):
         return f"{self.username} ({self.get_role_display()})"
 
     def is_student(self):
-        return self.role == 'student'
+        return (
+            self.role == 'student'
+            and not self.is_staff
+            and not self.is_superuser
+        )
 
     def is_teacher(self):
-        return self.role == 'teacher'
+        return (
+            self.role == 'teacher'
+            or self.is_staff
+            or self.is_superuser
+        )
 
     def get_full_name(self):
         full = f"{self.first_name} {self.last_name}".strip()
