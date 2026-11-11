@@ -5,8 +5,14 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from accounts.views import admin_teacher_dashboard
 
 urlpatterns = [
+    path(
+        'admin/ouvrir-espace-professeur/',
+        admin_teacher_dashboard,
+        name='admin_teacher_dashboard',
+    ),
     path('admin/', admin.site.urls),
     path('compte/', include('accounts.urls')),
     path('', include('education.urls')),

@@ -26,6 +26,11 @@ urlpatterns = [
     ),
     path('profil/', views.profile, name='profile'),
     path('tableau-de-bord/', views.dashboard, name='dashboard'),
+    path(
+        'espace-professeur/',
+        views.teacher_dashboard,
+        name='teacher_portal',
+    ),
     path('progression/', views.my_progress, name='progress'),
     path('mes-cours/', views.my_courses, name='my_courses'),
     path('mes-lecons/', views.my_lessons, name='my_lessons'),

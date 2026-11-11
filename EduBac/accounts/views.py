@@ -5,6 +5,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from django.http import HttpResponseForbidden
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 from django.db.models import Count, Avg, Q
@@ -244,6 +245,20 @@ def logout_view(request):
     request.session.flush()
     messages.info(request, 'Vous êtes déconnecté.')
     return redirect('education:home')
+
+
+def admin_teacher_dashboard(request):
+    """Transfer an authenticated Django admin session into the teacher area."""
+    user = request.user
+    if not getattr(user, 'is_authenticated', False):
+        return redirect('admin:login')
+    if not (user.is_staff or user.is_superuser) or user.role != 'teacher':
+        return HttpResponseForbidden('Accès réservé au compte administrateur enseignant.')
+
+    request.session['user_id'] = user.pk
+    request.session['role'] = user.role
+    request.session.cycle_key()
+    return redirect('accounts:teacher_portal')
 
 
 def register(request):

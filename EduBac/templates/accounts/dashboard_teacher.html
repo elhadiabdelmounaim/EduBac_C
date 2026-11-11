@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="h3 fw-bold mb-4" style="color:var(--edubac-navy);">Tableau de bord</h1>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h1 class="h3 fw-bold mb-0" style="color:var(--edubac-navy);">Tableau de bord</h1>
+    {% if user.is_staff or user.is_superuser %}
+    <a href="{% url 'admin:index' %}" class="btn btn-sm btn-outline-primary">Retour à l’administration</a>
+    {% endif %}
+</div>
 
 <div class="row g-3 mb-4">
     <div class="col-6 col-md-3">
