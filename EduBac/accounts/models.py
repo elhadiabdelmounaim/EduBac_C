@@ -61,6 +61,11 @@ class User(AbstractUser):
             or self.is_superuser
         )
 
+    def get_role_display(self):
+        if self.is_teacher():
+            return 'Enseignant'
+        return dict(self.ROLE_CHOICES).get(self.role, self.role)
+
     def get_full_name(self):
         full = f"{self.first_name} {self.last_name}".strip()
         return full if full else self.username

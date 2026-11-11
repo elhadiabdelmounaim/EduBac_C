@@ -66,6 +66,9 @@ class AdminTeacherHandoffTests(TestCase):
             self.client.get(reverse('accounts:teacher_portal')).status_code,
             200,
         )
+        profile = self.client.get(reverse('accounts:profile'))
+        self.assertContains(profile, 'Rôle :</strong> Enseignant')
+        self.assertEqual(User.objects.get(pk=self.admin.pk).role, 'student')
 
     def test_app_login_can_switch_from_student_session_to_superuser(self):
         student = User.objects.create_user(
