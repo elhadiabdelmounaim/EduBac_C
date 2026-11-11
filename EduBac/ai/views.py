@@ -136,7 +136,7 @@ def assistant_lesson(request, lesson_id):
 
 @login_required_simple
 def generate_quiz(request, lesson_id):
-    if not (hasattr(request.user, 'role') and request.user.role == 'teacher'):
+    if not hasattr(request.user, 'is_teacher') or not request.user.is_teacher():
         messages.error(request, 'Réservé aux enseignants.')
         return redirect('education:home')
     get_object_or_404(Lesson, pk=lesson_id)

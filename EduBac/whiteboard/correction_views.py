@@ -170,7 +170,7 @@ def correction_api(request, attempt_id, question_id):
 
     action = (body.get("action") or "generate").strip()
     user = getattr(request, "edubac_user", None) or request.user
-    if getattr(user, "role", "") == "student" and (
+    if user.is_student() and (
         action != "generate" or body.get("regenerate")
     ):
         return JsonResponse({

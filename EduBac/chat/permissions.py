@@ -15,10 +15,11 @@ def user_can_access_classroom(user, classroom) -> bool:
     """
     if not user or not getattr(user, 'is_authenticated', False):
         return False
-    role = getattr(user, 'role', None)
-    if role == 'teacher':
+    if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False):
+        return True
+    if user.is_teacher():
         return classroom.teacher_id == user.id
-    if role == 'student':
+    if user.is_student():
         return ClassroomMember.objects.filter(classroom=classroom, user=user).exists()
     return False
 
@@ -27,10 +28,11 @@ def classrooms_for_user(user):
     """Liste des classes accessibles pour le chat."""
     if not user or not getattr(user, 'is_authenticated', False):
         return Classroom.objects.none()
-    role = getattr(user, 'role', None)
-    if role == 'teacher':
+    if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False):
+        return Classroom.objects.filter(is_active=True).order_by('name')
+    if user.is_teacher():
         return Classroom.objects.filter(teacher=user, is_active=True).order_by('name')
-    if role == 'student':
+    if user.is_student():
         ids = ClassroomMember.objects.filter(user=user).values_list('classroom_id', flat=True)
         return Classroom.objects.filter(pk__in=ids, is_active=True).order_by('name')
     return Classroom.objects.none()

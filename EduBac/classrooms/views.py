@@ -19,6 +19,20 @@ def _user(request):
     return getattr(request, 'edubac_user', None) or request.user
 
 
+def _is_admin(user):
+    return bool(getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False))
+
+
+def _managed_classrooms(user):
+    if _is_admin(user):
+        return Classroom.objects.all()
+    return Classroom.objects.filter(teacher=user)
+
+
+def _managed_classroom(user, pk):
+    return get_object_or_404(_managed_classrooms(user), pk=pk)
+
+
 @teacher_required
 def create_classroom(request):
     """Créer une classe (enseignant)."""
@@ -50,12 +64,9 @@ def create_classroom(request):
 @login_required_simple
 def classroom_list(request):
     user = _user(request)
-    is_teacher = (
-        getattr(user, 'role', '') == 'teacher'
-        or (hasattr(user, 'is_teacher') and user.is_teacher())
-    )
+    is_teacher = hasattr(user, 'is_teacher') and user.is_teacher()
     if is_teacher:
-        classrooms = Classroom.objects.filter(teacher=user).annotate(
+        classrooms = _managed_classrooms(user).annotate(
             nb_eleves=Count('members'),
         )
         return render(request, 'classrooms/list.html', {
@@ -142,11 +153,14 @@ def classroom_detail(request, pk):
     user = _user(request)
     classroom = get_object_or_404(Classroom, pk=pk)
     is_teacher_owner = (
-        getattr(user, 'role', '') == 'teacher'
-        and classroom.teacher_id == getattr(user, 'id', None)
+        _is_admin(user)
+        or (
+            getattr(user, 'role', '') == 'teacher'
+            and classroom.teacher_id == getattr(user, 'id', None)
+        )
     )
     is_member = ClassroomMember.objects.filter(classroom=classroom, user=user).exists()
-    if not is_teacher_owner and not is_member and not getattr(user, 'is_superuser', False):
+    if not is_teacher_owner and not is_member:
         messages.error(request, 'Accès non autorisé à cette classe.')
         return redirect('classrooms:list')
 
@@ -194,7 +208,7 @@ def classroom_detail(request, pk):
 @teacher_required
 def edit_classroom(request, pk):
     """Modifier nom / niveau d'une classe (propriétaire uniquement)."""
-    classroom = get_object_or_404(Classroom, pk=pk, teacher=request.user)
+    classroom = _managed_classroom(request.user, pk)
     error = None
     if request.method == 'POST':
         name = (request.POST.get('name') or '').strip()
@@ -222,7 +236,7 @@ def delete_classroom(request, pk):
     Ne supprime JAMAIS les comptes élèves — uniquement Classroom + ClassroomMember.
     Option : supprimer aussi le fichier Excel.
     """
-    classroom = get_object_or_404(Classroom, pk=pk, teacher=request.user)
+    classroom = _managed_classroom(request.user, pk)
 
     members_count = classroom.members.count()
     from quizzes.models import Attempt
@@ -243,7 +257,7 @@ def delete_classroom(request, pk):
 
     if request.method == 'POST':
         # Double vérification propriétaire
-        if classroom.teacher_id != request.user.id and not request.user.is_superuser:
+        if classroom.teacher_id != request.user.id and not _is_admin(request.user):
             messages.error(request, 'Vous ne pouvez supprimer que vos propres classes.')
             return redirect('classrooms:list')
 
@@ -275,7 +289,7 @@ def delete_classroom(request, pk):
 @require_POST
 def reject_members(request, pk=None):
     """Supprimer uniquement les adhésions sélectionnées dans les classes du professeur."""
-    classroom = get_object_or_404(Classroom, pk=pk, teacher=request.user) if pk else None
+    classroom = _managed_classroom(request.user, pk) if pk else None
     destination = (
         redirect('classrooms:detail', pk=classroom.pk)
         if classroom else redirect('classrooms:students')
@@ -290,8 +304,10 @@ def reject_members(request, pk=None):
         raise Http404('Sélection invalide.')
     with transaction.atomic():
         memberships = ClassroomMember.objects.select_for_update().filter(
-            pk__in=ids, classroom__teacher=request.user, user__role='student',
+            pk__in=ids, user__role='student',
         )
+        if not _is_admin(request.user):
+            memberships = memberships.filter(classroom__teacher=request.user)
         if classroom:
             memberships = memberships.filter(classroom=classroom)
         # Refuser toute la sélection si elle contient un membre hors de ce périmètre.
@@ -309,7 +325,7 @@ def reject_members(request, pk=None):
 @teacher_required
 def remove_member(request, pk, user_id):
     """Retirer un élève de la classe."""
-    classroom = get_object_or_404(Classroom, pk=pk, teacher=request.user)
+    classroom = _managed_classroom(request.user, pk)
     if request.method == 'POST':
         ClassroomMember.objects.filter(classroom=classroom, user_id=user_id).delete()
         messages.success(request, 'Élève retiré de la classe.')
@@ -319,7 +335,7 @@ def remove_member(request, pk, user_id):
 @teacher_required
 def toggle_classroom_active(request, pk):
     """Activer / archiver une classe."""
-    classroom = get_object_or_404(Classroom, pk=pk, teacher=request.user)
+    classroom = _managed_classroom(request.user, pk)
     if request.method == 'POST':
         classroom.is_active = not classroom.is_active
         classroom.save(update_fields=['is_active'])
@@ -333,9 +349,11 @@ def toggle_classroom_active(request, pk):
 @teacher_required
 def my_students(request):
     """Tous les élèves des classes de l'enseignant."""
+    memberships_qs = ClassroomMember.objects.all()
+    if not _is_admin(request.user):
+        memberships_qs = memberships_qs.filter(classroom__teacher=request.user)
     memberships = (
-        ClassroomMember.objects
-        .filter(classroom__teacher=request.user)
+        memberships_qs
         .select_related('user', 'user__student_profile', 'classroom')
         .order_by('user__last_name', 'user__first_name')
     )
@@ -354,7 +372,7 @@ def my_students(request):
 @teacher_required
 def classroom_results(request, pk):
     """Page des résultats d'une classe (stats par quiz + liens Excel)."""
-    classroom = get_object_or_404(Classroom, pk=pk, teacher=request.user)
+    classroom = _managed_classroom(request.user, pk)
     from quizzes.models import Attempt, Quiz
 
     student_ids = list(
@@ -393,7 +411,7 @@ def classroom_results(request, pk):
 @teacher_required
 def download_class_excel(request, pk):
     """Télécharger le fichier Excel complet de la classe (régénéré depuis la DB)."""
-    classroom = get_object_or_404(Classroom, pk=pk, teacher=request.user)
+    classroom = _managed_classroom(request.user, pk)
     # Toujours régénérer depuis la DB (source de vérité)
     path = regenerate_class_excel(classroom)
     if not path.exists():
@@ -413,7 +431,7 @@ def download_class_excel(request, pk):
 def download_quiz_excel(request, pk, quiz_id):
     """Télécharger un Excel ne contenant que les résultats d'un quiz pour la classe."""
     from quizzes.models import Quiz
-    classroom = get_object_or_404(Classroom, pk=pk, teacher=request.user)
+    classroom = _managed_classroom(request.user, pk)
     quiz = get_object_or_404(Quiz, pk=quiz_id)
 
     wb = build_quiz_only_workbook(classroom, quiz)
@@ -437,7 +455,7 @@ def download_quiz_excel(request, pk, quiz_id):
 @teacher_required
 def regenerate_excel(request, pk):
     """Force la régénération du fichier Excel depuis la base Django."""
-    classroom = get_object_or_404(Classroom, pk=pk, teacher=request.user)
+    classroom = _managed_classroom(request.user, pk)
     if request.method == 'POST':
         try:
             regenerate_class_excel(classroom)

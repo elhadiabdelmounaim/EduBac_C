@@ -9,7 +9,7 @@
      id="chatApp"
      data-user-id="{{ user.id }}"
      data-classroom-id="{{ active_classroom.pk|default:'' }}"
-     data-csrf="{{ csrf_token }}" data-user-role="{{ user.role }}" data-is-teacher="{% if user.role == 'teacher' %}1{% else %}0{% endif %}">
+     data-csrf="{{ csrf_token }}" data-user-role="{% if user.is_teacher %}teacher{% else %}{{ user.role }}{% endif %}" data-is-teacher="{% if user.is_teacher %}1{% else %}0{% endif %}">
 
   {# ---- Liste des Classes ---- #}
   <aside class="chat-sidebar" id="chatSidebar">
@@ -42,7 +42,7 @@
       {% empty %}
       <div class="chat-empty-list">
         <i class="bi bi-chat-square-dots"></i>
-        <p class="mb-0">{% if user.role == 'teacher' or user.is_teacher %}Créez une classe pour discuter avec vos élèves.{% else %}Rejoignez une classe pour discuter avec votre professeur.{% endif %}</p>
+        <p class="mb-0">{% if user.is_teacher %}Créez une classe pour discuter avec vos élèves.{% else %}Rejoignez une classe pour discuter avec votre professeur.{% endif %}</p>
       </div>
       {% endfor %}
     </div>
@@ -151,7 +151,7 @@
     <div class="chat-placeholder">
       <div class="chat-placeholder-icon">💬</div>
       <h2>Prof-Étudiant Chat</h2>
-      <p>Sélectionnez une classe pour commencer la conversation avec votre {% if user.role == 'teacher' %}classe{% else %}professeur{% endif %}.</p>
+      <p>Sélectionnez une classe pour commencer la conversation avec votre {% if user.is_teacher %}classe{% else %}professeur{% endif %}.</p>
     </div>
     {% endif %}
   </section>

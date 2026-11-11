@@ -21,6 +21,21 @@ from ai.quiz_metrics import current_trace, timed_phase
 _render_generation = timed_phase("render")(render)
 
 
+def _is_platform_admin(user):
+    return bool(getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False))
+
+
+def _managed_classrooms(user, **filters):
+    classrooms = Classroom.objects.all()
+    if not _is_platform_admin(user):
+        classrooms = classrooms.filter(teacher=user)
+    return classrooms.filter(**filters)
+
+
+def _managed_classroom(user, pk, **filters):
+    return get_object_or_404(_managed_classrooms(user, **filters), pk=pk)
+
+
 def _sync_excel_after_submit(attempt):
     """Synchronise le résultat vers les fichiers Excel des classes de l'élève.
     Ne doit jamais faire échouer la soumission du quiz.
@@ -411,9 +426,10 @@ def my_results(request):
 @teacher_required
 def training(request):
     """Catalogue d'entraînement réservé à l'enseignant et à ses propres quiz."""
-    quizzes = Quiz.objects.filter(
+    quizzes = Quiz.objects.all() if _is_platform_admin(request.user) else Quiz.objects.filter(
         status='published', created_by=request.user,
-    ).select_related('lesson', 'lesson__course')
+    )
+    quizzes = quizzes.filter(status='published').select_related('lesson', 'lesson__course')
     quizzes = quizzes.order_by('-created_at')
     return render(request, 'quizzes/training.html', {
         'quizzes': quizzes,
@@ -436,7 +452,7 @@ def _publish_scheduled_quizzes():
 def delete_quiz(request, pk):
     """Confirmation explicite avant la suppression d'un quiz et de ses données liées."""
     allowed = Quiz.objects.select_related('lesson', 'lesson__course')
-    if not request.user.is_superuser:
+    if not _is_platform_admin(request.user):
         # Même périmètre que la gestion et l'édition : ses quiz et les anciens sans auteur.
         allowed = allowed.filter(Q(created_by=request.user) | Q(created_by__isnull=True))
     quiz = get_object_or_404(allowed, pk=pk)
@@ -482,8 +498,11 @@ def manage_quizzes(request):
 
     _publish_scheduled_quizzes()
     quizzes = (
-        Quiz.objects
-        .filter(Q(created_by=request.user) | Q(created_by__isnull=True))
+        Quiz.objects.all() if _is_platform_admin(request.user)
+        else Quiz.objects.filter(Q(created_by=request.user) | Q(created_by__isnull=True))
+    )
+    quizzes = (
+        quizzes
         .select_related('lesson', 'lesson__course')
         .annotate(nb_questions=Count('questions'), nb_attempts=Count('attempts'))
         .order_by('-created_at')
@@ -546,10 +565,12 @@ def create_quiz(request):
 @teacher_required
 def assign_quiz(request, pk=None):
     """Affecter un quiz à des élèves ou une classe."""
-    quizzes = Quiz.objects.filter(
-        Q(created_by=request.user) | Q(status='published')
+    is_admin = _is_platform_admin(request.user)
+    quizzes = (
+        Quiz.objects.all() if is_admin
+        else Quiz.objects.filter(Q(created_by=request.user) | Q(status='published'))
     ).order_by('-created_at')
-    classrooms = Classroom.objects.filter(teacher=request.user)
+    classrooms = _managed_classrooms(request.user)
     students = User.objects.filter(role='student').order_by('username')
 
     selected_quiz = get_object_or_404(Quiz, pk=pk) if pk else None
@@ -574,9 +595,7 @@ def assign_quiz(request, pk=None):
             if not class_id:
                 messages.error(request, "Sélectionnez une classe destinataire.")
                 return redirect('quizzes:assign')
-            classroom = get_object_or_404(
-                Classroom, pk=class_id, teacher=request.user, is_active=True
-            )
+            classroom = _managed_classroom(request.user, class_id, is_active=True)
             quiz.status = 'published'
             quiz.classroom = classroom
             quiz.save(update_fields=['status', 'classroom'])
@@ -617,7 +636,7 @@ def student_results(request):
     """
     from classrooms.models import Classroom, ClassroomMember
 
-    classrooms = Classroom.objects.filter(teacher=request.user).order_by('name')
+    classrooms = _managed_classrooms(request.user).order_by('name')
     class_id = request.GET.get('classe') or ''
     quiz_id = request.GET.get('quiz') or ''
 
@@ -627,7 +646,7 @@ def student_results(request):
         .select_related('student', 'quiz', 'quiz__lesson', 'quiz__created_by')
         .order_by('-submitted_at')
     )
-    if not request.user.is_superuser:
+    if not _is_platform_admin(request.user):
         attempts = attempts.filter(
             Q(quiz__created_by=request.user) |
             Q(student__classroom_memberships__classroom__teacher=request.user)
@@ -635,7 +654,7 @@ def student_results(request):
 
     selected_class = None
     if class_id:
-        selected_class = get_object_or_404(Classroom, pk=class_id, teacher=request.user)
+        selected_class = _managed_classroom(request.user, class_id)
         student_ids = ClassroomMember.objects.filter(
             classroom=selected_class
         ).values_list('user_id', flat=True)
@@ -645,7 +664,10 @@ def student_results(request):
         attempts = attempts.filter(quiz_id=quiz_id)
 
     # Quiz list for filter (those of teacher or seen in attempts)
-    quizzes = Quiz.objects.filter(created_by=request.user).order_by('-created_at')[:50]
+    quizzes = (
+        Quiz.objects.all() if _is_platform_admin(request.user)
+        else Quiz.objects.filter(created_by=request.user)
+    ).order_by('-created_at')[:50]
 
     stats = attempts.aggregate(
         avg=Avg('score'),
@@ -666,7 +688,7 @@ def student_results(request):
 @teacher_required
 def publish_quiz(request, pk):
     quiz = get_object_or_404(Quiz, pk=pk)
-    if quiz.created_by_id and quiz.created_by_id != request.user.id and not request.user.is_superuser:
+    if quiz.created_by_id and quiz.created_by_id != request.user.id and not _is_platform_admin(request.user):
         messages.error(request, 'Vous ne pouvez pas modifier ce quiz.')
         return redirect('quizzes:manage')
     quiz.status = 'published'
@@ -689,7 +711,7 @@ def teacher_ai_quiz(request):
     if request.method == 'GET' and request.GET.get('quiz'):
         quiz_id = request.GET['quiz']
         accessible = Quiz.objects.select_related('lesson__course')
-        if not request.user.is_superuser:
+        if not _is_platform_admin(request.user):
             accessible = accessible.filter(Q(created_by=request.user) | Q(created_by__isnull=True))
         restored_quiz = get_object_or_404(
             accessible, pk=quiz_id if quiz_id.isdecimal() else 0,
@@ -771,13 +793,16 @@ def teacher_ai_quiz(request):
                 )
                 return redirect(f"{reverse('quizzes:teacher_ai')}?quiz={quiz_created.pk}")
         elif action == 'send':
-            quiz = get_object_or_404(Quiz, pk=request.POST.get('quiz_id'), created_by=request.user)
+            quiz_queryset = Quiz.objects.all() if _is_platform_admin(request.user) else Quiz.objects.filter(
+                created_by=request.user,
+            )
+            quiz = get_object_or_404(quiz_queryset, pk=request.POST.get('quiz_id'))
             classroom_id = (request.POST.get('classroom') or '').strip()
             if not classroom_id:
                 messages.error(request, "Sélectionnez une classe destinataire avant d’envoyer le quiz.")
                 return redirect(f"{reverse('quizzes:teacher_ai')}?quiz={quiz.pk}")
-            classroom = get_object_or_404(
-                Classroom, pk=classroom_id, teacher=request.user, is_active=True,
+            classroom = _managed_classroom(
+                request.user, classroom_id, is_active=True,
             )
             if classroom.niveau != quiz.lesson.course.niveau:
                 messages.error(request, "La classe sélectionnée n’appartient pas au niveau de ce quiz.")
@@ -838,8 +863,8 @@ def teacher_ai_quiz(request):
         n_questions = quiz_created.questions.count()
         sec = quiz_created.seconds_per_question
         difficulty = quiz_created.difficulty
-    classrooms = Classroom.objects.filter(
-        teacher=request.user, is_active=True, niveau=selected_niveau,
+    classrooms = _managed_classrooms(
+        request.user, is_active=True, niveau=selected_niveau,
     ) if selected_niveau else Classroom.objects.none()
     courses = Course.objects.order_by('niveau', 'order', 'name')
     lessons = Lesson.objects.select_related('course').order_by(
@@ -871,7 +896,7 @@ def teacher_ai_quiz(request):
 def edit_quiz_questions(request, pk):
     """Édition manuelle des questions avant envoi."""
     quiz = get_object_or_404(Quiz, pk=pk)
-    if quiz.created_by_id and quiz.created_by_id != request.user.id and not request.user.is_superuser:
+    if quiz.created_by_id and quiz.created_by_id != request.user.id and not _is_platform_admin(request.user):
         messages.error(request, 'Vous ne pouvez pas modifier ce quiz.')
         return redirect('quizzes:manage')
     questions = quiz.get_questions().prefetch_related('choices')
@@ -1062,7 +1087,7 @@ def export_results_excel(request):
         .select_related('student', 'quiz', 'quiz__lesson')
         .order_by('student__last_name', 'student__first_name', '-submitted_at')
     )
-    if not request.user.is_superuser:
+    if not _is_platform_admin(request.user):
         attempts = attempts.filter(
             Q(quiz__created_by=request.user) |
             Q(student__classroom_memberships__classroom__teacher=request.user)
@@ -1070,7 +1095,7 @@ def export_results_excel(request):
 
     class_name = 'toutes_classes'
     if class_id:
-        classroom = get_object_or_404(Classroom, pk=class_id, teacher=request.user)
+        classroom = _managed_classroom(request.user, class_id)
         class_name = classroom.name.replace(' ', '_')[:40]
         student_ids = ClassroomMember.objects.filter(
             classroom=classroom
@@ -1142,7 +1167,7 @@ def export_results_csv(request):
         .select_related('student', 'quiz')
         .order_by('-submitted_at')
     )
-    if not request.user.is_superuser:
+    if not _is_platform_admin(request.user):
         attempts = attempts.filter(
             Q(quiz__created_by=request.user) |
             Q(student__classroom_memberships__classroom__teacher=request.user)
@@ -1182,7 +1207,7 @@ def retake_quiz(request, pk):
 def question_stats(request, pk):
     """Taux de réussite par question pour un quiz."""
     quiz = get_object_or_404(Quiz, pk=pk)
-    if quiz.created_by_id and quiz.created_by_id != request.user.id and not request.user.is_superuser:
+    if quiz.created_by_id and quiz.created_by_id != request.user.id and not _is_platform_admin(request.user):
         messages.error(request, 'Accès refusé.')
         return redirect('quizzes:manage')
     from django.db.models import Count, Q
@@ -1217,7 +1242,7 @@ def comment_attempt(request, attempt_id):
 @teacher_required
 def duplicate_quiz(request, pk):
     quiz = get_object_or_404(Quiz, pk=pk)
-    if quiz.created_by_id and quiz.created_by_id != request.user.id and not request.user.is_superuser:
+    if quiz.created_by_id and quiz.created_by_id != request.user.id and not _is_platform_admin(request.user):
         messages.error(request, 'Accès refusé.')
         return redirect('quizzes:manage')
     new_quiz = Quiz.objects.create(
@@ -1351,7 +1376,7 @@ def teacher_stats(request):
 def schedule_quiz(request, pk):
     """Programmer la publication d'un quiz."""
     quiz = get_object_or_404(Quiz, pk=pk)
-    if quiz.created_by_id and quiz.created_by_id != request.user.id and not request.user.is_superuser:
+    if quiz.created_by_id and quiz.created_by_id != request.user.id and not _is_platform_admin(request.user):
         messages.error(request, 'Accès refusé.')
         return redirect('quizzes:manage')
     if request.method == 'POST':

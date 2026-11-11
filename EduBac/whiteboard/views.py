@@ -14,11 +14,24 @@ def _user(request):
     return getattr(request, 'edubac_user', None) or request.user
 
 
+def _managed_boards(user):
+    boards = WhiteboardBoard.objects.all()
+    if not (user.is_staff or user.is_superuser):
+        boards = boards.filter(created_by=user)
+    return boards
+
+
 @login_required_simple
 def board_list(request):
     """Liste des tableaux accessibles (enseignant ou élève)."""
     user = _user(request)
-    if getattr(user, 'role', '') == 'teacher':
+    is_admin = user.is_staff or user.is_superuser
+    if is_admin:
+        boards = WhiteboardBoard.objects.filter(is_active=True).select_related(
+            'classroom', 'lesson',
+        )
+        classrooms = Classroom.objects.filter(is_active=True)
+    elif user.is_teacher():
         boards = WhiteboardBoard.objects.filter(
             created_by=user, is_active=True
         ).select_related('classroom', 'lesson')
@@ -32,7 +45,7 @@ def board_list(request):
         ).select_related('classroom', 'lesson')
         classrooms = Classroom.objects.filter(id__in=class_ids)
     shares = list(visible_shares(user).select_related('classroom', 'teacher')[:30])
-    is_student = getattr(user, 'role', '') == 'student'
+    is_student = user.is_student()
     latest_share = shares[0] if is_student and shares else None
     student_classroom_id = None
     if is_student and not latest_share:
@@ -46,7 +59,7 @@ def board_list(request):
         'latest_share': latest_share,
         'student_classroom_id': student_classroom_id,
         'page_title': 'Whiteboard',
-        'is_teacher': getattr(user, 'role', '') == 'teacher',
+        'is_teacher': user.is_teacher(),
         'lessons': Lesson.objects.select_related('course').order_by('course__order', 'order'),
     })
 
@@ -55,7 +68,7 @@ def board_list(request):
 @require_POST
 def board_create(request):
     user = _user(request)
-    if getattr(user, 'role', '') == 'student':
+    if user.is_student():
         return HttpResponseForbidden('Lecture seule.')
     title = (request.POST.get('title') or 'Nouveau tableau').strip()[:200]
     classroom_id = request.POST.get('classroom') or ''
@@ -63,9 +76,12 @@ def board_create(request):
     classroom = None
     lesson = None
     if classroom_id:
-        if user.role != 'teacher':
+        if not user.is_teacher():
             return HttpResponseForbidden('Les élèves créent uniquement des tableaux personnels.')
-        classroom = get_object_or_404(Classroom, pk=classroom_id, teacher=user)
+        classrooms = Classroom.objects.all()
+        if not (user.is_staff or user.is_superuser):
+            classrooms = classrooms.filter(teacher=user)
+        classroom = get_object_or_404(classrooms, pk=classroom_id)
     if lesson_id:
         from education.models import Lesson
         lesson = get_object_or_404(Lesson, pk=lesson_id)
@@ -95,19 +111,26 @@ def board_room(request, pk):
         )
     can_edit = user_can_edit_board(user, board)
     is_teacher_owner = (
-        getattr(user, 'role', '') == 'teacher'
-        and (board.created_by_id == user.id
-             or (board.classroom_id and board.classroom.teacher_id == user.id))
+        user.is_staff
+        or user.is_superuser
+        or (
+            user.is_teacher()
+            and (board.created_by_id == user.id
+                 or (board.classroom_id and board.classroom.teacher_id == user.id))
+        )
     )
     share_classrooms = []
     if is_teacher_owner:
+        classrooms = Classroom.objects.filter(is_active=True)
+        if not (user.is_staff or user.is_superuser):
+            classrooms = classrooms.filter(teacher=user)
         share_classrooms = list(
-            Classroom.objects.filter(teacher=user, is_active=True).order_by('name').values('id', 'name')
+            classrooms.order_by('name').values('id', 'name')
         )
     return render(request, 'whiteboard/room.html', {
         'board': board,
         'can_edit': can_edit,
-        'is_student': getattr(user, 'role', '') == 'student',
+        'is_student': user.is_student(),
         'is_teacher_owner': is_teacher_owner,
         'share_classrooms': share_classrooms,
         'page_title': board.title,
@@ -144,7 +167,7 @@ def board_api_content(request, pk):
         board.content = body['content']
     if 'title' in body and body['title']:
         board.title = str(body['title'])[:200]
-    if 'students_can_edit' in body and getattr(user, 'role', '') == 'teacher':
+    if 'students_can_edit' in body and user.is_teacher():
         board.students_can_edit = bool(body['students_can_edit'])
     board.save()
     return JsonResponse({'ok': True, 'updated_at': board.updated_at.isoformat()})
@@ -153,9 +176,10 @@ def board_api_content(request, pk):
 @login_required_simple
 @require_POST
 def board_delete(request, pk):
-    if getattr(_user(request), 'role', '') == 'student':
+    user = _user(request)
+    if user.is_student():
         return HttpResponseForbidden('Lecture seule.')
-    board = get_object_or_404(WhiteboardBoard, pk=pk, created_by=_user(request))
+    board = get_object_or_404(_managed_boards(user), pk=pk)
     board.is_active = False
     board.save(update_fields=['is_active'])
     return redirect('whiteboard:list')
@@ -164,14 +188,15 @@ def board_delete(request, pk):
 @login_required_simple
 @require_POST
 def board_duplicate(request, pk):
-    if getattr(_user(request), 'role', '') == 'student':
+    user = _user(request)
+    if user.is_student():
         return HttpResponseForbidden('Lecture seule.')
-    board = get_object_or_404(WhiteboardBoard, pk=pk, created_by=_user(request))
+    board = get_object_or_404(_managed_boards(user), pk=pk)
     clone = WhiteboardBoard.objects.create(
         title=f'{board.title} (copie)',
         classroom=board.classroom,
         lesson=board.lesson,
-        created_by=_user(request),
+        created_by=user,
         content=board.content,
         students_can_edit=board.students_can_edit,
     )
@@ -181,7 +206,8 @@ def board_duplicate(request, pk):
 @teacher_required
 @require_POST
 def board_rename(request, pk):
-    board = get_object_or_404(WhiteboardBoard, pk=pk, created_by=_user(request))
+    user = _user(request)
+    board = get_object_or_404(_managed_boards(user), pk=pk)
     title = (request.POST.get('title') or '').strip()[:200]
     if title:
         board.title = title

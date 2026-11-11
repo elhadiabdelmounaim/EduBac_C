@@ -101,12 +101,15 @@ def _broadcast(share):
 @require_POST
 def share_create(request):
     user = _user(request)
-    if getattr(user, 'role', '') != 'teacher':
+    if not user.is_teacher():
         return JsonResponse({'error': 'Accès réservé aux enseignants.'}, status=403)
     classroom_id = (request.POST.get('classroom_id') or '').strip()
     if not classroom_id.isdigit():
         return JsonResponse({'error': 'Choisissez une classe.'}, status=400)
-    classroom = Classroom.objects.filter(pk=int(classroom_id), teacher=user, is_active=True).first()
+    classrooms = Classroom.objects.filter(is_active=True)
+    if not (user.is_staff or user.is_superuser):
+        classrooms = classrooms.filter(teacher=user)
+    classroom = classrooms.filter(pk=int(classroom_id)).first()
     if classroom is None:
         return JsonResponse(
             {'error': 'Vous ne pouvez partager qu’avec une de vos classes.'},
@@ -171,7 +174,7 @@ def share_view(request, pk):
         'share': share,
         'shares': history,
         'page_title': share.title,
-        'is_teacher': getattr(user, 'role', '') == 'teacher',
+        'is_teacher': user.is_teacher(),
     })
 
 

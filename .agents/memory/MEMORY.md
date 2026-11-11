@@ -18,3 +18,4 @@
 - [Private uploaded media](private-uploaded-media.md) — never expose the whole media directory publicly; classroom uploads and results need Django permission checks.
 - [Student signup and email](email-verification.md) — student signup uses usernames and active class codes; administrator approval gates access, not email verification.
 - [Gmail SMTP email](gmail-smtp-email.md) — use Gmail SMTP with an App Password from environment secrets; test each host before claiming delivery works.
+- [Administrator teacher access](administrator-teacher-access.md) — treat Django staff and superusers as teachers without rewriting their stored role.
