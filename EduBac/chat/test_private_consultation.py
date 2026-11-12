@@ -226,13 +226,25 @@ class PrivateConsultationTests(TestCase):
             self.client.get(reverse('chat:private_room', args=[conversation.pk])).status_code,
             404,
         )
-        self.assertEqual(
-            self.client.get(
-                reverse('chat:api_private_messages', args=[conversation.pk]),
-            ).status_code,
-            404,
+        api_response = self.client.get(
+            reverse('chat:api_private_messages', args=[conversation.pk]),
+            HTTP_ACCEPT='application/json',
         )
+        self.assertEqual(api_response.status_code, 404)
+        self.assertEqual(api_response['Content-Type'], 'application/json')
         self.assertEqual(self.client.get(reverse('chat:private_inbox')).status_code, 403)
+
+    def test_unauthenticated_private_api_returns_json_instead_of_login_html(self):
+        conversation = self._conversation()
+
+        response = self.client.get(
+            reverse('chat:api_private_messages', args=[conversation.pk]),
+            HTTP_ACCEPT='application/json',
+        )
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertIn('session', response.json()['error'].lower())
 
     def test_removed_student_cannot_continue_private_conversation(self):
         conversation = PrivateConversation.objects.create(

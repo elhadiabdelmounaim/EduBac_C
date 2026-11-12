@@ -1,4 +1,5 @@
 from functools import wraps
+from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.contrib import messages
 
@@ -8,6 +9,11 @@ def login_required_simple(view_func):
     @wraps(view_func)
     def _wrapped(request, *args, **kwargs):
         if not getattr(request, 'edubac_user', None):
+            if 'application/json' in request.headers.get('Accept', '').lower():
+                return JsonResponse(
+                    {'error': 'Votre session a expiré. Veuillez vous reconnecter.'},
+                    status=401,
+                )
             messages.info(request, 'Veuillez vous connecter.')
             return redirect('accounts:login')
         return view_func(request, *args, **kwargs)

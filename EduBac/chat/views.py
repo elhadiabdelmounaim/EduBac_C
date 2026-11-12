@@ -407,10 +407,12 @@ def private_room(request, conversation_id):
 @require_GET
 def api_private_messages(request, conversation_id):
     user = get_edubac_user(request)
-    conversation = get_object_or_404(
-        _private_conversations_for(user),
-        pk=conversation_id,
-    )
+    conversation = _private_conversations_for(user).filter(pk=conversation_id).first()
+    if conversation is None:
+        return JsonResponse(
+            {'error': 'Cette conversation n’est plus accessible.'},
+            status=404,
+        )
     conversation.messages.filter(
         read_at__isnull=True,
     ).exclude(sender=user).update(read_at=timezone.now())
@@ -442,10 +444,12 @@ def api_private_messages(request, conversation_id):
 @require_POST
 def api_private_send(request, conversation_id):
     user = get_edubac_user(request)
-    conversation = get_object_or_404(
-        _private_conversations_for(user),
-        pk=conversation_id,
-    )
+    conversation = _private_conversations_for(user).filter(pk=conversation_id).first()
+    if conversation is None:
+        return JsonResponse(
+            {'error': 'Cette conversation n’est plus accessible.'},
+            status=404,
+        )
     upload = None
     is_voice = False
     if request.FILES or 'multipart/form-data' in (request.content_type or ''):

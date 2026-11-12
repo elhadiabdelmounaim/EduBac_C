@@ -39,6 +39,24 @@
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }
 
+  async function readJson(response, fallbackMessage) {
+    const contentType = (response.headers.get('content-type') || '').toLowerCase();
+    if (!contentType.includes('application/json')) {
+      if (response.redirected || response.status === 401) {
+        throw new Error('Votre session a expiré. Reconnectez-vous, puis actualisez cette page.');
+      }
+      throw new Error('Réponse inattendue du serveur. Actualisez la conversation et réessayez.');
+    }
+    let data;
+    try {
+      data = await response.json();
+    } catch (error) {
+      throw new Error('Réponse invalide du serveur. Actualisez la conversation et réessayez.');
+    }
+    if (!response.ok) throw new Error(data.error || fallbackMessage);
+    return data;
+  }
+
   function makeAttachment(message) {
     if (!message.attachment_url) return null;
     if (message.is_image) {
@@ -137,8 +155,7 @@
       const url = new URL(root.dataset.messagesUrl, window.location.origin);
       if (!initial && lastId) url.searchParams.set('after_id', String(lastId));
       const response = await fetch(url, { headers: { Accept: 'application/json' } });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Impossible de charger les messages.');
+      const data = await readJson(response, 'Impossible de charger les messages.');
 
       if (initial) {
         statusEl.remove();
@@ -234,8 +251,7 @@
           body: JSON.stringify({ body }),
         });
       }
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Le message n’a pas pu être envoyé.');
+      const data = await readJson(response, 'Le message n’a pas pu être envoyé.');
       const empty = messagesEl.querySelector('p.text-center');
       if (empty) empty.remove();
       appendMessage(data.message);
