@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% block title %}{{ page_title|default:"Conversation privée" }}{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="/static/css/chat.css?v=messaging-blue-1">
-<link rel="stylesheet" href="/static/css/chat-voice.css">
+<link rel="stylesheet" href="/static/css/chat.css?v=app-palette-2">
+<link rel="stylesheet" href="/static/css/chat-voice.css?v=app-palette-2">
 <style>
-    .private-chat-read.is-read { color: #77d9ff; font-weight: 700; }
+    .private-chat-read.is-read { color: var(--edubac-teal-light, #347d78); font-weight: 700; }
     .private-chat-image { display: block; max-width: min(100%, 340px); max-height: 320px; border-radius: 10px; object-fit: contain; }
     .private-chat-audio { display: block; width: min(100%, 340px); margin: .25rem 0; }
     .private-chat-error { margin: 0; padding: .25rem 1rem .75rem; }

@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block title %}Prof-Étudiant Chat{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="/static/css/chat.css?v=messaging-blue-1">
-<link rel="stylesheet" href="/static/css/chat-voice.css">
+<link rel="stylesheet" href="/static/css/chat.css?v=app-palette-2">
+<link rel="stylesheet" href="/static/css/chat-voice.css?v=app-palette-2">
 {% endblock %}
 {% block content %}
 <div class="chat-app {% if active_classroom %}chat-room-open{% endif %}"
@@ -81,7 +81,7 @@
     </dialog>
 
     <div class="chat-messages" id="chatMessages" aria-live="polite">
-      <div class="chat-messages-loading text-center py-4" style="color:#8B8399;">Chargement…</div>
+      <div class="chat-messages-loading text-center py-4" style="color:var(--nb-muted);">Chargement…</div>
     </div>
 
     <footer class="chat-composer">

@@ -267,7 +267,9 @@ body:has(.chat-app) .sidebar-nav .nav-link.active {
 .chat-bubble-row.theirs .chat-bubble { background: var(--nb-surface) !important; border-color: var(--nb-line) !important; }
 .chat-emoji-panel, .chat-file-preview { background: var(--nb-surface); border-color: var(--nb-line); }
 html[data-theme="dark"] .chat-bubble-row.theirs .chat-bubble { color: var(--nb-ink) !important; }
-html[data-theme="dark"] .chat-bubble-row.mine .chat-bubble { color: #fff !important; }
+html[data-theme="dark"] .chat-bubble-row.mine .chat-bubble,
+html[data-theme="dark"] .chat-bubble-row.mine .chat-att-file,
+html[data-theme="dark"] .chat-send-btn { color: var(--nb-surface) !important; }
 html[data-theme="dark"] .chat-app,
 html[data-theme="dark"] .chat-sidebar,
 html[data-theme="dark"] .chat-sidebar-header,
