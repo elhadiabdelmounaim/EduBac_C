@@ -5,11 +5,17 @@ from django.http import FileResponse, Http404, JsonResponse, HttpResponseForbidd
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_GET, require_POST
 from django.utils import timezone
+from django.db.models import F
 
 from accounts.decorators import login_required_simple
 from classrooms.models import Classroom, ClassroomMember
 
-from .models import ClassChatRoom, ChatMessage
+from .models import (
+    ClassChatRoom,
+    ChatMessage,
+    PrivateConversation,
+    PrivateMessage,
+)
 from .permissions import get_edubac_user, user_can_access_classroom, classrooms_for_user
 
 
@@ -47,6 +53,36 @@ def _room_payload(room, user):
         ),
         'last_message_at': last.created_at.isoformat() if last else '',
         'avatar_letter': (classroom.name[:1] or 'C').upper(),
+    }
+
+
+def _private_conversations_for(user):
+    conversations = PrivateConversation.objects.select_related(
+        'classroom', 'student', 'teacher',
+    )
+    if user.is_student():
+        return conversations.filter(
+            student=user,
+            classroom__members__user=user,
+            classroom__teacher_id=F('teacher_id'),
+        )
+    if user.is_teacher():
+        return conversations.filter(
+            teacher=user,
+            classroom__teacher=user,
+        )
+    return conversations.none()
+
+
+def _private_message_payload(message):
+    sender = message.sender
+    return {
+        'id': message.pk,
+        'body': message.body,
+        'sender_id': sender.pk,
+        'sender_name': sender.get_full_name() or sender.username,
+        'created_at': message.created_at.isoformat(),
+        'time_display': timezone.localtime(message.created_at).strftime('%d/%m/%Y %H:%M'),
     }
 
 
@@ -295,3 +331,115 @@ def api_pin(request, classroom_id, message_id):
     msg.is_pinned = not msg.is_pinned
     msg.save(update_fields=['is_pinned'])
     return JsonResponse({'ok': True, 'is_pinned': msg.is_pinned, 'message': msg.to_dict()})
+
+
+@login_required_simple
+def private_student_chat(request, classroom_id):
+    """Ouvrir la conversation privée de l'élève avec le professeur de sa classe."""
+    user = get_edubac_user(request)
+    if not user.is_student():
+        return HttpResponseForbidden('Cette conversation est réservée aux élèves de la classe.')
+    membership = get_object_or_404(
+        ClassroomMember.objects.select_related('classroom', 'classroom__teacher'),
+        classroom_id=classroom_id,
+        user=user,
+    )
+    classroom = membership.classroom
+    if not classroom.teacher_id:
+        from django.contrib import messages
+        messages.error(request, 'Aucun professeur n’est associé à cette classe.')
+        return redirect('classrooms:detail', pk=classroom.pk)
+    conversation, _ = PrivateConversation.objects.get_or_create(
+        classroom=classroom,
+        student=user,
+        teacher=classroom.teacher,
+    )
+    return redirect('chat:private_room', conversation_id=conversation.pk)
+
+
+@login_required_simple
+def private_inbox(request):
+    """Boîte des conversations individuelles du professeur."""
+    user = get_edubac_user(request)
+    if not user.is_teacher():
+        return HttpResponseForbidden('Cette boîte est réservée aux professeurs.')
+    conversations = list(
+        _private_conversations_for(user).order_by('-updated_at')[:100]
+    )
+    for conversation in conversations:
+        conversation.latest_message = conversation.last_message()
+    return render(request, 'chat/private_inbox.html', {
+        'conversations': conversations,
+        'page_title': 'Consultations individuelles',
+    })
+
+
+@login_required_simple
+def private_room(request, conversation_id):
+    user = get_edubac_user(request)
+    conversation = get_object_or_404(
+        _private_conversations_for(user),
+        pk=conversation_id,
+    )
+    contact = (
+        conversation.teacher
+        if user.pk == conversation.student_id
+        else conversation.student
+    )
+    return render(request, 'chat/private_room.html', {
+        'conversation': conversation,
+        'contact': contact,
+        'is_teacher': user.pk == conversation.teacher_id,
+        'page_title': 'Consultation avec le professeur',
+    })
+
+
+@login_required_simple
+@require_GET
+def api_private_messages(request, conversation_id):
+    user = get_edubac_user(request)
+    conversation = get_object_or_404(
+        _private_conversations_for(user),
+        pk=conversation_id,
+    )
+    messages_qs = conversation.messages.select_related('sender').order_by('created_at')
+    after_id = request.GET.get('after_id')
+    if after_id:
+        try:
+            messages_qs = messages_qs.filter(pk__gt=int(after_id))
+        except (TypeError, ValueError):
+            pass
+    else:
+        messages_qs = messages_qs.order_by('-created_at')[:100]
+        messages_qs = reversed(list(messages_qs))
+    return JsonResponse({
+        'messages': [_private_message_payload(message) for message in messages_qs],
+    })
+
+
+@login_required_simple
+@require_POST
+def api_private_send(request, conversation_id):
+    user = get_edubac_user(request)
+    conversation = get_object_or_404(
+        _private_conversations_for(user),
+        pk=conversation_id,
+    )
+    try:
+        payload = json.loads(request.body.decode('utf-8') or '{}')
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'error': 'Requête invalide.'}, status=400)
+    if not isinstance(payload, dict):
+        return JsonResponse({'error': 'Requête invalide.'}, status=400)
+    body = (payload.get('body') or '').strip()
+    if not body:
+        return JsonResponse({'error': 'Écrivez un message.'}, status=400)
+    if len(body) > 4000:
+        return JsonResponse({'error': 'Message trop long (4 000 caractères maximum).'}, status=400)
+    message = PrivateMessage.objects.create(
+        conversation=conversation,
+        sender=user,
+        body=body,
+    )
+    conversation.save(update_fields=['updated_at'])
+    return JsonResponse({'ok': True, 'message': _private_message_payload(message)})

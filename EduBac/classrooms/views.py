@@ -159,7 +159,11 @@ def classroom_detail(request, pk):
             and classroom.teacher_id == getattr(user, 'id', None)
         )
     )
-    is_member = ClassroomMember.objects.filter(classroom=classroom, user=user).exists()
+    membership = ClassroomMember.objects.filter(
+        classroom=classroom,
+        user=user,
+    ).first()
+    is_member = membership is not None
     if not is_teacher_owner and not is_member:
         messages.error(request, 'Accès non autorisé à cette classe.')
         return redirect('classrooms:list')
@@ -194,6 +198,7 @@ def classroom_detail(request, pk):
 
     return render(request, 'classrooms/detail.html', {
         'classroom': classroom,
+        'membership': membership,
         'members': members,
         'is_teacher_owner': is_teacher_owner,
         'nb_eleves': nb_eleves,

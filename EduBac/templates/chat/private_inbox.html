@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="container py-4" style="max-width:900px;">
+    <h1 class="h3 fw-bold mb-4" style="color:var(--edubac-navy);">Consultations individuelles</h1>
+    <div class="card border-0 shadow-sm" style="border-radius:16px;">
+        <div class="list-group list-group-flush">
+            {% for conversation in conversations %}
+            <a class="list-group-item list-group-item-action p-3"
+               href="{% url 'chat:private_room' conversation.pk %}">
+                <div class="d-flex justify-content-between align-items-start gap-3">
+                    <div>
+                        <div class="fw-semibold">{{ conversation.student.get_full_name|default:conversation.student.username }}</div>
+                        <div class="small text-muted">{{ conversation.classroom.get_niveau_display }}</div>
+                        <div class="small text-muted mt-1">
+                            {% if conversation.latest_message %}
+                            {{ conversation.latest_message.body|truncatechars:100 }}
+                            {% else %}
+                            Aucun message pour le moment.
+                            {% endif %}
+                        </div>
+                    </div>
+                    <span class="small text-muted text-nowrap">{{ conversation.updated_at|date:"d/m/Y H:i" }}</span>
+                </div>
+            </a>
+            {% empty %}
+            <div class="p-4 text-center text-muted">Aucune consultation individuelle pour le moment.</div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -48,6 +48,72 @@ class ClassChatRoom(models.Model):
         )
 
 
+class PrivateConversation(models.Model):
+    """Conversation privée entre un élève et le professeur de sa classe."""
+    classroom = models.ForeignKey(
+        'classrooms.Classroom',
+        on_delete=models.CASCADE,
+        related_name='private_conversations',
+        verbose_name='Classe',
+    )
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='teacher_conversations',
+        verbose_name='Élève',
+    )
+    teacher = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='student_conversations',
+        verbose_name='Enseignant',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True, db_index=True)
+
+    class Meta:
+        verbose_name = 'Conversation privée'
+        verbose_name_plural = 'Conversations privées'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['classroom', 'student', 'teacher'],
+                name='unique_private_chat_class_student_teacher',
+            ),
+        ]
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        return f"Consultation — {self.student} / {self.teacher}"
+
+    def last_message(self):
+        return self.messages.order_by('-created_at').first()
+
+
+class PrivateMessage(models.Model):
+    conversation = models.ForeignKey(
+        PrivateConversation,
+        on_delete=models.CASCADE,
+        related_name='messages',
+        verbose_name='Conversation',
+    )
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='private_chat_messages',
+        verbose_name='Expéditeur',
+    )
+    body = models.TextField(verbose_name='Message')
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = 'Message privé'
+        verbose_name_plural = 'Messages privés'
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.sender}: {self.body[:40]}"
+
+
 class ChatMessage(models.Model):
     room = models.ForeignKey(
         ClassChatRoom,

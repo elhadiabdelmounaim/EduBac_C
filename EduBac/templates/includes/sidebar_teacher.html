@@ -26,10 +26,16 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.app_name == 'chat' %}active{% endif %}"
+                <a class="nav-link {% if request.resolver_match.app_name == 'chat' and request.resolver_match.url_name != 'private_inbox' and request.resolver_match.url_name != 'private_room' %}active{% endif %}"
                    href="{% url 'chat:home' %}">
                     <i class="bi bi-chat-dots"></i><span>Chat</span>
                     {% if chat_unread_total %}<span class="sidebar-badge">{{ chat_unread_total }}</span>{% endif %}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'private_inbox' or request.resolver_match.url_name == 'private_room' %}active{% endif %}"
+                   href="{% url 'chat:private_inbox' %}">
+                    <i class="bi bi-person-lines-fill"></i><span>Consultations individuelles</span>
                 </a>
             </li>
             <li class="nav-item">

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Consultation avec le professeur{% endblock %}
+{% block content %}
+<section class="container py-4" style="max-width:900px;">
+    <a class="btn btn-sm btn-link px-0 mb-2"
+       href="{% if is_teacher %}{% url 'chat:private_inbox' %}{% else %}{% url 'classrooms:detail' conversation.classroom_id %}{% endif %}">
+        ← Retour
+    </a>
+    <div class="card border-0 shadow-sm overflow-hidden" style="border-radius:16px;">
+        <header class="p-3 border-bottom bg-white">
+            <h1 class="h5 fw-bold mb-1" style="color:var(--edubac-navy);">Consultation avec le professeur</h1>
+            <p class="small text-muted mb-0">
+                {{ contact.get_full_name|default:contact.username }}
+                · {{ conversation.classroom.get_niveau_display }}
+            </p>
+        </header>
+        <div id="privateChat"
+             class="d-flex flex-column"
+             data-messages-url="{% url 'chat:api_private_messages' conversation.pk %}"
+             data-send-url="{% url 'chat:api_private_send' conversation.pk %}"
+             data-current-user="{{ user.pk }}"
+             data-csrf="{{ csrf_token }}">
+            <div id="privateChatMessages"
+                 class="p-3"
+                 style="height:min(60vh,560px);min-height:260px;overflow-y:auto;background:#f7f8fa;"
+                 aria-live="polite"
+                 aria-label="Messages privés">
+                <p class="text-center text-muted py-3" id="privateChatStatus">Chargement des messages…</p>
+            </div>
+            <form id="privateChatForm" class="d-flex gap-2 p-3 border-top bg-white">
+                {% csrf_token %}
+                <label for="privateChatInput" class="visually-hidden">Votre message</label>
+                <textarea id="privateChatInput" class="form-control" rows="2" maxlength="4000"
+                          placeholder="Écrire un message…" required></textarea>
+                <button id="privateChatSend" type="submit" class="btn btn-edubac align-self-end">Envoyer</button>
+            </form>
+            <p id="privateChatError" class="text-danger small px-3 pb-2 mb-0" role="alert" hidden></p>
+        </div>
+    </div>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script src="/static/js/private-chat.js"></script>
+{% endblock %}

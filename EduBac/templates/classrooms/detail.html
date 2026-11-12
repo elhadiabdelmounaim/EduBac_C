@@ -1,5 +1,42 @@
 {% extends "base.html" %}
 {% block content %}
+{% if not is_teacher_owner %}
+<section class="container py-4" aria-labelledby="my-class-title">
+    <div class="card border-0 shadow-sm mx-auto" style="max-width:680px;border-radius:16px;">
+        <div class="card-body p-4 p-md-5">
+            <h1 id="my-class-title" class="h3 fw-bold mb-4" style="color:var(--edubac-navy);">Ma classe</h1>
+            <dl class="row mb-4">
+                <dt class="col-sm-5">Niveau</dt>
+                <dd class="col-sm-7">{{ classroom.get_niveau_display }}</dd>
+
+                <dt class="col-sm-5">Date d’entrée</dt>
+                <dd class="col-sm-7">{{ membership.joined_at|date:"d/m/Y" }}</dd>
+
+                <dt class="col-sm-5">État de la classe</dt>
+                <dd class="col-sm-7">
+                    {% if classroom.is_active %}
+                    <span class="badge bg-success">Active</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                </dd>
+
+                <dt class="col-sm-5">Code de la classe</dt>
+                <dd class="col-sm-7"><strong class="user-select-all">{{ classroom.code }}</strong></dd>
+            </dl>
+            {% if classroom.teacher_id %}
+            <a href="{% url 'chat:private_student_chat' classroom.pk %}" class="btn btn-edubac w-100">
+                <i class="bi bi-chat-dots me-2" aria-hidden="true"></i>Consulter le professeur
+            </a>
+            {% else %}
+            <button type="button" class="btn btn-edubac w-100" disabled>
+                <i class="bi bi-chat-dots me-2" aria-hidden="true"></i>Consulter le professeur
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% else %}
 <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
     <div>
         <h1 class="h3 fw-bold mb-1" style="color:var(--edubac-navy);">{{ classroom.name }}</h1>
@@ -133,6 +170,7 @@
 {% endif %}
 
 {% if is_teacher_owner %}<a href="{% url 'classrooms:list' %}" class="btn btn-link btn-sm mt-3">← Mes classes</a>{% else %}<a href="{% url 'classrooms:list' %}" class="btn btn-link btn-sm mt-3">← Ma classe</a>{% endif %}
+{% endif %}
 {% endblock %}
 {% block extra_js %}
 {% if is_teacher_owner %}
