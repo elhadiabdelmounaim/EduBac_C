@@ -209,38 +209,51 @@ def _login_session(request, user):
     request.session.cycle_key()
 
 
-def login_view(request):
+def login_view(request, *, teacher_entry=False):
     """
     Login unique : e-mail + mot de passe.
     Le backend détermine le rôle et redirige.
     """
     if getattr(request, 'edubac_user', None) and request.method != 'POST':
+        if teacher_entry and request.edubac_user.is_teacher():
+            return redirect('accounts:teacher_portal')
         return redirect('accounts:dashboard')
     error = None
     if request.method == 'POST':
         user, error = _authenticate(request)
         if user:
-            if user.is_staff or user.is_superuser:
+            if teacher_entry and not user.is_teacher():
+                error = 'Ce formulaire est réservé aux professeurs et aux administrateurs.'
+            else:
+                if user.is_staff or user.is_superuser:
+                    _login_session(request, user)
+                    return redirect('accounts:teacher_portal')
+                if user.must_change_password:
+                    _login_session(request, user)
+                    return redirect('accounts:change_password')
+                if not user.email_verified and not user.password_reset_at:
+                    request.session['email_verification_pending'] = user.email
+                    messages.warning(
+                        request,
+                        'Cette adresse e-mail n’est pas encore vérifiée.',
+                    )
+                    return redirect('accounts:email_verification_pending')
                 _login_session(request, user)
-                return redirect('accounts:teacher_portal')
-            if user.must_change_password:
-                _login_session(request, user)
-                return redirect('accounts:change_password')
-            if not user.email_verified and not user.password_reset_at:
-                request.session['email_verification_pending'] = user.email
-                messages.warning(
+                messages.success(
                     request,
-                    'Cette adresse e-mail n’est pas encore vérifiée.',
+                    f'Bienvenue, {user.get_full_name() or user.username} !'
                 )
-                return redirect('accounts:email_verification_pending')
-            _login_session(request, user)
-            messages.success(
-                request,
-                f'Bienvenue, {user.get_full_name() or user.username} !'
-            )
-            return redirect('accounts:dashboard')
-    return render(request, 'accounts/login.html', {
-        'page_title': 'Connexion',
+                return redirect(
+                    'accounts:teacher_portal'
+                    if teacher_entry
+                    else 'accounts:dashboard'
+                )
+    return render(request, (
+        'accounts/login_teacher.html'
+        if teacher_entry
+        else 'accounts/login.html'
+    ), {
+        'page_title': 'Connexion enseignant' if teacher_entry else 'Connexion',
         'error': error,
     })
 
@@ -251,7 +264,7 @@ def login_student(request):
 
 
 def login_teacher(request):
-    return login_view(request)
+    return login_view(request, teacher_entry=True)
 
 
 def logout_view(request):

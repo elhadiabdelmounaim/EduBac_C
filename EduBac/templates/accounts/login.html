@@ -43,6 +43,11 @@
             Pas encore de compte ?
             <a href="{% url 'accounts:register_student' %}" class="fw-semibold">Inscription élève</a>
         </p>
+        <p class="text-center small mt-2 mb-0">
+            <a href="{% url 'accounts:login_teacher' %}" class="fw-semibold">
+                Connexion professeur / administrateur
+            </a>
+        </p>
     </div>
 </div>
 {% endblock %}

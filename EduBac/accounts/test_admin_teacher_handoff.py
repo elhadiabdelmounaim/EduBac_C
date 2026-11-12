@@ -70,6 +70,52 @@ class AdminTeacherHandoffTests(TestCase):
         self.assertContains(profile, 'Rôle :</strong> Enseignant')
         self.assertEqual(User.objects.get(pk=self.admin.pk).role, 'student')
 
+    def test_teacher_login_page_is_linked_from_regular_login(self):
+        regular_login = self.client.get(reverse('accounts:login'))
+        self.assertContains(
+            regular_login,
+            reverse('accounts:login_teacher'),
+        )
+
+        teacher_login = self.client.get(reverse('accounts:login_teacher'))
+        self.assertEqual(teacher_login.status_code, 200)
+        self.assertTemplateUsed(teacher_login, 'accounts/login_teacher.html')
+        self.assertContains(teacher_login, 'professeur et administrateur')
+
+    def test_superuser_can_enter_teacher_area_through_teacher_login_form(self):
+        response = self.client.post(
+            reverse('accounts:login_teacher'),
+            {'username': self.admin.username, 'password': 'AdminPass123!'},
+        )
+
+        self.assertRedirects(response, reverse('accounts:teacher_portal'))
+        self.assertEqual(self.client.session.get('user_id'), self.admin.pk)
+        self.assertEqual(
+            User.objects.get(pk=self.admin.pk).role,
+            'student',
+        )
+        self.assertEqual(
+            self.client.get(reverse('accounts:teacher_portal')).status_code,
+            200,
+        )
+
+    def test_teacher_login_form_rejects_student_accounts(self):
+        student = User.objects.create_user(
+            username='teacher_form_student',
+            email='teacher-form-student@example.test',
+            password='StudentPass123!',
+            role='student',
+        )
+
+        response = self.client.post(
+            reverse('accounts:login_teacher'),
+            {'username': student.username, 'password': 'StudentPass123!'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'réservé aux professeurs')
+        self.assertNotIn('user_id', self.client.session)
+
     def test_app_login_can_switch_from_student_session_to_superuser(self):
         student = User.objects.create_user(
             username='already_logged_student',
