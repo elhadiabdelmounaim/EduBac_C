@@ -29,6 +29,7 @@
   var replyCancel = document.getElementById('chatReplyCancel');
   var pinnedBar = document.getElementById('chatPinnedBar');
   var lastId = 0;
+  var lastMarkedReadMessageId = 0;
   var pollTimer = null;
   var selectedFile = null;
   var replyToId = null;
@@ -195,6 +196,31 @@
       esc((text && text.innerText || '').replace(/\s+/g, ' ').slice(0, 100)) + '</span>';
   }
 
+  function markReadAfterIncomingMessages(list) {
+    var newestIncomingId = (list || []).reduce(function (newestId, message) {
+      var messageId = parseInt(message.id, 10) || 0;
+      var senderId = parseInt(message.sender_id, 10);
+      return senderId !== userId ? Math.max(newestId, messageId) : newestId;
+    }, 0);
+    if (newestIncomingId <= lastMarkedReadMessageId) return;
+
+    var previousMarkedId = lastMarkedReadMessageId;
+    lastMarkedReadMessageId = newestIncomingId;
+    fetch('/chat/api/classe/' + classroomId + '/read/', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'X-CSRFToken': csrf, Accept: 'application/json' },
+    })
+      .then(function (response) {
+        if (!response.ok) throw new Error('Impossible de marquer les messages comme lus.');
+      })
+      .catch(function () {
+        if (lastMarkedReadMessageId === newestIncomingId) {
+          lastMarkedReadMessageId = previousMarkedId;
+        }
+      });
+  }
+
   function loadMessages(initial) {
     if (!classroomId || !messagesEl) return;
     var url = '/chat/api/classe/' + classroomId + '/messages/';
@@ -223,6 +249,7 @@
           }
         }
         list.forEach(function (m) { renderMessage(m, !initial, !initial); });
+        if (!initial && list.length) markReadAfterIncomingMessages(list);
         if (initial || list.length) scrollBottom();
         updatePinnedBar();
       })
@@ -455,8 +482,5 @@
     }
     loadMessages(true);
     startPolling();
-    fetch('/chat/api/classe/' + classroomId + '/read/', {
-      method: 'POST', credentials: 'same-origin', headers: { 'X-CSRFToken': csrf },
-    }).catch(function () {});
   }
 })();

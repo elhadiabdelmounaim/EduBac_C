@@ -22,3 +22,4 @@
 - [Student class page and consultation](student-class-consultation.md) — show only class essentials and keep teacher consultations one-to-one, separate from class chat.
 - [Unified messaging access](unified-messaging-access.md) — peer chats require a current shared class; teacher consultations stay class-specific and admin replies share one inbox.
 - [Student password recovery](student-password-recovery.md) — superuser verifies identity, uses no email, preserves records, and issues a one-time temporary password.
+- [SQLite chat write pressure](chat-sqlite-concurrency.md) — keep message polling GETs read-only; use explicit read-state updates to avoid SQLite writer conflicts.

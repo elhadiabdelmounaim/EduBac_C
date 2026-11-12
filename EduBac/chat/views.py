@@ -334,7 +334,6 @@ def api_messages(request, classroom_id):
         # Derniers 100 messages au chargement
         qs = qs.order_by('-created_at')[:100]
         messages_list = list(reversed(list(qs)))
-        room.mark_read(user)
         return JsonResponse({
             'messages': [m.to_dict() for m in messages_list],
             'classroom_id': classroom.pk,
@@ -343,8 +342,6 @@ def api_messages(request, classroom_id):
         })
 
     messages_list = list(qs[:50])
-    if messages_list:
-        room.mark_read(user)
     return JsonResponse({
         'messages': [m.to_dict() for m in messages_list],
         'classroom_id': classroom.pk,

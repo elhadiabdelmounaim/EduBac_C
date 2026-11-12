@@ -7,7 +7,7 @@ from django.test import TestCase, override_settings
 
 from accounts.models import User
 from classrooms.models import Classroom
-from .models import ChatMessage
+from .models import ChatMessage, ChatReadState, ClassChatRoom
 
 
 @override_settings(ALLOWED_HOSTS=['testserver'])
@@ -119,3 +119,19 @@ class VoiceMessageTests(TestCase):
         self.assertEqual(response.status_code, 403)
         self.assertEqual(self.client.get(f'/chat/api/classe/{self.room.pk}/messages/').status_code, 403)
         self.assertFalse(ChatMessage.objects.exists())
+
+    def test_message_poll_is_read_only_and_explicit_read_marks_messages(self):
+        response = self.client.get(f'/chat/api/classe/{self.room.pk}/messages/')
+
+        self.assertEqual(response.status_code, 200)
+        chat_room = ClassChatRoom.objects.get(classroom=self.room)
+        read_state = ChatReadState.objects.filter(
+            room=chat_room,
+            user=self.student,
+        )
+        self.assertFalse(read_state.exists())
+
+        mark_read = self.client.post(f'/chat/api/classe/{self.room.pk}/read/')
+
+        self.assertEqual(mark_read.status_code, 200)
+        self.assertTrue(read_state.exists())

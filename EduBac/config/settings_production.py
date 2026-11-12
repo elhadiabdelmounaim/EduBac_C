@@ -110,6 +110,7 @@ elif database_engine == 'sqlite' or (
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': db_path,
+            'OPTIONS': {'timeout': 20},
             'CONN_MAX_AGE': 0,
         }
     }

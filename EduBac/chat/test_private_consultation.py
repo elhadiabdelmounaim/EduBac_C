@@ -6,6 +6,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.conf import settings
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from accounts.models import User
 from classrooms.models import Classroom, ClassroomMember
@@ -72,7 +73,8 @@ class PrivateConsultationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Ma classe')
         self.assertContains(response, self.classroom.get_niveau_display())
-        self.assertContains(response, self.membership.joined_at.strftime('%d/%m/%Y'))
+        joined_date = timezone.localtime(self.membership.joined_at).strftime('%d/%m/%Y')
+        self.assertContains(response, joined_date)
         self.assertContains(response, 'Inactive')
         self.assertContains(response, self.classroom.code)
         self.assertContains(response, 'Consulter le professeur')
