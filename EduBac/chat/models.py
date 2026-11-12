@@ -3,6 +3,8 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 
+from .storage import PrivateChatStorage, private_message_upload_to
+
 
 class ClassChatRoom(models.Model):
     classroom = models.OneToOneField(
@@ -103,6 +105,16 @@ class PrivateMessage(models.Model):
         verbose_name='Expéditeur',
     )
     body = models.TextField(verbose_name='Message')
+    attachment = models.FileField(
+        upload_to=private_message_upload_to,
+        storage=PrivateChatStorage(),
+        blank=True,
+        null=True,
+        verbose_name='Pièce jointe',
+    )
+    attachment_name = models.CharField(max_length=255, blank=True)
+    is_voice = models.BooleanField(default=False, verbose_name='Message vocal')
+    read_at = models.DateTimeField(null=True, blank=True, verbose_name='Lu le')
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
@@ -111,7 +123,15 @@ class PrivateMessage(models.Model):
         ordering = ['created_at']
 
     def __str__(self):
-        return f"{self.sender}: {self.body[:40]}"
+        return f"{self.sender}: {(self.body or self.attachment_name)[:40]}"
+
+    @property
+    def is_image(self):
+        name = self.attachment_name.lower()
+        return bool(self.attachment) and any(
+            name.endswith(extension)
+            for extension in ('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')
+        )
 
 
 class ChatMessage(models.Model):

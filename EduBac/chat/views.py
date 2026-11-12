@@ -3,6 +3,7 @@ import mimetypes
 
 from django.http import FileResponse, Http404, JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 from django.utils import timezone
 from django.db.models import F
@@ -83,6 +84,14 @@ def _private_message_payload(message):
         'sender_name': sender.get_full_name() or sender.username,
         'created_at': message.created_at.isoformat(),
         'time_display': timezone.localtime(message.created_at).strftime('%d/%m/%Y %H:%M'),
+        'is_read': message.read_at is not None,
+        'is_voice': message.is_voice,
+        'is_image': message.is_image,
+        'attachment_url': (
+            reverse('chat:private_attachment', args=[message.pk])
+            if message.attachment else ''
+        ),
+        'attachment_name': message.attachment_name,
     }
 
 
@@ -402,18 +411,30 @@ def api_private_messages(request, conversation_id):
         _private_conversations_for(user),
         pk=conversation_id,
     )
+    conversation.messages.filter(
+        read_at__isnull=True,
+    ).exclude(sender=user).update(read_at=timezone.now())
     messages_qs = conversation.messages.select_related('sender').order_by('created_at')
     after_id = request.GET.get('after_id')
     if after_id:
         try:
-            messages_qs = messages_qs.filter(pk__gt=int(after_id))
+            after_id = int(after_id)
         except (TypeError, ValueError):
-            pass
+            return JsonResponse({'error': 'Identifiant de message invalide.'}, status=400)
+        if after_id < 0:
+            return JsonResponse({'error': 'Identifiant de message invalide.'}, status=400)
+        messages_qs = messages_qs.filter(pk__gt=after_id)[:50]
     else:
         messages_qs = messages_qs.order_by('-created_at')[:100]
         messages_qs = reversed(list(messages_qs))
     return JsonResponse({
         'messages': [_private_message_payload(message) for message in messages_qs],
+        'read_ids': list(
+            conversation.messages.filter(
+                sender=user,
+                read_at__isnull=False,
+            ).order_by('-created_at').values_list('pk', flat=True)[:100]
+        ),
     })
 
 
@@ -425,21 +446,79 @@ def api_private_send(request, conversation_id):
         _private_conversations_for(user),
         pk=conversation_id,
     )
-    try:
-        payload = json.loads(request.body.decode('utf-8') or '{}')
-    except (json.JSONDecodeError, UnicodeDecodeError):
-        return JsonResponse({'error': 'Requête invalide.'}, status=400)
-    if not isinstance(payload, dict):
-        return JsonResponse({'error': 'Requête invalide.'}, status=400)
-    body = (payload.get('body') or '').strip()
-    if not body:
+    upload = None
+    is_voice = False
+    if request.FILES or 'multipart/form-data' in (request.content_type or ''):
+        body = (request.POST.get('body') or '').strip()
+        upload = request.FILES.get('attachment')
+        is_voice = (request.POST.get('is_voice') or '').lower() in {'1', 'true'}
+    else:
+        try:
+            payload = json.loads(request.body.decode('utf-8') or '{}')
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'error': 'Requête invalide.'}, status=400)
+        if not isinstance(payload, dict) or not isinstance(payload.get('body', ''), str):
+            return JsonResponse({'error': 'Requête invalide.'}, status=400)
+        body = payload.get('body', '').strip()
+    if not body and not upload:
         return JsonResponse({'error': 'Écrivez un message.'}, status=400)
     if len(body) > 4000:
         return JsonResponse({'error': 'Message trop long (4 000 caractères maximum).'}, status=400)
-    message = PrivateMessage.objects.create(
+    attachment_name = ''
+    if upload:
+        if upload.size > 10 * 1024 * 1024:
+            return JsonResponse({'error': 'Fichier trop volumineux (maximum 10 Mo).'}, status=400)
+        from pathlib import Path
+        original_name = (upload.name or '').replace('\\', '/')
+        attachment_name = Path(original_name).name[:255]
+        extension = Path(attachment_name).suffix.lower()
+        allowed_extensions = {
+            '.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp',
+            '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt', '.zip',
+            '.webm', '.ogg', '.mp3', '.wav', '.m4a', '.aac',
+        }
+        if extension not in allowed_extensions:
+            return JsonResponse({'error': 'Type de fichier non autorisé.'}, status=400)
+        is_voice = is_voice or extension in {
+            '.webm', '.ogg', '.mp3', '.wav', '.m4a', '.aac',
+        }
+    message = PrivateMessage(
         conversation=conversation,
         sender=user,
         body=body,
+        attachment_name=attachment_name,
+        is_voice=is_voice,
     )
+    if upload:
+        message.attachment = upload
+    message.save()
     conversation.save(update_fields=['updated_at'])
     return JsonResponse({'ok': True, 'message': _private_message_payload(message)})
+
+
+@login_required_simple
+@require_GET
+def private_attachment(request, message_id):
+    user = get_edubac_user(request)
+    message = get_object_or_404(
+        PrivateMessage.objects.select_related('conversation'),
+        pk=message_id,
+        conversation__in=_private_conversations_for(user),
+    )
+    if not message.attachment:
+        raise Http404
+    try:
+        handle = message.attachment.open('rb')
+    except FileNotFoundError:
+        raise Http404
+    content_type = mimetypes.guess_type(message.attachment_name)[0]
+    inline = message.is_image or message.is_voice
+    response = FileResponse(
+        handle,
+        content_type=content_type or 'application/octet-stream',
+        as_attachment=not inline,
+        filename=message.attachment_name or 'piece-jointe',
+    )
+    response['Cache-Control'] = 'private, no-store'
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response

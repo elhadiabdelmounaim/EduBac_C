@@ -28,6 +28,11 @@ urlpatterns = [
         views.api_private_send,
         name='api_private_send',
     ),
+    path(
+        'consultations/attachments/<int:message_id>/',
+        views.private_attachment,
+        name='private_attachment',
+    ),
     path('api/classe/<int:classroom_id>/messages/', views.api_messages, name='api_messages'),
     path('attachments/<int:message_id>/', views.attachment, name='attachment'),
     path('api/classe/<int:classroom_id>/send/', views.api_send, name='api_send'),

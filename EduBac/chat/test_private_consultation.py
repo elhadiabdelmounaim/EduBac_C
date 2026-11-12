@@ -1,16 +1,27 @@
 import json
+import tempfile
+from pathlib import Path
 
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.conf import settings
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from accounts.models import User
 from classrooms.models import Classroom, ClassroomMember
 from .models import PrivateConversation, PrivateMessage
+from .storage import PrivateChatStorage
 
 
 @override_settings(ALLOWED_HOSTS=['testserver'])
 class PrivateConsultationTests(TestCase):
     def setUp(self):
+        self.private_files = tempfile.TemporaryDirectory()
+        self.addCleanup(self.private_files.cleanup)
+        attachment_field = PrivateMessage._meta.get_field('attachment')
+        self.original_storage = attachment_field.storage
+        attachment_field.storage = PrivateChatStorage(location=self.private_files.name)
+        self.addCleanup(setattr, attachment_field, 'storage', self.original_storage)
         self.teacher = User.objects.create_user(
             username='private_teacher',
             email='private-teacher@example.test',
@@ -108,6 +119,7 @@ class PrivateConsultationTests(TestCase):
         self.assertEqual(received.status_code, 200)
         self.assertEqual(received.json()['messages'][0]['body'], 'Bonjour, professeur.')
         self.assertEqual(received.json()['messages'][0]['sender_id'], self.student.pk)
+        self.assertTrue(received.json()['messages'][0]['is_read'])
 
         send_teacher = self.client.post(
             reverse('chat:api_private_send', args=[conversation.pk]),
@@ -126,6 +138,81 @@ class PrivateConsultationTests(TestCase):
             latest.json()['messages'][0]['body'],
             'Bonjour, comment puis-je vous aider ?',
         )
+        self.assertIn(send_student.json()['message']['id'], latest.json()['read_ids'])
+
+    def test_private_chat_page_exposes_media_recording_and_emoji_controls(self):
+        self.login_as(self.student)
+        conversation = self._conversation()
+
+        response = self.client.get(reverse('chat:private_room', args=[conversation.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        for control in (
+            'privateFileBtn',
+            'privateImageBtn',
+            'privateAudioBtn',
+            'chatVoiceBtn',
+            'privateEmojiBtn',
+            'chatVoiceStop',
+            'chatVoiceSend',
+        ):
+            self.assertContains(response, f'id="{control}"')
+        page = response.content.decode()
+        self.assertLess(page.index('chat-voice.js'), page.index('private-chat.js'))
+
+    def test_private_image_and_audio_uploads_are_delivered_only_to_participants(self):
+        self.login_as(self.student)
+        image_response = self.client.post(
+            reverse('chat:api_private_send', args=[
+                self._conversation().pk,
+            ]),
+            {
+                'body': 'Regardez cette image.',
+                'attachment': SimpleUploadedFile(
+                    'exercice.png', b'private-image-data', content_type='image/png',
+                ),
+            },
+        )
+        self.assertEqual(image_response.status_code, 200)
+        image_message = image_response.json()['message']
+        self.assertTrue(image_message['is_image'])
+        self.assertTrue(image_message['attachment_url'].startswith('/chat/consultations/attachments/'))
+        self.assertNotIn('/media/', image_message['attachment_url'])
+        private_root = Path(PrivateMessage._meta.get_field('attachment').storage.location).resolve()
+        media_root = Path(settings.MEDIA_ROOT).resolve()
+        self.assertFalse(private_root == media_root or media_root in private_root.parents)
+        image_download = self.client.get(image_message['attachment_url'])
+        self.assertEqual(image_download.status_code, 200)
+        self.assertEqual(image_download['Cache-Control'], 'private, no-store')
+        self.assertIn('inline', image_download['Content-Disposition'])
+
+        audio_response = self.client.post(
+            reverse('chat:api_private_send', args=[self._conversation().pk]),
+            {
+                'attachment': SimpleUploadedFile(
+                    'explication.mp3', b'private-audio-data', content_type='audio/mpeg',
+                ),
+            },
+        )
+        self.assertEqual(audio_response.status_code, 200)
+        audio_message = audio_response.json()['message']
+        self.assertTrue(audio_message['is_voice'])
+        self.login_as(self.teacher)
+        audio_download = self.client.get(audio_message['attachment_url'])
+        self.assertEqual(audio_download.status_code, 200)
+        self.assertTrue(audio_download['Content-Type'].startswith('audio/'))
+        self.assertIn('inline', audio_download['Content-Disposition'])
+        self.login_as(self.outsider)
+        self.assertEqual(self.client.get(image_message['attachment_url']).status_code, 404)
+        self.assertEqual(self.client.get(audio_message['attachment_url']).status_code, 404)
+
+    def _conversation(self):
+        conversation, _ = PrivateConversation.objects.get_or_create(
+            classroom=self.classroom,
+            student=self.student,
+            teacher=self.teacher,
+        )
+        return conversation
 
     def test_private_conversation_is_hidden_from_nonparticipants(self):
         conversation = PrivateConversation.objects.create(

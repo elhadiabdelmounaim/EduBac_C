@@ -1,44 +1,115 @@
 {% extends "base.html" %}
 {% block title %}Consultation avec le professeur{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/chat.css">
+<link rel="stylesheet" href="/static/css/chat-voice.css">
+<style>
+    .private-chat-read.is-read { color: #77d9ff; font-weight: 700; }
+    .private-chat-image { display: block; max-width: min(100%, 340px); max-height: 320px; border-radius: 10px; object-fit: contain; }
+    .private-chat-audio { display: block; width: min(100%, 340px); margin: .25rem 0; }
+    .private-chat-error { margin: 0; padding: .25rem 1rem .75rem; }
+</style>
+{% endblock %}
 {% block content %}
-<section class="container py-4" style="max-width:900px;">
-    <a class="btn btn-sm btn-link px-0 mb-2"
-       href="{% if is_teacher %}{% url 'chat:private_inbox' %}{% else %}{% url 'classrooms:detail' conversation.classroom_id %}{% endif %}">
-        ← Retour
-    </a>
-    <div class="card border-0 shadow-sm overflow-hidden" style="border-radius:16px;">
-        <header class="p-3 border-bottom bg-white">
-            <h1 class="h5 fw-bold mb-1" style="color:var(--edubac-navy);">Consultation avec le professeur</h1>
-            <p class="small text-muted mb-0">
-                {{ contact.get_full_name|default:contact.username }}
-                · {{ conversation.classroom.get_niveau_display }}
-            </p>
-        </header>
-        <div id="privateChat"
-             class="d-flex flex-column"
-             data-messages-url="{% url 'chat:api_private_messages' conversation.pk %}"
-             data-send-url="{% url 'chat:api_private_send' conversation.pk %}"
-             data-current-user="{{ user.pk }}"
-             data-csrf="{{ csrf_token }}">
-            <div id="privateChatMessages"
-                 class="p-3"
-                 style="height:min(60vh,560px);min-height:260px;overflow-y:auto;background:#f7f8fa;"
-                 aria-live="polite"
-                 aria-label="Messages privés">
-                <p class="text-center text-muted py-3" id="privateChatStatus">Chargement des messages…</p>
+<div class="chat-app chat-room-open" id="privateChat"
+     data-messages-url="{% url 'chat:api_private_messages' conversation.pk %}"
+     data-send-url="{% url 'chat:api_private_send' conversation.pk %}"
+     data-current-user="{{ user.pk }}">
+    <section class="chat-main" id="privateChatMain">
+        <header class="chat-main-header">
+            <a class="chat-back-btn" aria-label="Retour"
+               href="{% if is_teacher %}{% url 'chat:private_inbox' %}{% else %}{% url 'classrooms:detail' conversation.classroom_id %}{% endif %}">
+                <i class="bi bi-arrow-left" aria-hidden="true"></i>
+            </a>
+            <div class="chat-avatar chat-avatar-lg">{{ contact.get_full_name|default:contact.username|slice:":1"|upper }}</div>
+            <div class="chat-header-info">
+                <div class="chat-header-name">{{ contact.get_full_name|default:contact.username }}</div>
+                <div class="chat-header-status">Consultation privée · {{ conversation.classroom.get_niveau_display }}</div>
             </div>
-            <form id="privateChatForm" class="d-flex gap-2 p-3 border-top bg-white">
-                {% csrf_token %}
-                <label for="privateChatInput" class="visually-hidden">Votre message</label>
-                <textarea id="privateChatInput" class="form-control" rows="2" maxlength="4000"
-                          placeholder="Écrire un message…" required></textarea>
-                <button id="privateChatSend" type="submit" class="btn btn-edubac align-self-end">Envoyer</button>
-            </form>
-            <p id="privateChatError" class="text-danger small px-3 pb-2 mb-0" role="alert" hidden></p>
+            <div class="chat-header-actions">
+                <span class="small text-muted" id="privateChatConnection" role="status">Messages privés</span>
+            </div>
+        </header>
+
+        <div class="chat-messages" id="privateChatMessages" aria-live="polite" aria-label="Messages privés">
+            <div class="text-center text-muted py-4 small" id="privateChatStatus">Chargement…</div>
         </div>
-    </div>
-</section>
+
+        <footer class="chat-composer">
+            <div class="chat-emoji-panel" id="privateEmojiPanel" hidden>
+                <div class="chat-emoji-grid" id="privateEmojiGrid"></div>
+            </div>
+            <div class="chat-file-preview" id="privateFilePreview" hidden>
+                <span id="privateFilePreviewName"></span>
+                <button type="button" id="privateFileClear" title="Retirer la pièce jointe" aria-label="Retirer la pièce jointe">&times;</button>
+            </div>
+            <form id="chatForm" autocomplete="off" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="chat-composer-tools">
+                    <button type="button" class="chat-tool-btn" id="privateEmojiBtn" title="Emoji" aria-label="Choisir un emoji">
+                        <i class="bi bi-emoji-smile"></i>
+                    </button>
+                    <button type="button" class="chat-tool-btn" id="privateFileBtn" title="Joindre un fichier" aria-label="Joindre un fichier">
+                        <i class="bi bi-paperclip"></i>
+                    </button>
+                    <button type="button" class="chat-tool-btn" id="privateImageBtn" title="Envoyer une image" aria-label="Envoyer une image">
+                        <i class="bi bi-image"></i>
+                    </button>
+                    <button type="button" class="chat-tool-btn" id="privateAudioBtn" title="Envoyer un fichier audio" aria-label="Envoyer un fichier audio">
+                        <i class="bi bi-file-music"></i>
+                    </button>
+                    <button type="button" class="chat-tool-btn" id="chatVoiceBtn" title="Enregistrer un message vocal" aria-label="Enregistrer un message vocal" aria-pressed="false">
+                        <svg class="chat-mic-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path fill="currentColor" d="M12 14.6a3.1 3.1 0 0 0 3.1-3.1V6.2a3.1 3.1 0 0 0-6.2 0v5.3a3.1 3.1 0 0 0 3.1 3.1zm5.5-3.1a.8.8 0 0 0-1.6.1 3.9 3.9 0 0 1-7.8 0 .8.8 0 1 0-1.6.1 5.5 5.5 0 0 0 4.7 5.2V19H9.4a.8.8 0 0 0 0 1.6h5.2a.8.8 0 0 0 0-1.6h-1.8v-2.2a5.5 5.5 0 0 0 4.7-5.3z"/>
+                        </svg>
+                    </button>
+                    <input type="file" id="privateFileInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.zip" hidden>
+                    <input type="file" id="privateImageInput" accept="image/*" hidden>
+                    <input type="file" id="privateAudioInput" accept="audio/*" hidden>
+                </div>
+                <div class="chat-input-wrap">
+                    <label for="chatInput" class="visually-hidden">Votre message</label>
+                    <textarea id="chatInput" rows="1" placeholder="Écrire un message…" maxlength="4000"></textarea>
+                </div>
+                <button type="submit" class="chat-send-btn" title="Envoyer" aria-label="Envoyer">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </form>
+            <div class="chat-voice-recorder" id="chatVoiceRecorder" hidden data-state="idle">
+                <div class="chat-voice-rec" id="chatVoiceRec" hidden role="group" aria-label="Enregistrement en cours">
+                    <button type="button" class="chat-voice-text-btn chat-voice-rec-cancel" id="chatVoiceCancel">Annuler</button>
+                    <div class="chat-voice-rec-live">
+                        <span class="chat-voice-rec-dot" aria-hidden="true"></span>
+                        <span class="chat-voice-rec-time" id="chatVoiceRecTime">0:00</span>
+                        <div class="chat-voice-wave is-fallback" id="chatVoiceWave" aria-hidden="true"></div>
+                        <span class="chat-voice-state" id="chatVoiceRecLabel">Enregistrement</span>
+                    </div>
+                    <button type="button" class="chat-voice-rec-stop" id="chatVoiceStop" aria-label="Arrêter l'enregistrement">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M7 7h10v10H7z"/></svg>
+                    </button>
+                </div>
+                <div class="chat-voice-preview" id="chatVoicePreview" hidden data-playback="paused" role="group" aria-label="Aperçu du message vocal">
+                    <button type="button" class="chat-voice-text-btn chat-voice-delete" id="chatVoiceDelete">Supprimer</button>
+                    <div class="chat-voice-preview-main">
+                        <button type="button" class="chat-voice-play" id="chatVoicePlay" aria-label="Lecture"></button>
+                        <div class="chat-voice-preview-timeline">
+                            <input type="range" id="chatVoiceSeek" min="0" max="1" step="0.01" value="0" disabled aria-label="Position de lecture">
+                            <div class="chat-voice-preview-meta">
+                                <span class="chat-voice-preview-times"><span id="chatVoiceElapsed">0:00</span><span aria-hidden="true">/</span><span id="chatVoiceDuration">0:00</span></span>
+                                <span class="chat-voice-state" id="chatVoicePreviewState" role="status">Aperçu</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="chat-voice-send" id="chatVoiceSend">Envoyer</button>
+                    <audio id="chatVoicePreviewAudio" preload="auto" playsinline hidden></audio>
+                </div>
+            </div>
+            <p id="privateChatError" class="private-chat-error text-danger small" role="alert" hidden></p>
+        </div>
+    </section>
+</div>
 {% endblock %}
 {% block extra_js %}
+<script src="/static/js/chat-voice.js"></script>
 <script src="/static/js/private-chat.js"></script>
 {% endblock %}
