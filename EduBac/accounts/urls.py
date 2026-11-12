@@ -14,11 +14,22 @@ urlpatterns = [
     path('verification-email/', views.email_verification_pending, name='email_verification_pending'),
     path('verification-email/renvoyer/', views.resend_verification, name='resend_verification'),
     path('verification-email/confirmer/<str:token>/', views.confirm_email, name='confirm_email'),
+    path('mot-de-passe/changer/', views.change_password, name='change_password'),
     path('inscription/', views.register, name='register'),
     path('inscription/choix/', views.register_choice, name='register_choice'),
     path('inscription/eleve/', views.register_student, name='register_student'),
     path('inscription/professeur/', views.register_teacher, name='register_teacher'),
     path('administration/', views.admin_dashboard, name='admin_dashboard'),
+    path(
+        'administration/eleves/<int:user_id>/mot-de-passe/',
+        views.confirm_student_password_reset,
+        name='confirm_student_password_reset',
+    ),
+    path(
+        'administration/eleves/<int:user_id>/mot-de-passe/reinitialiser/',
+        views.reset_student_password,
+        name='reset_student_password',
+    ),
     path(
         'administration/inscriptions/<int:user_id>/',
         views.review_registration,

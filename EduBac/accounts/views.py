@@ -1,24 +1,33 @@
 import logging
+import secrets
 import uuid
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.http import HttpResponseForbidden
 from django.urls import reverse
-from django.views.decorators.http import require_GET, require_POST
-from django.db.models import Count, Avg, Q
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
+from django.db.models import Count, Avg, Q, Prefetch
 from django.core import signing
 from django.db import IntegrityError, transaction
+from django.utils import timezone
 
-from .models import User, StudentProfile, TeacherProfile
+from .models import (
+    User,
+    StudentProfile,
+    TeacherProfile,
+    StudentPasswordResetEvent,
+)
 from .decorators import (
     admin_required,
     login_required_simple,
     student_required,
+    superuser_required,
     teacher_required,
 )
+from .forms import ForcedPasswordChangeForm
 from .email_verification import (
     get_user_from_verification_token,
     send_verification_email,
@@ -196,6 +205,7 @@ def _send_verification_after_signup(request, user):
 def _login_session(request, user):
     request.session['user_id'] = user.id
     request.session['role'] = user.role
+    request.session['password_session_version'] = user.password_session_version
     request.session.cycle_key()
 
 
@@ -213,7 +223,10 @@ def login_view(request):
             if user.is_staff or user.is_superuser:
                 _login_session(request, user)
                 return redirect('accounts:teacher_portal')
-            if not user.email_verified:
+            if user.must_change_password:
+                _login_session(request, user)
+                return redirect('accounts:change_password')
+            if not user.email_verified and not user.password_reset_at:
                 request.session['email_verification_pending'] = user.email
                 messages.warning(
                     request,
@@ -502,6 +515,7 @@ def dashboard(request):
 def admin_dashboard(request):
     from classrooms.models import ClassroomMember
 
+    current_user = request.edubac_user
     pending_users = User.objects.filter(
         role='student',
         approval_status='pending',
@@ -515,11 +529,237 @@ def admin_dashboard(request):
         }
         for user in pending_users
     ]
+    student_search = (request.GET.get('student_q') or '').strip()
+    student_results = []
+    if current_user.is_superuser and student_search:
+        memberships = ClassroomMember.objects.select_related('classroom')
+        student_results = list(
+            User.objects.filter(
+                role='student',
+                is_staff=False,
+                is_superuser=False,
+            )
+            .filter(
+                Q(username__icontains=student_search)
+                | Q(first_name__icontains=student_search)
+                | Q(last_name__icontains=student_search)
+            )
+            .select_related('student_profile')
+            .prefetch_related(
+                Prefetch('classroom_memberships', queryset=memberships)
+            )
+            .order_by('last_name', 'first_name', 'username')[:50]
+        )
+        for student in student_results:
+            student_memberships = list(student.classroom_memberships.all())
+            student.admin_classroom = (
+                student_memberships[0].classroom.name
+                if student_memberships else None
+            )
+            try:
+                profile = student.student_profile
+            except StudentProfile.DoesNotExist:
+                profile = None
+            student.admin_level = (
+                profile.get_niveau_display() if profile else 'Non renseigné'
+            )
+            if student.approval_status == 'pending':
+                student.admin_status = 'En attente d’approbation'
+            elif not student.is_active:
+                student.admin_status = 'Désactivé'
+            elif student.must_change_password:
+                student.admin_status = 'Changement de mot de passe requis'
+            else:
+                student.admin_status = 'Actif'
+            student.can_reset_password = (
+                student.approval_status == 'approved' and student.is_active
+            )
+
     return render(request, 'accounts/dashboard_admin.html', {
         'page_title': 'Administration EduBac',
         'registrations': registrations,
         'pending_count': len(registrations),
+        'student_search': student_search,
+        'student_results': student_results,
+        'student_search_performed': bool(student_search and current_user.is_superuser),
+        'student_results_limit_reached': len(student_results) == 50,
     })
+
+
+def _student_reset_context(student, *, nonce='', error=None):
+    from classrooms.models import ClassroomMember
+
+    membership = (
+        ClassroomMember.objects.filter(user=student)
+        .select_related('classroom')
+        .first()
+    )
+    try:
+        profile = student.student_profile
+    except StudentProfile.DoesNotExist:
+        profile = None
+    return {
+        'page_title': 'Réinitialiser le mot de passe',
+        'student': student,
+        'classroom': membership.classroom if membership else None,
+        'level': profile.get_niveau_display() if profile else 'Non renseigné',
+        'nonce': nonce,
+        'error': error,
+        'account_status': (
+            'En attente d’approbation'
+            if student.approval_status == 'pending'
+            else 'Désactivé'
+            if not student.is_active
+            else 'Changement de mot de passe requis'
+            if student.must_change_password
+            else 'Actif'
+        ),
+    }
+
+
+def _no_store(response):
+    response['Cache-Control'] = 'no-store, no-cache, max-age=0, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Referrer-Policy'] = 'no-referrer'
+    return response
+
+
+@superuser_required
+@require_GET
+def confirm_student_password_reset(request, user_id):
+    student = get_object_or_404(
+        User,
+        pk=user_id,
+        role='student',
+        is_staff=False,
+        is_superuser=False,
+    )
+    nonce = secrets.token_urlsafe(24)
+    pending = request.session.get('student_password_reset_nonces', {})
+    if not isinstance(pending, dict):
+        pending = {}
+    pending[str(student.pk)] = nonce
+    request.session['student_password_reset_nonces'] = pending
+    return _no_store(render(
+        request,
+        'accounts/confirm_student_password_reset.html',
+        _student_reset_context(student, nonce=nonce),
+    ))
+
+
+@superuser_required
+@require_POST
+def reset_student_password(request, user_id):
+    student = get_object_or_404(
+        User,
+        pk=user_id,
+        role='student',
+        is_staff=False,
+        is_superuser=False,
+    )
+    pending = request.session.get('student_password_reset_nonces', {})
+    expected_nonce = pending.get(str(student.pk)) if isinstance(pending, dict) else None
+    supplied_nonce = request.POST.get('nonce', '')
+    if (
+        not expected_nonce
+        or not supplied_nonce
+        or not secrets.compare_digest(expected_nonce, supplied_nonce)
+    ):
+        messages.error(
+            request,
+            'Cette confirmation a expiré. Recherchez de nouveau l’élève.',
+        )
+        return redirect('accounts:admin_dashboard')
+
+    if request.POST.get('identity_verified') != 'yes':
+        return _no_store(render(
+            request,
+            'accounts/confirm_student_password_reset.html',
+            _student_reset_context(
+                student,
+                nonce=expected_nonce,
+                error='Confirmez d’abord que vous avez vérifié l’identité de l’élève.',
+            ),
+        ))
+
+    pending.pop(str(student.pk), None)
+    request.session['student_password_reset_nonces'] = pending
+    with transaction.atomic():
+        student = User.objects.select_for_update().filter(
+            pk=student.pk,
+            role='student',
+            is_staff=False,
+            is_superuser=False,
+            approval_status='approved',
+            is_active=True,
+        ).first()
+        if student is None:
+            messages.error(
+                request,
+                'Seul un compte élève actif et approuvé peut être réinitialisé.',
+            )
+            return redirect('accounts:admin_dashboard')
+
+        temporary_password = secrets.token_urlsafe(24)
+        student.set_password(temporary_password)
+        student.must_change_password = True
+        student.password_reset_at = timezone.now()
+        student.password_session_version += 1
+        student.save(update_fields=(
+            'password',
+            'must_change_password',
+            'password_reset_at',
+            'password_session_version',
+        ))
+        administrator = request.edubac_user
+        StudentPasswordResetEvent.objects.create(
+            student=student,
+            student_username=student.username,
+            administrator=administrator,
+            administrator_id_snapshot=administrator.pk,
+            administrator_username=administrator.username,
+        )
+
+    response = render(
+        request,
+        'accounts/student_password_reset_result.html',
+        {
+            'page_title': 'Mot de passe temporaire',
+            'student': student,
+            'temporary_password': temporary_password,
+        },
+    )
+    return _no_store(response)
+
+
+@login_required_simple
+@require_http_methods(['GET', 'POST'])
+def change_password(request):
+    user = request.edubac_user
+    if not user.must_change_password:
+        return redirect('accounts:dashboard')
+
+    form = ForcedPasswordChangeForm(
+        request.POST or None,
+        user=user,
+    )
+    if request.method == 'POST' and form.is_valid():
+        user.set_password(form.cleaned_data['new_password1'])
+        user.must_change_password = False
+        user.save(update_fields=('password', 'must_change_password'))
+        request.session['password_session_version'] = user.password_session_version
+        request.session.cycle_key()
+        messages.success(request, 'Votre mot de passe a été modifié.')
+        return redirect('accounts:dashboard')
+
+    return _no_store(render(
+        request,
+        'accounts/change_password.html',
+        {
+            'page_title': 'Changer votre mot de passe',
+            'form': form,
+        },
+    ))
 
 
 @admin_required

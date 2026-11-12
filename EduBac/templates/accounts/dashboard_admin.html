@@ -67,5 +67,74 @@
             {% endif %}
         </div>
     </section>
+
+    {% if user.is_superuser %}
+    <section class="card border-0 shadow-sm mt-4" aria-labelledby="student-recovery-title">
+        <div class="card-body">
+            <div class="mb-3">
+                <h2 id="student-recovery-title" class="h5 mb-1">Récupération du compte élève</h2>
+                <p class="text-muted small mb-0">
+                    Recherchez par nom, prénom ou identifiant. Aucun e-mail ne sera envoyé.
+                </p>
+            </div>
+            <form method="get" action="{% url 'accounts:admin_dashboard' %}" class="row g-2 mb-3">
+                <div class="col-sm">
+                    <label class="visually-hidden" for="studentSearch">Nom, prénom ou identifiant</label>
+                    <input id="studentSearch" class="form-control" type="search" name="student_q"
+                           value="{{ student_search }}" placeholder="Nom, prénom ou identifiant">
+                </div>
+                <div class="col-sm-auto">
+                    <button class="btn btn-edubac" type="submit">Rechercher un élève</button>
+                </div>
+            </form>
+
+            {% if student_search_performed %}
+                {% if student_results %}
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th scope="col">Élève</th>
+                                <th scope="col">Identifiant</th>
+                                <th scope="col">Classe et niveau</th>
+                                <th scope="col">Statut du compte</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in student_results %}
+                            <tr>
+                                <td>{{ student.get_full_name }}</td>
+                                <td>{{ student.username }}</td>
+                                <td>
+                                    {{ student.admin_classroom|default:"Aucune classe associée" }}
+                                    <span class="d-block small text-muted">{{ student.admin_level }}</span>
+                                </td>
+                                <td>{{ student.admin_status }}</td>
+                                <td>
+                                    {% if student.can_reset_password %}
+                                    <a class="btn btn-sm btn-outline-danger"
+                                       href="{% url 'accounts:confirm_student_password_reset' student.pk %}">
+                                        Réinitialiser le mot de passe
+                                    </a>
+                                    {% else %}
+                                    <span class="small text-muted">Compte non réinitialisable</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">Aucun élève trouvé pour « {{ student_search }} ».</p>
+                {% endif %}
+                {% if student_results_limit_reached %}
+                    <p class="small text-muted mb-0">Les 50 premiers résultats sont affichés. Affinez la recherche si nécessaire.</p>
+                {% endif %}
+            {% endif %}
+        </div>
+    </section>
+    {% endif %}
 </div>
 {% endblock %}

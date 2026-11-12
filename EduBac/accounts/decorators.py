@@ -1,5 +1,5 @@
 from functools import wraps
-from django.http import JsonResponse
+from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import redirect
 from django.contrib import messages
 
@@ -41,6 +41,23 @@ def admin_required(view_func):
         if not user or not (user.is_staff or user.is_superuser):
             messages.error(request, 'Accès réservé à l’administrateur.')
             return redirect('education:home')
+        return view_func(request, *args, **kwargs)
+    return _wrapped
+
+
+def superuser_required(view_func):
+    """Require the actual Django superuser, not any staff/teacher account."""
+    @login_required_simple
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        user = request.edubac_user
+        if not user or not user.is_superuser:
+            if 'application/json' in request.headers.get('Accept', '').lower():
+                return JsonResponse(
+                    {'error': 'Accès réservé au superadministrateur.'},
+                    status=403,
+                )
+            return HttpResponseForbidden('Accès réservé au superadministrateur.')
         return view_func(request, *args, **kwargs)
     return _wrapped
 

@@ -39,6 +39,19 @@ class User(AbstractUser):
         default='approved',
         verbose_name='Statut d’approbation',
     )
+    must_change_password = models.BooleanField(
+        default=False,
+        verbose_name='Doit changer son mot de passe',
+    )
+    password_reset_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Dernière réinitialisation administrateur',
+    )
+    password_session_version = models.PositiveIntegerField(
+        default=0,
+        editable=False,
+    )
 
     class Meta:
         verbose_name = 'Utilisateur'
@@ -69,6 +82,37 @@ class User(AbstractUser):
     def get_full_name(self):
         full = f"{self.first_name} {self.last_name}".strip()
         return full if full else self.username
+
+
+class StudentPasswordResetEvent(models.Model):
+    """Audit trail without retaining the temporary password."""
+
+    student = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='password_reset_events',
+    )
+    student_username = models.CharField(max_length=150)
+    administrator = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='student_password_resets',
+    )
+    administrator_id_snapshot = models.PositiveBigIntegerField()
+    administrator_username = models.CharField(max_length=150)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-created_at',)
+        verbose_name = 'Réinitialisation de mot de passe élève'
+        verbose_name_plural = 'Réinitialisations de mots de passe élèves'
+
+    def __str__(self):
+        return f'{self.student_username} — {self.created_at:%Y-%m-%d %H:%M}'
 
 
 class StudentProfile(models.Model):
