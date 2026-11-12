@@ -33,6 +33,11 @@
   var selectedFile = null;
   var replyToId = null;
   var notifPermissionAsked = false;
+  var announcementInput = document.getElementById('chatAnnouncementInput');
+  var membersButton = document.getElementById('chatMembersBtn');
+  var membersDialog = document.getElementById('chatMembersDialog');
+  var membersContent = document.getElementById('chatMembersContent');
+  var membersClose = document.getElementById('chatMembersClose');
 
   var EMOJIS = [
     '😀','😃','😄','😁','😅','😂','😊','😇','🙂','😉','😍','🥰','😘','😋','😜','🤗',
@@ -97,6 +102,7 @@
     row.className = 'chat-bubble-row ' + (mine ? 'mine' : 'theirs');
     row.id = 'msg-' + m.id;
     if (m.is_pinned) row.classList.add('is-pinned');
+    if (m.is_announcement) row.classList.add('is-announcement');
 
     var html = '';
     if (!mine) {
@@ -125,6 +131,9 @@
       bodyHtml += (bodyHtml ? '<div class="chat-att-caption">' : '') + esc(m.body) + (bodyHtml && m.body ? '</div>' : '');
     }
     if (!bodyHtml) bodyHtml = '<em style="opacity:.7">—</em>';
+    if (m.is_announcement) {
+      bodyHtml = '<div class="chat-announcement-badge"><i class="bi bi-megaphone-fill"></i> Annonce importante</div>' + bodyHtml;
+    }
 
     var timeHtml = esc(m.time_display || '');
     if (mine) timeHtml += ' <span class="chat-ticks">✓✓</span>';
@@ -152,7 +161,7 @@
         fetch('/chat/api/classe/' + classroomId + '/pin/' + m.id + '/', {
           method: 'POST',
           credentials: 'same-origin',
-          headers: { 'X-CSRFToken': csrf },
+          headers: { 'X-CSRFToken': csrf, Accept: 'application/json' },
         })
           .then(function (r) { return r.json(); })
           .then(function (d) {
@@ -191,9 +200,17 @@
     var url = '/chat/api/classe/' + classroomId + '/messages/';
     if (!initial && lastId) url += '?after_id=' + lastId;
 
-    fetch(url, { credentials: 'same-origin' })
+    fetch(url, {
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' },
+    })
       .then(function (r) {
         if (r.status === 403) throw new Error('Accès refusé');
+        if (!(r.headers.get('content-type') || '').toLowerCase().includes('application/json')) {
+          throw new Error(r.redirected
+            ? 'Votre session a expiré. Reconnectez-vous puis réessayez.'
+            : 'Réponse inattendue du serveur. Actualisez la page et réessayez.');
+        }
         return r.json();
       })
       .then(function (data) {
@@ -238,15 +255,20 @@
       fd.append('attachment', file, file.name || (isVoice ? 'voice.webm' : 'file'));
       if (isVoice) fd.append('is_voice', '1');
       if (replyToId) fd.append('reply_to', replyToId);
+      if (announcementInput && announcementInput.checked) fd.append('is_announcement', '1');
       req = fetch('/chat/api/classe/' + classroomId + '/send/', {
         method: 'POST', credentials: 'same-origin',
-        headers: { 'X-CSRFToken': csrf }, body: fd,
+        headers: { 'X-CSRFToken': csrf, Accept: 'application/json' }, body: fd,
       });
     } else {
       req = fetch('/chat/api/classe/' + classroomId + '/send/', {
         method: 'POST', credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
-        body: JSON.stringify({ body: body, reply_to: replyToId }),
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf, Accept: 'application/json' },
+        body: JSON.stringify({
+          body: body,
+          reply_to: replyToId,
+          is_announcement: !!(announcementInput && announcementInput.checked),
+        }),
       });
     }
 
@@ -259,6 +281,7 @@
           clearFile();
           closeEmoji();
         }
+        if (announcementInput) announcementInput.checked = false;
         clearReply();
         var empty = messagesEl && messagesEl.querySelector('.text-muted');
         if (empty && empty.parentElement === messagesEl) empty.remove();
@@ -327,6 +350,58 @@
   }
   if (fileClear) fileClear.addEventListener('click', clearFile);
   if (replyCancel) replyCancel.addEventListener('click', clearReply);
+  if (membersButton && membersDialog && membersContent) {
+    membersButton.addEventListener('click', function () {
+      membersContent.textContent = 'Chargement des membres…';
+      membersDialog.showModal();
+      fetch('/chat/api/classe/' + classroomId + '/members/', {
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json' },
+      })
+        .then(function (response) {
+          if (!(response.headers.get('content-type') || '').toLowerCase().includes('application/json')) {
+            throw new Error('Réponse inattendue du serveur. Actualisez la page et réessayez.');
+          }
+          return response.json().then(function (data) {
+            if (!response.ok) throw new Error(data.error || 'Impossible de charger les membres.');
+            return data;
+          });
+        })
+        .then(function (data) {
+          membersContent.replaceChildren();
+          (data.members || []).forEach(function (member) {
+            var row = document.createElement('div');
+            row.className = 'chat-member-row';
+            var avatar = document.createElement('span');
+            avatar.className = 'chat-member-avatar';
+            avatar.textContent = (member.name || '?').slice(0, 1).toUpperCase();
+            var details = document.createElement('div');
+            details.className = 'chat-member-details';
+            var name = document.createElement('strong');
+            name.textContent = member.name || 'Membre';
+            var activity = document.createElement('span');
+            activity.textContent = member.role + ' · ' + member.message_count + ' message(s)'
+              + (member.last_message_at ? ' · dernier : ' + member.last_message_at : '');
+            details.append(name, activity);
+            row.append(avatar, details);
+            if (member.is_online) {
+              var online = document.createElement('span');
+              online.className = 'chat-member-presence';
+              online.textContent = 'En ligne';
+              row.append(online);
+            }
+            membersContent.append(row);
+          });
+          if (!(data.members || []).length) {
+            membersContent.textContent = 'Aucun membre dans cette classe.';
+          }
+        })
+        .catch(function (error) {
+          membersContent.textContent = error.message || 'Impossible de charger les membres.';
+        });
+    });
+    if (membersClose) membersClose.addEventListener('click', function () { membersDialog.close(); });
+  }
   document.addEventListener('edubac:voice-send', function (event) {
     if (event && event.preventDefault) event.preventDefault();
     var detail = (event && event.detail) || {};
@@ -355,6 +430,26 @@
   }
 
   if (classroomId) {
+    var onlineLabel = document.getElementById('chatOnlineCount');
+    function refreshOnlineCount() {
+      if (document.hidden || !onlineLabel) return;
+      fetch('/chat/api/classe/' + classroomId + '/members/', {
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json' },
+      }).then(function (response) {
+        if (!response.ok || !(response.headers.get('content-type') || '').toLowerCase().includes('application/json')) return null;
+        return response.json();
+      }).then(function (data) {
+        if (data && typeof data.online_count === 'number') {
+          onlineLabel.textContent = data.online_count + ' en ligne';
+          var dot = document.querySelector('.chat-online-dot');
+          if (dot) dot.title = data.online_count + ' en ligne';
+        }
+      }).catch(function () {});
+    }
+    refreshOnlineCount();
+    var onlineTimer = setInterval(refreshOnlineCount, 30000);
+    window.addEventListener('pagehide', function () { clearInterval(onlineTimer); }, { once: true });
     if ('Notification' in window && Notification.permission === 'default') {
       // demandera au premier message reçu
     }

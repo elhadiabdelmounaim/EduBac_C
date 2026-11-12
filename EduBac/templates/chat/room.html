@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Prof-Étudiant Chat{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="/static/css/chat.css">
+<link rel="stylesheet" href="/static/css/chat.css?v=messaging-blue-1">
 <link rel="stylesheet" href="/static/css/chat-voice.css">
 {% endblock %}
 {% block content %}
@@ -9,7 +9,8 @@
      id="chatApp"
      data-user-id="{{ user.id }}"
      data-classroom-id="{{ active_classroom.pk|default:'' }}"
-     data-csrf="{{ csrf_token }}" data-user-role="{% if user.is_teacher %}teacher{% else %}{{ user.role }}{% endif %}" data-is-teacher="{% if user.is_teacher %}1{% else %}0{% endif %}">
+     data-presence-url="{{ presence_url|default:'' }}"
+     data-csrf="{{ csrf_token }}" data-user-role="{% if user.is_teacher or user.is_staff %}teacher{% else %}{{ user.role }}{% endif %}" data-is-teacher="{% if user.is_teacher or user.is_staff %}1{% else %}0{% endif %}">
 
   {# ---- Liste des Classes ---- #}
   <aside class="chat-sidebar" id="chatSidebar">
@@ -61,15 +62,23 @@
         <div class="chat-header-status">
           {{ members_count }} membre{{ members_count|pluralize }}
           <span>•</span>
-          <span class="chat-online-dot" title="En ligne"></span>
-          En ligne
+          <span class="chat-online-dot" title="{{ online_count }} en ligne"></span>
+          <span id="chatOnlineCount">{{ online_count }} en ligne</span>
         </div>
       </div>
       <div class="chat-header-actions">
         <button type="button" title="Rechercher" aria-label="Rechercher"><i class="bi bi-search"></i></button>
-        <button type="button" title="Menu" aria-label="Menu"><i class="bi bi-three-dots-vertical"></i></button>
+        <button type="button" id="chatMembersBtn" title="Membres et participation" aria-label="Voir les membres et leur participation"><i class="bi bi-people"></i></button>
       </div>
     </header>
+
+    <dialog class="chat-members-dialog" id="chatMembersDialog" aria-labelledby="chatMembersTitle">
+      <header class="chat-members-dialog-header">
+        <div><h2 id="chatMembersTitle">Membres et participation</h2><p>{{ active_classroom.name }}</p></div>
+        <button type="button" id="chatMembersClose" aria-label="Fermer">&times;</button>
+      </header>
+      <div id="chatMembersContent" class="chat-members-content" aria-live="polite"></div>
+    </dialog>
 
     <div class="chat-messages" id="chatMessages" aria-live="polite">
       <div class="chat-messages-loading text-center py-4" style="color:#8B8399;">Chargement…</div>
@@ -91,6 +100,13 @@
         <button type="button" id="chatFileClear" title="Retirer">&times;</button>
       </div>
       <div class="chat-pinned-bar" id="chatPinnedBar" hidden></div>
+      {% if user.is_teacher or user.is_staff %}
+      <label class="chat-announcement-toggle" for="chatAnnouncementInput">
+        <input type="checkbox" id="chatAnnouncementInput">
+        <i class="bi bi-megaphone-fill" aria-hidden="true"></i>
+        <span>Publier comme annonce importante</span>
+      </label>
+      {% endif %}
       <form id="chatForm" autocomplete="off" enctype="multipart/form-data">
         <div class="chat-composer-tools">
           <button type="button" class="chat-tool-btn" id="chatEmojiBtn" title="Emoji" aria-label="Emoji">
@@ -159,5 +175,6 @@
 {% endblock %}
 {% block extra_js %}
 <script src="/static/js/chat-voice.js"></script>
+<script src="/static/js/chat-presence.js"></script>
 <script src="/static/js/chat.js"></script>
 {% endblock %}

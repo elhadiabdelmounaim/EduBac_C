@@ -245,8 +245,7 @@ input[type="number"], textarea, select {
 /* Chat keeps its two-pane geometry and message states; only its visual palette changes. */
 body:has(.chat-app) .edubac-main > main.container-fluid { background: var(--nb-paper); }
 body:has(.chat-app) .edubac-sidebar { background: #214f51 !important; }
-body:has(.chat-app) .sidebar-nav .nav-link.active,
-body:has(.chat-app) .sidebar-nav a[href*="/chat/"].nav-link {
+body:has(.chat-app) .sidebar-nav .nav-link.active {
     background: #f4f1e8 !important; color: #263449 !important;
     border-left: 3px solid var(--nb-ochre); box-shadow: none !important;
 }

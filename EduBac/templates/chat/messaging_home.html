@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% block title %}Messagerie{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/messaging-home.css?v=messaging-home-1">
+{% endblock %}
+
+{% block content %}
+<div class="messaging-page" id="messagingRoot"
+     data-contacts-url="{{ contacts_url }}"
+     data-start-url="{{ start_url }}"
+     data-presence-url="{{ presence_url }}"
+     data-active-tab="{{ active_tab|default:'groups' }}"
+     data-is-admin="{% if is_admin %}1{% else %}0{% endif %}"
+     data-is-teacher="{% if is_teacher %}1{% else %}0{% endif %}"
+     data-is-student="{% if is_student %}1{% else %}0{% endif %}">
+  <form id="messagingCsrfForm" hidden>{% csrf_token %}</form>
+
+  <main class="messaging-content">
+    <header class="messaging-topbar">
+      <div class="page-heading">
+        <p class="eyebrow">VOTRE ESPACE DE COMMUNICATION</p>
+        <h1>Messagerie</h1>
+        <p class="heading-description">La classe, vos camarades et vos enseignants — tout au même endroit.</p>
+      </div>
+      <button class="primary-action" type="button" id="newConversationBtn">
+        <i class="bi bi-plus-lg" aria-hidden="true"></i>
+        <span>Nouveau message</span>
+      </button>
+    </header>
+
+    <section class="messaging-summary" aria-label="Résumé de vos conversations">
+      <div class="summary-intro">
+        <span class="summary-icon"><i class="bi bi-inbox-fill" aria-hidden="true"></i></span>
+        <div><strong>Vos conversations</strong><p>Retrouvez les derniers échanges de votre espace scolaire.</p></div>
+      </div>
+      <div class="summary-stat">
+        <span class="stat-value">{{ rooms|length }}</span>
+        <span class="stat-label">classe{{ rooms|length|pluralize }}</span>
+      </div>
+      <span class="summary-divider" aria-hidden="true"></span>
+      <div class="summary-stat">
+        <span class="stat-value">{{ conversations|length }}</span>
+        <span class="stat-label">conversation{{ conversations|length|pluralize }}</span>
+      </div>
+    </section>
+
+    <section class="conversation-panel" aria-labelledby="conversationTitle">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">BOÎTE DE RÉCEPTION</p>
+          <h2 id="conversationTitle">Discussions récentes</h2>
+        </div>
+        <label class="search-field" for="messagingSearch">
+          <i class="bi bi-search" aria-hidden="true"></i>
+          <span class="visually-hidden">Rechercher une conversation</span>
+          <input id="messagingSearch" type="search" placeholder="Rechercher…" autocomplete="off">
+          <kbd aria-hidden="true">⌘ K</kbd>
+        </label>
+      </div>
+
+      <div class="conversation-controls">
+        <div class="message-tabs" id="messageTabs" role="tablist" aria-label="Filtrer les conversations">
+          <button type="button" class="message-tab is-active" id="messageTabGroups"
+                  role="tab" aria-selected="true" aria-controls="groupList">
+            <i class="bi bi-people" aria-hidden="true"></i> Classes
+          </button>
+          <button type="button" class="message-tab" id="messageTabIndividuals"
+                  role="tab" aria-selected="false" aria-controls="directList" tabindex="-1">
+            <i class="bi bi-person-lines-fill" aria-hidden="true"></i> Individuelles
+          </button>
+        </div>
+        <div class="list-filters">
+          <label class="filter-select-label" for="classFilter">
+            <i class="bi bi-filter" aria-hidden="true"></i><span class="visually-hidden">Filtrer par classe</span>
+            <select id="classFilter">
+              <option value="">Toutes les classes</option>
+              {% for option in class_options %}
+              <option value="{{ option.id }}">{{ option.name }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label class="unread-filter" for="unreadOnlyFilter">
+            <input type="checkbox" id="unreadOnlyFilter">
+            <span class="filter-check" aria-hidden="true"><i class="bi bi-check2"></i></span>
+            <span>Non lus</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="conversation-lists">
+        <section class="conversation-list" id="groupList" role="tabpanel"
+                 aria-labelledby="messageTabGroups">
+          <h3 class="visually-hidden">Conversations de classe</h3>
+          {% for room in rooms %}
+          <a class="conversation-row group-row" href="/chat/classe/{{ room.classroom_id }}/"
+             data-classroom-id="{{ room.classroom_id }}"
+             data-search="{{ room.name|lower }} {{ room.niveau|lower }} {{ room.last_message|default:''|lower }}"
+             data-unread="{% if room.unread %}1{% else %}0{% endif %}">
+            <span class="conversation-avatar avatar-group" aria-hidden="true">{{ room.avatar_letter|default:room.name|slice:":1"|upper }}</span>
+            <span class="conversation-details">
+              <span class="conversation-title-line">
+                <span class="conversation-name">{{ room.name }}</span>
+              <time class="conversation-time" {% if room.last_message_at %}datetime="{{ room.last_message_at }}"{% endif %}>{{ room.last_message_date|default:room.last_message_time|default:"" }}</time>
+              </span>
+              <span class="conversation-subtitle">{{ room.niveau }}</span>
+              <span class="conversation-preview">{% if room.last_message %}{{ room.last_message|truncatechars:100 }}{% else %}Aucun message pour le moment{% endif %}</span>
+            </span>
+            <span class="conversation-end">
+              <span class="member-count"><i class="bi bi-person" aria-hidden="true"></i>{{ room.members_count }}</span>
+              {% if room.unread %}<span class="unread-badge" aria-label="{{ room.unread }} message{{ room.unread|pluralize }} non lu{{ room.unread|pluralize }}">{{ room.unread }}</span>{% endif %}
+              <i class="bi bi-chevron-right row-chevron" aria-hidden="true"></i>
+            </span>
+          </a>
+          {% empty %}
+          <div class="list-empty">
+            <span class="empty-illustration"><i class="bi bi-chat-square-dots" aria-hidden="true"></i></span>
+            <strong>Aucune discussion de classe</strong>
+            <p>Vos échanges de classe apparaîtront ici dès qu’une conversation commencera.</p>
+          </div>
+          {% endfor %}
+        </section>
+
+        <section class="conversation-list" id="directList" role="tabpanel"
+                 aria-labelledby="messageTabIndividuals" hidden>
+          <h3 class="visually-hidden">Conversations individuelles</h3>
+          {% for conversation in conversations %}
+          <a class="conversation-row direct-row" href="{{ conversation.url }}"
+             data-kind="{{ conversation.kind }}"
+             data-classroom-id="{{ conversation.classroom_id|default:'' }}"
+              data-search="{{ conversation.search_text|default:conversation.name|lower }} {{ conversation.last_message|default:''|lower }}"
+             data-unread="{% if conversation.unread %}1{% else %}0{% endif %}">
+            <span class="conversation-avatar {% if conversation.kind == 'consultation' %}avatar-teacher{% else %}avatar-direct{% endif %}" aria-hidden="true">
+              {{ conversation.avatar_letter|default:conversation.name|slice:":1"|upper }}
+              {% if conversation.is_online %}<span class="online-indicator" aria-label="En ligne"></span>{% endif %}
+            </span>
+            <span class="conversation-details">
+              <span class="conversation-title-line">
+                <span class="conversation-name">{{ conversation.name }}</span>
+              <time class="conversation-time" {% if conversation.last_message_at %}datetime="{{ conversation.last_message_at }}"{% endif %}>{{ conversation.last_message_time|default:"" }}</time>
+              </span>
+              <span class="conversation-subtitle">
+                {% if conversation.kind == "consultation" %}<i class="bi bi-mortarboard-fill" aria-hidden="true"></i> Consultation · {% endif %}
+                {{ conversation.subtitle }}
+              </span>
+              <span class="conversation-preview">{% if conversation.last_message %}{{ conversation.last_message|truncatechars:100 }}{% else %}Commencez la conversation{% endif %}</span>
+            </span>
+            <span class="conversation-end">
+              {% if conversation.unread %}<span class="unread-badge" aria-label="{{ conversation.unread }} message{{ conversation.unread|pluralize }} non lu{{ conversation.unread|pluralize }}">{{ conversation.unread }}</span>{% endif %}
+              <i class="bi bi-chevron-right row-chevron" aria-hidden="true"></i>
+            </span>
+          </a>
+          {% empty %}
+          <div class="list-empty">
+            <span class="empty-illustration empty-purple"><i class="bi bi-person-plus" aria-hidden="true"></i></span>
+            <strong>Aucun message individuel</strong>
+            <p>Vous pourrez retrouver ici vos échanges avec les élèves, enseignants et l’administration.</p>
+            <button type="button" class="text-action" data-open-contacts>Écrire un premier message</button>
+          </div>
+          {% endfor %}
+        </section>
+
+        <div class="filtered-empty" id="messagingEmpty" hidden role="status" aria-live="polite">
+          <span class="empty-illustration"><i class="bi bi-search" aria-hidden="true"></i></span>
+          <strong>Aucun résultat</strong>
+          <p>Essayez un autre nom ou modifiez vos filtres.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="messaging-safety">
+      <i class="bi bi-shield-lock-fill" aria-hidden="true"></i>
+      <p><strong>Un espace encadré.</strong> Les échanges sont réservés à votre classe et à votre équipe pédagogique.</p>
+      <span class="safety-separator" aria-hidden="true"></span>
+      <span class="safety-language">EduBac <span aria-hidden="true">·</span> Maroc</span>
+    </footer>
+  </main>
+
+  <dialog class="new-message-dialog" id="newConversationDialog" aria-labelledby="dialogTitle">
+    <div class="dialog-heading">
+      <span class="dialog-icon"><i class="bi bi-chat-square-text-fill" aria-hidden="true"></i></span>
+      <div><p class="eyebrow">NOUVEL ÉCHANGE</p><h2 id="dialogTitle">À qui souhaitez-vous écrire&nbsp;?</h2></div>
+      <button type="button" class="dialog-close" aria-label="Fermer la fenêtre" data-close-dialog>
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
+      </button>
+    </div>
+    <p class="dialog-description">Choisissez un contact autorisé dans votre espace EduBac.</p>
+    <label class="contact-search" for="contactSearch">
+      <i class="bi bi-search" aria-hidden="true"></i>
+      <span class="visually-hidden">Rechercher un contact</span>
+      <input type="search" id="contactSearch" placeholder="Nom, classe ou rôle…" autocomplete="off">
+    </label>
+    <div class="contact-results" id="contactResults" aria-live="polite" aria-busy="false">
+      <div class="contact-loading" aria-label="Chargement des contacts">
+        <span></span><span></span><span></span>
+        <span class="visually-hidden">Chargement des contacts…</span>
+      </div>
+    </div>
+    <div class="dialog-footnote"><i class="bi bi-shield-check" aria-hidden="true"></i> Seuls les contacts autorisés vous seront proposés.</div>
+  </dialog>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/chat-presence.js"></script>
+<script src="/static/js/messaging-home.js"></script>
+{% endblock %}

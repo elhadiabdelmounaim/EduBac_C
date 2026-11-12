@@ -1,23 +1,39 @@
 import json
 import mimetypes
+from pathlib import Path
+from datetime import timedelta
 
 from django.http import FileResponse, Http404, JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 from django.utils import timezone
-from django.db.models import F
+from django.db.models import F, Q
+from django.contrib.auth import get_user_model
 
 from accounts.decorators import login_required_simple
 from classrooms.models import Classroom, ClassroomMember
+from accounts.models import User
 
 from .models import (
     ClassChatRoom,
     ChatMessage,
+    ChatPresence,
+    DirectConversation,
+    DirectMessage,
     PrivateConversation,
     PrivateMessage,
 )
-from .permissions import get_edubac_user, user_can_access_classroom, classrooms_for_user
+from .permissions import (
+    classrooms_for_user,
+    direct_conversation_start_context,
+    direct_conversations_for,
+    get_edubac_user,
+    is_platform_admin,
+    platform_admin_user,
+    user_can_access_classroom,
+    user_can_access_direct_conversation,
+)
 
 
 def _require_access(request, classroom_id):
@@ -43,7 +59,7 @@ def _room_payload(room, user):
         'classroom_id': classroom.pk,
         'name': classroom.name,
         'niveau': classroom.get_niveau_display(),
-        'members_count': classroom.members.count(),
+        'members_count': members_count,
         'unread': room.unread_count_for(user),
         'last_message': (
             (last.body[:80] if last and last.body else '')
@@ -53,6 +69,10 @@ def _room_payload(room, user):
             last.created_at.strftime('%H:%M') if last else ''
         ),
         'last_message_at': last.created_at.isoformat() if last else '',
+        'last_message_date': (
+            timezone.localtime(last.created_at).strftime('%d/%m/%Y')
+            if last else ''
+        ),
         'avatar_letter': (classroom.name[:1] or 'C').upper(),
     }
 
@@ -73,6 +93,149 @@ def _private_conversations_for(user):
             classroom__teacher=user,
         )
     return conversations.none()
+
+
+def _is_online(user, now=None):
+    if not user:
+        return False
+    now = now or timezone.now()
+    return ChatPresence.objects.filter(
+        user=user,
+        last_seen_at__gte=now - timedelta(seconds=90),
+    ).exists()
+
+
+def _direct_conversation_payload(conversation, user, now=None):
+    contact = conversation.other_participant(user)
+    if not contact:
+        return None
+    last = conversation.last_message()
+    student = contact if contact.is_student() else (user if user.is_student() else None)
+    classroom = conversation.classroom
+    if student and (
+        not classroom
+        or not classroom.is_active
+        or not ClassroomMember.objects.filter(
+            classroom=classroom,
+            user=student,
+        ).exists()
+    ):
+        shared_classes = Classroom.objects.filter(
+            members__user=student,
+            is_active=True,
+        )
+        if contact.is_student():
+            shared_classes = shared_classes.filter(members__user=contact)
+        classroom = shared_classes.order_by('name').first()
+    name = 'Admin EduBac' if is_platform_admin(contact) else (
+        contact.get_full_name() or contact.username
+    )
+    class_label = (
+        f'{classroom.name} · {classroom.get_niveau_display()}'
+        if classroom else ('Administration EduBac' if is_platform_admin(contact) else '')
+    )
+    return {
+        'id': conversation.pk,
+        'url': reverse('chat:direct_room', args=[conversation.pk]),
+        'name': name,
+        'subtitle': class_label,
+        'kind': 'direct',
+        'last_message': (
+            (last.body[:100] if last and last.body else '')
+            or (('📎 ' + last.attachment_name) if last and last.attachment else '')
+        ),
+        'last_message_time': (
+            timezone.localtime(last.created_at).strftime('%d/%m %H:%M')
+            if last else ''
+        ),
+        'last_message_at': last.created_at.isoformat() if last else '',
+        'unread': conversation.unread_count_for(user),
+        'is_online': _is_online(contact, now),
+        'avatar_letter': (name[:1] or '?').upper(),
+        'search_text': ' '.join(filter(None, [
+            name,
+            contact.username,
+            class_label,
+            classroom.name if classroom else '',
+        ])).lower(),
+        'classroom_id': classroom.pk if classroom else '',
+    }
+
+
+def _consultation_payload(conversation, user, now=None):
+    contact = (
+        conversation.teacher
+        if user.pk == conversation.student_id
+        else conversation.student
+    )
+    last = conversation.last_message()
+    name = contact.get_full_name() or contact.username
+    classroom = conversation.classroom
+    subtitle = f'{classroom.name} · {classroom.get_niveau_display()}'
+    return {
+        'id': conversation.pk,
+        'url': reverse('chat:private_room', args=[conversation.pk]),
+        'name': name,
+        'subtitle': subtitle,
+        'kind': 'consultation',
+        'last_message': (
+            (last.body[:100] if last and last.body else '')
+            or (('📎 ' + last.attachment_name) if last and last.attachment else '')
+        ),
+        'last_message_time': (
+            timezone.localtime(last.created_at).strftime('%d/%m %H:%M')
+            if last else ''
+        ),
+        'last_message_at': last.created_at.isoformat() if last else '',
+        'unread': conversation.messages.filter(
+            read_at__isnull=True,
+        ).exclude(sender=user).count(),
+        'is_online': _is_online(contact, now),
+        'avatar_letter': (name[:1] or '?').upper(),
+        'search_text': ' '.join(filter(None, [
+            name,
+            contact.username,
+            classroom.name,
+            classroom.get_niveau_display(),
+        ])).lower(),
+        'classroom_id': classroom.pk,
+    }
+
+
+def _messaging_context(user, active_tab='groups'):
+    now = timezone.now()
+    classrooms = list(classrooms_for_user(user))
+    rooms = [
+        _room_payload(ClassChatRoom.get_or_create_for(classroom), user)
+        for classroom in classrooms
+    ]
+    if user.is_student():
+        admin = platform_admin_user()
+        if admin and admin.pk != user.pk:
+            DirectConversation.get_or_create_for(user, admin)
+
+    conversations = []
+    for conversation in direct_conversations_for(user):
+        if user_can_access_direct_conversation(user, conversation):
+            item = _direct_conversation_payload(conversation, user, now)
+            if item:
+                conversations.append(item)
+    for conversation in _private_conversations_for(user):
+        conversations.append(_consultation_payload(conversation, user, now))
+    conversations.sort(key=lambda item: item['last_message_at'], reverse=True)
+    return {
+        'rooms': rooms,
+        'conversations': conversations,
+        'class_options': [{'id': classroom.pk, 'name': classroom.name} for classroom in classrooms],
+        'is_admin': is_platform_admin(user),
+        'is_teacher': user.is_teacher(),
+        'is_student': user.is_student(),
+        'active_tab': active_tab,
+        'contacts_url': reverse('chat:api_direct_contacts'),
+        'start_url': reverse('chat:api_direct_start'),
+        'presence_url': reverse('chat:api_presence'),
+        'page_title': 'Messagerie EduBac',
+    }
 
 
 def _private_message_payload(message):
@@ -97,19 +260,9 @@ def _private_message_payload(message):
 
 @login_required_simple
 def chat_home(request):
-    """Liste des conversations + zone vide (ou première classe)."""
+    """Boîte de messagerie unifiée, limitée aux conversations autorisées."""
     user = get_edubac_user(request)
-    classes = classrooms_for_user(user)
-    rooms_data = []
-    for c in classes:
-        room = ClassChatRoom.get_or_create_for(c)
-        rooms_data.append(_room_payload(room, user))
-    rooms_data.sort(key=lambda r: r.get('last_message_at') or '', reverse=True)
-    return render(request, 'chat/room.html', {
-        'rooms': rooms_data,
-        'active_classroom': None,
-        'page_title': 'Prof-Étudiant Chat',
-    })
+    return render(request, 'chat/messaging_home.html', _messaging_context(user))
 
 
 @login_required_simple
@@ -123,6 +276,12 @@ def chat_room(request, classroom_id):
 
     room = ClassChatRoom.get_or_create_for(classroom)
     room.mark_read(user)
+    online_ids = set(ChatPresence.objects.filter(
+        last_seen_at__gte=timezone.now() - timedelta(seconds=90),
+    ).values_list('user_id', flat=True))
+    online_count = classroom.members.filter(user_id__in=online_ids).count()
+    if classroom.teacher_id in online_ids:
+        online_count += 1
 
     classes = classrooms_for_user(user)
     rooms_data = []
@@ -135,7 +294,9 @@ def chat_room(request, classroom_id):
         'rooms': rooms_data,
         'active_classroom': classroom,
         'active_room': room,
-        'members_count': classroom.members.count(),
+        'members_count': classroom.members.count() + (1 if classroom.teacher_id else 0),
+        'online_count': online_count,
+        'presence_url': reverse('chat:api_presence'),
         'page_title': f'Chat — {classroom.name}',
     })
 
@@ -230,15 +391,23 @@ def api_send(request, classroom_id):
     if 'multipart/form-data' in content_type or request.FILES:
         body = (request.POST.get('body') or '').strip()
         upload = request.FILES.get('attachment')
+        announcement_raw = request.POST.get('is_announcement')
     else:
         try:
             payload = json.loads(request.body.decode('utf-8') or '{}')
         except (json.JSONDecodeError, UnicodeDecodeError):
             payload = request.POST
+        if (
+            not hasattr(payload, 'get')
+            or not isinstance(payload.get('body', ''), str)
+        ):
+            return JsonResponse({'error': 'Requête invalide.'}, status=400)
         body = (payload.get('body') or '').strip()
         upload = None
+        announcement_raw = payload.get('is_announcement') if isinstance(payload, dict) else None
 
     is_voice = False
+    is_announcement = str(announcement_raw or '').lower() in {'1', 'true', 'on', 'yes'}
     if 'multipart/form-data' in content_type or request.FILES:
         is_voice = (request.POST.get('is_voice') or '') in ('1', 'true', 'True')
         reply_raw = request.POST.get('reply_to')
@@ -256,6 +425,14 @@ def api_send(request, classroom_id):
         return JsonResponse({'error': 'Message vide.'}, status=400)
     if len(body) > 4000:
         return JsonResponse({'error': 'Message trop long (max 4000).'}, status=400)
+    if is_announcement and not (
+        is_platform_admin(user)
+        or (user.is_teacher() and classroom.teacher_id == user.pk)
+    ):
+        return JsonResponse(
+            {'error': 'Seuls le professeur de la classe et l’administration peuvent publier une annonce.'},
+            status=403,
+        )
 
     if upload:
         if upload.size > 10 * 1024 * 1024:
@@ -282,6 +459,7 @@ def api_send(request, classroom_id):
         attachment=upload if upload else None,
         reply_to=reply_to,
         is_voice=is_voice,
+        is_announcement=is_announcement,
     )
     room.mark_read(user)
 
@@ -314,12 +492,11 @@ def api_mark_read(request, classroom_id):
 @login_required_simple
 @require_GET
 def api_unread_total(request):
-    user = get_edubac_user(request)
-    total = 0
-    for c in classrooms_for_user(user):
-        room = ClassChatRoom.get_or_create_for(c)
-        total += room.unread_count_for(user)
-    return JsonResponse({'total_unread': total})
+    from .context_processors import chat_unread
+
+    return JsonResponse({
+        'total_unread': chat_unread(request).get('chat_unread_total', 0),
+    })
 
 
 
@@ -330,7 +507,10 @@ def api_pin(request, classroom_id, message_id):
     user, classroom, err = _require_access(request, classroom_id)
     if err:
         return err
-    if getattr(user, 'role', None) != 'teacher' or classroom.teacher_id != user.id:
+    if not (
+        is_platform_admin(user)
+        or (user.is_teacher() and classroom.teacher_id == user.id)
+    ):
         return JsonResponse({'error': 'Seul le professeur peut épingler.'}, status=403)
     room = ClassChatRoom.get_or_create_for(classroom)
     try:
@@ -368,19 +548,17 @@ def private_student_chat(request, classroom_id):
 
 @login_required_simple
 def private_inbox(request):
-    """Boîte des conversations individuelles du professeur."""
+    """Compatibilité avec l'ancien lien vers les conversations individuelles."""
     user = get_edubac_user(request)
-    if not user.is_teacher():
-        return HttpResponseForbidden('Cette boîte est réservée aux professeurs.')
-    conversations = list(
-        _private_conversations_for(user).order_by('-updated_at')[:100]
+    if not (user.is_teacher() or is_platform_admin(user)):
+        return HttpResponseForbidden(
+            'Cette boîte de réception est réservée à l’équipe pédagogique.'
+        )
+    return render(
+        request,
+        'chat/messaging_home.html',
+        _messaging_context(user, active_tab='individuals'),
     )
-    for conversation in conversations:
-        conversation.latest_message = conversation.last_message()
-    return render(request, 'chat/private_inbox.html', {
-        'conversations': conversations,
-        'page_title': 'Consultations individuelles',
-    })
 
 
 @login_required_simple
@@ -398,8 +576,56 @@ def private_room(request, conversation_id):
     return render(request, 'chat/private_room.html', {
         'conversation': conversation,
         'contact': contact,
+        'contact_display_name': contact.get_full_name() or contact.username,
+        'conversation_kind': 'consultation',
         'is_teacher': user.pk == conversation.teacher_id,
+        'conversation_subtitle': (
+            f'{conversation.classroom.name} · '
+            f'{conversation.classroom.get_niveau_display()}'
+        ),
+        'messages_url': reverse('chat:api_private_messages', args=[conversation.pk]),
+        'send_url': reverse('chat:api_private_send', args=[conversation.pk]),
+        'presence_url': reverse('chat:api_presence'),
+        'back_url': (
+            reverse('chat:home') + '?tab=individuals'
+            if user.pk == conversation.teacher_id
+            else reverse('classrooms:detail', args=[conversation.classroom_id])
+        ),
         'page_title': 'Consultation avec le professeur',
+    })
+
+
+@login_required_simple
+def direct_room(request, conversation_id):
+    user = get_edubac_user(request)
+    conversation = get_object_or_404(
+        direct_conversations_for(user),
+        pk=conversation_id,
+    )
+    if not user_can_access_direct_conversation(user, conversation):
+        return HttpResponseForbidden('Accès refusé à cette conversation.')
+    contact = conversation.other_participant(user)
+    contact_name = 'Admin EduBac' if is_platform_admin(contact) else (
+        contact.get_full_name() or contact.username
+    )
+    return render(request, 'chat/private_room.html', {
+        'conversation': conversation,
+        'contact': contact,
+        'contact_display_name': contact_name,
+        'conversation_kind': 'direct',
+        'is_teacher': user.is_teacher(),
+        'conversation_subtitle': (
+            f'{conversation.classroom.name} · '
+            f'{conversation.classroom.get_niveau_display()}'
+            if conversation.classroom_id else 'Conversation privée'
+        ),
+        'messages_url': reverse('chat:api_direct_messages', args=[conversation.pk]),
+        'send_url': reverse('chat:api_direct_send', args=[conversation.pk]),
+        'presence_url': reverse('chat:api_presence'),
+        'back_url': reverse('chat:home') + '?tab=individuals',
+        'page_title': (
+            'Conversation avec ' + contact_name
+        ),
     })
 
 

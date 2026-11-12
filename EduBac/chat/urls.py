@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import direct_views
 
 app_name = 'chat'
 
@@ -16,6 +17,11 @@ urlpatterns = [
         views.private_room,
         name='private_room',
     ),
+    path(
+        'direct/<int:conversation_id>/',
+        views.direct_room,
+        name='direct_room',
+    ),
     path('classe/<int:classroom_id>/', views.chat_room, name='room'),
     path('api/rooms/', views.api_rooms, name='api_rooms'),
     path(
@@ -28,6 +34,13 @@ urlpatterns = [
         views.api_private_send,
         name='api_private_send',
     ),
+    path('api/direct/contacts/', direct_views.api_direct_contacts, name='api_direct_contacts'),
+    path('api/direct/start/', direct_views.api_direct_start, name='api_direct_start'),
+    path('api/direct/<int:conversation_id>/messages/', direct_views.api_direct_messages, name='api_direct_messages'),
+    path('api/direct/<int:conversation_id>/send/', direct_views.api_direct_send, name='api_direct_send'),
+    path('direct/attachments/<int:message_id>/', direct_views.direct_attachment, name='direct_attachment'),
+    path('api/presence/', direct_views.api_presence, name='api_presence'),
+    path('api/classe/<int:classroom_id>/members/', direct_views.api_room_members, name='api_room_members'),
     path(
         'consultations/attachments/<int:message_id>/',
         views.private_attachment,

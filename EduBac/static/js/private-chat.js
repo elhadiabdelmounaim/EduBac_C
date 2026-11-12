@@ -163,7 +163,9 @@
         if (!data.messages || !data.messages.length) {
           const empty = document.createElement('p');
           empty.className = 'text-center text-muted py-3';
-          empty.textContent = 'Votre conversation privée avec le professeur commence ici.';
+          empty.textContent = root.dataset.conversationKind === 'direct'
+            ? 'Cette conversation privée commence ici.'
+            : 'Votre conversation privée avec le professeur commence ici.';
           messagesEl.append(empty);
         }
       } else {

@@ -20,3 +20,4 @@
 - [Gmail SMTP email](gmail-smtp-email.md) — use Gmail SMTP with an App Password from environment secrets; test each host before claiming delivery works.
 - [Administrator teacher access](administrator-teacher-access.md) — treat Django staff and superusers as teachers without rewriting their stored role.
 - [Student class page and consultation](student-class-consultation.md) — show only class essentials and keep teacher consultations one-to-one, separate from class chat.
+- [Unified messaging access](unified-messaging-access.md) — peer chats require a current shared class; teacher consultations stay class-specific and admin replies share one inbox.

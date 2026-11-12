@@ -134,6 +134,146 @@ class PrivateMessage(models.Model):
         )
 
 
+class DirectConversation(models.Model):
+    """Conversation individuelle entre deux élèves ou un élève et l'administration."""
+    participant_one = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='direct_conversations_as_one',
+        verbose_name='Premier participant',
+    )
+    participant_two = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='direct_conversations_as_two',
+        verbose_name='Second participant',
+    )
+    classroom = models.ForeignKey(
+        'classrooms.Classroom',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='direct_conversations',
+        verbose_name='Classe commune',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True, db_index=True)
+
+    class Meta:
+        verbose_name = 'Conversation individuelle'
+        verbose_name_plural = 'Conversations individuelles'
+        ordering = ['-updated_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['participant_one', 'participant_two'],
+                name='unique_direct_conversation_pair',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(participant_one_id__lt=models.F('participant_two_id')),
+                name='direct_conversation_canonical_pair',
+            ),
+        ]
+
+    def __str__(self):
+        return f"Conversation — {self.participant_one} / {self.participant_two}"
+
+    @classmethod
+    def get_or_create_for(cls, user_a, user_b, classroom=None):
+        if user_a.pk == user_b.pk:
+            raise ValueError('Une conversation doit avoir deux participants distincts.')
+        first, second = sorted((user_a, user_b), key=lambda user: user.pk)
+        conversation, created = cls.objects.get_or_create(
+            participant_one=first,
+            participant_two=second,
+            defaults={'classroom': classroom},
+        )
+        if not created and classroom and conversation.classroom_id != classroom.pk:
+            conversation.classroom = classroom
+            conversation.save(update_fields=['classroom'])
+        return conversation, created
+
+    def other_participant(self, user):
+        if user.pk == self.participant_one_id:
+            return self.participant_two
+        if user.pk == self.participant_two_id:
+            return self.participant_one
+        if (
+            (user.is_staff or user.is_superuser)
+            and self.participant_one.is_student() != self.participant_two.is_student()
+            and (
+                self.participant_one.is_staff
+                or self.participant_one.is_superuser
+                or self.participant_two.is_staff
+                or self.participant_two.is_superuser
+            )
+        ):
+            return (
+                self.participant_one
+                if self.participant_one.is_student()
+                else self.participant_two
+            )
+        return None
+
+    def last_message(self):
+        return self.messages.order_by('-created_at').first()
+
+    def unread_count_for(self, user):
+        return self.messages.filter(read_at__isnull=True).exclude(sender=user).count()
+
+
+class DirectMessage(models.Model):
+    conversation = models.ForeignKey(
+        DirectConversation,
+        on_delete=models.CASCADE,
+        related_name='messages',
+        verbose_name='Conversation',
+    )
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='direct_messages',
+        verbose_name='Expéditeur',
+    )
+    body = models.TextField(blank=True, verbose_name='Message')
+    attachment = models.FileField(
+        upload_to=private_message_upload_to,
+        storage=PrivateChatStorage(),
+        blank=True,
+        null=True,
+        verbose_name='Pièce jointe',
+    )
+    attachment_name = models.CharField(max_length=255, blank=True)
+    is_voice = models.BooleanField(default=False, verbose_name='Message vocal')
+    read_at = models.DateTimeField(null=True, blank=True, verbose_name='Lu le')
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = 'Message individuel'
+        verbose_name_plural = 'Messages individuels'
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.sender}: {(self.body or self.attachment_name)[:40]}"
+
+    @property
+    def is_image(self):
+        name = self.attachment_name.lower()
+        return bool(self.attachment) and any(
+            name.endswith(extension)
+            for extension in ('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')
+        )
+
+
+class ChatPresence(models.Model):
+    """Dernière activité vérifiée sur une page de messagerie."""
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='chat_presence',
+    )
+    last_seen_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+
 class ChatMessage(models.Model):
     room = models.ForeignKey(
         ClassChatRoom,
@@ -163,6 +303,7 @@ class ChatMessage(models.Model):
         verbose_name='Réponse à',
     )
     is_pinned = models.BooleanField(default=False, verbose_name='Épinglé')
+    is_announcement = models.BooleanField(default=False, verbose_name='Annonce importante')
     is_voice = models.BooleanField(default=False, verbose_name='Message vocal')
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
@@ -214,6 +355,7 @@ class ChatMessage(models.Model):
             'is_image': self.is_image,
             'is_voice': self.is_voice,
             'is_pinned': self.is_pinned,
+            'is_announcement': self.is_announcement,
             'reply_to': reply,
         }
 

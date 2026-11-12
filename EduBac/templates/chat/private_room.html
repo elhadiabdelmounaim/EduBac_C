@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% block title %}Consultation avec le professeur{% endblock %}
+{% block title %}{{ page_title|default:"Conversation privée" }}{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="/static/css/chat.css">
+<link rel="stylesheet" href="/static/css/chat.css?v=messaging-blue-1">
 <link rel="stylesheet" href="/static/css/chat-voice.css">
 <style>
     .private-chat-read.is-read { color: #77d9ff; font-weight: 700; }
@@ -12,19 +12,20 @@
 {% endblock %}
 {% block content %}
 <div class="chat-app chat-room-open" id="privateChat"
-     data-messages-url="{% url 'chat:api_private_messages' conversation.pk %}"
-     data-send-url="{% url 'chat:api_private_send' conversation.pk %}"
+     data-messages-url="{{ messages_url }}"
+     data-send-url="{{ send_url }}"
+     data-presence-url="{{ presence_url }}"
+     data-conversation-kind="{{ conversation_kind }}"
      data-current-user="{{ user.pk }}">
     <section class="chat-main" id="privateChatMain">
         <header class="chat-main-header">
-            <a class="chat-back-btn" aria-label="Retour"
-               href="{% if is_teacher %}{% url 'chat:private_inbox' %}{% else %}{% url 'classrooms:detail' conversation.classroom_id %}{% endif %}">
+            <a class="chat-back-btn" aria-label="Retour" href="{{ back_url }}">
                 <i class="bi bi-arrow-left" aria-hidden="true"></i>
             </a>
-            <div class="chat-avatar chat-avatar-lg">{{ contact.get_full_name|default:contact.username|slice:":1"|upper }}</div>
+            <div class="chat-avatar chat-avatar-lg">{{ contact_display_name|slice:":1"|upper }}</div>
             <div class="chat-header-info">
-                <div class="chat-header-name">{{ contact.get_full_name|default:contact.username }}</div>
-                <div class="chat-header-status">Consultation privée · {{ conversation.classroom.get_niveau_display }}</div>
+                <div class="chat-header-name">{{ contact_display_name }}</div>
+                <div class="chat-header-status">{{ conversation_subtitle }}</div>
             </div>
             <div class="chat-header-actions">
                 <span class="small text-muted" id="privateChatConnection" role="status">Messages privés</span>
@@ -111,5 +112,6 @@
 {% endblock %}
 {% block extra_js %}
 <script src="/static/js/chat-voice.js"></script>
+<script src="/static/js/chat-presence.js"></script>
 <script src="/static/js/private-chat.js"></script>
 {% endblock %}
