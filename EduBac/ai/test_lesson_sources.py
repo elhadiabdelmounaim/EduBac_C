@@ -101,54 +101,44 @@ class LessonSourceTransportTests(TestCase):
 
     @patch.object(AIService, "generate_quiz_from_lesson", side_effect=ValueError("Test interrompu"))
     def test_topic_form_preserves_parameters_and_ignores_source(self, generate):
-        from accounts.models import User, TeacherProfile
+        from accounts.models import User
         from django.urls import reverse
-        teacher = User.objects.create_user(username="topic_teacher", role="teacher")
-        TeacherProfile.objects.get_or_create(user=teacher)
+        from quizzes.models import Quiz
+        # La génération interne par IA est désactivée côté enseignant (import JSON seulement) :
+        # la route refuse, n'appelle aucun modèle et ne crée aucun quiz.
+        teacher = User.objects.create_user(username="test_topic_form_pres", role="teacher")
         session = self.client.session
         session["user_id"] = teacher.pk
         session.save()
-        payload = {
+        response = self.client.post(reverse("quizzes:teacher_ai"), {
             "niveau": self.lesson.course.niveau, "lesson": self.lesson.pk,
             "generation_mode": "topic", "subject": "Équations", "description": "Deux étapes",
-            "source_file": "missing.txt",
-        }
-        response = self.client.post(reverse("quizzes:teacher_ai"), payload)
+            "source_file": "missing.txt", "action": "generate",
+        })
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(generate.call_args.kwargs["use_resources"])
-        self.assertIsNone(generate.call_args.kwargs["source_file"])
-        self.assertEqual(generate.call_args.kwargs["subject"], "Équations")
-        self.assertEqual(response.context["generation_mode"], "topic")
-        self.assertEqual(response.context["quiz_subject"], "Équations")
-        generate.reset_mock()
-        payload["generation_mode"] = "invalid"
-        self.client.post(reverse("quizzes:teacher_ai"), payload)
+        self.assertIn("La génération interne est désactivée", response.context["error"])
+        self.assertFalse(Quiz.objects.exists())
         generate.assert_not_called()
 
     @patch.object(AIService, "generate_quiz_from_lesson")
     def test_form_passes_selection_and_rejects_level_mismatch(self, generate):
-        from accounts.models import User, TeacherProfile
+        from accounts.models import User
         from django.urls import reverse
-        teacher = User.objects.create_user(username="source_teacher", role="teacher")
-        TeacherProfile.objects.get_or_create(user=teacher)
+        from quizzes.models import Quiz
+        # La génération interne par IA est désactivée côté enseignant (import JSON seulement) :
+        # la route refuse, n'appelle aucun modèle et ne crée aucun quiz.
+        teacher = User.objects.create_user(username="test_form_passes_sel", role="teacher")
         session = self.client.session
         session["user_id"] = teacher.pk
         session.save()
-        generate.side_effect = ValueError("Test : génération interrompue")
-        payload = {
+        response = self.client.post(reverse("quizzes:teacher_ai"), {
             "niveau": self.lesson.course.niveau, "lesson": self.lesson.pk,
             "source_file": self.source.name, "action": "generate",
-        }
-        response = self.client.post(reverse("quizzes:teacher_ai"), payload)
+        })
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(generate.call_args.kwargs["source_file"], self.source.name)
-        self.assertEqual(response.context["selected_source_file"], self.source.name)
-        self.assertEqual(response.context["source_files_by_lesson"][str(self.lesson.pk)], [self.source.name])
-        generate.reset_mock()
-        payload["niveau"] = "tronc_commun"
-        response = self.client.post(reverse("quizzes:teacher_ai"), payload)
+        self.assertIn("La génération interne est désactivée", response.context["error"])
+        self.assertFalse(Quiz.objects.exists())
         generate.assert_not_called()
-        self.assertContains(response, "appartenant au niveau")
 
     @patch.object(AIService, "_chat", return_value="Explication")
     def test_assistant_rereads_modified_sources_and_ignores_other_lessons(self, chat):

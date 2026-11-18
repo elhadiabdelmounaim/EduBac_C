@@ -1,3 +1,4 @@
+import os
 import json
 import shutil
 from unittest.mock import patch
@@ -47,14 +48,14 @@ class QuizJsonValidationBrowserTests(StaticLiveServerTestCase):
             side_effect=AssertionError('Un import JSON ne doit pas appeler l’IA.'),
         ), sync_playwright() as pw:
             browser = pw.chromium.launch(
-                executable_path=shutil.which('chromium'),
+                executable_path=os.environ.get('CHROMIUM_EXECUTABLE') or shutil.which('chromium'),
                 headless=True,
                 args=['--no-sandbox'],
             )
             try:
                 page = browser.new_page(viewport={'width': 1280, 'height': 900})
                 page.goto(self.live_server_url + reverse('accounts:login'))
-                page.locator('[name="email"]').fill(teacher.email)
+                page.locator('[name="username"]').fill(teacher.username)
                 page.locator('[name="password"]').fill('Browser-test-only-123!')
                 page.get_by_role('button', name='Se connecter', exact=True).click()
                 page.wait_for_url(self.live_server_url + reverse('accounts:dashboard'))

@@ -16,6 +16,7 @@
   const fileInputs = [
     document.getElementById('privateFileInput'),
     document.getElementById('privateImageInput'),
+    document.getElementById('privateCameraInput'),
     document.getElementById('privateAudioInput'),
   ];
   const filePreview = document.getElementById('privateFilePreview');
@@ -447,6 +448,7 @@
   });
   document.getElementById('privateFileBtn').addEventListener('click', () => openFilePicker('privateFileInput'));
   document.getElementById('privateImageBtn').addEventListener('click', () => openFilePicker('privateImageInput'));
+  document.getElementById('privateCameraBtn')?.addEventListener('click', () => openFilePicker('privateCameraInput'));
   document.getElementById('privateAudioBtn').addEventListener('click', () => openFilePicker('privateAudioInput'));
   document.getElementById('privateFileClear').addEventListener('click', clearFile);
 

@@ -1,0 +1,80 @@
+{% extends "education/info/_base.html" %}
+{% block eyebrow %}Vos données{% endblock %}
+{% block info %}
+<p class="info-lead">EduBac collecte uniquement ce qui est nécessaire pour suivre la classe : pas de publicité,
+    pas de revente de données, pas d’outil de mesure d’audience.</p>
+<section>
+    <h2>Responsable du traitement</h2>
+    <p>{% include "education/info/_value.html" with value=site.publisher_name %}, éditeur du site —
+        {% if site.contact_email %}<a href="mailto:{{ site.contact_email }}">{{ site.contact_email }}</a>{% else %}<span class="info-missing">e-mail à compléter</span>{% endif %}.
+        Le traitement respecte la loi marocaine n° 09-08 relative à la protection des personnes physiques à l’égard
+        du traitement des données à caractère personnel.</p>
+</section>
+<section>
+    <h2>Données collectées et utilisation</h2>
+    <div class="table-responsive">
+        <table class="table info-table">
+            <thead><tr><th scope="col">Données</th><th scope="col">Pourquoi</th></tr></thead>
+            <tbody>
+                <tr><td>Nom, prénom, nom d’utilisateur, mot de passe (enregistré chiffré, jamais lisible), classe</td>
+                    <td>Créer le compte, le rattacher à la classe et permettre la connexion.</td></tr>
+                <tr><td>Adresse e-mail (si elle est renseignée)</td>
+                    <td>Envoyer les notifications par e-mail choisies dans les préférences.</td></tr>
+                <tr><td>Réponses aux quiz, notes, dates de passage, badges</td>
+                    <td>Corriger les quiz, suivre la progression, informer le professeur.</td></tr>
+                <tr><td>Messages, messages vocaux, fichiers et images envoyés</td>
+                    <td>Faire fonctionner la messagerie de la classe et les consultations avec le professeur.</td></tr>
+                <tr><td>Dessins du tableau blanc partagé</td>
+                    <td>Travailler à plusieurs sur le même tableau.</td></tr>
+                <tr><td>Abonnement aux notifications du téléphone (adresse technique fournie par le navigateur, type d’appareil)</td>
+                    <td>Afficher une notification sur le téléphone, uniquement si l’élève a appuyé sur « Activer ».</td></tr>
+                <tr><td>Cookie de session et préférences d’affichage enregistrées sur l’appareil (thème, bannières)</td>
+                    <td>Rester connecté et retrouver ses réglages. Aucun cookie publicitaire.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+<section>
+    <h2>Qui voit quoi ?</h2>
+    <ul>
+        <li>Le <strong>professeur</strong> voit les comptes, résultats et messages de ses classes.</li>
+        <li>Les <strong>élèves d’une même classe</strong> voient les messages de la discussion de classe et les tableaux partagés avec eux.</li>
+        <li>Les <strong>consultations</strong> (messages privés) ne sont visibles que par l’élève et le professeur.</li>
+        <li>Aucune donnée n’est vendue ni cédée.</li>
+    </ul>
+</section>
+<section>
+    <h2>Prestataires techniques</h2>
+    <ul>
+        <li><strong>Hébergement</strong> : {{ site.host_name }}.</li>
+        <li><strong>Notifications du téléphone</strong> : le service du navigateur (Google pour Android et Chrome,
+            Apple pour iPhone, Mozilla pour Firefox) transmet un message chiffré ; il ne peut pas en lire le contenu.</li>
+        <li><strong>E-mails</strong> : envoyés par le service de messagerie configuré par l’éditeur.</li>
+        <li><strong>Assistant de rédaction</strong> : si le professeur l’utilise pour préparer une réponse, le texte
+            concerné est transmis au fournisseur d’intelligence artificielle configuré, sans le nom de l’élève.</li>
+    </ul>
+</section>
+<section>
+    <h2>Durées de conservation</h2>
+    <ul>
+        <li>Compte et résultats : pendant la scolarité de l’élève dans la classe, puis supprimés à sa demande ou à la fin de l’année suivante.</li>
+        <li>Fichiers joints aux messages : 1 an.</li>
+        <li>Messages supprimés : effacés définitivement après 30 jours.</li>
+        <li>Abonnement aux notifications du téléphone : jusqu’à sa désactivation, ou automatiquement si l’appareil ne répond plus.</li>
+    </ul>
+</section>
+<section>
+    <h2>Vos droits</h2>
+    <p>Vous pouvez demander l’accès à vos données, leur correction ou leur suppression. Pour un élève mineur,
+        la demande peut être faite par un parent. Écrivez au professeur depuis la messagerie EduBac ou à
+        {% if site.contact_email %}<a href="mailto:{{ site.contact_email }}">{{ site.contact_email }}</a>{% else %}<span class="info-missing">l’adresse de contact (à compléter)</span>{% endif %}.
+        Une réponse est apportée dans un délai d’un mois. Vous pouvez aussi saisir la
+        <a href="https://www.cndp.ma" rel="noopener" target="_blank">CNDP</a> (Commission nationale de contrôle de la protection des données à caractère personnel).</p>
+</section>
+<section>
+    <h2>Sécurité</h2>
+    <p>Connexion chiffrée (HTTPS), mots de passe enregistrés sous forme chiffrée, accès limité selon le rôle,
+        limitation des tentatives de connexion et sauvegardes régulières.</p>
+</section>
+<p class="info-updated">Dernière mise à jour : {{ site.legal_updated }}.</p>
+{% endblock %}

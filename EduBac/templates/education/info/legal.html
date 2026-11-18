@@ -1,0 +1,34 @@
+{% extends "education/info/_base.html" %}
+{% block eyebrow %}Informations légales{% endblock %}
+{% block info %}
+<section>
+    <h2>Éditeur du site</h2>
+    <p>Le site EduBac est édité à titre personnel et pédagogique par
+        <strong>{% include "education/info/_value.html" with value=site.publisher_name %}</strong>,
+        professeur de mathématiques, {% include "education/info/_value.html" with value=site.city %} ({{ site.country }}).</p>
+    <p>Responsable de la publication : {% include "education/info/_value.html" with value=site.publisher_name %}.<br>
+        Contact : {% if site.contact_email %}<a href="mailto:{{ site.contact_email }}">{{ site.contact_email }}</a>{% else %}<span class="info-missing">à compléter</span>{% endif %}.</p>
+</section>
+<section>
+    <h2>Hébergement</h2>
+    <p>Le site est hébergé par <a href="{{ site.host_url }}" rel="noopener" target="_blank">{{ site.host_name }}</a>.</p>
+</section>
+<section>
+    <h2>Objet du site</h2>
+    <p>EduBac est une plateforme d’accompagnement en mathématiques pour les élèves du lycée marocain
+        (Tronc commun, 1<sup>re</sup> et 2<sup>e</sup> année du Baccalauréat). L’accès aux cours publics est libre ;
+        les quiz, la messagerie et le tableau blanc sont réservés aux élèves inscrits dans une classe du professeur.</p>
+</section>
+<section>
+    <h2>Propriété intellectuelle</h2>
+    <p>Les cours, exercices, quiz et documents publiés sur EduBac sont protégés. Ils peuvent être consultés et
+        imprimés pour un usage personnel et scolaire. Toute reproduction ou diffusion publique, en particulier
+        commerciale, nécessite l’accord préalable de l’éditeur.</p>
+    <p>Les élèves restent responsables des messages et fichiers qu’ils envoient.</p>
+</section>
+<section>
+    <h2>Données personnelles</h2>
+    <p>Le traitement des données est décrit dans la <a href="{% url 'education:privacy' %}">politique de confidentialité</a>.</p>
+</section>
+<p class="info-updated">Dernière mise à jour : {{ site.legal_updated }}.</p>
+{% endblock %}

@@ -40,8 +40,18 @@
         <h2 class="h5 mb-0" id="teacherTodo"><i class="bi bi-list-check" aria-hidden="true"></i> À faire</h2>
         {% if drafts_count %}<a href="{% url 'quizzes:manage' %}" class="small">Tous mes quiz</a>{% endif %}
     </div>
-    {% if pending_registrations or drafts %}
+    {% if pending_registrations or drafts or chat_unread_total or inactive_count %}
     <ul class="todo-list">
+        {% if chat_unread_total %}
+        <li class="todo-item is-urgent">
+            <span class="todo-icon" aria-hidden="true"><i class="bi bi-chat-dots"></i></span>
+            <span class="todo-body">
+                <strong>{{ chat_unread_total }} message{{ chat_unread_total|pluralize }} non lu{{ chat_unread_total|pluralize }}</strong>
+                <small>Questions des élèves dans les classes et les consultations.</small>
+            </span>
+            <a href="{% url 'chat:home' %}" class="btn btn-accent btn-sm">Lire</a>
+        </li>
+        {% endif %}
         {% if pending_registrations %}
         <li class="todo-item is-urgent">
             <span class="todo-icon" aria-hidden="true"><i class="bi bi-person-plus"></i></span>
@@ -64,10 +74,20 @@
             </a>
         </li>
         {% endfor %}
+        {% if inactive_count %}
+        <li class="todo-item">
+            <span class="todo-icon" aria-hidden="true"><i class="bi bi-person-exclamation"></i></span>
+            <span class="todo-body">
+                <strong>{{ inactive_count }} élève{{ inactive_count|pluralize }} sans activité depuis 2 semaines</strong>
+                <small>{% for s in inactive_students %}{{ s.get_full_name|default:s.username }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if inactive_count > inactive_students|length %}…{% endif %}</small>
+            </span>
+            <a href="{% url 'quizzes:student_results' %}" class="btn btn-outline-primary btn-sm">Voir</a>
+        </li>
+        {% endif %}
     </ul>
     {% if drafts_count > drafts|length %}<p class="small text-muted mt-2 mb-0">… et {{ drafts_count|add:"-5" }} autre{{ drafts_count|add:"-5"|pluralize }} brouillon{{ drafts_count|add:"-5"|pluralize }}.</p>{% endif %}
     {% else %}
-    <div class="todo-empty"><i class="bi bi-check2-circle" aria-hidden="true"></i> Tout est à jour : aucun brouillon ni inscription en attente.</div>
+    <div class="todo-empty"><i class="bi bi-check2-circle" aria-hidden="true"></i> Tout est à jour : aucun message, brouillon ni inscription en attente.</div>
     {% endif %}
 </section>
 

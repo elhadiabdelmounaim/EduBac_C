@@ -67,7 +67,7 @@ class AdminTeacherHandoffTests(TestCase):
             200,
         )
         profile = self.client.get(reverse('accounts:profile'))
-        self.assertContains(profile, 'Rôle :</strong> Enseignant')
+        self.assertContains(profile, '<i class="bi bi-person-workspace" aria-hidden="true"></i> Enseignant')
         self.assertEqual(User.objects.get(pk=self.admin.pk).role, 'student')
 
     def test_teacher_login_page_is_hidden_from_students_but_reachable_directly(self):

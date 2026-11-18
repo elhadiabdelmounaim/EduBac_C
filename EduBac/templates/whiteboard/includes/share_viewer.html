@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="/static/css/whiteboard-share.css">
+<link rel="stylesheet" href="{% asset 'css/whiteboard-share.css' %}">
 <section class="wb-share mb-3" id="wbShareView"
          data-bound="0"
          data-image="{% url 'whiteboard:share_image' share.pk %}"
@@ -31,4 +31,4 @@
     </div>
     <p class="small text-muted mt-2 mb-0">Lecture seule : le dessin, l’effacement et le partage sont désactivés.</p>
 </section>
-<script src="/static/js/whiteboard-share-view.js"></script>
+<script src="{% asset 'js/whiteboard-share-view.js' %}"></script>

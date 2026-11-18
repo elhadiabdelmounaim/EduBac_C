@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block title %}{{ active_classroom.name }} — Messagerie{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="/static/css/chat.css?v=brand-2">
-<link rel="stylesheet" href="/static/css/chat-voice.css?v=brand-1">
+<link rel="stylesheet" href="{% asset 'css/chat.css' %}">
+<link rel="stylesheet" href="{% asset 'css/chat-voice.css' %}">
 {% include "includes/katex.html" %}
 {% endblock %}
 {% block content %}
@@ -157,10 +157,10 @@
 </div>
 {% endblock %}
 {% block extra_js %}
-<script src="/static/js/chat-voice.js?v=redesign-2"></script>
-<script src="/static/js/chat-presence.js"></script>
-<script src="/static/js/chat-actions.js?v=redesign-3"></script>
-<script src="/static/js/messaging-home.js?v=redesign-2"></script>
-<script src="/static/js/chat.js?v=redesign-2"></script>
-{% if user.is_teacher or user.is_staff %}<script src="/static/js/chat-whiteboard.js?v=1"></script>{% endif %}
+<script src="{% asset 'js/chat-voice.js' %}"></script>
+<script src="{% asset 'js/chat-presence.js' %}"></script>
+<script src="{% asset 'js/chat-actions.js' %}"></script>
+<script src="{% asset 'js/messaging-home.js' %}"></script>
+<script src="{% asset 'js/chat.js' %}"></script>
+{% if user.is_teacher or user.is_staff %}<script src="{% asset 'js/chat-whiteboard.js' %}"></script>{% endif %}
 {% endblock %}

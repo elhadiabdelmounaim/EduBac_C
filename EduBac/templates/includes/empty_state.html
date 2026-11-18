@@ -1,0 +1,7 @@
+{# Usage : {% include "includes/empty_state.html" with icon="bi-journal" title="…" text="…" action_url=… action_label="…" %} #}
+<div class="empty-state" role="status">
+    <span class="empty-state-icon" aria-hidden="true"><i class="bi {{ icon|default:'bi-inbox' }}"></i></span>
+    <p class="empty-state-title">{{ title }}</p>
+    {% if text %}<p class="empty-state-text">{{ text }}</p>{% endif %}
+    {% if action_url %}<a href="{{ action_url }}" class="btn btn-edubac btn-sm">{{ action_label }}</a>{% endif %}
+</div>

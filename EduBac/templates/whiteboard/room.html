@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block extra_css %}
-<link rel="stylesheet" href="/static/css/whiteboard.css?v=brand-1">
-{% if not is_student %}<link rel="stylesheet" href="/static/css/whiteboard-tutor.css?v=brand-1">{% endif %}
-<link rel="stylesheet" href="/static/css/whiteboard-share.css">
-<link rel="stylesheet" href="/static/css/whiteboard-collab.css?v=brand-1">
+<link rel="stylesheet" href="{% asset 'css/whiteboard.css' %}">
+{% if not is_student %}<link rel="stylesheet" href="{% asset 'css/whiteboard-tutor.css' %}">{% endif %}
+<link rel="stylesheet" href="{% asset 'css/whiteboard-share.css' %}">
+<link rel="stylesheet" href="{% asset 'css/whiteboard-collab.css' %}">
 {% include "includes/katex.html" %}
 {% endblock %}
 {% block content %}
@@ -324,9 +324,9 @@
 {% endif %}
 {% endblock %}
 {% block extra_js %}
-<script src="/static/js/whiteboard-objects.js?v=20261009-tools2"></script>
-<script src="/static/js/whiteboard.js?v=brand-1"></script>
-<script src="/static/js/whiteboard-collab.js?v=brand-1"></script>
-{% if not is_student %}<script src="/static/js/whiteboard-tutor.js"></script>{% endif %}
-{% if is_teacher_owner %}<script src="/static/js/whiteboard-share-publish.js"></script>{% endif %}
+<script src="{% asset 'js/whiteboard-objects.js' %}"></script>
+<script src="{% asset 'js/whiteboard.js' %}"></script>
+<script src="{% asset 'js/whiteboard-collab.js' %}"></script>
+{% if not is_student %}<script src="{% asset 'js/whiteboard-tutor.js' %}"></script>{% endif %}
+{% if is_teacher_owner %}<script src="{% asset 'js/whiteboard-share-publish.js' %}"></script>{% endif %}
 {% endblock %}

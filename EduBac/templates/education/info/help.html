@@ -1,0 +1,60 @@
+{% extends "education/info/_base.html" %}
+{% block eyebrow %}Aide{% endblock %}
+{% block info %}
+<div class="info-faq">
+    <details open>
+        <summary><i class="bi bi-person-plus" aria-hidden="true"></i> Comment m’inscrire ?</summary>
+        <ol>
+            <li>Demandez le <strong>code de classe</strong> à votre professeur.</li>
+            <li>Ouvrez <a href="{% url 'accounts:register_student' %}">Inscription</a>, remplissez le formulaire avec ce code.</li>
+            <li>Le professeur valide votre demande : vous pouvez ensuite vous connecter avec votre nom d’utilisateur.</li>
+        </ol>
+    </details>
+    <details>
+        <summary><i class="bi bi-phone" aria-hidden="true"></i> Installer EduBac sur mon téléphone</summary>
+        <p><strong>Android (Chrome)</strong> : menu <i class="bi bi-three-dots-vertical" aria-hidden="true"></i> → « Installer l’application »
+            (ou « Ajouter à l’écran d’accueil »). L’icône EduBac apparaît avec vos applications.</p>
+        <p><strong>iPhone (Safari)</strong> : bouton Partager <i class="bi bi-box-arrow-up" aria-hidden="true"></i> →
+            « Sur l’écran d’accueil » → « Ajouter ». Ouvrez ensuite EduBac depuis cette icône.</p>
+    </details>
+    <details>
+        <summary><i class="bi bi-bell" aria-hidden="true"></i> Recevoir les notifications sur le téléphone</summary>
+        <ol>
+            <li>Ouvrez EduBac (sur iPhone : depuis l’icône installée, iOS 16.4 ou plus récent).</li>
+            <li>Appuyez sur la cloche <i class="bi bi-bell" aria-hidden="true"></i>, puis sur <strong>Activer</strong>, et acceptez.</li>
+            <li>Vérifiez dans <a href="{% url 'notifications:preferences' %}">Préférences de notification</a> avec « Envoyer un test ».</li>
+        </ol>
+        <p class="small text-muted">Rien ne s’affiche ? Autorisez les notifications pour Chrome (ou EduBac) dans les réglages du téléphone,
+            et désactivez le mode « Ne pas déranger ».</p>
+    </details>
+    <details>
+        <summary><i class="bi bi-ui-checks" aria-hidden="true"></i> Passer un quiz</summary>
+        <ul>
+            <li>Les quiz envoyés par le professeur apparaissent dans <strong>Mes quiz</strong> et sur le tableau de bord, avec leur date limite.</li>
+            <li>Chaque question a un temps limité : lisez bien avant de répondre.</li>
+            <li>Après l’envoi, vous voyez votre note et la correction.</li>
+        </ul>
+    </details>
+    <details>
+        <summary><i class="bi bi-chat-dots" aria-hidden="true"></i> Écrire au professeur</summary>
+        <p>Ouvrez <strong>Messagerie</strong> : la discussion de classe est visible par toute la classe ; une
+            <strong>consultation</strong> est un échange privé avec le professeur. Vous pouvez joindre une photo de votre
+            exercice ou envoyer un message vocal. Pour écrire une formule : <code>$x^2$</code>.</p>
+    </details>
+    <details>
+        <summary><i class="bi bi-easel" aria-hidden="true"></i> Le tableau blanc</summary>
+        <p>Quand le professeur partage un tableau, une notification vous l’indique. Selon ses réglages, vous pouvez
+            regarder, lever la main ou dessiner quand il vous donne la parole.</p>
+    </details>
+    <details>
+        <summary><i class="bi bi-key" aria-hidden="true"></i> Mot de passe oublié</summary>
+        <p>Demandez à votre professeur : il peut réinitialiser votre mot de passe. Votre compte et vos résultats sont conservés.
+            Après 8 essais incorrects, la connexion est bloquée 15 minutes par sécurité.</p>
+    </details>
+    <details>
+        <summary><i class="bi bi-moon-stars" aria-hidden="true"></i> Mode sombre</summary>
+        <p>Le bouton lune <i class="bi bi-moon-stars" aria-hidden="true"></i> en haut de la page change le thème ; votre choix est mémorisé sur l’appareil.</p>
+    </details>
+</div>
+<p class="mt-3">Une autre question ? <a href="{% url 'education:contact' %}">Contact</a>.</p>
+{% endblock %}

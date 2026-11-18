@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import status_views, views
 
 app_name = 'accounts'
 
@@ -20,6 +20,7 @@ urlpatterns = [
     path('inscription/eleve/', views.register_student, name='register_student'),
     path('inscription/professeur/', views.register_teacher, name='register_teacher'),
     path('administration/', views.admin_dashboard, name='admin_dashboard'),
+    path('administration/etat/', status_views.system_status, name='system_status'),
     path(
         'administration/eleves/<int:user_id>/mot-de-passe/',
         views.confirm_student_password_reset,

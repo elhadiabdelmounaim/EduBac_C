@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block extra_css %}
-<link rel="stylesheet" href="/static/css/whiteboard-share.css">
+<link rel="stylesheet" href="{% asset 'css/whiteboard-share.css' %}">
 {% endblock %}
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4 fade-up">
@@ -31,7 +31,7 @@
     <div id="wbShareWatch" hidden
          data-classroom-id="{{ student_classroom_id }}"
          data-api="{% url 'whiteboard:share_api' %}"></div>
-    <script src="/static/js/whiteboard-share-view.js"></script>
+    <script src="{% asset 'js/whiteboard-share-view.js' %}"></script>
     {% endif %}
     {% endif %}
     {% include "whiteboard/includes/share_history.html" %}

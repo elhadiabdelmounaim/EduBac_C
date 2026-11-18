@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block title %}{{ page_title|default:"Conversation privée" }}{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="/static/css/chat.css?v=brand-2">
-<link rel="stylesheet" href="/static/css/chat-voice.css?v=brand-1">
+<link rel="stylesheet" href="{% asset 'css/chat.css' %}">
+<link rel="stylesheet" href="{% asset 'css/chat-voice.css' %}">
 {% include "includes/katex.html" %}
 {% endblock %}
 {% block content %}
@@ -123,6 +123,9 @@
                             <button type="button" id="privateImageBtn" title="Envoyer une image" aria-label="Envoyer une image">
                                 <span class="chat-attach-icon is-photo"><i class="bi bi-image" aria-hidden="true"></i></span> Photo
                             </button>
+                            <button type="button" id="privateCameraBtn" title="Prendre une photo" aria-label="Prendre une photo avec l’appareil">
+                                <span class="chat-attach-icon is-photo"><i class="bi bi-camera" aria-hidden="true"></i></span> Caméra
+                            </button>
                             <button type="button" id="privateAudioBtn" title="Envoyer un fichier audio" aria-label="Envoyer un fichier audio">
                                 <span class="chat-attach-icon is-audio"><i class="bi bi-file-music" aria-hidden="true"></i></span> Audio
                             </button>
@@ -130,6 +133,7 @@
                     </div>
                     <input type="file" id="privateFileInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.zip" hidden>
                     <input type="file" id="privateImageInput" accept="image/*" hidden>
+                    <input type="file" id="privateCameraInput" accept="image/*" capture="environment" hidden>
                     <input type="file" id="privateAudioInput" accept="audio/*" hidden>
                 </div>
                 <button type="submit" class="chat-round-btn chat-send-btn" title="Envoyer" aria-label="Envoyer">
@@ -148,10 +152,10 @@
 </div>
 {% endblock %}
 {% block extra_js %}
-<script src="/static/js/chat-voice.js?v=redesign-2"></script>
-<script src="/static/js/chat-presence.js"></script>
-<script src="/static/js/chat-actions.js?v=redesign-3"></script>
-<script src="/static/js/messaging-home.js?v=redesign-2"></script>
-<script src="/static/js/private-chat.js?v=redesign-2"></script>
-{% if not user.is_student and contact.is_student %}<script src="/static/js/chat-whiteboard.js?v=1"></script>{% endif %}
+<script src="{% asset 'js/chat-voice.js' %}"></script>
+<script src="{% asset 'js/chat-presence.js' %}"></script>
+<script src="{% asset 'js/chat-actions.js' %}"></script>
+<script src="{% asset 'js/messaging-home.js' %}"></script>
+<script src="{% asset 'js/private-chat.js' %}"></script>
+{% if not user.is_student and contact.is_student %}<script src="{% asset 'js/chat-whiteboard.js' %}"></script>{% endif %}
 {% endblock %}

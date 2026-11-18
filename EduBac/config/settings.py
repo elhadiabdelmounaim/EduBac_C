@@ -72,8 +72,21 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.csp.ContentSecurityPolicyMiddleware',
     'accounts.middleware.SimpleSessionAuthMiddleware',
 ]
+
+# Politique de sécurité du contenu : directives sans risque pour les scripts en ligne
+# existants (pas d'objets/plugins, pas de <base> détourné, pas d'affichage dans un cadre).
+from django.utils.csp import CSP  # noqa: E402
+
+SECURE_CSP = {
+    'object-src': [CSP.NONE],
+    'base-uri': [CSP.SELF],
+    'frame-ancestors': [CSP.NONE],
+}
+SECURE_REFERRER_POLICY = 'same-origin'
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
 
 ROOT_URLCONF = 'config.urls'
 
@@ -91,6 +104,8 @@ TEMPLATES = [
                 'chat.context_processors.chat_unread',
                 'notifications.context_processors.web_push',
             ],
+            # {% asset 'css/x.css' %} disponible partout, sans {% load %}.
+            'builtins': ['education.templatetags.edubac_assets'],
         },
     },
 ]
@@ -180,7 +195,8 @@ EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False').strip().lower() in (
 )
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '').strip()
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '').strip()
-EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', '20'))
+# Court : un SMTP en panne ne doit pas occuper le serveur longtemps (les e-mails partent après la réponse).
+EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', '8'))
 EMAIL_DIAGNOSTIC_TRACEBACK = os.getenv(
     'EMAIL_DIAGNOSTIC_TRACEBACK', 'False'
 ).strip().lower() in ('true', '1', 'yes')
@@ -190,6 +206,9 @@ DEFAULT_FROM_EMAIL = (
 SERVER_EMAIL = (
     os.getenv('SERVER_EMAIL', '').strip() or DEFAULT_FROM_EMAIL
 )
+# Erreurs serveur (500) envoyées par e-mail à l'administrateur : ADMIN_EMAIL dans .env.
+ADMINS = [('Administrateur EduBac', _admin) for _admin in
+          [os.getenv('ADMIN_EMAIL', '').strip()] if _admin and '@' in _admin]
 EMAIL_NOTIFICATIONS_ENABLED = os.getenv('EMAIL_NOTIFICATIONS_ENABLED', 'True').lower() in ('true', '1', 'yes')
 
 # Notifications sur le téléphone (Web Push). Clés : python manage.py generate_vapid_keys

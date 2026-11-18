@@ -8,7 +8,11 @@ from django.db import connections
 
 
 class Command(BaseCommand):
-    help = 'Crée une sauvegarde SQLite cohérente hors du dépôt.'
+    help = 'Crée une sauvegarde SQLite cohérente hors du dépôt (~/backups/edubac), en gardant les plus récentes.'
+
+    def add_arguments(self, parser):
+        parser.add_argument('--keep', type=int, default=14,
+                            help='Nombre de sauvegardes conservées (les plus anciennes sont supprimées). 0 = toutes.')
 
     def handle(self, *args, **options):
         db = settings.DATABASES['default']
@@ -39,6 +43,12 @@ class Command(BaseCommand):
                 dest.unlink(missing_ok=True)
                 raise
             self.stdout.write(self.style.SUCCESS(f'Sauvegarde SQLite : {dest}'))
+            keep = options.get('keep') or 0
+            if keep > 0:
+                backups = sorted(backup_dir.glob('db_*.sqlite3'), reverse=True)
+                for old in backups[keep:]:
+                    old.unlink(missing_ok=True)
+                    self.stdout.write(f'Ancienne sauvegarde supprimée : {old.name}')
         else:
             self.stdout.write(
                 self.style.WARNING(

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block extra_css %}<link rel="stylesheet" href="{% asset 'css/info-pages.css' %}">{% endblock %}
+{% block content %}
+<div class="info-page">
+    <header class="page-head">
+        <div>
+            <p class="dash-eyebrow">{% block eyebrow %}Informations{% endblock %}</p>
+            <h1 class="h3 mb-1">{{ page_title }}</h1>
+            <p class="text-muted mb-0">{{ meta_description }}</p>
+        </div>
+    </header>
+    {% if missing_info %}
+    <div class="alert alert-warning small" role="status">
+        <strong>Visible par l’administrateur seulement :</strong> à compléter dans <code>config/site_info.py</code> —
+        {{ missing_info|join:", " }}.
+    </div>
+    {% endif %}
+    <div class="info-layout">
+        <nav class="info-nav" aria-label="Pages d’information">
+            {% for key, label in info_pages %}
+            {% with "education:"|add:key as route %}
+            <a href="{% url route %}" class="info-nav-link{% if key == current_page %} is-active{% endif %}"
+               {% if key == current_page %}aria-current="page"{% endif %}>{{ label }}</a>
+            {% endwith %}
+            {% endfor %}
+        </nav>
+        <article class="info-body">
+            {% block info %}{% endblock %}
+        </article>
+    </div>
+</div>
+{% endblock %}

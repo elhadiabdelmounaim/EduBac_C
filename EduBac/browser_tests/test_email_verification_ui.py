@@ -108,6 +108,12 @@ class StudentApprovalBrowserTests(StaticLiveServerTestCase):
             page.locator('input[name="username"]').fill('browser-admin')
             page.locator('input[name="password"]').fill('BrowserAdmin-2026!')
             page.locator('button[type="submit"]').click()
+            # L'enseignant-administrateur arrive sur son tableau de bord : la demande
+            # apparaît dans « À faire », et « Valider » mène à la gestion des inscriptions.
+            page.wait_for_url(f'**{reverse("accounts:teacher_portal")}')
+            todo = page.locator('.todo-item.is-urgent')
+            expect(todo).to_contain_text('1 inscription en attente')
+            todo.get_by_role('link', name='Valider').click()
             page.wait_for_url(f'**{reverse("accounts:admin_dashboard")}')
             page.get_by_role('button', name='Accepter').click()
             expect(page.get_by_text('Aucune demande d’inscription en attente.')).to_be_visible()

@@ -61,68 +61,33 @@ class DuplicateChecksDisabledTests(TestCase):
 
     @patch.object(AIService, "_get_provider", return_value=SimpleNamespace(name="test", model="test"))
     def test_teacher_saves_repeated_questions_from_sources_and_prior_generations(self, provider):
-        stages = []
-
-        def response(messages, **kwargs):
-            system = messages[0]["content"]
-            if "ÉTAPE 1" in system:
-                stages.append("analysis")
-                return json.dumps({**ANALYSIS, "reference_segments": [1]})
-            if "ÉTAPE 4" in system:
-                stages.append("math")
-                return reviews(1, 2)
-            if "diversité" in system:
-                self.fail("Duplicate detection must not call the model.")
-            stages.append("generation")
-            self.assertNotIn("DIVERSITÉ OBLIGATOIRE", messages[1]["content"])
-            return generated(self.original, self.original)
-
-        with patch.object(AIService, "_chat", side_effect=response):
-            for _ in range(2):
-                result = self.client.post(reverse("quizzes:teacher_ai"), {
-                    "lesson": self.lesson.pk, "niveau": "tronc_commun", "action": "generate",
-                    "description": "Évaluer des calculs simples.", "question_count": 2,
-                    "resource_selection_present": "1", "generation_mode": "resources",
-                    "resource_uploads": SimpleUploadedFile(
-                        "exemple.txt", ("Exemple : " + self.original["text"]).encode(),
-                    ),
-                })
-                self.assertIsNone(result.context["error"])
-                self.assertFalse(result.context["generation_report"]["history_checked"])
-                self.assertContains(result, "Le contrôle de répétition des questions est désactivé.")
-                self.assertNotContains(result, "historique consulté")
-        self.assertEqual(stages, ["analysis", "generation", "math"] * 2)
-        self.assertEqual(Quiz.objects.count(), 2)
-        self.assertEqual(Question.objects.filter(text=self.original["text"]).count(), 4)
-        self.assertEqual(QuizGenerationQuestion.objects.count(), 1)
-        self.assertEqual(QuizGenerationQuestion.objects.get().pk, self.archived.pk)
-
-    @patch.object(AIService, "_get_provider", return_value=SimpleNamespace(name="test", model="test"))
-    def test_incorrect_math_still_blocks_saving_after_targeted_repairs(self, provider):
-        bad = question(answer="6")
-        stages = []
-
-        def response(messages, **kwargs):
-            if "ÉTAPE 1" in messages[0]["content"]:
-                return json.dumps(ANALYSIS)
-            if "ÉTAPE 4" in messages[0]["content"]:
-                stages.append("math")
-                return reviews()
-            if messages[-1]["content"].startswith(("CORRIGE", "REMPLACE")):
-                stages.append("repair")
-                return repaired(bad)
-            return generated(bad)
-
-        with patch.object(AIService, "_chat", side_effect=response):
-            result = self.client.post(reverse("quizzes:teacher_ai"), {
+        # La génération interne par IA est désactivée côté enseignant (import JSON seulement) :
+        # la route refuse, n'appelle aucun modèle et ne crée aucun quiz.
+        with patch.object(AIService, "_chat") as chat:
+            response = self.client.post(reverse("quizzes:teacher_ai"), {
                 "lesson": self.lesson.pk, "niveau": "tronc_commun", "action": "generate",
                 "description": "Calculer une somme.", "question_count": 1,
                 "generation_mode": "topic", "resource_selection_present": "1",
             })
-        self.assertIsNotNone(result.context["error"])
-        self.assertEqual(stages, ["math", "repair", "math", "repair", "math"])
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("La génération interne est désactivée", response.context["error"])
         self.assertFalse(Quiz.objects.exists())
-        self.assertEqual(QuizGenerationQuestion.objects.count(), 1)
+        chat.assert_not_called()
+
+    @patch.object(AIService, "_get_provider", return_value=SimpleNamespace(name="test", model="test"))
+    def test_incorrect_math_still_blocks_saving_after_targeted_repairs(self, provider):
+        # La génération interne par IA est désactivée côté enseignant (import JSON seulement) :
+        # la route refuse, n'appelle aucun modèle et ne crée aucun quiz.
+        with patch.object(AIService, "_chat") as chat:
+            response = self.client.post(reverse("quizzes:teacher_ai"), {
+                "lesson": self.lesson.pk, "niveau": "tronc_commun", "action": "generate",
+                "description": "Calculer une somme.", "question_count": 1,
+                "generation_mode": "topic", "resource_selection_present": "1",
+            })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("La génération interne est désactivée", response.context["error"])
+        self.assertFalse(Quiz.objects.exists())
+        chat.assert_not_called()
 
     def test_answer_choices_must_still_be_distinct(self):
         invalid = question()

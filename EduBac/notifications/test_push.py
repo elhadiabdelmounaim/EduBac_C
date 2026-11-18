@@ -55,6 +55,12 @@ class CryptoTests(TestCase):
         public = ec.EllipticCurvePublicKey.from_encoded_point(ec.SECP256R1(), push.b64url_decode(PUBLIC))
         public.verify(der, f'{head}.{claims}'.encode(), ec.ECDSA(hashes.SHA256()))  # lève une erreur si invalide
 
+    def test_contact_gets_mailto_prefix_when_missing(self):
+        with override_settings(WEBPUSH_CONTACT='prof@example.test'):
+            self.assertEqual(push.contact(), 'mailto:prof@example.test')
+        with override_settings(WEBPUSH_CONTACT='https://edubac.example'):
+            self.assertEqual(push.contact(), 'https://edubac.example')
+
     def test_only_browser_push_services_are_contacted(self):
         for url in (FCM, 'https://web.push.apple.com/abc', 'https://updates.push.services.mozilla.com/wpush/v2/x',
                     'https://db5p.notify.windows.com/w/?token=x'):

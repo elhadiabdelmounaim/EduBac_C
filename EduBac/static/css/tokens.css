@@ -1,0 +1,66 @@
+/* =========================================================================
+   EduBac — jetons de design (source unique des couleurs, rayons et ombres).
+   Couleurs du logo : bleu marine #12306b, bleu #1d4fa3, orange #f39c12.
+   Les anciens noms --edubac-* restent des alias pour le code existant.
+   ========================================================================= */
+:root {
+    --edubac-purple: #1d4fa3;
+    --edubac-navy: #263449;
+    --edubac-dark: #263449;
+    --edubac-teal: #1d4fa3;
+    --edubac-teal-light: #3a6fc9;
+    --edubac-blue: #1d4fa3;
+    --edubac-green: #39744f;
+    --edubac-accent: #b45309;
+    --edubac-orange: #b45309;
+    --edubac-cream: #fde7c2;
+    --edubac-cream-bg: #f6f8fc;
+    --edubac-soft: #f4f6fb;
+    --edubac-light: #e6eefb;
+    --nb-paper: #f4f6fb;
+    --nb-surface: #ffffff;
+    --nb-ink: #263449;
+    --nb-muted: #56627a;
+    --nb-teal: #1d4fa3;
+    --nb-teal-soft: #e6eefb;
+    --nb-ochre: #b45309;
+    --nb-line: #d9e0ec;
+    --nb-shadow: 0 5px 18px rgba(38, 52, 73, .07);
+    --nb-orange: #f39c12;
+    --nb-navy: #12306b;
+
+    --radius-sm: 12px;
+    --radius-md: 16px;
+    --radius-lg: 20px;
+    --radius-xl: 24px;
+    --radius-pill: 999px;
+    --sidebar-width: 250px;
+    --navbar-height: 64px;
+    --shadow-sm: 0 2px 12px rgba(30, 42, 74, 0.06);
+    --shadow-md: 0 8px 28px rgba(30, 42, 74, 0.10);
+}
+
+html[data-theme="dark"] {
+    --edubac-purple: #8ab4ff;
+    --edubac-navy: #e8edf7;
+    --edubac-dark: #e8edf7;
+    --edubac-teal: #8ab4ff;
+    --edubac-teal-light: #a9c7ff;
+    --edubac-blue: #8ab4ff;
+    --edubac-green: #8fd0a0;
+    --edubac-accent: #f5a524;
+    --edubac-orange: #f5a524;
+    --edubac-cream: #54452e;
+    --edubac-cream-bg: #131d33;
+    --edubac-soft: #131d33;
+    --edubac-light: #1d2c4a;
+    --nb-paper: #0f1726;
+    --nb-surface: #16213a;
+    --nb-ink: #e8edf7;
+    --nb-muted: #a7b3c9;
+    --nb-teal: #8ab4ff;
+    --nb-teal-soft: #1d2c4a;
+    --nb-ochre: #f5a524;
+    --nb-line: #2b3b5c;
+    --nb-shadow: 0 6px 20px rgba(0, 0, 0, .18);
+}

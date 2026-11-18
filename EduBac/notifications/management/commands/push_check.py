@@ -3,7 +3,6 @@
     python manage.py push_check                  # configuration + appareils enregistrés
     python manage.py push_check --send omar      # envoie un test aux appareils de « omar »
 """
-from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import DatabaseError
 
@@ -25,7 +24,7 @@ class Command(BaseCommand):
                                   'dans .env, puis Reload. Sans clés, le bouton « Activer » est caché.'))
             return
         self.stdout.write(ok(f'   ✓ Configurées (publique : {push.public_key()[:12]}…, contact : '
-                             f'{getattr(settings, "WEBPUSH_CONTACT", "") or "non défini"})'))
+                             f'{push.contact()})'))
         try:
             push._vapid_private_key()
         except Exception as exc:

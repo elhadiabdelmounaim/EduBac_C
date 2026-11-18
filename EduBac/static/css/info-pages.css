@@ -1,0 +1,40 @@
+/* Pages d'information (aide, contact, légal, Bac). */
+.info-layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 20px; align-items: start; }
+.info-nav { position: sticky; top: 84px; display: flex; flex-direction: column; gap: 2px; padding: 8px; border: 1px solid var(--nb-line); border-radius: 16px; background: var(--nb-surface); }
+.info-nav-link { padding: 8px 12px; border-radius: 10px; color: var(--nb-ink); text-decoration: none; font-weight: 500; }
+.info-nav-link:hover { background: var(--nb-teal-soft); color: var(--nb-teal); }
+.info-nav-link.is-active { background: var(--nb-teal); color: #fff; }
+.info-body { min-width: 0; padding: 20px 24px; border: 1px solid var(--nb-line); border-radius: 18px; background: var(--nb-surface); box-shadow: var(--nb-shadow); line-height: 1.65; }
+.info-body section + section { margin-top: 1.5rem; }
+.info-body h2 { margin-bottom: .5rem; font-size: 1.1rem; }
+.info-lead { font-size: 1.05rem; color: var(--nb-ink); }
+.info-missing { padding: 1px 6px; border-radius: 6px; background: #fff3dc; color: #9a4b00; font-weight: 600; }
+html[data-theme="dark"] .info-missing { background: #3a2a10; color: #f5b04a; }
+.info-updated { margin: 1.5rem 0 0; color: var(--nb-muted); font-size: .85rem; }
+.info-table td:first-child { width: 48%; }
+.info-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+.info-card { display: flex; gap: 12px; padding: 14px; border: 1px solid var(--nb-line); border-radius: 14px; background: var(--nb-paper); color: var(--nb-ink); text-decoration: none; }
+a.info-card:hover { border-color: var(--nb-teal); color: var(--nb-ink); }
+.info-card strong { display: block; }
+.info-card small { color: var(--nb-muted); }
+.info-card-icon { display: grid; place-items: center; width: 40px; height: 40px; flex: 0 0 auto; border-radius: 12px; background: var(--nb-teal-soft); color: var(--nb-teal); font-size: 1.2rem; }
+.info-faq details { border-bottom: 1px solid var(--nb-line); padding: 10px 0; }
+.info-faq summary { font-weight: 600; cursor: pointer; list-style-position: inside; }
+.info-faq summary i { color: var(--nb-teal); margin-right: 6px; }
+.info-faq details > :not(summary) { margin: 8px 0 0 4px; }
+.bac-formula { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 8px; margin: 8px 0 14px; }
+.bac-part { display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 14px; color: #fff; }
+.bac-part strong { font-size: 1.5rem; line-height: 1; }
+.bac-part small { opacity: .85; }
+.bac-part.is-cc { background: #1d4fa3; }
+.bac-part.is-reg { background: #12306b; }
+.bac-part.is-nat { background: #f39c12; color: #12306b; }
+.bac-dates { padding-left: 1.1rem; }
+@media (max-width: 767.98px) {
+  .info-layout { grid-template-columns: 1fr; }
+  .info-nav { position: static; flex-direction: row; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .info-nav-link { white-space: nowrap; }
+  .info-body { padding: 16px; }
+  .bac-formula { grid-template-columns: 1fr; }
+}
+html[data-theme="dark"] .info-nav-link.is-active { color: #0f1726; }

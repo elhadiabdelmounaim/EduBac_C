@@ -8,6 +8,7 @@
         </div>
         {% if user.is_teacher %}
         <a href="{% url 'classrooms:list' %}" class="btn btn-outline-primary">Gérer les classes</a>
+        <a href="{% url 'accounts:system_status' %}" class="btn btn-outline-primary"><i class="bi bi-activity" aria-hidden="true"></i> État du site</a>
         {% endif %}
     </header>
 

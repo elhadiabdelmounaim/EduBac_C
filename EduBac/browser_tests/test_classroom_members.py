@@ -1,3 +1,4 @@
+import os
 import shutil
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
@@ -28,12 +29,12 @@ class ClassroomMemberBrowserTests(StaticLiveServerTestCase):
         detail_url = self.live_server_url + reverse('classrooms:detail', args=[classroom.pk])
         with sync_playwright() as pw:
             browser = pw.chromium.launch(
-                executable_path=shutil.which('chromium'), headless=True, args=['--no-sandbox'],
+                executable_path=os.environ.get('CHROMIUM_EXECUTABLE') or shutil.which('chromium'), headless=True, args=['--no-sandbox'],
             )
             try:
                 page = browser.new_page(viewport={'width': 390, 'height': 900})
                 page.goto(self.live_server_url + reverse('accounts:login'))
-                page.locator('input[name="email"]').fill(teacher.email)
+                page.locator('input[name="username"]').fill(teacher.username)
                 page.locator('input[name="password"]').fill('Browser-test-only-123!')
                 page.locator('button[type="submit"]').click()
                 page.wait_for_url(self.live_server_url + reverse('accounts:dashboard'))
@@ -54,7 +55,7 @@ class ClassroomMemberBrowserTests(StaticLiveServerTestCase):
                 expect(page.locator('#rejectMembersButton')).to_have_text('Rejeter (1)')
                 page.locator('#rejectMembersButton').click()
                 expect(page.locator('.js-member-select')).to_have_count(0)
-                expect(page.get_by_text('Aucun élève dans vos classes.', exact=True)).to_be_visible()
+                expect(page.get_by_text('Aucun élève dans vos classes')).to_be_visible()
                 page.goto(detail_url)
                 expect(page.get_by_text('Élèves (0)', exact=True)).to_be_visible()
                 expect(page.locator('#rejectMembersButton')).to_be_disabled()

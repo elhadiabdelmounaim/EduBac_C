@@ -268,3 +268,73 @@ html[data-theme="dark"] body .edubac-sidebar .sidebar-nav .nav-link.active i { c
   .todo-body strong { white-space: normal; }
   .todo-item .btn { margin-left: 50px; }
 }
+
+/* ---- Pied de page : liens utiles ---- */
+.footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 16px; font-size: .85rem; }
+.footer-links a { color: rgba(255, 255, 255, .85); text-decoration: none; }
+.footer-links a:hover, .footer-links a:focus-visible { color: #fff; text-decoration: underline; }
+
+/* ---- État vide commun ---- */
+.empty-state { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 28px 16px; border: 1px dashed var(--nb-line); border-radius: 18px; background: var(--nb-surface); text-align: center; }
+.empty-state-icon { display: grid; place-items: center; width: 56px; height: 56px; margin-bottom: 4px; border-radius: 16px; background: var(--nb-teal-soft); color: var(--nb-teal); font-size: 1.6rem; }
+.empty-state-title { margin: 0; font-weight: 700; color: var(--nb-ink); }
+.empty-state-text { max-width: 420px; margin: 0 0 6px; color: var(--nb-muted); font-size: .92rem; }
+
+/* ---- Profil ---- */
+.profile-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 20px; border: 1px solid var(--nb-line); border-radius: 18px; background: var(--nb-surface); box-shadow: var(--nb-shadow); margin-bottom: 1.25rem; }
+.profile-avatar { display: grid; place-items: center; width: 72px; height: 72px; flex: 0 0 auto; border-radius: 50%; background: linear-gradient(135deg, #12306b, #1d4fa3); color: #fff; font-size: 1.9rem; font-weight: 700; }
+.profile-id { flex: 1 1 220px; min-width: 0; }
+.profile-id h1 { margin: 0; font-size: 1.4rem; }
+.profile-id p { margin: 2px 0 0; color: var(--nb-muted); }
+.profile-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.profile-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; }
+.profile-card { padding: 16px; border: 1px solid var(--nb-line); border-radius: 18px; background: var(--nb-surface); box-shadow: var(--nb-shadow); }
+.profile-card h2 { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 1.02rem; }
+.profile-card h2 i { color: var(--nb-teal); }
+.profile-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 16px; margin: 0; }
+.profile-facts dt { color: var(--nb-muted); font-weight: 500; }
+.profile-facts dd { margin: 0; overflow-wrap: anywhere; }
+.profile-links { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.profile-links a, .profile-links button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 6px; border: 0; border-bottom: 1px solid var(--nb-line); background: none; color: var(--nb-ink); text-align: left; text-decoration: none; }
+.profile-links li:last-child a, .profile-links li:last-child button { border-bottom: 0; }
+.profile-links a:hover, .profile-links button:hover { color: var(--nb-teal); }
+.profile-links i:first-child { width: 22px; color: var(--nb-teal); font-size: 1.1rem; }
+.profile-links .bi-chevron-right { margin-left: auto; color: var(--nb-muted); }
+.profile-links .is-danger, .profile-links .is-danger i:first-child { color: #b3372b; }
+@media (max-width: 767.98px) {
+  .profile-grid { grid-template-columns: 1fr; }
+  .profile-head { padding: 16px; }
+}
+.empty-state .empty-icon { display: grid; place-items: center; width: 56px; height: 56px; margin: 0 auto 4px; border-radius: 16px; background: var(--nb-teal-soft); color: var(--nb-teal); font-size: 1.6rem; }
+.empty-state h3 { margin: 0; font-size: 1.02rem; font-weight: 700; color: var(--nb-ink); }
+.empty-state p { margin-bottom: 6px; }
+
+/* ---- Tableaux sur téléphone : une carte par ligne ---- */
+@media (max-width: 575.98px) {
+  .table-stack thead { display: none; }
+  .table-stack, .table-stack tbody, .table-stack tr, .table-stack td { display: block; width: 100%; }
+  .table-stack tr { position: relative; margin-bottom: 10px; padding: 10px 12px 8px 44px; border: 1px solid var(--nb-line); border-radius: 14px; background: var(--nb-surface); }
+  .table-stack td { padding: 2px 0; border: 0; background: transparent !important; box-shadow: none !important; }
+  .table-stack td:first-child:has(input[type="checkbox"]) { position: absolute; top: 12px; left: 14px; width: auto; }
+  .table-stack td[data-label] { display: flex; justify-content: space-between; gap: 12px; }
+  .table-stack td[data-label]::before { content: attr(data-label); color: var(--nb-muted); font-size: .8rem; font-weight: 600; }
+  .table-stack .table-stack-title { font-weight: 700; }
+  .table-stack td[colspan] { padding: 12px 0; }
+}
+
+/* ---- Contrastes AA : boutons secondaires sur le fond de page ---- */
+.btn-outline-secondary { --bs-btn-color: #545b62; --bs-btn-border-color: #8a939b; }
+.btn-outline-danger { --bs-btn-color: #b02a37; --bs-btn-border-color: #b02a37; }
+html[data-theme="dark"] .btn-outline-secondary { --bs-btn-color: #c3cad6; --bs-btn-border-color: #6b7690; }
+html[data-theme="dark"] .btn-outline-danger { --bs-btn-color: #f2a39a; --bs-btn-border-color: #f2a39a; }
+
+/* ---- Contrastes AA en mode sombre ---- */
+html[data-theme="dark"] .edubac-navbar { background: #12306b !important; }
+html[data-theme="dark"] .form-text,
+html[data-theme="dark"] .stat-pill .lbl { color: var(--nb-muted) !important; }
+html[data-theme="dark"] code { color: #f7a8cf; }
+html[data-theme="dark"] .btn-link { --bs-btn-color: #8ab4ff; --bs-btn-hover-color: #a9c7ff; }
+html[data-theme="dark"] .btn-outline-success { --bs-btn-color: #8fd9aa; --bs-btn-border-color: #8fd9aa; }
+html[data-theme="dark"] .profile-links .is-danger,
+html[data-theme="dark"] .profile-links .is-danger i:first-child { color: #f2a39a; }
+html[data-theme="dark"] .edubac-motion-control { color: #e8edf7; border-color: rgba(232, 237, 247, .5); }

@@ -181,13 +181,48 @@ def _direct_conversation_payload(conversation, user, now=None):
     }
 
 
-def _consultation_payload(conversation, user, now=None):
+def _consultation_prefetch(conversations, user, now):
+    """Dernier message, non-lus et présence de toutes les consultations en 3 requêtes."""
+    from django.db.models import Count, OuterRef, Subquery
+    ids = [c.pk for c in conversations]
+    if not ids:
+        return {}
+    last_ids = dict(
+        PrivateConversation.objects.filter(pk__in=ids).annotate(
+            last_pk=Subquery(
+                PrivateMessage.objects.filter(conversation=OuterRef('pk'), deleted_at__isnull=True)
+                .order_by('-created_at').values('pk')[:1]
+            ),
+        ).values_list('pk', 'last_pk')
+    )
+    messages_by_pk = PrivateMessage.objects.select_related('sender').in_bulk(
+        [pk for pk in last_ids.values() if pk]
+    )
+    unread = dict(
+        PrivateMessage.objects.filter(conversation_id__in=ids, read_at__isnull=True)
+        .exclude(sender=user).values('conversation').annotate(n=Count('pk')).values_list('conversation', 'n')
+    )
+    contact_ids = {c.teacher_id if user.pk == c.student_id else c.student_id for c in conversations}
+    online = set(ChatPresence.objects.filter(
+        user_id__in=contact_ids, last_seen_at__gte=now - timedelta(seconds=90),
+    ).values_list('user_id', flat=True))
+    return {
+        c.pk: {
+            'last': messages_by_pk.get(last_ids.get(c.pk)),
+            'unread': unread.get(c.pk, 0),
+            'online': (c.teacher_id if user.pk == c.student_id else c.student_id) in online,
+        }
+        for c in conversations
+    }
+
+
+def _consultation_payload(conversation, user, now=None, prefetched=None):
     contact = (
         conversation.teacher
         if user.pk == conversation.student_id
         else conversation.student
     )
-    last = conversation.last_message()
+    last = prefetched['last'] if prefetched else conversation.last_message()
     name = contact.get_full_name() or contact.username
     classroom = conversation.classroom
     subtitle = f'{classroom.name} · {classroom.get_niveau_display()}'
@@ -203,10 +238,10 @@ def _consultation_payload(conversation, user, now=None):
             if last else ''
         ),
         'last_message_at': last.created_at.isoformat() if last else '',
-        'unread': conversation.messages.filter(
+        'unread': prefetched['unread'] if prefetched else conversation.messages.filter(
             read_at__isnull=True,
         ).exclude(sender=user).count(),
-        'is_online': _is_online(contact, now),
+        'is_online': prefetched['online'] if prefetched else _is_online(contact, now),
         'avatar_letter': (name[:1] or '?').upper(),
         'search_text': ' '.join(filter(None, [
             name,
@@ -235,8 +270,10 @@ def _messaging_context(user, active_tab='groups'):
         item = _direct_conversation_payload(conversation, user, now)
         if item:
             conversations.append(item)
-    for conversation in _private_conversations_for(user):
-        conversations.append(_consultation_payload(conversation, user, now))
+    consultations = list(_private_conversations_for(user))
+    prefetched = _consultation_prefetch(consultations, user, now)
+    for conversation in consultations:
+        conversations.append(_consultation_payload(conversation, user, now, prefetched.get(conversation.pk)))
     conversations.sort(key=lambda item: item['last_message_at'], reverse=True)
     rooms.sort(key=lambda item: item['last_message_at'], reverse=True)
     # Liste unique (classes et conversations privées) triée par activité.

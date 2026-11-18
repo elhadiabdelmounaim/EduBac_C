@@ -75,17 +75,53 @@ def _make_username(first_name, last_name, email):
     return username
 
 
+# Limite des tentatives de connexion, par compte (pas par adresse IP : derrière le
+# proxy de l'hébergeur ou le Wi-Fi d'un lycée, toute une classe partage la même adresse).
+LOGIN_WINDOW_SECONDS = 15 * 60
+LOGIN_MAX_FAILURES = 8
+
+
+def _login_key(identifiant):
+    from hashlib import sha256
+    return 'login-fail:' + sha256(identifiant.lower().encode('utf-8')).hexdigest()[:24]
+
+
+def _login_blocked(identifiant):
+    from django.core.cache import cache
+    return cache.get(_login_key(identifiant), 0) >= LOGIN_MAX_FAILURES
+
+
+def _login_failed(identifiant):
+    from django.core.cache import cache
+    key = _login_key(identifiant)
+    if not cache.add(key, 1, timeout=LOGIN_WINDOW_SECONDS):
+        try:
+            cache.incr(key)
+        except ValueError:
+            cache.add(key, 1, timeout=LOGIN_WINDOW_SECONDS)
+
+
+def _login_succeeded(identifiant):
+    from django.core.cache import cache
+    cache.delete(_login_key(identifiant))
+
+
 def _authenticate(request):
-    """Email + password. Retourne (user, error) sans filtrer le rôle."""
+    """Nom d'utilisateur (ou e-mail) + mot de passe. Retourne (user, error) sans filtrer le rôle."""
     identifiant = (request.POST.get('email') or request.POST.get('username') or '').strip()
     password = request.POST.get('password') or ''
     if not identifiant or not password:
         return None, 'Veuillez remplir tous les champs.'
+    if _login_blocked(identifiant):
+        return None, ('Trop de tentatives de connexion. Patientez 15 minutes avant de réessayer, '
+                      'ou demandez à votre professeur de réinitialiser votre mot de passe.')
     user = User.objects.filter(email__iexact=identifiant).first()
     if user is None:
         user = User.objects.filter(username=identifiant).first()
     if user is None or not user.check_password(password):
-        return None, 'E-mail ou mot de passe incorrect.'
+        _login_failed(identifiant)
+        return None, 'Nom d’utilisateur ou mot de passe incorrect.'
+    _login_succeeded(identifiant)
     if user.approval_status == 'pending':
         return None, 'Votre demande d’inscription attend la validation de l’administrateur.'
     if not user.is_active:
@@ -523,13 +559,18 @@ def confirm_email(request, token):
 
 @login_required_simple
 def profile(request):
+    from classrooms.models import Classroom
     user = request.edubac_user
     context = {'page_title': 'Profil', 'user': user}
-    if user.is_student() and hasattr(user, 'student_profile'):
-        context['profile'] = user.student_profile
+    if user.is_student():
+        context['classrooms'] = list(Classroom.objects.filter(members__user=user).select_related('teacher'))
+        if hasattr(user, 'student_profile'):
+            context['profile'] = user.student_profile
         context['stats'] = compute_student_progress(user)
-    elif user.is_teacher() and hasattr(user, 'teacher_profile'):
-        context['profile'] = user.teacher_profile
+    elif user.is_teacher():
+        context['classrooms'] = list(Classroom.objects.filter(teacher=user, is_active=True))
+        if hasattr(user, 'teacher_profile'):
+            context['profile'] = user.teacher_profile
     return render(request, 'accounts/profile.html', context)
 
 
@@ -934,8 +975,22 @@ def teacher_dashboard(request):
     pending_registrations = (
         User.objects.filter(role='student', approval_status='pending').count() if is_admin else 0
     )
+    # Élèves inscrits depuis plus de 14 jours sans aucun quiz rendu depuis 14 jours.
+    from django.db.models import Max
+    from datetime import timedelta
+    since = timezone.now() - timedelta(days=14)
+    inactive_students = list(
+        User.objects.filter(
+            role='student', is_active=True,
+            pk__in=memberships.filter(joined_at__lt=since).values('user'),
+        ).annotate(last_attempt=Max('attempts__submitted_at'))
+        .filter(Q(last_attempt__isnull=True) | Q(last_attempt__lt=since))
+        .order_by('last_attempt', 'first_name')
+    )
 
     return render(request, 'accounts/dashboard_teacher.html', {
+        'inactive_students': inactive_students[:5],
+        'inactive_count': len(inactive_students),
         'page_title': 'Tableau de bord enseignant',
         'classrooms': classrooms,
         'total_students': total_students,
@@ -984,7 +1039,8 @@ def my_progress(request):
 def my_courses(request):
     from education.models import Course
     profile = getattr(request.edubac_user, 'student_profile', None)
-    courses = Course.objects.filter(niveau=profile.niveau).order_by('order') if profile else Course.objects.none()
+    niveau = _student_niveau(request.edubac_user)
+    courses = Course.objects.filter(niveau=niveau).order_by('order') if niveau else Course.objects.none()
     return render(request, 'accounts/my_courses.html', {
         'page_title': 'Mes cours',
         'courses': courses,
@@ -992,13 +1048,24 @@ def my_courses(request):
     })
 
 
+def _student_niveau(user):
+    """Niveau de l'élève : celui de son profil, sinon celui de sa classe."""
+    profile = getattr(user, 'student_profile', None)
+    if profile is not None and profile.niveau:
+        return profile.niveau
+    from classrooms.models import Classroom
+    classroom = Classroom.objects.filter(members__user=user, is_active=True).order_by('pk').first()
+    return classroom.niveau if classroom else None
+
+
 @student_required
 def my_lessons(request):
     from education.models import Lesson
     profile = getattr(request.edubac_user, 'student_profile', None)
+    niveau = _student_niveau(request.edubac_user)
     lessons = Lesson.objects.none()
-    if profile:
-        lessons = Lesson.objects.filter(course__niveau=profile.niveau).select_related('course').order_by('course__order', 'order')
+    if niveau:
+        lessons = Lesson.objects.filter(course__niveau=niveau).select_related('course').order_by('course__order', 'order')
     return render(request, 'accounts/my_lessons.html', {
         'page_title': 'Mes leçons',
         'lessons': lessons,

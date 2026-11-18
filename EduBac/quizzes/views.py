@@ -1465,6 +1465,38 @@ def duplicate_quiz(request, pk):
     return redirect('quizzes:edit_questions', pk=new_quiz.pk)
 
 
+@teacher_required
+@require_POST
+def remind_pending(request, pk):
+    """Relance les élèves affectés qui n'ont pas encore rendu le quiz (notification + téléphone)."""
+    from notifications.models import Notification
+    from notifications.reminders import _unfinished
+    quiz = get_object_or_404(Quiz, pk=pk)
+    if quiz.created_by_id and quiz.created_by_id != request.user.id and not _is_platform_admin(request.user):
+        messages.error(request, 'Accès refusé.')
+        return redirect('quizzes:manage')
+    pending = list(_unfinished(QuizAssignment.objects.filter(quiz=quiz)).select_related('student'))
+    if not pending:
+        messages.info(request, f'Tous les élèves ont déjà rendu « {quiz.title} ».')
+        return redirect('quizzes:manage')
+    for assignment in pending:
+        deadline = ''
+        if assignment.deadline:
+            deadline = f" avant le {timezone.localtime(assignment.deadline):%d/%m à %H:%M}"
+        Notification.notify(
+            recipient=assignment.student,
+            title='Rappel du professeur',
+            message=f'N’oubliez pas le quiz « {quiz.title} »{deadline}.',
+            type='quiz_assigned',
+            actor=request.user,
+            link=reverse('quizzes:detail', args=[quiz.pk]),
+            send_email=False,
+            group_key=f'relance:{quiz.pk}',
+        )
+    messages.success(request, f'Rappel envoyé à {len(pending)} élève(s) qui n’ont pas encore rendu « {quiz.title} ».')
+    return redirect('quizzes:manage')
+
+
 @student_required
 def class_ranking(request):
     """Classement simple par score moyen (classe de l'élève si membre)."""

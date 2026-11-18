@@ -7,7 +7,7 @@
     --about-teal: #1d4fa3;
     --about-tint: #e4efeb;
     --about-line: #d1dcd5;
-    --about-ochre: #b45309;
+    --about-ochre: #9a4508;
     max-width: 1180px;
     margin: 0 auto;
     color: var(--about-ink);
@@ -208,7 +208,8 @@ html[data-theme="dark"] .about-page {
     padding: clamp(1.5rem, 3vw, 2.5rem);
     border-radius: 4px 20px 20px 4px;
 }
-.about-page .about-ai .about-kicker { color: var(--about-ochre); }
+.about-page .about-ai .about-kicker { color: #9a4508; }
+html[data-theme="dark"] .about-page .about-ai .about-kicker { color: var(--about-ochre); }
 .about-page .about-ai p:last-child { margin-bottom: 0; }
 .about-page .about-ai-copy { color: var(--about-muted); }
 .about-page .about-ai-copy strong { color: var(--about-ink); }
@@ -240,3 +241,5 @@ html[data-theme="dark"] .about-page {
     .about-page .about-button:hover { transform: none; }
 }
 body[data-edubac-motion="paused"] .about-page .about-button { transition: none; }
+/* Contraste AA : l'orange sur fond bleu clair doit être plus foncé. */
+html:not([data-theme="dark"]) .about-page .about-kicker { color: #9a4508; }

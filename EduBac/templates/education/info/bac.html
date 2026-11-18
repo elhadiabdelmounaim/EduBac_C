@@ -1,0 +1,43 @@
+{% extends "education/info/_base.html" %}
+{% block eyebrow %}Baccalauréat marocain{% endblock %}
+{% block info %}
+<section>
+    <h2>Comment est calculée la note du Bac ?</h2>
+    <div class="bac-formula" role="group" aria-label="Composition de la note du Bac">
+        <div class="bac-part is-cc"><strong>25 %</strong><span>Contrôle continu<br><small>2<sup>e</sup> année Bac</small></span></div>
+        <div class="bac-part is-reg"><strong>25 %</strong><span>Examen régional<br><small>fin de 1<sup>re</sup> année Bac</small></span></div>
+        <div class="bac-part is-nat"><strong>50 %</strong><span>Examen national<br><small>fin de 2<sup>e</sup> année Bac</small></span></div>
+    </div>
+    <p>Le Bac est obtenu avec une moyenne générale d’au moins <strong>10/20</strong>. En dessous, une session de rattrapage
+        est possible selon les conditions fixées chaque année par le Ministère. Les coefficients des matières dépendent de la filière
+        (les mathématiques ont un coefficient élevé en Sciences Mathématiques et en Sciences Expérimentales).</p>
+    <p class="small text-muted">Ces règles générales sont fixées par le Ministère de l’Éducation nationale ; en cas de doute,
+        la référence est le règlement publié chaque année sur <a href="https://www.men.gov.ma" rel="noopener" target="_blank">men.gov.ma</a>.</p>
+</section>
+<section>
+    <h2>Calendrier des examens</h2>
+    {% if bac_dates %}
+    <ul class="bac-dates">
+        {% for item in bac_dates %}<li><strong>{{ item.label }}</strong> : {{ item.dates }}</li>{% endfor %}
+    </ul>
+    {% else %}
+    <ul class="bac-dates">
+        <li><strong>Examen régional (1<sup>re</sup> année Bac)</strong> : en général début juin.</li>
+        <li><strong>Examen national — session normale (2<sup>e</sup> année Bac)</strong> : en général début juin.</li>
+        <li><strong>Session de rattrapage</strong> : en général début juillet.</li>
+    </ul>
+    <p class="small text-muted">Les dates exactes sont publiées par le Ministère chaque année ; elles seront indiquées ici dès leur annonce.</p>
+    {% endif %}
+</section>
+<section>
+    <h2>Réviser efficacement les maths</h2>
+    <ol>
+        <li><strong>Revoir le cours avant les exercices</strong> : définitions, théorèmes et méthodes types.</li>
+        <li><strong>S’entraîner régulièrement</strong> avec les quiz EduBac : un quiz court plusieurs fois par semaine vaut mieux qu’une longue séance la veille.</li>
+        <li><strong>Refaire les exercices ratés</strong> sans regarder la correction, quelques jours plus tard.</li>
+        <li><strong>Rédiger proprement</strong> : au Bac, la justification compte autant que le résultat.</li>
+        <li><strong>Poser ses questions tôt</strong> au professeur, dans la messagerie.</li>
+    </ol>
+    <p><a class="btn btn-edubac btn-sm" href="{% url 'education:niveaux' %}">Voir les cours par niveau</a></p>
+</section>
+{% endblock %}

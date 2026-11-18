@@ -1,20 +1,61 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="h3 mb-4">Profil</h1>
-<div class="card">
-    <div class="card-body">
-        <p><strong>Nom d'utilisateur :</strong> {{ user.username }}</p>
-        <p><strong>E-mail :</strong> {{ user.email }}</p>
-        <p><strong>Rôle :</strong> {{ user.get_role_display }}</p>
-        {% if profile %}
-            {% if user.is_student %}
-            <p><strong>Niveau :</strong> {{ profile.get_niveau_display }}</p>
-            <p><strong>Progression :</strong> {{ profile.progress }} %</p>
-            {% else %}
-            <p><strong>Matière :</strong> {{ profile.subject }}</p>
-            <p><strong>Bio :</strong> {{ profile.bio|default:"—" }}</p>
-            {% endif %}
-        {% endif %}
+<section class="profile-head" aria-labelledby="profileName">
+    <span class="profile-avatar" aria-hidden="true">{{ user.first_name|default:user.username|slice:":1"|upper }}</span>
+    <div class="profile-id">
+        <h1 id="profileName">{{ user.get_full_name|default:user.username }}</h1>
+        <p>@{{ user.username }}</p>
+        <div class="profile-chips">
+            <span class="dash-chip"><i class="bi {% if user.is_student %}bi-mortarboard{% else %}bi-person-workspace{% endif %}" aria-hidden="true"></i> {{ user.get_role_display }}</span>
+            {% if user.is_student and profile %}<span class="dash-chip">{{ profile.get_niveau_display }}</span>{% endif %}
+            {% if user.is_superuser %}<span class="dash-chip is-warm">Administrateur</span>{% endif %}
+        </div>
     </div>
+</section>
+
+{% if user.is_student and stats %}
+<div class="dash-stats">
+    <div class="dash-stat"><span class="dash-stat-icon is-blue"><i class="bi bi-ui-checks" aria-hidden="true"></i></span>
+        <span><strong>{{ stats.attempts }}</strong><small>quiz passé{{ stats.attempts|pluralize }}</small></span></div>
+    <div class="dash-stat"><span class="dash-stat-icon is-green"><i class="bi bi-bullseye" aria-hidden="true"></i></span>
+        <span><strong>{{ stats.avg_score|floatformat:0 }} %</strong><small>score moyen</small></span></div>
+    <div class="dash-stat"><span class="dash-stat-icon is-orange"><i class="bi bi-check2-all" aria-hidden="true"></i></span>
+        <span><strong>{{ stats.assignments_done }}</strong><small>quiz rendu{{ stats.assignments_done|pluralize }}</small></span></div>
+    <a class="dash-stat" href="{% url 'accounts:progress' %}"><span class="dash-stat-icon is-purple"><i class="bi bi-graph-up" aria-hidden="true"></i></span>
+        <span><strong>{{ stats.progress|floatformat:0 }} %</strong><small>progression</small></span></a>
+</div>
+{% endif %}
+
+<div class="profile-grid">
+    <section class="profile-card" aria-labelledby="profileInfo">
+        <h2 id="profileInfo"><i class="bi bi-person-vcard" aria-hidden="true"></i> Mes informations</h2>
+        <dl class="profile-facts">
+            <dt>Nom</dt><dd>{{ user.get_full_name|default:"—" }}</dd>
+            <dt>Identifiant</dt><dd>{{ user.username }}</dd>
+            <dt>E-mail</dt><dd>{{ user.email|default:"Non renseigné" }}</dd>
+            {% if user.is_student %}
+            <dt>Classe{{ classrooms|length|pluralize }}</dt>
+            <dd>{% for c in classrooms %}{{ c.name }}{% if c.teacher %} · {{ c.teacher.get_full_name|default:c.teacher.username }}{% endif %}{% if not forloop.last %}<br>{% endif %}{% empty %}Aucune classe{% endfor %}</dd>
+            {% else %}
+            <dt>Classes</dt>
+            <dd>{% for c in classrooms %}<a href="{% url 'classrooms:detail' c.pk %}">{{ c.name }}</a>{% if not forloop.last %}, {% endif %}{% empty %}Aucune classe{% endfor %}</dd>
+            {% if profile and profile.subject %}<dt>Matière</dt><dd>{{ profile.subject }}</dd>{% endif %}
+            {% endif %}
+            <dt>Inscrit le</dt><dd>{{ user.date_joined|date:"j F Y" }}</dd>
+        </dl>
+        {% if user.is_student %}<p class="small text-muted mt-3 mb-0">Une information à corriger ? Écrivez à votre professeur depuis la messagerie.</p>{% endif %}
+    </section>
+
+    <section class="profile-card" aria-labelledby="profileSettings">
+        <h2 id="profileSettings"><i class="bi bi-gear" aria-hidden="true"></i> Réglages</h2>
+        <ul class="profile-links">
+            <li><a href="{% url 'accounts:change_password' %}"><i class="bi bi-key" aria-hidden="true"></i> Changer mon mot de passe <i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+            <li><a href="{% url 'notifications:preferences' %}"><i class="bi bi-bell" aria-hidden="true"></i> Notifications (EduBac, e-mail, téléphone) <i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+            {% if user.is_superuser %}<li><a href="{% url 'accounts:admin_dashboard' %}"><i class="bi bi-shield-lock" aria-hidden="true"></i> Inscriptions et comptes élèves <i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>{% endif %}
+            <li><a href="{% url 'education:help' %}"><i class="bi bi-question-circle" aria-hidden="true"></i> Aide <i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+            <li><a href="{% url 'education:privacy' %}"><i class="bi bi-shield-check" aria-hidden="true"></i> Mes données <i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+            <li><a href="{% url 'accounts:logout' %}" class="is-danger"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Se déconnecter</a></li>
+        </ul>
+    </section>
 </div>
 {% endblock %}

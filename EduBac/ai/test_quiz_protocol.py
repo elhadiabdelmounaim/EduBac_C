@@ -298,23 +298,21 @@ class QuizProtocolTests(TestCase):
 
     @patch.object(AIService, "_chat")
     def test_teacher_route_saves_only_after_full_protocol_and_displays_honest_report(self, chat):
-        teacher = User.objects.create_user(
-            username="protocol-teacher", email="protocol-teacher@example.test", role="teacher",
-        )
+        # La génération interne par IA est désactivée côté enseignant (import JSON seulement) :
+        # la route refuse, n'appelle aucun modèle et ne crée aucun quiz.
+        teacher = User.objects.create_user(username="protocol-teacher", role="teacher")
         session = self.client.session
         session["user_id"] = teacher.pk
         session.save()
-        chat.side_effect = [json.dumps(ANALYSIS), generated(question()), reviews()]
         response = self.client.post(reverse("quizzes:teacher_ai"), {
             "lesson": self.lesson.pk, "niveau": "tronc_commun", "question_count": 1,
             "description": "Évaluer le calcul numérique sans fichier.", "action": "generate",
             "generation_mode": "topic", "resource_selection_present": "1",
         })
-        self.assertIsNone(response.context["error"])
-        self.assertEqual(Quiz.objects.count(), 1)
-        self.assertEqual(QuizGenerationQuestion.objects.count(), 1)
-        self.assertContains(response, "La revue croisée par IA ne constitue pas une preuve mathématique générale")
-        self.assertEqual(response.context["generation_report"]["reviewed_questions"], 1)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("La génération interne est désactivée", response.context["error"])
+        self.assertFalse(Quiz.objects.exists())
+        chat.assert_not_called()
 
     @patch.object(AIService, "_chat")
     def test_semantic_collect_covers_every_history_and_new_question_batch(self, chat):

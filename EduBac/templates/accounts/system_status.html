@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="page-head">
+    <div>
+        <p class="dash-eyebrow">Administration</p>
+        <h1 class="h3 mb-1">État du site</h1>
+        <p class="text-muted mb-0">{{ ok_count }} / {{ checks|length }} points en ordre · version {{ version }}</p>
+    </div>
+    <div class="page-head-actions"><a href="{% url 'accounts:admin_dashboard' %}" class="btn btn-sm btn-outline-primary">Retour à l’administration</a></div>
+</header>
+<ul class="todo-list">
+    {% for c in checks %}
+    <li class="todo-item{% if not c.ok %} is-urgent{% endif %}">
+        <span class="todo-icon" aria-hidden="true"><i class="bi {% if c.ok %}bi-check2-circle{% else %}bi-exclamation-triangle{% endif %}"></i></span>
+        <span class="todo-body">
+            <strong>{{ c.label }}</strong>
+            <small>{{ c.detail }}{% if not c.ok and c.fix %} — <code>{{ c.fix }}</code>{% endif %}</small>
+        </span>
+        <span class="visually-hidden">{% if c.ok %}En ordre{% else %}À corriger{% endif %}</span>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}

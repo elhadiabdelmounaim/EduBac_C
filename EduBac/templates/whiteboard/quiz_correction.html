@@ -3,7 +3,7 @@
 {% block title %}Tableau de correction{% endblock %}
 {% block extra_css %}
 {% include "includes/katex.html" %}
-<link rel="stylesheet" href="/static/css/quiz_whiteboard.css">
+<link rel="stylesheet" href="{% asset 'css/quiz_whiteboard.css' %}">
 {% endblock %}
 {% block content %}
 <div class="qwb-shell{% if mode == 'full' %} qwb-shell--rule-only{% endif %}{% if student_readonly %} qwb-shell--readonly{% endif %}" id="qwbShell"
@@ -109,5 +109,5 @@
 </div>
 {% endblock %}
 {% block extra_js %}
-<script src="/static/js/quiz_whiteboard.js"></script>
+<script src="{% asset 'js/quiz_whiteboard.js' %}"></script>
 {% endblock %}

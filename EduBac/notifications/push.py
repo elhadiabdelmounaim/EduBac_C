@@ -91,6 +91,16 @@ def _vapid_private_key():
     return ec.derive_private_key(value, ec.SECP256R1())
 
 
+def contact():
+    """« mailto:… » ou « https://… » (exigé par Apple et Google) ; « mailto: » ajouté s'il manque."""
+    value = str(getattr(settings, 'WEBPUSH_CONTACT', '') or '').strip()
+    if not value:
+        return 'mailto:admin@edubac.invalid'
+    if not value.startswith(('mailto:', 'https://')):
+        value = f'mailto:{value}'
+    return value
+
+
 def vapid_authorization(endpoint, now=None):
     """En-tête Authorization « vapid t=…, k=… » pour le service de push de l'abonnement."""
     from cryptography.hazmat.primitives import hashes
@@ -101,7 +111,7 @@ def vapid_authorization(endpoint, now=None):
     claims = {
         'aud': f'{parts.scheme}://{parts.netloc}',
         'exp': int((now or time.time()) + 12 * 3600),
-        'sub': getattr(settings, 'WEBPUSH_CONTACT', '') or 'mailto:admin@edubac.invalid',
+        'sub': contact(),
     }
     header = b64url_encode(json.dumps({'typ': 'JWT', 'alg': 'ES256'}, separators=(',', ':')).encode())
     body = b64url_encode(json.dumps(claims, separators=(',', ':')).encode())

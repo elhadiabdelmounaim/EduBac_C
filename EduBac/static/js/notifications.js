@@ -185,7 +185,9 @@
         if (busy) return;
         busy = true;
         revision++;
-        markAllBtn.disabled = true;
+        // Pas de « disabled » : désactiver le bouton qui a le focus renverrait le focus
+        // au document, et Échap ne fermerait plus le menu au clavier.
+        markAllBtn.setAttribute('aria-disabled', 'true');
         const error = document.getElementById('notifError');
         if (error) error.remove();
         return fetch(cfg.markAllUrl, {
@@ -206,7 +208,7 @@
                 }
             })
             .catch(showError)
-            .finally(function () { busy = false; revision++; markAllBtn.disabled = false; });
+            .finally(function () { busy = false; revision++; markAllBtn.removeAttribute('aria-disabled'); });
     }
 
     if (markAllBtn) {

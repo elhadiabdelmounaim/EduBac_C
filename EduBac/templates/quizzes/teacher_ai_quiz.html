@@ -322,10 +322,10 @@
 {% endblock %}
 {% block extra_css %}
 {% include "includes/katex.html" %}
-<link rel="stylesheet" href="/static/css/quiz-assign.css?v=5">
+<link rel="stylesheet" href="{% asset 'css/quiz-assign.css' %}">
 {% endblock %}
 {% block extra_js %}
-<script src="/static/js/quiz-assign.js?v=5"></script>
+<script src="{% asset 'js/quiz-assign.js' %}"></script>
 <script>
 (() => {
     const level = document.getElementById('quizLevel');

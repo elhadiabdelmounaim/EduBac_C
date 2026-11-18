@@ -237,28 +237,21 @@ class QuizQuestionValidationTests(TestCase):
 
     @patch.object(AIService, "_chat")
     def test_teacher_route_saves_only_valid_repaired_quiz(self, chat):
-        from .test_helpers import isolate_protocol_checks
-        isolate_protocol_checks(self)
-        user = User.objects.create_user(username="qcm-teacher", email="qcm@example.test", role="teacher")
+        # La génération interne par IA est désactivée côté enseignant (import JSON seulement) :
+        # la route refuse, n'appelle aucun modèle et ne crée aucun quiz.
+        teacher = User.objects.create_user(username="qcm-teacher", role="teacher")
         session = self.client.session
-        session["user_id"] = user.pk
+        session["user_id"] = teacher.pk
         session.save()
-        chat.side_effect = [response(self.good, self.broken), response(self.fixed),
-                            '{"similar_questions":[]}']
-        page = self.client.post(reverse("quizzes:teacher_ai"), {
+        response = self.client.post(reverse("quizzes:teacher_ai"), {
             "action": "generate", "niveau": self.lesson.course.niveau, "lesson": self.lesson.pk,
             "question_count": 2, "difficulty": "moyen",
             "description": "Évaluer les équations et les fonctions du second degré.",
         })
-        self.assertEqual(page.status_code, 200)
-        self.assertIsNone(page.context["error"])
-        quiz = Quiz.objects.get()
-        self.assertEqual(list(quiz.questions.order_by("order").values_list("text", flat=True)),
-                         [self.good["text"], self.fixed["text"]])
-        for q in quiz.questions.all():
-            self.assertEqual(q.choices.count(), 4)
-            self.assertEqual(q.choices.filter(is_correct=True).count(), 1)
-            self.assertEqual(q.correct_answer, q.choices.get(is_correct=True).text)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("La génération interne est désactivée", response.context["error"])
+        self.assertFalse(Quiz.objects.exists())
+        chat.assert_not_called()
 
     def test_fenced_json_and_latex_repairs_still_pass_final_validation(self):
         raw = r'''```json

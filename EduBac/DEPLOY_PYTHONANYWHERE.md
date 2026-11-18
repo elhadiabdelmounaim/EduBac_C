@@ -229,6 +229,16 @@ La commande de rappel des échéances est `send_quiz_reminders`. Si les tâches 
 cd "$HOME/EduBac/EduBac" && "$HOME/.virtualenvs/edubac-venv/bin/python" manage.py send_quiz_reminders
 ```
 
+Tâches recommandées (onglet **Tasks**). Remplacez `PYTHON` par le chemin affiché par `which python` dans la console où l’environnement virtuel est activé :
+
+| Fréquence | Commande | Rôle |
+| --- | --- | --- |
+| Quotidienne (nuit) | `cd ~/EduBac_C/EduBac && PYTHON manage.py backup_db --keep 14` | Sauvegarde de la base dans `~/backups/edubac`, 14 copies conservées. |
+| Quotidienne (matin) | `cd ~/EduBac_C/EduBac && PYTHON manage.py send_quiz_reminders` | Rappels de date limite (notification et téléphone). |
+| Hebdomadaire | `cd ~/EduBac_C/EduBac && PYTHON manage.py purge_chat_data --apply` | Durées de conservation annoncées dans la politique de confidentialité. |
+
+Restaurer une sauvegarde : arrêter le site (onglet Web, *Disable*), copier `~/backups/edubac/db_AAAAMMJJ_….sqlite3` à la place de `db.sqlite3`, puis *Enable* et *Reload*. La page **Administration → État du site** indique la date de la dernière sauvegarde.
+
 Sur un compte sans tâches planifiées, les rappels automatiques ne seront pas déclenchés par PythonAnywhere; ne remplacez pas cette fonction par un processus permanent lancé dans une console Bash.
 
 | Fonction | WSGI standard | Condition ou remarque |

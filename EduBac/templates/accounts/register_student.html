@@ -11,34 +11,37 @@
         <form method="post">
             {% csrf_token %}
             <div class="mb-2">
-                <label class="form-label small fw-semibold">Nom *</label>
-                <input type="text" name="name" class="form-control" required
+                <label class="form-label small fw-semibold" for="regName">Nom *</label>
+                <input type="text" name="name" id="regName" class="form-control" required
                        placeholder="Prénom et nom" autocomplete="name">
             </div>
             <div class="mb-2">
-                <label class="form-label small fw-semibold">Nom d’utilisateur *</label>
-                <input type="text" name="username" class="form-control" required maxlength="150"
+                <label class="form-label small fw-semibold" for="regUsername">Nom d’utilisateur *</label>
+                <input type="text" name="username" id="regUsername" class="form-control" required maxlength="150"
                        autocomplete="username">
             </div>
             <div class="mb-2">
-                <label class="form-label small fw-semibold">Code de classe *</label>
-                <input type="text" name="class_code" class="form-control" required maxlength="12"
+                <label class="form-label small fw-semibold" for="regClassCode">Code de classe *</label>
+                <input type="text" name="class_code" id="regClassCode" class="form-control" required maxlength="12"
                        autocomplete="off" autocapitalize="characters">
             </div>
             <div class="mb-2">
-                <label class="form-label small fw-semibold">Mot de passe *</label>
+                <label class="form-label small fw-semibold" for="p1">Mot de passe *</label>
                 <div class="password-field">
                     <input type="password" name="password" id="p1" class="form-control" required minlength="6" autocomplete="new-password">
-                    <button type="button" class="password-toggle" data-target="p1"><i class="bi bi-eye"></i></button>
+                    <button type="button" class="password-toggle" data-target="p1" aria-label="Afficher le mot de passe"><i class="bi bi-eye"></i></button>
                 </div>
             </div>
             <div class="mb-3">
-                <label class="form-label small fw-semibold">Confirmer le mot de passe *</label>
+                <label class="form-label small fw-semibold" for="p2">Confirmer le mot de passe *</label>
                 <div class="password-field">
                     <input type="password" name="password2" id="p2" class="form-control" required minlength="6" autocomplete="new-password">
-                    <button type="button" class="password-toggle" data-target="p2"><i class="bi bi-eye"></i></button>
+                    <button type="button" class="password-toggle" data-target="p2" aria-label="Afficher le mot de passe"><i class="bi bi-eye"></i></button>
                 </div>
             </div>
+            <p class="small text-muted mb-2">En créant un compte, vous acceptez les
+                <a href="{% url 'education:terms' %}" target="_blank" rel="noopener">conditions d’utilisation</a> et la
+                <a href="{% url 'education:privacy' %}" target="_blank" rel="noopener">politique de confidentialité</a>.</p>
             <button type="submit" class="btn btn-accent w-100 py-2 mb-3">Envoyer ma demande</button>
         </form>
         <p class="text-center small mb-0 text-muted">

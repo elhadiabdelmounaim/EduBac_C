@@ -1,19 +1,25 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="h3 mb-4">Mes cours</h1>
-{% if profile %}<p class="text-muted">Niveau : {{ profile.get_niveau_display }}</p>{% endif %}
+<header class="page-head">
+    <div>
+        <h1 class="h3 mb-1">Mes cours</h1>
+        {% if profile %}<p class="text-muted mb-0">Niveau : {{ profile.get_niveau_display }}</p>{% endif %}
+    </div>
+</header>
 <div class="row g-3">
 {% for c in courses %}
     <div class="col-md-6">
         <a href="{% url 'education:course_detail' c.pk %}" class="card card-niveau text-decoration-none">
             <div class="card-body">
-                <h5 class="card-title">{{ c.name }}</h5>
+                <h2 class="h5 card-title">{{ c.name }}</h2>
                 <p class="small text-muted mb-0">{{ c.description|truncatewords:20 }}</p>
             </div>
         </a>
     </div>
 {% empty %}
-    <div class="col-12"><div class="alert alert-info">Aucun cours pour votre niveau.</div></div>
+    <div class="col-12">{% url 'education:niveaux' as niveaux_url %}
+        {% include "includes/empty_state.html" with icon="bi-journal-bookmark" title="Aucun cours pour votre niveau pour l’instant" text="Les cours de votre niveau apparaîtront ici dès leur publication. En attendant, parcourez tous les niveaux." action_url=niveaux_url action_label="Voir tous les niveaux" %}
+    </div>
 {% endfor %}
 </div>
 {% endblock %}

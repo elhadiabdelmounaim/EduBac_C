@@ -1,0 +1,32 @@
+{% extends "education/info/_base.html" %}
+{% block eyebrow %}Nous écrire{% endblock %}
+{% block info %}
+<div class="info-cards">
+    {% if user.is_authenticated %}
+    <a class="info-card" href="{% url 'chat:home' %}">
+        <span class="info-card-icon" aria-hidden="true"><i class="bi bi-chat-dots"></i></span>
+        <span><strong>Écrire au professeur</strong><small>Le plus rapide pour une question sur un cours, un quiz ou votre compte.</small></span>
+    </a>
+    {% else %}
+    <a class="info-card" href="{% url 'accounts:login' %}">
+        <span class="info-card-icon" aria-hidden="true"><i class="bi bi-box-arrow-in-right"></i></span>
+        <span><strong>Élève inscrit ?</strong><small>Connectez-vous et écrivez au professeur depuis la messagerie.</small></span>
+    </a>
+    {% endif %}
+    <div class="info-card">
+        <span class="info-card-icon" aria-hidden="true"><i class="bi bi-envelope"></i></span>
+        <span><strong>Par e-mail</strong>
+            <small>{% if site.contact_email %}<a href="mailto:{{ site.contact_email }}">{{ site.contact_email }}</a>{% else %}<span class="info-missing">adresse à compléter</span>{% endif %}<br>
+                Parents, établissements, demandes concernant les données personnelles.</small></span>
+    </div>
+    <a class="info-card" href="{% url 'education:help' %}">
+        <span class="info-card-icon" aria-hidden="true"><i class="bi bi-question-circle"></i></span>
+        <span><strong>Aide</strong><small>Installer l’application, notifications, quiz, mot de passe oublié.</small></span>
+    </a>
+</div>
+<section>
+    <h2>S’inscrire</h2>
+    <p>L’inscription se fait avec le <strong>code de classe</strong> donné par le professeur.
+        <a href="{% url 'accounts:register_student' %}">Créer mon compte élève</a>.</p>
+</section>
+{% endblock %}

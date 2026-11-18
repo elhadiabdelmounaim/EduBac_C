@@ -1,0 +1,44 @@
+{% extends "education/info/_base.html" %}
+{% block eyebrow %}Règles d’utilisation{% endblock %}
+{% block info %}
+<section>
+    <h2>1. Accès</h2>
+    <p>Les cours publics sont accessibles à tous. Les quiz, la messagerie et le tableau blanc sont réservés aux élèves
+        inscrits avec le code de leur classe et dont l’inscription a été validée par le professeur.</p>
+</section>
+<section>
+    <h2>2. Compte</h2>
+    <ul>
+        <li>Le compte est personnel : ne communiquez pas votre mot de passe.</li>
+        <li>Choisissez un nom d’utilisateur correct, sans moquerie ni contenu offensant.</li>
+        <li>En cas d’oubli du mot de passe, le professeur peut le réinitialiser.</li>
+    </ul>
+</section>
+<section>
+    <h2>3. Messagerie et tableau blanc</h2>
+    <ul>
+        <li>Les échanges servent au travail scolaire. Restez poli et bienveillant.</li>
+        <li>Sont interdits : insultes, harcèlement, contenus violents ou choquants, publicité, partage de données personnelles d’autrui.</li>
+        <li>Les messages peuvent être signalés ; le professeur peut masquer un message ou suspendre l’accès à la messagerie.</li>
+    </ul>
+</section>
+<section>
+    <h2>4. Quiz et travail personnel</h2>
+    <p>Les quiz servent à s’entraîner et à mesurer sa progression. Répondez seul : les résultats aident le professeur
+        à adapter son enseignement.</p>
+</section>
+<section>
+    <h2>5. Contenus</h2>
+    <p>Les contenus sont fournis pour l’apprentissage. Malgré le soin apporté, une erreur peut subsister : signalez-la au
+        professeur. Les règles de réutilisation figurent dans les <a href="{% url 'education:legal' %}">mentions légales</a>.</p>
+</section>
+<section>
+    <h2>6. Disponibilité</h2>
+    <p>Le site peut être interrompu pour maintenance. L’éditeur fait de son mieux pour assurer sa disponibilité, sans garantie.</p>
+</section>
+<section>
+    <h2>7. Données personnelles</h2>
+    <p>Voir la <a href="{% url 'education:privacy' %}">politique de confidentialité</a>.</p>
+</section>
+<p class="info-updated">Dernière mise à jour : {{ site.legal_updated }}.</p>
+{% endblock %}

@@ -84,7 +84,15 @@
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
                     {% if q.status != 'published' %}<li><a class="dropdown-item" href="{% url 'quizzes:schedule' q.pk %}"><i class="bi bi-alarm me-2" aria-hidden="true"></i>Programmer</a></li>{% endif %}
-                    <li><a class="dropdown-item" href="{% url 'quizzes:assign_quiz' q.pk %}"><i class="bi bi-person-check me-2" aria-hidden="true"></i>Affecter à des élèves</a></li>
+                    <li><a class="dropdown-item" href="{% url 'quizzes:assign_quiz' q.pk %}"><i class="bi bi-person-check me-2" aria-hidden="true"></i>Envoyer à une autre classe ou à des élèves</a></li>
+                    {% if q.status == 'published' %}
+                    <li>
+                        <form method="post" action="{% url 'quizzes:remind_pending' q.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="dropdown-item"><i class="bi bi-bell me-2" aria-hidden="true"></i>Relancer ceux qui ne l’ont pas fait</button>
+                        </form>
+                    </li>
+                    {% endif %}
                     <li><a class="dropdown-item" href="{% url 'quizzes:question_stats' q.pk %}"><i class="bi bi-bar-chart me-2" aria-hidden="true"></i>Statistiques</a></li>
                     <li>
                         <form method="post" action="{% url 'quizzes:duplicate' q.pk %}">

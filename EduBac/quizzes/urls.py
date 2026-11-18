@@ -33,6 +33,7 @@ urlpatterns = [
     path('<int:pk>/rejouer/', views.retake_quiz, name='retake'),
     path('<int:pk>/stats-questions/', views.question_stats, name='question_stats'),
     path('<int:pk>/dupliquer/', views.duplicate_quiz, name='duplicate'),
+    path('<int:pk>/relancer/', views.remind_pending, name='remind_pending'),
     path('tentative/<int:attempt_id>/commentaire/', views.comment_attempt, name='comment'),
     path('classement/', views.class_ranking, name='ranking'),
 ]
