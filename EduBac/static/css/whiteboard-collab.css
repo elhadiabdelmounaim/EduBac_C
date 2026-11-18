@@ -1,16 +1,16 @@
 /* Tableau collaboratif : participants, autorisations, curseurs, plein écran. */
 .wb-app {
-  --wb-accent: #1b6f6c;
-  --wb-accent-soft: #e0eee9;
+  --wb-accent: #1d4fa3;
+  --wb-accent-soft: #e6eefb;
   --wb-ink: #22303f;
   --wb-muted: #5f6d74;
   --wb-panel: #fff;
-  --wb-line: #e6e1d6;
+  --wb-line: #dfe5ef;
   --wb-danger: #b4372a;
 }
 html[data-theme="dark"] .wb-app {
-  --wb-accent: #7fd1c3;
-  --wb-accent-soft: #1f3a37;
+  --wb-accent: #8ab4ff;
+  --wb-accent-soft: #1d2c4a;
   --wb-ink: #e9eeea;
   --wb-muted: #9aabad;
   --wb-panel: #1e2830;
@@ -85,7 +85,7 @@ html[data-theme="dark"] .wb-chip-btn.is-accent { color: #0c1d1b; }
   gap: 12px;
   padding: 8px 14px;
   border-radius: 12px;
-  background: linear-gradient(90deg, #1b6f6c, #2a8a7f);
+  background: linear-gradient(90deg, #1d4fa3, #2f6fd6);
   color: #fff;
   font-size: .9rem;
   animation: wb-slide .25s ease;
@@ -178,7 +178,7 @@ html[data-theme="dark"] .wb-chip-btn.is-accent { color: #0c1d1b; }
   border-radius: 10px;
   transition: background-color .15s;
 }
-.wb-person:hover { background: rgba(27, 111, 108, .06); }
+.wb-person:hover { background: rgba(29, 79, 163, .06); }
 .wb-person.has-hand { background: rgba(229, 72, 77, .08); }
 .wb-person-avatar {
   position: relative;
@@ -285,10 +285,10 @@ html[data-theme="dark"] .wb-chip-btn.is-accent { color: #0c1d1b; }
   margin: 0;
   padding: 10px;
   min-height: 100vh;
-  background: var(--nb-paper, #f4f1e8);
+  background: var(--nb-paper, #f4f6fb);
   overflow: auto;
 }
-.wb-app:fullscreen { padding: 10px; background: var(--nb-paper, #f4f1e8); overflow: auto; }
+.wb-app:fullscreen { padding: 10px; background: var(--nb-paper, #f4f6fb); overflow: auto; }
 .wb-app--fullscreen .wb-toolbar, .wb-app--fullscreen .wb-people { max-height: calc(100vh - 140px); }
 
 /* ---- Responsive ---- */

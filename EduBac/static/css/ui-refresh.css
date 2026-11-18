@@ -1,0 +1,270 @@
+/* =========================================================================
+   EduBac — composants d'interface communs (identité bleu marine + orange du logo).
+   Chargé après notebook.css et responsive.css.
+   ========================================================================= */
+
+/* ---- En-têtes de page ---- */
+.page-head,
+.dash-hello {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 16px;
+  margin-bottom: 1.25rem;
+}
+.page-head-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.page-head-actions .btn { white-space: nowrap; }
+.dash-eyebrow {
+  margin: 0 0 2px;
+  color: var(--nb-ochre);
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.dash-hello-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.dash-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--nb-teal-soft);
+  color: var(--nb-teal);
+  font-size: .85rem;
+  font-weight: 600;
+}
+.dash-chip.is-warm { background: #fff3dc; color: #9a4b00; }
+html[data-theme="dark"] .dash-chip.is-warm { background: #3a2a10; color: #f5b04a; }
+
+/* ---- Chiffres clés (enseignant) ---- */
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 1.25rem;
+}
+.dash-stat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--nb-line);
+  border-radius: 16px;
+  background: var(--nb-surface);
+  color: var(--nb-ink);
+  text-decoration: none;
+  box-shadow: var(--nb-shadow);
+  transition: transform .15s, box-shadow .15s;
+}
+.dash-stat:hover { color: var(--nb-ink); transform: translateY(-2px); box-shadow: 0 10px 24px rgba(18, 48, 107, .1); }
+.dash-stat strong { display: block; font-size: 1.35rem; line-height: 1.1; white-space: nowrap; }
+.dash-stat small { color: var(--nb-muted); font-size: .8rem; }
+.dash-stat-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  font-size: 1.25rem;
+}
+.dash-stat-icon.is-blue { background: #e6eefb; color: #1d4fa3; }
+.dash-stat-icon.is-green { background: #e3f4ea; color: #1f7a45; }
+.dash-stat-icon.is-orange { background: #fff1d9; color: #b45309; }
+.dash-stat-icon.is-purple { background: #efe9fb; color: #6741b5; }
+html[data-theme="dark"] .dash-stat-icon { filter: saturate(.9) brightness(.9); }
+
+/* ---- « À faire » ---- */
+.dash-section {
+  margin-bottom: 1.25rem;
+  padding: 16px;
+  border: 1px solid var(--nb-line);
+  border-radius: 18px;
+  background: var(--nb-surface);
+  box-shadow: var(--nb-shadow);
+}
+.dash-section-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.dash-section-head h2 { display: flex; align-items: center; gap: 8px; }
+.dash-section-head h2 i { color: var(--nb-teal); }
+.todo-list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--nb-line);
+  border-radius: 14px;
+  background: var(--nb-paper);
+}
+.todo-item.is-urgent { border-color: #f3b04b; background: #fff8ec; }
+html[data-theme="dark"] .todo-item.is-urgent { background: #2a2112; border-color: #8a5a14; }
+.todo-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  background: var(--nb-teal-soft);
+  color: var(--nb-teal);
+}
+.todo-item.is-urgent .todo-icon { background: #ffe7bf; color: #b45309; }
+.todo-body { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.todo-body strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.todo-body small { color: var(--nb-muted); }
+.todo-item.is-urgent .todo-deadline { color: #b45309; font-weight: 600; }
+.todo-item .btn { flex: 0 0 auto; }
+.todo-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #e9f7ef;
+  color: #1f7a45;
+  font-weight: 600;
+}
+html[data-theme="dark"] .todo-empty { background: #14281d; color: #8fd9aa; }
+
+/* ---- Notes et pourcentages : jamais coupés ---- */
+.score-chip {
+  flex: 0 0 auto;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--nb-teal-soft);
+  color: var(--nb-teal);
+  font-weight: 700;
+  white-space: nowrap;
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+}
+.score-chip.is-good { background: #e3f4ea; color: #1f7a45; }
+.score-chip.is-low { background: #fde8e6; color: #b3372b; }
+html[data-theme="dark"] .score-chip.is-good { background: #14281d; color: #8fd9aa; }
+html[data-theme="dark"] .score-chip.is-low { background: #3a1d1a; color: #f2a39a; }
+.min-width-0 { min-width: 0; }
+
+/* ---- Tableau blanc partagé (tableau de bord élève) ---- */
+.dash-share {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 1.25rem;
+  padding: 10px 14px 10px 10px;
+  border: 1px solid var(--nb-line);
+  border-radius: 16px;
+  background: var(--nb-surface);
+  color: var(--nb-ink);
+  text-decoration: none;
+  box-shadow: var(--nb-shadow);
+}
+.dash-share:hover { color: var(--nb-ink); border-color: var(--nb-teal); }
+.dash-share img { width: 96px; height: 64px; flex: 0 0 auto; border-radius: 10px; object-fit: cover; background: #fff; border: 1px solid var(--nb-line); }
+.dash-share-body { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.dash-share-body small { color: var(--nb-teal); font-weight: 600; }
+.dash-share-body strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---- Liste « Mes quiz » ---- */
+.quiz-list { display: flex; flex-direction: column; gap: 10px; }
+.quiz-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2.4fr) minmax(130px, 1fr) minmax(150px, .9fr) auto;
+  align-items: center;
+  gap: 12px 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--nb-line);
+  border-radius: 16px;
+  background: var(--nb-surface);
+  box-shadow: var(--nb-shadow);
+}
+.quiz-row-title { margin: 0 0 2px; font-size: 1rem; line-height: 1.35; }
+.quiz-row-meta { margin: 0; color: var(--nb-muted); font-size: .84rem; }
+.quiz-row-status { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.quiz-row-class { color: var(--nb-muted); font-size: .8rem; white-space: nowrap; }
+.quiz-row-stats { display: flex; gap: 14px; color: var(--nb-muted); font-size: .84rem; white-space: nowrap; }
+.quiz-row-stats strong { color: var(--nb-ink); }
+.quiz-row-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.quiz-row-actions form { margin: 0; }
+.quiz-row-actions .btn { white-space: nowrap; }
+@media (max-width: 1199.98px) {
+  .quiz-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .quiz-row-status, .quiz-row-stats { grid-column: 1; }
+  .quiz-row-actions { grid-column: 2; grid-row: 1 / span 3; flex-direction: column; align-items: stretch; }
+}
+@media (max-width: 575.98px) {
+  .quiz-row { grid-template-columns: 1fr; }
+  .quiz-row-actions { grid-column: 1; grid-row: auto; flex-direction: row; flex-wrap: wrap; justify-content: flex-start; }
+  .quiz-row-actions .btn-accent, .quiz-row-actions .btn-outline-primary:first-child { flex: 1 1 auto; }
+}
+
+/* ---- Niveaux : icônes homogènes ---- */
+.level-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  border-radius: 14px;
+  background: var(--nb-teal-soft);
+  color: var(--nb-teal);
+  font-size: 1.4rem;
+}
+.level-card:hover .level-icon { background: var(--nb-teal); color: #fff; }
+
+/* ---- Barre latérale : sections ---- */
+.sidebar-nav .nav-section {
+  margin: 14px 18px 4px;
+  color: rgba(255, 255, 255, .55);
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.sidebar-nav .nav-section.is-divider { height: 1px; margin: 12px 18px; background: rgba(255, 255, 255, .14); }
+
+/* ---- Barre supérieure sur téléphone : une seule ligne ---- */
+@media (max-width: 767.98px) {
+  .edubac-navbar .navbar-search-mobile { display: none !important; }
+  .edubac-navbar.is-search-open .navbar-search-mobile {
+    display: flex !important;
+    order: 10;
+    flex: 1 0 100%;
+    margin: 6px 0 2px !important;
+  }
+  .page-head-actions { width: 100%; }
+  .page-head-actions .btn { flex: 1 1 auto; }
+  .dash-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-stat, .dash-stat:hover { transition: none; transform: none; }
+}
+
+/* ---- Barre latérale : élément actif lisible (blanc, texte marine, repère orange) ---- */
+body .edubac-sidebar .sidebar-nav .nav-link.active {
+  background: #ffffff !important;
+  color: #12306b !important;
+  border-left: 3px solid #f39c12;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .12);
+}
+body .edubac-sidebar .sidebar-nav .nav-link.active i { color: #1d4fa3 !important; }
+html[data-theme="dark"] body .edubac-sidebar .sidebar-nav .nav-link.active { background: #1d2c4a !important; color: #e8edf7 !important; }
+html[data-theme="dark"] body .edubac-sidebar .sidebar-nav .nav-link.active i { color: #8ab4ff !important; }
+
+/* ---- Cartes de niveau : pas de mot coupé en plein milieu ---- */
+.level-card h2 { overflow-wrap: normal; word-break: normal; hyphens: auto; }
+
+/* ---- Boutons Connexion / Inscription sur téléphone ---- */
+@media (max-width: 575.98px) {
+  .navbar-actions .btn-sm { white-space: nowrap; padding-inline: .6rem; }
+}
+
+/* ---- « À faire » sur téléphone : le bouton passe sous le texte ---- */
+@media (max-width: 575.98px) {
+  .todo-item { flex-wrap: wrap; }
+  .todo-body { flex: 1 1 calc(100% - 52px); }
+  .todo-body strong { white-space: normal; }
+  .todo-item .btn { margin-left: 50px; }
+}

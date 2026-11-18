@@ -13,6 +13,7 @@
                     <i class="bi bi-house-door"></i><span>Accueil</span>
                 </a>
             </li>
+            <li class="nav-section" role="presentation">Apprendre</li>
             <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'niveaux' %}active{% endif %}"
                    href="{% url 'education:niveaux' %}">
@@ -20,11 +21,18 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.app_name == 'classrooms' %}active{% endif %}"
-                   href="{% url 'classrooms:list' %}">
-                    <i class="bi bi-people"></i><span>Ma classe</span>
+                <a class="nav-link {% if request.resolver_match.url_name == 'favorites' %}active{% endif %}"
+                   href="{% url 'accounts:favorites' %}">
+                    <i class="bi bi-star"></i><span>Favoris</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.app_name == 'whiteboard' %}active{% endif %}"
+                   href="{% url 'whiteboard:list' %}">
+                    <i class="bi bi-easel"></i><span>Whiteboard</span>
+                </a>
+            </li>
+            <li class="nav-section" role="presentation">Quiz et progrès</li>
             <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'assigned' %}active{% endif %} {% if not student_has_class %}nav-link-muted{% endif %}"
                    href="{% if student_has_class %}{% url 'quizzes:assigned' %}{% else %}{% url 'classrooms:join' %}{% endif %}"
@@ -34,13 +42,6 @@
                     {% if student_has_class and new_quiz_assignments_count %}
                     <span class="sidebar-badge">{{ new_quiz_assignments_count }}</span>
                     {% endif %}
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.app_name == 'chat' %}active{% endif %}"
-                   href="{% url 'chat:home' %}">
-                    <i class="bi bi-chat-dots"></i><span>Chat</span>
-                    {% if chat_unread_total %}<span class="sidebar-badge">{{ chat_unread_total }}</span>{% endif %}
                 </a>
             </li>
             <li class="nav-item">
@@ -56,18 +57,6 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'calendar' %}active{% endif %}"
-                   href="{% url 'accounts:calendar' %}">
-                    <i class="bi bi-calendar3"></i><span>Calendrier</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'favorites' %}active{% endif %}"
-                   href="{% url 'accounts:favorites' %}">
-                    <i class="bi bi-star"></i><span>Favoris</span>
-                </a>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'badges' %}active{% endif %}"
                    href="{% url 'accounts:badges' %}">
                     <i class="bi bi-award"></i><span>Badges</span>
@@ -80,18 +69,33 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.app_name == 'whiteboard' %}active{% endif %}"
-                   href="{% url 'whiteboard:list' %}">
-                    <i class="bi bi-easel"></i><span>Whiteboard</span>
+                <a class="nav-link {% if request.resolver_match.url_name == 'calendar' %}active{% endif %}"
+                   href="{% url 'accounts:calendar' %}">
+                    <i class="bi bi-calendar3"></i><span>Calendrier</span>
                 </a>
             </li>
+            <li class="nav-section" role="presentation">Ma classe</li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.app_name == 'classrooms' %}active{% endif %}"
+                   href="{% url 'classrooms:list' %}">
+                    <i class="bi bi-people"></i><span>Ma classe</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.app_name == 'chat' %}active{% endif %}"
+                   href="{% url 'chat:home' %}">
+                    <i class="bi bi-chat-dots"></i><span>Chat</span>
+                    {% if chat_unread_total %}<span class="sidebar-badge">{{ chat_unread_total }}</span>{% endif %}
+                </a>
+            </li>
+            <li class="nav-section is-divider" role="presentation" aria-hidden="true"></li>
             <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}"
                    href="{% url 'education:about' %}">
                     <i class="bi bi-info-circle"></i><span>À propos</span>
                 </a>
             </li>
-            <li class="nav-item mt-2">
+            <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}"
                    href="{% url 'accounts:profile' %}">
                     <i class="bi bi-gear"></i><span>Paramètres</span>

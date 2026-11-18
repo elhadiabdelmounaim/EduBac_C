@@ -1,55 +1,91 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-    <h1 class="h3 fw-bold mb-0" style="color:var(--edubac-navy);">Tableau de bord</h1>
-    {% if user.is_staff or user.is_superuser %}
-    <div class="d-flex flex-wrap gap-2">
-        <a href="{% url 'accounts:admin_dashboard' %}" class="btn btn-sm btn-outline-primary">Gérer les inscriptions</a>
-        <a href="{% url 'admin:index' %}" class="btn btn-sm btn-outline-secondary">Ouvrir Django Admin</a>
+<header class="dash-hello">
+    <div>
+        <p class="dash-eyebrow">{% now "l j F" %}</p>
+        <h1 class="h3 mb-1">Tableau de bord</h1>
+        <p class="text-muted mb-0">Bonjour {{ user.first_name|default:user.username }} : voici l’essentiel de vos classes.</p>
     </div>
-    {% endif %}
+    <div class="page-head-actions">
+        <a href="{% url 'quizzes:teacher_ai' %}" class="btn btn-edubac btn-sm"><i class="bi bi-upload" aria-hidden="true"></i> Importer un quiz</a>
+        {% if is_admin %}
+        <a href="{% url 'accounts:admin_dashboard' %}" class="btn btn-sm btn-outline-primary">
+            Gérer les inscriptions{% if pending_registrations %} <span class="badge text-bg-warning ms-1">{{ pending_registrations }}</span>{% endif %}
+        </a>
+        {% endif %}
+    </div>
+</header>
+
+<div class="dash-stats">
+    <a href="{% url 'classrooms:list' %}" class="dash-stat">
+        <span class="dash-stat-icon is-blue"><i class="bi bi-people" aria-hidden="true"></i></span>
+        <span><strong>{{ classrooms|length }}</strong><small>classe{{ classrooms|length|pluralize }}</small></span>
+    </a>
+    <a href="{% url 'classrooms:students' %}" class="dash-stat">
+        <span class="dash-stat-icon is-green"><i class="bi bi-person-badge" aria-hidden="true"></i></span>
+        <span><strong>{{ total_students }}</strong><small>élève{{ total_students|pluralize }}</small></span>
+    </a>
+    <a href="{% url 'quizzes:manage' %}" class="dash-stat">
+        <span class="dash-stat-icon is-orange"><i class="bi bi-send-check" aria-hidden="true"></i></span>
+        <span><strong>{{ published_count }}</strong><small>quiz envoyé{{ published_count|pluralize }}</small></span>
+    </a>
+    <a href="{% url 'quizzes:student_results' %}" class="dash-stat">
+        <span class="dash-stat-icon is-purple"><i class="bi bi-bar-chart" aria-hidden="true"></i></span>
+        <span><strong>{% if avg_score %}{{ avg_score }} %{% else %}—{% endif %}</strong><small>moyenne récente</small></span>
+    </a>
 </div>
 
-<div class="row g-3 mb-4">
-    <div class="col-6 col-md-3">
-        <a href="{% url 'classrooms:list' %}" class="quick-card qc-teal">
-            <div class="qc-icon"><i class="bi bi-people"></i></div>
-            <div class="fw-bold">Mes classes</div>
-            <div class="small opacity-75">{{ classrooms|length }} classe{{ classrooms|length|pluralize }}</div>
-        </a>
+<section class="dash-section" aria-labelledby="teacherTodo">
+    <div class="dash-section-head">
+        <h2 class="h5 mb-0" id="teacherTodo"><i class="bi bi-list-check" aria-hidden="true"></i> À faire</h2>
+        {% if drafts_count %}<a href="{% url 'quizzes:manage' %}" class="small">Tous mes quiz</a>{% endif %}
     </div>
-    <div class="col-6 col-md-3">
-        <a href="{% url 'classrooms:students' %}" class="quick-card qc-green">
-            <div class="qc-icon"><i class="bi bi-person-badge"></i></div>
-            <div class="fw-bold">Mes élèves</div>
-            <div class="small opacity-75">{{ total_students }} élève{{ total_students|pluralize }}</div>
-        </a>
-    </div>
-    <div class="col-6 col-md-3">
-        <a href="{% url 'quizzes:manage' %}" class="quick-card qc-orange">
-            <div class="qc-icon"><i class="bi bi-pencil-square"></i></div>
-            <div class="fw-bold">Mes quiz</div>
-            <div class="small opacity-75">{{ my_quizzes|length }} récents</div>
-        </a>
-    </div>
-    <div class="col-6 col-md-3">
-        <a href="{% url 'quizzes:student_results' %}" class="quick-card qc-purple">
-            <div class="qc-icon"><i class="bi bi-bar-chart"></i></div>
-            <div class="fw-bold">Résultats</div>
-            <div class="small opacity-75">{% if avg_score %}Moy. {{ avg_score }}%{% else %}—{% endif %}</div>
-        </a>
-    </div>
-</div>
+    {% if pending_registrations or drafts %}
+    <ul class="todo-list">
+        {% if pending_registrations %}
+        <li class="todo-item is-urgent">
+            <span class="todo-icon" aria-hidden="true"><i class="bi bi-person-plus"></i></span>
+            <span class="todo-body">
+                <strong>{{ pending_registrations }} inscription{{ pending_registrations|pluralize }} en attente</strong>
+                <small>Les élèves ne peuvent pas se connecter avant votre validation.</small>
+            </span>
+            <a href="{% url 'accounts:admin_dashboard' %}" class="btn btn-accent btn-sm">Valider</a>
+        </li>
+        {% endif %}
+        {% for quiz in drafts %}
+        <li class="todo-item">
+            <span class="todo-icon" aria-hidden="true"><i class="bi bi-file-earmark-text"></i></span>
+            <span class="todo-body">
+                <strong>{{ quiz.title }}</strong>
+                <small>Brouillon non envoyé · {{ quiz.lesson.title }}{% if quiz.classroom %} · prévu pour {{ quiz.classroom.name }}{% endif %}</small>
+            </span>
+            <a href="{% url 'quizzes:teacher_ai' %}?quiz={{ quiz.pk }}#quizAssign" class="btn btn-outline-primary btn-sm">
+                {% if quiz.classroom %}Envoyer{% else %}Choisir la classe{% endif %}
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% if drafts_count > drafts|length %}<p class="small text-muted mt-2 mb-0">… et {{ drafts_count|add:"-5" }} autre{{ drafts_count|add:"-5"|pluralize }} brouillon{{ drafts_count|add:"-5"|pluralize }}.</p>{% endif %}
+    {% else %}
+    <div class="todo-empty"><i class="bi bi-check2-circle" aria-hidden="true"></i> Tout est à jour : aucun brouillon ni inscription en attente.</div>
+    {% endif %}
+</section>
 
 <div class="row g-4">
-    <div class="col-lg-6">
-        <div class="card shadow-sm">
-            <div class="card-header bg-white fw-bold border-0 pt-3">Activité récente</div>
+    <div class="col-lg-7">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white fw-bold border-0 pt-3 d-flex justify-content-between">
+                <span>Activité récente</span>
+                <a href="{% url 'quizzes:student_results' %}" class="small fw-normal">Tous les résultats</a>
+            </div>
             <ul class="list-group list-group-flush">
                 {% for a in recent_attempts %}
-                <li class="list-group-item d-flex justify-content-between">
-                    <span class="small">{{ a.student.get_full_name }} — {{ a.quiz.title }}</span>
-                    <span class="fw-bold text-primary">{{ a.score }}%</span>
+                <li class="list-group-item d-flex justify-content-between align-items-center gap-3">
+                    <span class="min-width-0">
+                        <span class="d-block fw-semibold text-truncate">{{ a.student.get_full_name|default:a.student.username|title }}</span>
+                        <span class="d-block small text-muted text-truncate">{{ a.quiz.title }} · {{ a.submitted_at|date:"d/m H:i" }}</span>
+                    </span>
+                    <span class="score-chip{% if a.score >= 70 %} is-good{% elif a.score < 50 %} is-low{% endif %}">{{ a.score|floatformat:0 }} %</span>
                 </li>
                 {% empty %}
                 <li class="list-group-item text-muted">Pas encore d'activité.</li>
@@ -57,17 +93,20 @@
             </ul>
         </div>
     </div>
-    <div class="col-lg-6">
-        <div class="card shadow-sm">
+    <div class="col-lg-5">
+        <div class="card shadow-sm h-100">
             <div class="card-header bg-white fw-bold border-0 pt-3 d-flex justify-content-between">
                 <span>Mes classes</span>
-                <a href="{% url 'classrooms:list' %}" class="small">Voir tout</a>
+                <a href="{% url 'classrooms:list' %}" class="small fw-normal">Voir tout</a>
             </div>
             <ul class="list-group list-group-flush">
                 {% for c in classrooms %}
-                <li class="list-group-item d-flex justify-content-between">
-                    <span>{{ c.name }} <code class="small">{{ c.code }}</code></span>
-                    <span class="badge" style="background:var(--edubac-light);color:var(--edubac-teal);">{{ c.nb_eleves }} élèves</span>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <a href="{% url 'classrooms:detail' c.pk %}" class="text-decoration-none">
+                        <span class="d-block fw-semibold">{{ c.name }}</span>
+                        <span class="d-block small text-muted">{{ c.get_niveau_display }} · code {{ c.code }}</span>
+                    </a>
+                    <span class="badge rounded-pill text-bg-light">{{ c.nb_eleves }} élève{{ c.nb_eleves|pluralize }}</span>
                 </li>
                 {% empty %}
                 <li class="list-group-item text-muted">Aucune classe.</li>

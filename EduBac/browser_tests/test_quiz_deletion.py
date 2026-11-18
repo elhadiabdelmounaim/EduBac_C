@@ -1,3 +1,4 @@
+import os
 import shutil
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
@@ -25,12 +26,12 @@ class QuizDeletionBrowserTests(StaticLiveServerTestCase):
         manage_url = self.live_server_url + reverse('quizzes:manage')
         with sync_playwright() as pw:
             browser = pw.chromium.launch(
-                executable_path=shutil.which('chromium'), headless=True, args=['--no-sandbox'],
+                executable_path=os.environ.get('CHROMIUM_EXECUTABLE') or shutil.which('chromium'), headless=True, args=['--no-sandbox'],
             )
             try:
                 page = browser.new_page(viewport={'width': 1440, 'height': 900})
                 page.goto(self.live_server_url + reverse('accounts:login'))
-                page.locator('input[name="email"]').fill(teacher.email)
+                page.locator('input[name="username"]').fill(teacher.username)
                 page.locator('input[name="password"]').fill('Browser-test-only-123!')
                 page.get_by_role('button', name='Se connecter', exact=True).click()
                 page.wait_for_url(self.live_server_url + reverse('accounts:dashboard'))

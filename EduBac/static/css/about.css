@@ -1,13 +1,13 @@
 /* About only: an editorial notebook in EduBac's teal, ink and warm cream. */
 .about-page {
-    --about-paper: #f7f3e8;
-    --about-surface: #fcfaf4;
+    --about-paper: #f6f8fc;
+    --about-surface: #ffffff;
     --about-ink: #263449;
-    --about-muted: #53636b;
-    --about-teal: #185f60;
+    --about-muted: #56627a;
+    --about-teal: #1d4fa3;
     --about-tint: #e4efeb;
     --about-line: #d1dcd5;
-    --about-ochre: #975815;
+    --about-ochre: #b45309;
     max-width: 1180px;
     margin: 0 auto;
     color: var(--about-ink);
@@ -17,12 +17,12 @@
 html[data-theme="dark"] .about-page {
     --about-paper: #202a2c;
     --about-surface: #1b242b;
-    --about-ink: #f1eee3;
-    --about-muted: #bdcbc9;
-    --about-teal: #9bd9cd;
+    --about-ink: #e8edf7;
+    --about-muted: #a7b3c9;
+    --about-teal: #8ab4ff;
     --about-tint: #263a3a;
     --about-line: #435554;
-    --about-ochre: #efbc78;
+    --about-ochre: #f5a524;
 }
 .about-page h1, .about-page h2, .about-page h3 {
     color: var(--about-ink);
@@ -49,7 +49,7 @@ html[data-theme="dark"] .about-page {
     overflow: hidden;
 }
 .about-page h1 {
-    font-family: Georgia, 'Times New Roman', serif;
+    font-family: inherit;
     font-weight: 400;
     font-size: clamp(2.3rem, 4.5vw, 4.2rem);
     line-height: 1.08;
@@ -157,7 +157,7 @@ html[data-theme="dark"] .about-page {
     margin-bottom: 1.8rem;
 }
 .about-page h2 {
-    font-family: Georgia, 'Times New Roman', serif;
+    font-family: inherit;
     font-weight: 400;
     font-size: clamp(1.85rem, 3vw, 2.7rem);
     line-height: 1.15;

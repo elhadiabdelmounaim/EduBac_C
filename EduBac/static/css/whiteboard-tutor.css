@@ -1,8 +1,8 @@
 /* Cahier d'étude — warm paper, aubergine ink, restrained amber. */
-.wb-app { --wb-paper:#fcfaf5; --wb-ink:#352443; --wb-line:#e5ddd2; --wb-soft:#f3ece2; --wb-accent:#a45e17; min-height:calc(100dvh - 140px); color:var(--wb-ink); }
+.wb-app { --wb-paper:#ffffff; --wb-ink:#352443; --wb-line:#e5ddd2; --wb-soft:#f3ece2; --wb-accent:#b45309; min-height:calc(100dvh - 140px); color:var(--wb-ink); }
 .wb-topbar,.wb-bottombar,.wb-toolbar { background:var(--wb-paper); box-shadow:none; border:1px solid var(--wb-line); }
 .wb-topbar { padding:12px 16px; }
-.wb-tool.active { background:var(--wb-ink); color:#fcfaf5; }
+.wb-tool.active { background:var(--wb-ink); color:#ffffff; }
 .wb-tool:hover { background:var(--wb-soft); color:var(--wb-ink); }
 .wb-tool { transition:transform .15s; }
 .wb-tool[data-tool="protractor"] { font-size:.78rem; font-weight:600; }
@@ -48,16 +48,16 @@
 .wb-tutor-loading { margin:10px 0; }
 .wb-tutor-loading span { display:block; height:9px; background:var(--wb-line); border-radius:5px; margin:8px 0; }
 .wb-tutor-loading span:last-child { width:65%; }
-.wb-editor { border:1px solid #e5ddd2; border-radius:16px; padding:22px; max-width:520px; width:calc(100% - 30px); color:#352443; background:#fcfaf5; }
+.wb-editor { border:1px solid #e5ddd2; border-radius:16px; padding:22px; max-width:520px; width:calc(100% - 30px); color:#352443; background:#ffffff; }
 .wb-editor::backdrop { background:rgba(53,36,67,.28); }
 .wb-editor label { display:block; font-size:.8rem; margin:8px 0; }
-.wb-editor input,.wb-editor textarea { display:block; width:100%; border:1px solid #e5ddd2; border-radius:7px; padding:7px; background:#fcfaf5; }
+.wb-editor input,.wb-editor textarea { display:block; width:100%; border:1px solid #e5ddd2; border-radius:7px; padding:7px; background:#ffffff; }
 .wb-editor-fields { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .wb-editor-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
-html[data-theme="dark"] .wb-app { --wb-paper:#261e30; --wb-ink:#eee3d7; --wb-soft:#382c40; --wb-line:#57465f; --wb-accent:#e5ac67; }
+html[data-theme="dark"] .wb-app { --wb-paper:#16213a; --wb-ink:#e8edf7; --wb-soft:#382c40; --wb-line:#57465f; --wb-accent:#e5ac67; }
 html[data-theme="dark"] .wb-editor,
 html[data-theme="dark"] .wb-editor input,
-html[data-theme="dark"] .wb-editor textarea { background:#261e30; color:#eee3d7; border-color:#57465f; }
+html[data-theme="dark"] .wb-editor textarea { background:#16213a; color:#e8edf7; border-color:#57465f; }
 @keyframes wb-arrive { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
 @media (min-width:769px) { .wb-workspace { min-height:570px; } .wb-toolbar { max-height:740px; } }
 @media (max-width:1100px) { .wb-tutor { width:275px; flex-basis:275px; } }

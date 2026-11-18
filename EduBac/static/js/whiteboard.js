@@ -282,8 +282,8 @@
     } else if (o.type === 'image' && o._img) {
       ctx.drawImage(o._img, o.x, o.y, o.w, o.h);
     } else if(o.type==='image' && o._imgError) {
-      ctx.strokeStyle='#a45e17';ctx.strokeRect(o.x,o.y,o.w,o.h);
-      ctx.fillStyle='#a45e17';ctx.font='16px sans-serif';ctx.fillText('Image indisponible · modifier pour réessayer',o.x+8,o.y+24);
+      ctx.strokeStyle='#b45309';ctx.strokeRect(o.x,o.y,o.w,o.h);
+      ctx.fillStyle='#b45309';ctx.font='16px sans-serif';ctx.fillText('Image indisponible · modifier pour réessayer',o.x+8,o.y+24);
     }
     ctx.restore();
   }
@@ -407,7 +407,7 @@
     if (hooks.decorate) hooks.decorate(ctx, canvas, objects);
     var selection=selected();
     if(selection) {
-      var b=model.bounds(selection);ctx.save();ctx.strokeStyle='#a45e17';ctx.lineWidth=2;ctx.setLineDash([7,4]);
+      var b=model.bounds(selection);ctx.save();ctx.strokeStyle='#b45309';ctx.lineWidth=2;ctx.setLineDash([7,4]);
       ctx.strokeRect(b.x-8,b.y-8,Math.max(8,b.w)+16,Math.max(8,b.h)+16);ctx.restore();
     }
   }

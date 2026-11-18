@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">Mes quiz</h1>
-    <div class="d-flex gap-2">
-        <a href="{% url 'quizzes:teacher_ai' %}" class="btn btn-edubac btn-sm">
-            <i class="bi bi-plus-circle"></i>
-            Importer un quiz
-        </a>
-        <a href="{% url 'quizzes:assign' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-send"></i> Affecter</a>
-        <a href="{% url 'quizzes:teacher_stats' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-graph-up"></i> Statistiques</a>
+<div class="page-head">
+    <div>
+        <h1 class="h3 mb-1">Mes quiz</h1>
+        <p class="text-muted small mb-0">Importez, relisez, puis envoyez chaque quiz à la classe choisie.</p>
+    </div>
+    <div class="page-head-actions">
+        <a href="{% url 'quizzes:teacher_ai' %}" class="btn btn-edubac btn-sm"><i class="bi bi-upload" aria-hidden="true"></i> Importer un quiz</a>
+        <a href="{% url 'quizzes:assign' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-send" aria-hidden="true"></i> Affecter</a>
+        <a href="{% url 'quizzes:teacher_stats' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-graph-up" aria-hidden="true"></i> Statistiques</a>
     </div>
 </div>
 <form method="get" class="card card-body mb-3">
@@ -45,69 +45,71 @@
         {% endif %}
     </div>
 </form>
-<div class="table-responsive">
-<table class="table table-hover bg-white shadow-sm">
-    <thead class="table-light">
-        <tr>
-            <th>Titre</th><th>Leçon</th><th>Statut</th><th>Questions</th><th>Tentatives</th><th></th>
-        </tr>
-    </thead>
-    <tbody>
+<div class="quiz-list" role="list">
     {% for q in quizzes %}
-        <tr>
-            <td class="fw-semibold">{{ q.title }}</td>
-            <td class="small">{{ q.lesson.title }}</td>
-            <td>
-                {% if q.status == 'published' %}<span class="badge bg-success">Publié</span>
-                {% elif q.status == 'draft' %}<span class="badge bg-secondary">Brouillon</span>
-                {% else %}<span class="badge bg-dark">{{ q.get_status_display }}</span>{% endif %}
-                {% if q.classroom %}<div class="small text-muted mt-1"><i class="bi bi-people" aria-hidden="true"></i> {{ q.classroom.name }}</div>{% endif %}
-            </td>
-            <td>{{ q.nb_questions }}</td>
-            <td>{{ q.nb_attempts }}</td>
-            <td class="text-nowrap">
-                {% if q.status != 'published' %}
+    <article class="quiz-row" role="listitem">
+        <div class="quiz-row-main">
+            <h2 class="quiz-row-title">{{ q.title }}</h2>
+            <p class="quiz-row-meta"><i class="bi bi-journal-text" aria-hidden="true"></i> {{ q.lesson.title }} · {{ q.lesson.course.get_niveau_display }}</p>
+        </div>
+        <div class="quiz-row-status">
+            {% if q.status == 'published' %}<span class="badge text-bg-success">Publié</span>
+            {% elif q.status == 'draft' %}<span class="badge bg-secondary">Brouillon</span>
+            {% else %}<span class="badge bg-dark">{{ q.get_status_display }}</span>{% endif %}
+            {% if q.classroom %}<span class="quiz-row-class"><i class="bi bi-people" aria-hidden="true"></i> {{ q.classroom.name }}</span>{% endif %}
+            {% if q.publish_at and q.status != 'published' %}<span class="quiz-row-class"><i class="bi bi-alarm" aria-hidden="true"></i> {{ q.publish_at|date:"d/m H:i" }}</span>{% endif %}
+        </div>
+        <div class="quiz-row-stats">
+            <span><strong>{{ q.nb_questions }}</strong> question{{ q.nb_questions|pluralize }}</span>
+            <span><strong>{{ q.nb_attempts }}</strong> tentative{{ q.nb_attempts|pluralize }}</span>
+        </div>
+        <div class="quiz-row-actions">
+            {% if q.status != 'published' %}
                 {% if q.classroom %}
-                <form method="post" action="{% url 'quizzes:publish' q.pk %}" class="d-inline"
+                <form method="post" action="{% url 'quizzes:publish' q.pk %}"
                       data-confirm="Envoyer « {{ q.title }} » à la classe {{ q.classroom.name }} ? Les élèves recevront une notification.">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-accent">Envoyer à {{ q.classroom.name }}</button>
+                    <button type="submit" class="btn btn-sm btn-accent"><i class="bi bi-send" aria-hidden="true"></i> Envoyer à {{ q.classroom.name }}</button>
                 </form>
                 {% else %}
-                <a href="{% url 'quizzes:teacher_ai' %}?quiz={{ q.pk }}#quizAssign" class="btn btn-sm btn-accent">Choisir la classe</a>
+                <a href="{% url 'quizzes:teacher_ai' %}?quiz={{ q.pk }}#quizAssign" class="btn btn-sm btn-accent"><i class="bi bi-send" aria-hidden="true"></i> Choisir la classe</a>
                 {% endif %}
-                <a href="{% url 'quizzes:schedule' q.pk %}" class="btn btn-sm btn-outline-secondary">Programmer</a>
-                {% endif %}
-                {% if q.publish_at and q.status != 'published' %}
-                <span class="badge bg-info text-dark">⏰ {{ q.publish_at|date:"d/m H:i" }}</span>
-                {% endif %}
-                <a href="{% url 'quizzes:edit_questions' q.pk %}" class="btn btn-sm btn-outline-secondary">Questions</a>
-                <a href="{% url 'quizzes:question_stats' q.pk %}" class="btn btn-sm btn-outline-secondary">Stats</a>
-                <form method="post" action="{% url 'quizzes:duplicate' q.pk %}" class="d-inline">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-outline-secondary">Dupliquer</button>
-                </form>
-                <a href="{% url 'quizzes:assign_quiz' q.pk %}" class="btn btn-sm btn-outline-primary">Affecter</a>
-                <a href="{% url 'quizzes:delete' q.pk %}" class="btn btn-sm btn-outline-danger" aria-label="Supprimer le quiz {{ q.title }}">Delete</a>
-            </td>
-        </tr>
+            {% else %}
+            <a href="{% url 'quizzes:question_stats' q.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-bar-chart" aria-hidden="true"></i> Résultats</a>
+            {% endif %}
+            <a href="{% url 'quizzes:edit_questions' q.pk %}" class="btn btn-sm btn-outline-secondary" title="Modifier les questions"><i class="bi bi-pencil" aria-hidden="true"></i><span class="visually-hidden">Modifier les questions</span></a>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Plus d’actions">
+                    <i class="bi bi-three-dots" aria-hidden="true"></i><span class="visually-hidden">Plus d’actions pour {{ q.title }}</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    {% if q.status != 'published' %}<li><a class="dropdown-item" href="{% url 'quizzes:schedule' q.pk %}"><i class="bi bi-alarm me-2" aria-hidden="true"></i>Programmer</a></li>{% endif %}
+                    <li><a class="dropdown-item" href="{% url 'quizzes:assign_quiz' q.pk %}"><i class="bi bi-person-check me-2" aria-hidden="true"></i>Affecter à des élèves</a></li>
+                    <li><a class="dropdown-item" href="{% url 'quizzes:question_stats' q.pk %}"><i class="bi bi-bar-chart me-2" aria-hidden="true"></i>Statistiques</a></li>
+                    <li>
+                        <form method="post" action="{% url 'quizzes:duplicate' q.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="dropdown-item"><i class="bi bi-copy me-2" aria-hidden="true"></i>Dupliquer</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+            <a href="{% url 'quizzes:delete' q.pk %}" class="btn btn-sm btn-outline-danger" aria-label="Supprimer le quiz {{ q.title }}" title="Supprimer"><i class="bi bi-trash" aria-hidden="true"></i></a>
+        </div>
+    </article>
     {% empty %}
-        <tr>
-            <td colspan="6" class="text-muted">
-                {% if selected_lesson %}
-                    Aucun quiz pour « {{ selected_lesson.title }} ».
-                    <a href="{% url 'quizzes:teacher_ai' %}">Importer un quiz JSON</a>
-                {% elif selected_niveau %}
-                    Aucun quiz pour ce niveau.
-                    <a href="{% url 'quizzes:teacher_ai' %}">Importer un quiz JSON</a>
-                {% else %}
-                    Aucun quiz. <a href="{% url 'quizzes:teacher_ai' %}">Importer un quiz JSON</a>
-                {% endif %}
-            </td>
-        </tr>
+    <div class="empty-state">
+        <div class="empty-icon"><i class="bi bi-journal-check" aria-hidden="true"></i></div>
+        {% if selected_lesson %}
+        <p>Aucun quiz pour « {{ selected_lesson.title }} ».</p>
+        {% elif selected_niveau %}
+        <p>Aucun quiz pour ce niveau.</p>
+        {% else %}
+        <p>Aucun quiz pour le moment.</p>
+        {% endif %}
+        <a href="{% url 'quizzes:teacher_ai' %}" class="btn btn-edubac btn-sm">Importer un quiz JSON</a>
+    </div>
     {% endfor %}
-    </tbody>
-</table>
 </div>
 <script>
 (function() {

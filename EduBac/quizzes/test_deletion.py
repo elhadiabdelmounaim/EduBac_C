@@ -132,7 +132,8 @@ class QuizDeletionTests(TestCase):
             self.assertContains(self.client.get(reverse(route)), self.url)
         manage = self.client.get(reverse('quizzes:manage'))
         self.assertNotContains(manage, '/admin/quizzes/quiz/')
-        self.assertContains(manage, '>Delete</a>')
+        self.assertContains(manage, f'aria-label="Supprimer le quiz {self.quiz.title}"')
+        self.assertNotContains(manage, '>Delete<', msg_prefix='libellé en français')
         self.assertContains(
             self.client.get(reverse('quizzes:edit_questions', args=[self.quiz.pk])), self.url,
         )

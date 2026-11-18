@@ -34,10 +34,10 @@
             <i class="bi bi-search search-icon"></i>
             <input type="search" name="q" class="form-control form-control-sm" placeholder="Rechercher un cours, une leçon…">
         </form>
-        {# Mobile search (compact) #}
-        <form class="navbar-search-mobile position-relative d-md-none" action="{% url 'education:search' %}" method="get">
+        {# Mobile : la recherche s'ouvre depuis une icône pour garder la barre sur une ligne. #}
+        <form class="navbar-search-mobile position-relative d-md-none" id="navSearchMobile" action="{% url 'education:search' %}" method="get" role="search">
             <i class="bi bi-search search-icon"></i>
-            <input type="search" name="q" class="form-control form-control-sm" placeholder="Rechercher…">
+            <input type="search" name="q" class="form-control form-control-sm" placeholder="Rechercher un cours, une leçon…" aria-label="Rechercher">
         </form>
         {% else %}
         <div class="flex-grow-1"></div>
@@ -57,6 +57,12 @@
                 </ul>
             </div>
 
+            {% if user.is_authenticated %}
+            <button type="button" class="btn btn-link text-white p-2 border-0 d-md-none" id="navSearchToggle"
+                    aria-controls="navSearchMobile" aria-expanded="false" aria-label="Rechercher">
+                <i class="bi bi-search fs-5" aria-hidden="true"></i>
+            </button>
+            {% endif %}
             <button type="button" class="theme-toggle" id="themeToggle" title="Mode sombre / clair" aria-label="Changer le thème">
                 <i class="bi bi-moon-stars" id="themeIcon"></i>
             </button>
@@ -95,6 +101,9 @@
                     <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person me-2"></i>Profil</a></li>
                     <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-gear me-2"></i>Paramètres</a></li>
                     <li><button type="button" class="dropdown-item" data-pwa-install hidden><i class="bi bi-phone me-2"></i>Installer l’application</button></li>
+                    {% if user.is_staff or user.is_superuser %}
+                    <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="bi bi-tools me-2"></i>Administration Django</a></li>
+                    {% endif %}
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Déconnexion</a></li>
                 </ul>
@@ -108,6 +117,16 @@
 </nav>
 {% if user.is_authenticated %}
 <script>
+(function () {
+    var toggle = document.getElementById('navSearchToggle');
+    var bar = document.querySelector('.edubac-navbar');
+    if (!toggle || !bar) return;
+    toggle.addEventListener('click', function () {
+        var open = bar.classList.toggle('is-search-open');
+        toggle.setAttribute('aria-expanded', String(open));
+        if (open) document.querySelector('#navSearchMobile input').focus();
+    });
+})();
 window.EDUBAC_NOTIF = {
     listUrl: "{% url 'notifications:api_list' %}",
     countUrl: "{% url 'notifications:api_count' %}",

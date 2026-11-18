@@ -32,7 +32,7 @@
   --voice-accent: var(--ch-accent-strong);
   --voice-idle: color-mix(in srgb, var(--ch-mine-ink) 30%, transparent);
 }
-html[data-theme="dark"] .chat-bubble-row.mine .chat-voice { --voice-accent: #c6f0e6; }
+html[data-theme="dark"] .chat-bubble-row.mine .chat-voice { --voice-accent: #cfe0ff; }
 
 .chat-voice-play {
   position: relative;

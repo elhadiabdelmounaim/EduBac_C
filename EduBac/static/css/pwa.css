@@ -26,7 +26,7 @@
   padding: 0 16px;
   border: 0;
   border-radius: 999px;
-  background: #185f60;
+  background: #1d4fa3;
   color: #fff;
   font-weight: 600;
   white-space: nowrap;
@@ -53,9 +53,9 @@
 .pwa-help h2 { margin: 14px 0 12px; font-size: 1.2rem; }
 .pwa-help ol { margin: 0 0 14px; padding-left: 22px; text-align: left; }
 .pwa-help li { margin: 8px 0; line-height: 1.45; }
-.pwa-help li i { color: #185f60; }
-.pwa-help-note { margin: 0 0 12px; color: #8f5313; font-size: .85rem; }
-.pwa-help-close { min-height: 44px; padding: 0 24px; border: 0; border-radius: 999px; background: #185f60; color: #fff; font-weight: 600; }
+.pwa-help li i { color: #1d4fa3; }
+.pwa-help-note { margin: 0 0 12px; color: #b45309; font-size: .85rem; }
+.pwa-help-close { min-height: 44px; padding: 0 24px; border: 0; border-radius: 999px; background: #1d4fa3; color: #fff; font-weight: 600; }
 
 html[data-theme="dark"] .pwa-banner,
 html[data-theme="dark"] .pwa-help { background: #1e2830; color: #e9eeea; }

@@ -14,8 +14,8 @@ from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_GET
 
-THEME_COLOR = '#185f60'       # barre EduBac (--nb-teal)
-BACKGROUND_COLOR = '#f4f1e8'  # fond des pages (--nb-paper)
+THEME_COLOR = '#12306b'       # barre EduBac (--nb-teal)
+BACKGROUND_COLOR = '#f4f6fb'  # fond des pages (--nb-paper)
 ICON_DIR = '/static/pwa/'
 PRECACHE = [
     '/hors-ligne/',

@@ -13,6 +13,7 @@
                     <i class="bi bi-speedometer2"></i><span>Tableau de bord</span>
                 </a>
             </li>
+            <li class="nav-section" role="presentation">Classes</li>
             <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.app_name == 'classrooms' and request.resolver_match.url_name != 'students' %}active{% endif %}"
                    href="{% url 'classrooms:list' %}">
@@ -25,49 +26,7 @@
                     <i class="bi bi-person-badge"></i><span>Mes élèves</span>
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.app_name == 'chat' and request.resolver_match.url_name != 'private_inbox' and request.resolver_match.url_name != 'private_room' and request.resolver_match.url_name != 'direct_room' and request.resolver_match.url_name != 'moderation' and request.GET.tab != 'individuals' %}active{% endif %}"
-                   href="{% url 'chat:home' %}">
-                    <i class="bi bi-chat-dots"></i><span>Messagerie</span>
-                    {% if chat_unread_total %}<span class="sidebar-badge">{{ chat_unread_total }}</span>{% endif %}
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.GET.tab == 'individuals' or request.resolver_match.url_name == 'private_inbox' or request.resolver_match.url_name == 'private_room' or request.resolver_match.url_name == 'direct_room' %}active{% endif %}"
-                   href="{% url 'chat:home' %}?tab=individuals">
-                    <i class="bi bi-person-lines-fill"></i><span>Conversations individuelles</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'moderation' %}active{% endif %}"
-                   href="{% url 'chat:moderation' %}">
-                    <i class="bi bi-shield-check"></i><span>Modération</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.app_name == 'education' and request.resolver_match.url_name == 'home' %}active{% endif %}"
-                   href="{% url 'education:home' %}">
-                    <i class="bi bi-book"></i><span>Cours</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'training' %}active{% endif %}"
-                   href="{% url 'quizzes:training' %}">
-                    <i class="bi bi-bullseye"></i><span>Entraînement</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.app_name == 'ai' %}active{% endif %}"
-                   href="{% url 'ai:assistant' %}">
-                    <i class="bi bi-robot"></i><span>Assistant IA</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'niveaux' or request.resolver_match.url_name == 'my_lessons' %}active{% endif %}"
-                   href="{% url 'education:niveaux' %}">
-                    <i class="bi bi-journal-text"></i><span>Leçons / Niveaux</span>
-                </a>
-            </li>
+            <li class="nav-section" role="presentation">Quiz</li>
             <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'manage' %}active{% endif %}"
                    href="{% url 'quizzes:manage' %}">
@@ -92,19 +51,65 @@
                     <i class="bi bi-graph-up-arrow"></i><span>Statistiques</span>
                 </a>
             </li>
+            <li class="nav-section" role="presentation">Communication</li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.app_name == 'chat' and request.resolver_match.url_name != 'private_inbox' and request.resolver_match.url_name != 'private_room' and request.resolver_match.url_name != 'direct_room' and request.resolver_match.url_name != 'moderation' and request.GET.tab != 'individuals' %}active{% endif %}"
+                   href="{% url 'chat:home' %}">
+                    <i class="bi bi-chat-dots"></i><span>Messagerie</span>
+                    {% if chat_unread_total %}<span class="sidebar-badge">{{ chat_unread_total }}</span>{% endif %}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.GET.tab == 'individuals' or request.resolver_match.url_name == 'private_inbox' or request.resolver_match.url_name == 'private_room' or request.resolver_match.url_name == 'direct_room' %}active{% endif %}"
+                   href="{% url 'chat:home' %}?tab=individuals">
+                    <i class="bi bi-person-lines-fill"></i><span>Conversations individuelles</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'moderation' %}active{% endif %}"
+                   href="{% url 'chat:moderation' %}">
+                    <i class="bi bi-shield-check"></i><span>Modération</span>
+                </a>
+            </li>
+            <li class="nav-section" role="presentation">Contenus et outils</li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.app_name == 'education' and request.resolver_match.url_name == 'home' %}active{% endif %}"
+                   href="{% url 'education:home' %}">
+                    <i class="bi bi-book"></i><span>Cours</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'niveaux' or request.resolver_match.url_name == 'my_lessons' %}active{% endif %}"
+                   href="{% url 'education:niveaux' %}">
+                    <i class="bi bi-journal-text"></i><span>Leçons / Niveaux</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'training' %}active{% endif %}"
+                   href="{% url 'quizzes:training' %}">
+                    <i class="bi bi-bullseye"></i><span>Entraînement</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.app_name == 'ai' %}active{% endif %}"
+                   href="{% url 'ai:assistant' %}">
+                    <i class="bi bi-robot"></i><span>Assistant IA</span>
+                </a>
+            </li>
             <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.app_name == 'whiteboard' %}active{% endif %}"
                    href="{% url 'whiteboard:list' %}">
                     <i class="bi bi-easel"></i><span>Whiteboard</span>
                 </a>
             </li>
+            <li class="nav-section is-divider" role="presentation" aria-hidden="true"></li>
             <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}"
                    href="{% url 'education:about' %}">
                     <i class="bi bi-info-circle"></i><span>À propos</span>
                 </a>
             </li>
-            <li class="nav-item mt-2">
+            <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}"
                    href="{% url 'accounts:profile' %}">
                     <i class="bi bi-gear"></i><span>Paramètres</span>

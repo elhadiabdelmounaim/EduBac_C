@@ -123,7 +123,9 @@ class WhiteboardShareTests(TestCase):
         self.assertContains(board, 'Lecture seule')
         self.assertContains(board, 'Dérivées')
         home = self.client.get(reverse('accounts:dashboard'))
-        self.assertContains(home, 'Lecture seule')
+        # Carte compacte vers le partage (titre + aperçu), au lieu du grand lecteur.
+        self.assertContains(home, 'Dérivées')
+        self.assertContains(home, reverse('whiteboard:share_view', args=[share.pk]))
 
         self.login(self.other_student)
         self.assertEqual(

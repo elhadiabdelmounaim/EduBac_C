@@ -388,13 +388,13 @@
         ctx.save();
         for (var i = 0; i < count; i++) {
           var x0 = i * width;
-          if (i === mine) { ctx.fillStyle = 'rgba(27,111,108,0.06)'; ctx.fillRect(x0, 0, width, canvas.height); }
+          if (i === mine) { ctx.fillStyle = 'rgba(29, 79, 163,0.06)'; ctx.fillRect(x0, 0, width, canvas.height); }
           if (i > 0) {
-            ctx.strokeStyle = 'rgba(27,111,108,0.45)'; ctx.lineWidth = 2; ctx.setLineDash([10, 8]);
+            ctx.strokeStyle = 'rgba(29, 79, 163,0.45)'; ctx.lineWidth = 2; ctx.setLineDash([10, 8]);
             ctx.beginPath(); ctx.moveTo(x0, 0); ctx.lineTo(x0, canvas.height); ctx.stroke();
           }
           ctx.setLineDash([]);
-          ctx.fillStyle = i === mine ? '#1b6f6c' : 'rgba(34,48,63,0.75)';
+          ctx.fillStyle = i === mine ? '#1d4fa3' : 'rgba(34,48,63,0.75)';
           ctx.font = '600 18px system-ui, sans-serif';
           ctx.fillText(state.zones[i].label + (i === mine ? ' · votre espace' : ''), x0 + 14, 28);
         }

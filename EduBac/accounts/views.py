@@ -40,6 +40,10 @@ from .services import compute_student_progress
 
 logger = logging.getLogger(__name__)
 
+# Quiz « urgent » sur le tableau de bord élève : date limite dans moins de 48 h.
+from datetime import timedelta as _timedelta  # noqa: E402
+URGENT_DELAY = _timedelta(hours=48)
+
 
 def _split_name(full_name: str):
     full_name = (full_name or '').strip()
@@ -865,8 +869,25 @@ def student_dashboard(request):
             .first()
         )
 
+    # « À faire » : quiz publiés, non terminés, encore ouverts ; le plus urgent d'abord.
+    now = timezone.now()
+    done_quiz_ids = set(Attempt.objects.filter(
+        student=user, submitted_at__isnull=False,
+    ).values_list('quiz_id', flat=True))
+    todo = []
+    for assignment in QuizAssignment.objects.filter(
+        student=user, quiz__status='published',
+    ).select_related('quiz__lesson'):
+        if assignment.quiz_id in done_quiz_ids or (assignment.deadline and assignment.deadline < now):
+            continue
+        assignment.urgent = bool(assignment.deadline and assignment.deadline - now < URGENT_DELAY)
+        todo.append(assignment)
+    todo.sort(key=lambda a: (a.deadline is None, a.deadline or now))
+
     return render(request, 'accounts/dashboard_student.html', {
         'page_title': 'Tableau de bord élève',
+        'todo': todo[:6],
+        'todo_count': len(todo),
         'profile': profile,
         'stats': stats,
         'courses': courses,
@@ -908,6 +929,11 @@ def teacher_dashboard(request):
         )
     recent_attempts = recent_attempts.distinct().order_by('-submitted_at')[:8]
     avg_score = recent_attempts.aggregate(a=Avg('score'))['a']
+    # « À faire » : brouillons jamais envoyés (sinon invisibles pour les élèves).
+    drafts = quizzes_qs.filter(status='draft').select_related('classroom', 'lesson').order_by('-created_at')
+    pending_registrations = (
+        User.objects.filter(role='student', approval_status='pending').count() if is_admin else 0
+    )
 
     return render(request, 'accounts/dashboard_teacher.html', {
         'page_title': 'Tableau de bord enseignant',
@@ -916,6 +942,11 @@ def teacher_dashboard(request):
         'my_quizzes': my_quizzes,
         'recent_attempts': recent_attempts,
         'avg_score': round(avg_score, 1) if avg_score else None,
+        'drafts': drafts[:5],
+        'drafts_count': drafts.count(),
+        'published_count': quizzes_qs.filter(status='published').count(),
+        'pending_registrations': pending_registrations,
+        'is_admin': is_admin,
         'courses_count': Course.objects.count(),
         'lessons_count': Lesson.objects.count(),
         'user': user,

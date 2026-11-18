@@ -21,8 +21,8 @@ class ProgressiveWebAppTests(TestCase):
         self.assertEqual(data['display'], 'standalone')
         self.assertEqual(data['start_url'], '/')
         self.assertEqual(data['scope'], '/')
-        self.assertEqual(data['theme_color'], '#185f60')
-        self.assertEqual(data['background_color'], '#f4f1e8')
+        self.assertEqual(data['theme_color'], '#12306b')
+        self.assertEqual(data['background_color'], '#f4f6fb')
         purposes = {(icon['sizes'], icon['purpose']) for icon in data['icons']}
         for size in ('192x192', '512x512'):
             self.assertIn((size, 'any'), purposes)
@@ -72,7 +72,7 @@ class ProgressiveWebAppTests(TestCase):
 
     def test_every_page_links_the_manifest_ios_tags_and_install_entry(self):
         page = self.client.get('/compte/connexion/')
-        for marker in ('rel="manifest" href="/manifest.webmanifest"', 'name="theme-color" content="#185f60"',
+        for marker in ('rel="manifest" href="/manifest.webmanifest"', 'name="theme-color" content="#12306b"',
                        'rel="apple-touch-icon"', 'apple-mobile-web-app-capable', 'apple-touch-startup-image',
                        'data-pwa-install', 'id="pwaBanner"', '/static/js/pwa.js'):
             self.assertContains(page, marker)

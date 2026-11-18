@@ -231,7 +231,7 @@ class QuizAssignmentJourneyTests(StaticLiveServerTestCase):
 
                 # « Mes quiz » : un brouillon avec classe s'envoie à cette classe, sans en changer.
                 teacher.goto(base + reverse('quizzes:manage'))
-                expect(teacher.locator('td', has_text='TC B').first).to_be_visible()
+                expect(teacher.locator('.quiz-row-class', has_text='TC B').first).to_be_visible()
                 self.assertEqual(self.errors, [])
             finally:
                 browser.close()

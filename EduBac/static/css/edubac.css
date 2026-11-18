@@ -10,7 +10,7 @@
     --edubac-accent: #DD8826;
     --edubac-orange: #f0a04b;
     --edubac-cream: #F3E6A7;
-    --edubac-cream-bg: #f7f3e8;
+    --edubac-cream-bg: #f6f8fc;
     --edubac-soft: #f5f7fa;
     --edubac-dark: #2A0C3D;
     --edubac-blue: #1a6b6b;
@@ -557,7 +557,7 @@ a:hover { color: var(--edubac-navy); }
 /* Illustration carte (personnage stylisé SVG container) */
 .illus-card {
     border-radius: var(--radius-xl);
-    background: linear-gradient(145deg, #e8f6f5 0%, #f7f3e8 100%);
+    background: linear-gradient(145deg, #e8f6f5 0%, #f6f8fc 100%);
     padding: 1.5rem;
     display: flex;
     align-items: center;

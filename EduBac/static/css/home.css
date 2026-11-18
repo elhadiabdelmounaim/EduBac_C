@@ -1,13 +1,13 @@
 /* Accueil only — a warm, bold study notebook. */
 .home-page {
-    --home-paper: #f7f3e8;
-    --home-surface: #fcfaf4;
+    --home-paper: #f6f8fc;
+    --home-surface: #ffffff;
     --home-ink: #263449;
     --home-muted: #566268;
-    --home-teal: #185f60;
-    --home-tint: #e7eeea;
+    --home-teal: #1d4fa3;
+    --home-tint: #e6eefb;
     --home-line: #d9d9cb;
-    --home-ochre: #975815;
+    --home-ochre: #b45309;
     max-width: 1180px;
     margin: 0 auto;
     color: var(--home-ink);
@@ -16,18 +16,19 @@
     line-height: 1.65;
 }
 html[data-theme="dark"] .home-page {
-    --home-paper: #242c2d;
-    --home-surface: #1c252b;
-    --home-ink: #f1eee3;
+    --home-paper: #0f1726;
+    --home-surface: #16213a;
+    --home-ink: #e8edf7;
     --home-muted: #c0ceca;
-    --home-teal: #9bd9cd;
-    --home-tint: #2d3d3a;
-    --home-line: #465650;
-    --home-ochre: #efbc78;
+    --home-teal: #8ab4ff;
+    --home-tint: #1d2c4a;
+    --home-line: #2b3b5c;
+    --home-ochre: #f5a524;
 }
-.home-page :where(p, a, span, small, figcaption, blockquote, h1, h2, h3) { font-weight: 700; }
+.home-page :where(h1, h2, h3) { font-weight: 800; }
 .home-page h1, .home-page h2, .home-page h3 {
-    font-family: Georgia, 'Times New Roman', serif;
+    font-family: inherit;
+    letter-spacing: -.02em;
     color: var(--home-ink);
     text-wrap: balance;
     line-height: 1.2;

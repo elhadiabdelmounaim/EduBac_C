@@ -1,29 +1,52 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="welcome-banner">
-    <div class="row align-items-center">
-        <div class="col-auto d-none d-md-block">
-            <div class="reader-illus float-soft">🧑‍🎓</div>
-        </div>
-        <div class="col">
-            <h1 class="h3 fw-bold mb-1" style="color:var(--edubac-navy);">
-                Bonjour{% if user.first_name %} {{ user.first_name }}{% endif %} 👋
-            </h1>
-            <p class="text-muted mb-0">Continue ton apprentissage en mathématiques. ∑ · π · √</p>
-            {% if profile %}<span class="badge mt-2" style="background:var(--edubac-light);color:var(--edubac-teal);">{{ profile.get_niveau_display }}</span>{% endif %}
-        </div>
-        <div class="col-lg-3 d-none d-lg-flex justify-content-end gap-2" style="font-size:1.8rem;opacity:.35;">
-            <span class="float-soft">∫</span>
-            <span class="float-soft-delay">∞</span>
-        </div>
+<header class="dash-hello">
+    <div>
+        <p class="dash-eyebrow">{% now "l j F" %}</p>
+        <h1 class="h3 mb-1">Bonjour{% if user.first_name %} {{ user.first_name }}{% endif %} 👋</h1>
+        <p class="text-muted mb-0">
+            {% if todo_count %}Tu as <strong>{{ todo_count }} quiz</strong> à faire.{% else %}Rien d’urgent : profites-en pour réviser une leçon.{% endif %}
+        </p>
     </div>
-</div>
+    <div class="dash-hello-badges">
+        {% if profile %}<span class="dash-chip"><i class="bi bi-mortarboard" aria-hidden="true"></i> {{ profile.get_niveau_display }}</span>{% endif %}
+        <span class="dash-chip is-warm" title="Jours consécutifs d’activité">🔥 {{ streak|default:0 }} jour{{ streak|default:0|pluralize }}</span>
+    </div>
+</header>
+
+<section class="dash-section" aria-labelledby="todoTitle">
+    <div class="dash-section-head">
+        <h2 class="h5 mb-0" id="todoTitle"><i class="bi bi-list-check" aria-hidden="true"></i> À faire</h2>
+        <a href="{% url 'quizzes:assigned' %}" class="small">Tous mes quiz</a>
+    </div>
+    {% if todo %}
+    <ul class="todo-list">
+        {% for a in todo %}
+        <li class="todo-item{% if a.urgent %} is-urgent{% endif %}">
+            <span class="todo-icon" aria-hidden="true"><i class="bi bi-clipboard-check"></i></span>
+            <span class="todo-body">
+                <strong>{{ a.quiz.title }}</strong>
+                <small>{{ a.quiz.lesson.title }}{% if a.deadline %} · <span class="todo-deadline">{% if a.urgent %}⏰ {% endif %}avant le {{ a.deadline|date:"d/m à H:i" }}</span>{% endif %}</small>
+            </span>
+            <a href="{% url 'quizzes:detail' a.quiz.pk %}" class="btn btn-accent btn-sm">Commencer</a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="todo-empty"><i class="bi bi-check2-circle" aria-hidden="true"></i> Tous tes quiz sont faits. Bravo !</div>
+    {% endif %}
+</section>
 
 {% if latest_share %}
-<div class="mb-4">
-    {% include "whiteboard/includes/share_viewer.html" with share=latest_share follow=1 %}
-    <a href="{% url 'whiteboard:list' %}" class="small">Historique des whiteboards</a>
-</div>
+<a class="dash-share" href="{% url 'whiteboard:share_view' latest_share.pk %}">
+    <img src="{% url 'whiteboard:share_image' latest_share.pk %}" alt="" loading="lazy">
+    <span class="dash-share-body">
+        <small><i class="bi bi-easel" aria-hidden="true"></i> Tableau partagé par ton professeur</small>
+        <strong>{{ latest_share.title }}</strong>
+        <span class="text-muted small">{{ latest_share.when_label }}</span>
+    </span>
+    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+</a>
 {% endif %}
 
 {% if continue_lesson %}
@@ -101,20 +124,20 @@
     <div class="col-lg-7">
         <div class="card shadow-sm h-100">
             <div class="card-header bg-white d-flex justify-content-between align-items-center border-0 pt-3">
-                <span class="fw-bold">Quiz assignés récents</span>
-                <a href="{% url 'quizzes:assigned' %}" class="small">Voir tout</a>
+                <span class="fw-bold">Mes derniers résultats</span>
+                <a href="{% url 'quizzes:my_results' %}" class="small">Voir tout</a>
             </div>
             <ul class="list-group list-group-flush">
-                {% for a in assignments %}
-                <li class="list-group-item d-flex justify-content-between align-items-center px-3">
-                    <div>
-                        <div class="fw-semibold">{{ a.quiz.title }}</div>
-                        <div class="small text-muted">{{ a.quiz.lesson.title }}</div>
+                {% for attempt in recent_attempts %}
+                <li class="list-group-item d-flex justify-content-between align-items-center gap-2 px-3">
+                    <div class="min-width-0">
+                        <div class="fw-semibold text-truncate">{{ attempt.quiz.title }}</div>
+                        <div class="small text-muted">{{ attempt.submitted_at|date:"d/m/Y" }}</div>
                     </div>
-                    <a href="{% url 'quizzes:detail' a.quiz.pk %}" class="btn btn-accent btn-sm">Commencer</a>
+                    <a href="{% url 'quizzes:results' attempt.pk %}" class="score-chip{% if attempt.score >= 70 %} is-good{% elif attempt.score < 50 %} is-low{% endif %}">{{ attempt.score|floatformat:0 }} %</a>
                 </li>
                 {% empty %}
-                <li class="list-group-item text-muted px-3">Aucun quiz assigné.</li>
+                <li class="list-group-item text-muted px-3">Pas encore de résultat : commence par un quiz « À faire ».</li>
                 {% endfor %}
             </ul>
         </div>
@@ -125,8 +148,8 @@
             <div class="card-body text-center">
                 <div class="progress-ring-wrap mb-3">
                     <svg width="120" height="120" viewBox="0 0 120 120">
-                        <circle cx="60" cy="60" r="52" fill="none" stroke="#e5ecec" stroke-width="10"/>
-                        <circle cx="60" cy="60" r="52" fill="none" stroke="#1a6b6b" stroke-width="10"
+                        <circle cx="60" cy="60" r="52" fill="none" stroke="var(--nb-teal-soft)" stroke-width="10"/>
+                        <circle cx="60" cy="60" r="52" fill="none" stroke="var(--nb-teal)" stroke-width="10"
                                 stroke-linecap="round"
                                 stroke-dasharray="{{ stats.progress|default:0 }}, 100"
                                 pathLength="100"/>

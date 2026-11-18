@@ -9,7 +9,7 @@
             <div class="level-card card h-100 shadow-sm border-0 {{ lvl.color }}" style="border-radius:18px;transition:transform .15s;">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-start gap-3">
-                        <div style="font-size:2rem;line-height:1;">{{ lvl.icon }}</div>
+                        <span class="level-icon" aria-hidden="true">{% if lvl.bi %}<i class="bi {{ lvl.bi }}"></i>{% else %}{{ lvl.icon }}{% endif %}</span>
                         <div>
                             <h2 class="h6 fw-bold mb-1" style="color:var(--edubac-navy);">{{ lvl.label }}</h2>
                             <p class="small text-muted mb-0">{{ lvl.lesson_count }} leçon{{ lvl.lesson_count|pluralize }}</p>

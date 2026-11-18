@@ -1,51 +1,53 @@
 /* Shared EduBac notebook system.
    Loaded after page-level CSS so every route shares the approved Accueil language. */
 :root {
-    --edubac-purple: #185f60;
+    --edubac-purple: #1d4fa3;
     --edubac-navy: #263449;
     --edubac-dark: #263449;
-    --edubac-teal: #185f60;
-    --edubac-teal-light: #347d78;
-    --edubac-blue: #185f60;
+    --edubac-teal: #1d4fa3;
+    --edubac-teal-light: #3a6fc9;
+    --edubac-blue: #1d4fa3;
     --edubac-green: #39744f;
-    --edubac-accent: #975815;
-    --edubac-orange: #a9651b;
-    --edubac-cream: #ead59b;
-    --edubac-cream-bg: #f7f3e8;
-    --edubac-soft: #f4f1e8;
-    --edubac-light: #e7eeea;
-    --nb-paper: #f4f1e8;
-    --nb-surface: #fcfaf4;
+    --edubac-accent: #b45309;
+    --edubac-orange: #b45309;
+    --edubac-cream: #fde7c2;
+    --edubac-cream-bg: #f6f8fc;
+    --edubac-soft: #f4f6fb;
+    --edubac-light: #e6eefb;
+    --nb-paper: #f4f6fb;
+    --nb-surface: #ffffff;
     --nb-ink: #263449;
-    --nb-muted: #53636b;
-    --nb-teal: #185f60;
-    --nb-teal-soft: #e7eeea;
-    --nb-ochre: #975815;
-    --nb-line: #d5d9cf;
+    --nb-muted: #56627a;
+    --nb-teal: #1d4fa3;
+    --nb-teal-soft: #e6eefb;
+    --nb-ochre: #b45309;
+    --nb-line: #d9e0ec;
     --nb-shadow: 0 5px 18px rgba(38, 52, 73, .07);
+    --nb-orange: #f39c12;
+    --nb-navy: #12306b;
 }
 html[data-theme="dark"] {
-    --edubac-purple: #9bd9cd;
-    --edubac-navy: #f1eee3;
-    --edubac-dark: #f1eee3;
-    --edubac-teal: #9bd9cd;
-    --edubac-teal-light: #b4e6da;
-    --edubac-blue: #9bd9cd;
+    --edubac-purple: #8ab4ff;
+    --edubac-navy: #e8edf7;
+    --edubac-dark: #e8edf7;
+    --edubac-teal: #8ab4ff;
+    --edubac-teal-light: #a9c7ff;
+    --edubac-blue: #8ab4ff;
     --edubac-green: #8fd0a0;
-    --edubac-accent: #efbc78;
-    --edubac-orange: #efbc78;
+    --edubac-accent: #f5a524;
+    --edubac-orange: #f5a524;
     --edubac-cream: #54452e;
-    --edubac-cream-bg: #222c2c;
-    --edubac-soft: #20292b;
-    --edubac-light: #2b3b39;
-    --nb-paper: #242c2d;
-    --nb-surface: #1c252b;
-    --nb-ink: #f1eee3;
-    --nb-muted: #bdcbc9;
-    --nb-teal: #9bd9cd;
-    --nb-teal-soft: #2d3d3a;
-    --nb-ochre: #efbc78;
-    --nb-line: #465650;
+    --edubac-cream-bg: #131d33;
+    --edubac-soft: #131d33;
+    --edubac-light: #1d2c4a;
+    --nb-paper: #0f1726;
+    --nb-surface: #16213a;
+    --nb-ink: #e8edf7;
+    --nb-muted: #a7b3c9;
+    --nb-teal: #8ab4ff;
+    --nb-teal-soft: #1d2c4a;
+    --nb-ochre: #f5a524;
+    --nb-line: #2b3b5c;
     --nb-shadow: 0 6px 20px rgba(0, 0, 0, .18);
 }
 
@@ -54,30 +56,33 @@ html[data-theme="dark"] { color-scheme: dark; }
 body {
     background: var(--nb-paper) !important;
     color: var(--nb-ink);
-    font-family: "Segoe UI", system-ui, sans-serif;
-    font-weight: 700;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
 }
 .edubac-layout, .edubac-main, main.container-fluid { background: transparent; }
-body :where(p, h1, h2, h3, h4, h5, h6, a, span, small, label, li, dt, dd, td, th, button, input, select, textarea, summary, figcaption, blockquote):not(.katex):not(.katex *) {
-    font-weight: 700 !important;
-}
+/* Hiérarchie typographique : texte courant normal, gras pour titres et commandes. */
 body :where(h1, h2, h3, h4, h5, h6) {
     color: var(--nb-ink);
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: inherit;
+    font-weight: 700;
+    letter-spacing: -.015em;
     text-wrap: balance;
 }
+body :where(th, dt, label.form-label, .form-label, .btn, .nav-link, summary, .badge, strong, b) { font-weight: 600; }
+.fw-semibold { font-weight: 600 !important; }
 .text-muted { color: var(--nb-muted) !important; }
 a { color: var(--nb-teal); }
 a:hover { color: var(--nb-ochre); }
 .text-primary { color: var(--nb-teal) !important; }
 .text-success { color: #39744f !important; }
-.text-warning { color: #975815 !important; }
+.text-warning { color: #b45309 !important; }
 .text-danger { color: #b34135 !important; }
 
 /* Consistent study-room navigation and information hierarchy. */
 .edubac-navbar {
-    background: var(--nb-teal) !important;
-    border-bottom: 3px solid var(--nb-ochre) !important;
+    background: #12306b !important;
+    border-bottom: 3px solid #f39c12 !important;
     box-shadow: 0 3px 14px rgba(38, 52, 73, .12) !important;
 }
 .edubac-navbar .navbar-brand { min-width: 0; }
@@ -86,38 +91,38 @@ a:hover { color: var(--nb-ochre); }
 .brand-text strong {
     display: flex;
     gap: 0;
-    color: #fcfaf4;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 1.03rem;
-    font-weight: 900;
-    letter-spacing: -.035em;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 1.08rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
     white-space: nowrap;
 }
-.brand-word-etudes { color: #fcfaf4; }
-.brand-word-bac { color: #efbc78; }
-.brand-subtitle { color: #e1eee8; }
+.brand-word-etudes { color: #ffffff; }
+.brand-word-bac { color: #f7a81b; }
+.brand-subtitle { color: #dbe6fb; }
 .edubac-navbar .nav-link { border-radius: 9px !important; }
 .edubac-navbar .nav-link:hover { background: rgba(255,255,255,.12); }
 .theme-toggle {
-    color: #fcfaf4 !important;
+    color: #ffffff !important;
     border-color: rgba(255,255,255,.3) !important;
 }
 .edubac-sidebar {
-    background: #214f51 !important;
+    background: #12306b !important;
     border-right: 1px solid rgba(255,255,255,.12) !important;
     box-shadow: 4px 0 18px rgba(38,52,73,.1) !important;
 }
 .sidebar-nav .nav-link.active {
-    background: #f4f1e8 !important;
-    color: #263449 !important;
-    border-left: 3px solid var(--nb-ochre);
+    background: #ffffff !important;
+    color: #12306b !important;
+    border-left: 3px solid #f39c12;
     border-radius: 4px 12px 12px 4px;
     box-shadow: none !important;
 }
 .sidebar-nav .nav-link.active i { color: var(--nb-teal) !important; }
 .sidebar-footer { background: rgba(255,255,255,.09) !important; }
 .footer {
-    background: #214f51 !important;
+    background: #12306b !important;
     border-radius: 0 !important;
     border-top: 3px solid var(--nb-ochre);
 }
@@ -129,8 +134,7 @@ a:hover { color: var(--nb-ochre); }
     background-color: var(--nb-surface);
     color: var(--nb-ink);
     border: 1px solid var(--nb-line) !important;
-    border-left: 3px solid var(--nb-ochre) !important;
-    border-radius: 5px 18px 18px 5px !important;
+    border-radius: 16px !important;
     box-shadow: var(--nb-shadow);
 }
 .card-header, .card-footer {
@@ -172,12 +176,14 @@ a:hover { color: var(--nb-ochre); }
     background: var(--nb-teal) !important;
     border-color: var(--nb-teal) !important;
 }
-.btn-edubac:hover, .btn-primary:hover { background: #124d4e !important; border-color: #124d4e !important; }
+.btn-edubac:hover, .btn-primary:hover { background: #163b7d !important; border-color: #163b7d !important; }
+/* Orange du logo : texte bleu marine pour rester lisible (contraste 5,5:1). */
 .btn-accent, .btn-warning {
-    color: #fff !important;
-    background: var(--nb-ochre) !important;
-    border-color: var(--nb-ochre) !important;
+    color: #12306b !important;
+    background: var(--nb-orange) !important;
+    border-color: var(--nb-orange) !important;
 }
+.btn-accent:hover, .btn-warning:hover { background: #e08a00 !important; border-color: #e08a00 !important; color: #0c1f47 !important; }
 .btn-outline-primary { color: var(--nb-teal) !important; border-color: var(--nb-teal) !important; }
 .btn-outline-primary:hover { color: #fff !important; background: var(--nb-teal) !important; }
 .form-control, .form-select, input[type="text"], input[type="email"], input[type="password"],
@@ -189,14 +195,14 @@ input[type="number"], textarea, select {
 }
 .form-control:focus, .form-select:focus, input:focus, textarea:focus, select:focus {
     border-color: var(--nb-teal);
-    box-shadow: 0 0 0 3px rgba(24,95,96,.14);
+    box-shadow: 0 0 0 3px rgba(29, 79, 163,.14);
 }
 .badge { font-weight: 700; }
 .bg-edubac { background-color: var(--nb-teal) !important; }
-.bg-accent { background-color: var(--nb-ochre) !important; }
+.bg-accent { background-color: var(--nb-orange) !important; color: #12306b !important; }
 .bg-primary { background-color: var(--nb-teal) !important; }
-.bg-secondary { background-color: #71817b !important; }
-.bg-dark { background-color: #214f51 !important; }
+.bg-secondary { background-color: #6b7a90 !important; }
+.bg-dark { background-color: #12306b !important; }
 .bg-light { background-color: var(--nb-paper) !important; }
 .bg-white { background-color: var(--nb-surface) !important; }
 .bg-info { background-color: var(--nb-teal-soft) !important; color: var(--nb-ink) !important; }
@@ -207,7 +213,7 @@ input[type="number"], textarea, select {
 .quick-card.qc-teal, .quick-card.qc-green, .quick-card.qc-orange,
 .lc-1, .lc-2, .lc-3 { background: var(--nb-teal-soft); color: var(--nb-ink); }
 .hero, .math-quote { background: var(--nb-teal) !important; }
-.hero, .math-quote, .hero h1, .hero h2, .hero h3, .math-quote h1, .math-quote h2 { color: #fcfaf4; }
+.hero, .math-quote, .hero h1, .hero h2, .hero h3, .math-quote h1, .math-quote h2 { color: #ffffff; }
 .auth-page { background: var(--nb-paper) !important; }
 .auth-card { max-width: 520px; }
 .choice-btn { color: var(--nb-ink); background: var(--nb-surface); border-color: var(--nb-line); }
@@ -243,9 +249,9 @@ input[type="number"], textarea, select {
 .about-page .about-line, .about-page .about-path, .about-page .about-list li { border-color: var(--nb-line); }
 
 /* Chat keeps its two-pane geometry and message states; only its visual palette changes. */
-body:has(.chat-app) .edubac-sidebar { background: #214f51 !important; }
+body:has(.chat-app) .edubac-sidebar { background: #12306b !important; }
 body:has(.chat-app) .sidebar-nav .nav-link.active {
-    background: #f4f1e8 !important; color: #263449 !important;
+    background: #f4f6fb !important; color: #263449 !important;
     border-left: 3px solid var(--nb-ochre); box-shadow: none !important;
 }
 /* Messagerie : palette et composants dans chat.css / chat-voice.css. */
@@ -290,7 +296,7 @@ body:has(.chat-app) .sidebar-nav .nav-link.active {
     color: #fff !important;
     background: var(--nb-teal) !important;
     border-color: var(--nb-teal) !important;
-    box-shadow: 0 5px 14px rgba(24,95,96,.18) !important;
+    box-shadow: 0 5px 14px rgba(29, 79, 163,.18) !important;
 }
 .qb-preview {
     color: var(--nb-ink) !important;
@@ -313,7 +319,7 @@ html[data-theme="dark"] .qb-preview-q { background: rgba(255,255,255,.07); }
 html[data-theme="dark"] body,
 html[data-theme="dark"] body.has-sidebar { background: var(--nb-paper) !important; color: var(--nb-ink); }
 html[data-theme="dark"] .edubac-navbar {
-    background: #185f60 !important;
+    background: #1d4fa3 !important;
     border-bottom-color: var(--nb-ochre) !important;
 }
 html[data-theme="dark"] .btn-edubac,
@@ -323,22 +329,22 @@ html[data-theme="dark"] .bg-primary,
 html[data-theme="dark"] .qb-card-head,
 html[data-theme="dark"] .qb-generate-btn,
 html[data-theme="dark"] .wb-tool.active {
-    background: #185f60 !important;
-    border-color: #185f60 !important;
+    background: #1d4fa3 !important;
+    border-color: #1d4fa3 !important;
     color: #fff !important;
 }
 html[data-theme="dark"] .btn-primary:hover,
-html[data-theme="dark"] .btn-edubac:hover { background: #124d4e !important; }
+html[data-theme="dark"] .btn-edubac:hover { background: #163b7d !important; }
 html[data-theme="dark"] .btn-accent,
 html[data-theme="dark"] .btn-warning,
-html[data-theme="dark"] .bg-accent { background: #975815 !important; border-color: #975815 !important; color: #fff !important; }
+html[data-theme="dark"] .bg-accent { background: #f39c12 !important; border-color: #f39c12 !important; color: #12306b !important; }
 html[data-theme="dark"] .hero,
-html[data-theme="dark"] .math-quote { background: #185f60 !important; }
+html[data-theme="dark"] .math-quote { background: #1d4fa3 !important; }
 html[data-theme="dark"] .text-success { color: #9bd6ad !important; }
-html[data-theme="dark"] .text-warning { color: #efbc78 !important; }
+html[data-theme="dark"] .text-warning { color: #f5a524 !important; }
 html[data-theme="dark"] .text-danger { color: #f0b1a8 !important; }
-html[data-theme="dark"] .edubac-sidebar { background: #192f31 !important; }
-html[data-theme="dark"] .footer { background: #192f31 !important; }
+html[data-theme="dark"] .edubac-sidebar { background: #0e1a33 !important; }
+html[data-theme="dark"] .footer { background: #0e1a33 !important; }
 html[data-theme="dark"] .card,
 html[data-theme="dark"] .stat-pill,
 html[data-theme="dark"] .auth-card,
