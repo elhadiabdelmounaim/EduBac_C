@@ -330,3 +330,46 @@ class QuizAssignmentJourneyTests(StaticLiveServerTestCase):
             finally:
                 browser.close()
         self.assertEqual(sorted(Quiz.objects.values_list('status', flat=True)), ['draft', 'published'])
+
+    def test_assign_button_explains_instead_of_doing_nothing(self):
+        self.errors = []
+        base = self.live_server_url
+        draft = self.make_draft()
+        empty_only = self.make_draft(classroom_niveau='2bac_pc')
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(
+                executable_path=os.environ.get('CHROMIUM_EXECUTABLE') or shutil.which('chromium'),
+                headless=True, args=['--no-sandbox'])
+            try:
+                teacher = self.login(browser, 'qa-prof')
+                # Aucune classe choisie : message, pas de clic « mort ».
+                teacher.goto(f"{base}{reverse('quizzes:teacher_ai')}?quiz={draft}")
+                teacher.locator('#assignQuizBtn').click()
+                expect(teacher.locator('#assignError')).to_contain_text('Cliquez d’abord sur la classe')
+                # Classe choisie : confirmation puis envoi.
+                teacher.locator('.qb-class-card', has_text='TC A').click()
+                expect(teacher.locator('#assignError')).to_be_hidden()
+                expect(teacher.locator('.qb-class-card', has_text='TC A')).to_have_class(re.compile('is-checked'))
+                teacher.locator('#assignQuizBtn').click()
+                teacher.locator('#assignConfirmBtn').click()
+                teacher.wait_for_url(re.compile(re.escape(base + reverse('quizzes:manage')) + r'(#.*)?$'))
+                expect(teacher.locator('.alert-success')).to_contain_text('envoyé à la classe TC A (2 élève(s) notifié(s))')
+                # Aucune classe du niveau du quiz : la raison est donnée.
+                teacher.goto(f"{base}{reverse('quizzes:teacher_ai')}?quiz={empty_only}")
+                teacher.locator('#assignQuizBtn').click()
+                expect(teacher.locator('#assignError')).to_contain_text('Aucune de vos classes ne peut recevoir ce quiz')
+                self.assertEqual(self.errors, [])
+            finally:
+                browser.close()
+
+    def make_draft(self, classroom_niveau=None):
+        course = self.course
+        if classroom_niveau:
+            course = Course.objects.create(name='Physique', niveau=classroom_niveau)
+        lesson = Lesson.objects.create(course=course, title=f'Leçon {course.pk}', order=1)
+        quiz = Quiz.objects.create(title='Brouillon à affecter', lesson=lesson, created_by=self.teacher, status='draft')
+        from quizzes.models import Choice, Question
+        q = Question.objects.create(quiz=quiz, text='1 + 1 ?')
+        Choice.objects.create(question=q, text='2', is_correct=True)
+        Choice.objects.create(question=q, text='3', is_correct=False, order=1)
+        return quiz.pk

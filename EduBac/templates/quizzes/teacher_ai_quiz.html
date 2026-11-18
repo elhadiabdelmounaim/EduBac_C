@@ -297,6 +297,7 @@
                     </fieldset>
                     <label class="form-label small fw-semibold mt-3" for="deadlineInput">Date limite (facultative)</label>
                     <input type="datetime-local" name="deadline" id="deadlineInput" class="form-control">
+                    <div class="alert alert-danger mt-3 mb-0" id="assignError" role="alert" hidden></div>
                     <button type="submit" class="btn btn-edubac w-100 mt-3" id="assignQuizBtn">
                         <i class="bi bi-send"></i> Affecter le quiz à cette classe
                     </button>
@@ -321,10 +322,10 @@
 {% endblock %}
 {% block extra_css %}
 {% include "includes/katex.html" %}
-<link rel="stylesheet" href="/static/css/quiz-assign.css?v=4">
+<link rel="stylesheet" href="/static/css/quiz-assign.css?v=5">
 {% endblock %}
 {% block extra_js %}
-<script src="/static/js/quiz-assign.js?v=4"></script>
+<script src="/static/js/quiz-assign.js?v=5"></script>
 <script>
 (() => {
     const level = document.getElementById('quizLevel');

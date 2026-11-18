@@ -62,3 +62,7 @@ html[data-theme="dark"] .qb-assign-summary { background: var(--nb-teal-soft); }
 @media (max-width: 575.98px) { .qi-actions .btn { width: 100%; } .qi-step { padding: 12px; gap: 10px; } }
 .qi-drop.is-invalid { border-color: #dc3545; color: #b02a37; background: #fdf0f1; }
 .qi-drop.is-dragover { border-color: var(--nb-teal); background: var(--nb-teal-soft); }
+/* Sans :has() (anciens Safari) : la carte choisie reste visible. */
+.qb-class-card.is-checked { border-color: var(--nb-teal, #1d4fa3); box-shadow: 0 6px 18px rgba(29, 79, 163, .16); background: var(--nb-teal-soft, #e6eefb); }
+.qb-class-card.is-checked .qb-class-check { opacity: 1; transform: scale(1); }
+.qb-class-card.is-checked .qb-class-count { visibility: hidden; }

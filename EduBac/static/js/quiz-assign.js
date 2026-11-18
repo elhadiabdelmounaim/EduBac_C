@@ -3,33 +3,66 @@
   'use strict';
   document.addEventListener('DOMContentLoaded', function () {
     var form = document.getElementById('sendQuizForm');
+    if (!form) return;
     var dialog = document.getElementById('assignConfirm');
-    if (!form || !dialog || !dialog.showModal) return;
+    var errorBox = document.getElementById('assignError');
+    var confirmButton = document.getElementById('assignConfirmBtn');
     var confirmed = false;
     var text = document.getElementById('assignConfirmText');
     var title = (document.getElementById('quiz-preview-title') || {}).textContent || 'ce quiz';
 
+    function showError(message) {
+      if (!errorBox) { window.alert(message); return; }
+      errorBox.textContent = message;
+      errorBox.hidden = false;
+      if (errorBox.scrollIntoView) errorBox.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+    function markChecked() {
+      Array.prototype.forEach.call(form.querySelectorAll('.qb-class-card'), function (card) {
+        var input = card.querySelector('input');
+        card.classList.toggle('is-checked', !!(input && input.checked));
+      });
+    }
+    markChecked();
+    form.addEventListener('change', function () { if (errorBox) errorBox.hidden = true; markChecked(); });
+
+    function submitNow() {
+      confirmed = true;
+      if (confirmButton) { confirmButton.disabled = true; confirmButton.textContent = 'Affectation…'; }
+      HTMLFormElement.prototype.submit.call(form);
+    }
+
+    // Les boutons radio sont invisibles (cartes) : le navigateur ne peut pas afficher
+    // son avertissement, on explique donc nous-mêmes pourquoi rien ne part.
+    form.setAttribute('novalidate', '');
     form.addEventListener('submit', function (event) {
       if (confirmed) return;
       event.preventDefault();
-      var choice = form.querySelector('input[name="classroom"]:checked');
-      if (!choice) { form.reportValidity(); return; }
+      var radios = form.querySelectorAll('input[name="classroom"]');
+      var enabled = Array.prototype.filter.call(radios, function (r) { return !r.disabled; });
+      var choice = form.querySelector('input[name="classroom"]:checked:not(:disabled)');
+      if (!radios.length) { showError('Vous n’avez encore aucune classe : créez-en une, puis revenez affecter ce quiz.'); return; }
+      if (!enabled.length) {
+        showError('Aucune de vos classes ne peut recevoir ce quiz : elles sont d’un autre niveau ou n’ont aucun élève inscrit (voir la mention sous chaque classe).');
+        return;
+      }
+      if (!choice) { showError('Cliquez d’abord sur la classe qui doit recevoir le quiz.'); return; }
       var count = Number(choice.dataset.students || 0);
-      var deadline = form.elements.deadline.value;
-      text.textContent = 'Affecter « ' + title.trim() + ' » à la classe ' + choice.dataset.name + ' ? '
+      var deadline = form.elements.deadline ? form.elements.deadline.value : '';
+      var message = 'Affecter « ' + title.trim() + ' » à la classe ' + choice.dataset.name + ' ? '
         + count + ' élève' + (count > 1 ? 's' : '') + ' le recevr' + (count > 1 ? 'ont' : 'a')
         + (deadline ? ', à rendre avant le ' + new Date(deadline).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) : '') + '.';
+      if (!dialog || !dialog.showModal) {
+        if (window.confirm(message)) submitNow();
+        return;
+      }
+      text.textContent = message;
       dialog.showModal();
-      document.getElementById('assignConfirmBtn').focus();
+      if (confirmButton) confirmButton.focus();
     });
-    document.getElementById('assignCancel').addEventListener('click', function () { dialog.close(); });
-    document.getElementById('assignConfirmBtn').addEventListener('click', function () {
-      confirmed = true;
-      var button = document.getElementById('assignConfirmBtn');
-      button.disabled = true;
-      button.textContent = 'Affectation…';
-      form.submit();
-    });
+    var cancel = document.getElementById('assignCancel');
+    if (cancel && dialog) cancel.addEventListener('click', function () { dialog.close(); });
+    if (confirmButton) confirmButton.addEventListener('click', submitNow);
   });
 })();
 
