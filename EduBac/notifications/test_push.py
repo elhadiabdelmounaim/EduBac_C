@@ -206,3 +206,81 @@ class EmailAfterResponseTests(TestCase):
         self.assertEqual(Notification.objects.filter(type='quiz_assigned').count(), 3)
         # Trois e-mails tentés, tous après la réponse (jamais pendant le clic).
         self.assertEqual(during_request, [False, False, False])
+
+
+@override_settings(**KEYS)
+class SendAndSharePushTests(TestCase):
+    """Quiz envoyé à un élève précis, tableau partagé : le téléphone du destinataire sonne."""
+
+    def setUp(self):
+        self.teacher = User.objects.create(username='prof', email='p@t.test', role='teacher', first_name='Nadia')
+        self.omar = User.objects.create(username='omar', email='o@t.test', first_name='Omar')
+        self.salma = User.objects.create(username='salma', email='s@t.test', first_name='Salma')
+        self.classroom = Classroom.objects.create(name='1bac1', niveau='1ere_bac_sc', teacher=self.teacher)
+        self.classroom.add_member(self.omar)
+        self.classroom.add_member(self.salma)
+        self.devices = {}
+        for user in (self.omar, self.salma):
+            private, p256dh, auth = device_keys()
+            self.devices[user.pk] = (private, auth)
+            PushSubscription.objects.create(user=user, endpoint=f'{FCM}-{user.pk}', p256dh=p256dh, auth=auth)
+        session = self.client.session
+        session['user_id'] = self.teacher.pk
+        session.save()
+
+    def pushed(self, post):
+        """{username: [messages déchiffrés]} pour chaque envoi au service de push."""
+        result = {}
+        for call in post.call_args_list:
+            subscription, body = call.args[:2]
+            private, auth = self.devices[subscription.user_id]
+            result.setdefault(subscription.user.username, []).append(decrypt(body, private, auth))
+        return result
+
+    def test_quiz_sent_to_one_student_rings_only_that_phone(self):
+        from education.models import Course, Lesson
+        from quizzes.models import Quiz
+        lesson = Lesson.objects.create(course=Course.objects.create(name='Maths', niveau='1ere_bac_sc'),
+                                       title='Fonctions', order=1)
+        quiz = Quiz.objects.create(title='Généralités sur les fonctions', lesson=lesson,
+                                   created_by=self.teacher, status='draft')
+        with mock.patch('notifications.push._post', return_value=201) as post:
+            response = self.client.post(reverse('quizzes:assign'), {
+                'quiz': quiz.pk, 'target': 'students', 'students': [self.omar.pk]})
+        self.assertEqual(response.status_code, 302)
+        pushed = self.pushed(post)
+        self.assertEqual(list(pushed), ['omar'])
+        self.assertEqual(pushed['omar'][0]['title'], 'Nouveau quiz assigné')
+        self.assertIn('Généralités sur les fonctions', pushed['omar'][0]['body'])
+        self.assertEqual(pushed['omar'][0]['url'], reverse('quizzes:detail', args=[quiz.pk]))
+
+    def test_whiteboard_shared_with_the_class_rings_every_member(self):
+        from types import SimpleNamespace
+        from notifications.services import notify_whiteboard_share
+        share = SimpleNamespace(pk=7, title='Correction exercice 3', classroom=self.classroom, teacher=self.teacher)
+        with mock.patch('notifications.push._post', return_value=201) as post:
+            notify_whiteboard_share(share)
+        pushed = self.pushed(post)
+        self.assertEqual(set(pushed), {'omar', 'salma'})
+        self.assertEqual(pushed['salma'][0]['title'], 'Whiteboard partagé')
+
+    def test_board_posted_in_a_consultation_rings_once_even_if_already_shared(self):
+        from whiteboard.models import WhiteboardBoard
+        conversation = PrivateConversation.objects.create(
+            classroom=self.classroom, student=self.omar, teacher=self.teacher)
+        board = WhiteboardBoard.objects.create(title='Révisions', created_by=self.teacher,
+                                               content={'version': 1, 'objects': []})
+
+        def share():
+            with mock.patch('notifications.push._post', return_value=201) as post:
+                response = self.client.post(reverse('whiteboard:share_to_conversation'), json.dumps({
+                    'kind': 'consultation', 'conversation_id': conversation.pk, 'board_id': board.pk}),
+                    content_type='application/json')
+            self.assertEqual(response.status_code, 200, response.content)
+            return self.pushed(post)
+
+        first = share()  # Omar découvre le tableau : « Tableau partagé avec vous », une seule fois.
+        self.assertEqual([m['title'] for m in first['omar']], ['Tableau partagé avec vous'])
+        again = share()  # Il y avait déjà accès : il est prévenu du nouveau message.
+        self.assertEqual([m['title'] for m in again['omar']], ['Consultation — nouveau message'])
+        self.assertIn('Tableau en direct : Révisions', again['omar'][0]['body'])

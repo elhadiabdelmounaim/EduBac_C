@@ -475,7 +475,7 @@ def api_send(request, classroom_id):
     return JsonResponse({'ok': True, 'message': msg.to_dict(user)})
 
 
-def _push_class_message(classroom, message, sender):
+def _push_class_message(classroom, message, sender, exclude_ids=()):
     """Message du salon : notification sur le téléphone des membres (une par salon, remplacée)."""
     try:
         from notifications.models import NotificationPreference
@@ -486,6 +486,7 @@ def _push_class_message(classroom, message, sender):
         if classroom.teacher_id:
             member_ids.add(classroom.teacher_id)
         member_ids.discard(sender.pk)
+        member_ids.difference_update(exclude_ids)
         members = list(User.objects.filter(pk__in=member_ids, is_active=True))
         muted = NotificationPreference.muted_user_ids(members, 'message')
         body = message.body[:160] if message.body else ('🎤 Message vocal' if message.is_voice else '📎 Pièce jointe')

@@ -401,15 +401,37 @@ def post_board_link(kind, target, sender, board):
             message = ChatMessage.objects.create(room=room, sender=sender, body=body)
             chat_realtime.class_message(target.pk, message)
         elif kind == 'consultation':
-            PrivateMessage.objects.create(conversation=target, sender=sender, body=body)
+            message = PrivateMessage.objects.create(conversation=target, sender=sender, body=body)
             target.save(update_fields=['updated_at'])
             chat_realtime.conversation_changed(chat_realtime.KIND_CONSULTATION, target.pk)
         elif kind == 'direct':
-            DirectMessage.objects.create(conversation=target, sender=sender, body=body)
+            message = DirectMessage.objects.create(conversation=target, sender=sender, body=body)
             target.save(update_fields=['updated_at'])
             chat_realtime.conversation_changed(chat_realtime.KIND_DIRECT, target.pk)
+        else:
+            return None
+        return message
     except Exception:
         logger.warning('whiteboard link post failed kind=%s', kind, exc_info=True)
+        return None
+
+
+def _notify_board_message(kind, target, message, sender, skip_ids):
+    """Le lien posté dans la conversation prévient (téléphone compris) ceux qui
+    n'ont pas déjà reçu « Tableau partagé avec vous » pour ce partage."""
+    if message is None:
+        return
+    try:
+        if kind == 'class':
+            from chat.views import _push_class_message
+            _push_class_message(target, message, sender, exclude_ids=skip_ids)
+        else:
+            from notifications.services import notify_new_private_message
+            recipient = target.student if kind == 'consultation' else target.other_participant(sender)
+            if recipient and recipient.pk not in skip_ids and recipient.pk != sender.pk:
+                notify_new_private_message(kind, target, message, recipient)
+    except Exception:
+        logger.warning('whiteboard link notification failed kind=%s', kind, exc_info=True)
 
 
 def _conversation_target(user, kind, conversation_id):
@@ -488,9 +510,10 @@ def share_to_conversation(request):
             board.access_mode = WhiteboardBoard.ACCESS_SELECTED
             board.save(update_fields=['access_mode'])
         board.participants.add(*students)
-    _notify('notify_whiteboard_live_share', board,
-            [s for s in _audience(board) if s.pk not in before], user)
-    post_board_link(kind, target, user, board)
+    newcomers = [s for s in _audience(board) if s.pk not in before]
+    _notify('notify_whiteboard_live_share', board, newcomers, user)
+    message = post_board_link(kind, target, user, board)
+    _notify_board_message(kind, target, message, user, {s.pk for s in newcomers})
     realtime.board_state(board.pk)
     return JsonResponse({'ok': True, 'url': reverse('whiteboard:room', args=[board.pk]), 'id': board.pk})
 
