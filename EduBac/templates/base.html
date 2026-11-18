@@ -7,6 +7,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>{% block title %}{{ page_title|default:"EduBac" }}{% endblock %} — EduBac</title>
+    {% include "includes/pwa_head.html" %}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/static/css/edubac.css?v=notif-2">
@@ -51,6 +52,7 @@
     </div>
 
     {% include "includes/bottom_nav.html" %}
+    {% include "includes/pwa_install.html" %}
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -58,6 +60,7 @@
     <script src="/static/js/edubac-motion.js"></script>
     <script src="/static/js/sidebar.js"></script>
     <script src="/static/js/notifications.js?v=unread-2"></script>
+    <script src="/static/js/pwa.js?v=1"></script>
     <script>
     (function(){
         var btn=document.getElementById('themeToggle');

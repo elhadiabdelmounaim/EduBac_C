@@ -9,8 +9,14 @@ from playwright.sync_api import expect, sync_playwright
 from accounts.models import TeacherProfile, User
 from whiteboard.models import WhiteboardBoard
 
+from .test_chat_moderation import SingleThreadLiveServer
+
 
 class WhiteboardToolsBrowserTests(StaticLiveServerTestCase):
+    # Requêtes parallèles (page + service worker) : serveur à un seul fil,
+    # comme les autres tests, pour ne pas perdre la session SQLite en mémoire.
+    server_thread_class = SingleThreadLiveServer
+
     def test_draw_move_edit_and_reload(self):
         teacher = User.objects.create_user(
             username="board-tools-teacher", email="board-tools@example.test",

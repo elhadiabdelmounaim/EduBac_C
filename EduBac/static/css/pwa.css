@@ -1,0 +1,67 @@
+/* Application installable : invitation, aide iPhone, mode plein écran installé. */
+.pwa-banner {
+  position: fixed;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(calc(100% - 24px), 520px);
+  padding: 12px 12px 12px 14px;
+  border-radius: 18px;
+  background: #fffdf8;
+  color: #22303f;
+  box-shadow: 0 14px 40px rgba(17, 27, 33, .22);
+  transform: translateX(-50%);
+  animation: pwa-in .35s cubic-bezier(.2, .9, .3, 1.1);
+}
+.pwa-banner[hidden] { display: none; }
+.pwa-banner img { width: 48px; height: 48px; border-radius: 12px; flex: 0 0 auto; }
+.pwa-banner-text { display: flex; flex-direction: column; flex: 1; min-width: 0; line-height: 1.3; }
+.pwa-banner-text strong { font-size: .98rem; white-space: nowrap; }
+.pwa-banner-text span { color: #5f6d74; font-size: .8rem; }
+.pwa-banner-install {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: #185f60;
+  color: #fff;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pwa-banner-close { width: 36px; height: 36px; border: 0; border-radius: 50%; background: transparent; color: #5f6d74; }
+.pwa-banner-close:hover { background: rgba(0, 0, 0, .06); }
+@keyframes pwa-in { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@media (max-width: 991.98px) {
+  body.has-sidebar .pwa-banner { bottom: calc(84px + env(safe-area-inset-bottom)); }
+}
+
+.pwa-help {
+  width: min(calc(100% - 24px), 420px);
+  padding: 26px 24px 20px;
+  border: 0;
+  border-radius: 22px;
+  background: #fffdf8;
+  color: #22303f;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(17, 27, 33, .3);
+}
+.pwa-help::backdrop { background: rgba(9, 18, 22, .5); }
+.pwa-help img { border-radius: 16px; box-shadow: 0 6px 18px rgba(17, 27, 33, .12); }
+.pwa-help h2 { margin: 14px 0 12px; font-size: 1.2rem; }
+.pwa-help ol { margin: 0 0 14px; padding-left: 22px; text-align: left; }
+.pwa-help li { margin: 8px 0; line-height: 1.45; }
+.pwa-help li i { color: #185f60; }
+.pwa-help-note { margin: 0 0 12px; color: #8f5313; font-size: .85rem; }
+.pwa-help-close { min-height: 44px; padding: 0 24px; border: 0; border-radius: 999px; background: #185f60; color: #fff; font-weight: 600; }
+
+html[data-theme="dark"] .pwa-banner,
+html[data-theme="dark"] .pwa-help { background: #1e2830; color: #e9eeea; }
+html[data-theme="dark"] .pwa-banner-text span { color: #9aabad; }
+
+/* Ouvert depuis l'écran d'accueil : pas de surbrillance au toucher ni de rebond gênant. */
+html.is-standalone { -webkit-tap-highlight-color: transparent; }
+html.is-standalone body { overscroll-behavior-y: none; }
+@media (prefers-reduced-motion: reduce) { .pwa-banner { animation: none; } }

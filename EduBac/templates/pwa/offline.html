@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="{{ theme_color }}">
+  <meta name="robots" content="noindex">
+  <title>Hors connexion — EduBac</title>
+  <link rel="icon" href="/static/pwa/icon-192.png">
+  {# Page autonome : aucune donnée personnelle, aucune ressource externe. #}
+  <style>
+    :root { color-scheme: light dark; --bg: {{ background_color }}; --ink: #22303f; --muted: #5f6d74; --accent: {{ theme_color }}; --card: #fffdf8; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #0f1619; --ink: #e9eeea; --muted: #9aabad; --accent: #7fd1c3; --card: #172126; } }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center;
+      padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
+      background: var(--bg); color: var(--ink);
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+    }
+    main { width: min(100%, 420px); padding: 32px 26px; border-radius: 22px; background: var(--card); text-align: center; box-shadow: 0 10px 30px rgba(17, 27, 33, .08); }
+    img { width: 96px; height: 96px; border-radius: 22px; box-shadow: 0 6px 18px rgba(17, 27, 33, .12); }
+    h1 { margin: 20px 0 8px; font-size: 1.35rem; }
+    p { margin: 0 0 10px; color: var(--muted); }
+    .status { display: inline-flex; align-items: center; gap: 8px; margin: 6px 0 18px; font-size: .88rem; color: var(--muted); }
+    .status::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: #c0392b; }
+    .status.is-online::before { background: #2ea866; }
+    button { min-height: 48px; padding: 0 26px; border: 0; border-radius: 999px; background: var(--accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+    @media (prefers-color-scheme: dark) { button { color: #0c1d1b; } }
+    ul { margin: 18px 0 0; padding: 0; list-style: none; text-align: left; color: var(--muted); font-size: .88rem; }
+    li { padding: 4px 0 4px 22px; position: relative; }
+    li::before { content: "•"; position: absolute; left: 6px; color: var(--accent); }
+  </style>
+</head>
+<body>
+  <main>
+    <img src="/static/pwa/icon-192.png" alt="EduBac" width="96" height="96">
+    <h1>Vous êtes hors connexion</h1>
+    <p>EduBac a besoin d’Internet pour afficher vos cours, quiz et messages.</p>
+    <span class="status" id="status" role="status">Pas de connexion</span>
+    <div><button type="button" id="retry">Réessayer</button></div>
+    <ul>
+      <li>Vérifiez le Wi-Fi ou les données mobiles.</li>
+      <li>Sur le tableau blanc, vos dessins en cours sont gardés et envoyés au retour de la connexion.</li>
+      <li>La page se recharge toute seule dès que la connexion revient.</li>
+    </ul>
+  </main>
+  <script>
+    (function () {
+      var status = document.getElementById('status');
+      function retry() { window.location.reload(); }
+      document.getElementById('retry').addEventListener('click', retry);
+      window.addEventListener('online', function () {
+        status.textContent = 'Connexion rétablie…';
+        status.classList.add('is-online');
+        setTimeout(retry, 600);
+      });
+    })();
+  </script>
+</body>
+</html>

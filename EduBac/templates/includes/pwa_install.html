@@ -1,0 +1,28 @@
+{# Invitation à installer EduBac (affichée par pwa.js seulement quand c'est possible). #}
+<aside class="pwa-banner" id="pwaBanner" role="dialog" aria-labelledby="pwaBannerTitle" hidden>
+    <img src="/static/pwa/icon-192.png" alt="" width="48" height="48">
+    <div class="pwa-banner-text">
+        <strong id="pwaBannerTitle">Installer EduBac</strong>
+        <span>Accès direct depuis l’écran d’accueil.</span>
+    </div>
+    <button type="button" class="pwa-banner-install" data-pwa-install>Installer</button>
+    <button type="button" class="pwa-banner-close" id="pwaBannerClose" aria-label="Plus tard">
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
+    </button>
+</aside>
+<dialog class="pwa-help" id="pwaHelp" aria-labelledby="pwaHelpTitle">
+    <img src="/static/pwa/icon-192.png" alt="" width="64" height="64">
+    <h2 id="pwaHelpTitle">Installer EduBac</h2>
+    <ol id="pwaHelpIos" hidden>
+        <li>Touchez le bouton <strong>Partager</strong> <i class="bi bi-box-arrow-up" aria-hidden="true"></i> en bas de Safari.</li>
+        <li>Choisissez <strong>Sur l’écran d’accueil</strong> <i class="bi bi-plus-square" aria-hidden="true"></i>.</li>
+        <li>Touchez <strong>Ajouter</strong> : l’icône EduBac apparaît sur votre écran d’accueil.</li>
+    </ol>
+    <ol id="pwaHelpOther" hidden>
+        <li>Ouvrez le menu du navigateur <i class="bi bi-three-dots-vertical" aria-hidden="true"></i>.</li>
+        <li>Choisissez <strong>Installer l’application</strong> ou <strong>Ajouter à l’écran d’accueil</strong>.</li>
+        <li>Confirmez : EduBac s’ouvrira ensuite sans barre d’adresse.</li>
+    </ol>
+    <p class="pwa-help-note" id="pwaHelpNote" hidden>Sur iPhone et iPad, utilisez Safari pour ajouter EduBac à l’écran d’accueil.</p>
+    <button type="button" class="pwa-help-close" id="pwaHelpClose">J’ai compris</button>
+</dialog>

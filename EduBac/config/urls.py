@@ -6,6 +6,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from accounts.views import admin_teacher_dashboard
+from config import pwa
 
 urlpatterns = [
     path(
@@ -14,6 +15,10 @@ urlpatterns = [
         name='admin_teacher_dashboard',
     ),
     path('admin/', admin.site.urls),
+    # Application installable (PWA) : à la racine pour couvrir tout le site.
+    path('manifest.webmanifest', pwa.manifest, name='pwa_manifest'),
+    path('service-worker.js', pwa.service_worker, name='pwa_service_worker'),
+    path('hors-ligne/', pwa.offline, name='pwa_offline'),
     path('compte/', include('accounts.urls')),
     path('', include('education.urls')),
     path('quizzes/', include('quizzes.urls')),
