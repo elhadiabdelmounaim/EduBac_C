@@ -134,6 +134,7 @@
                     </button>
                     <span class="form-text">Le brouillon permet de relire et modifier les questions avant l’envoi.</span>
                 </div>
+                <div class="alert alert-danger mt-3 mb-0" id="quizImportError" role="alert" hidden></div>
             </form>
             <dialog class="qb-confirm" id="importConfirm" aria-labelledby="importConfirmTitle">
                 <h3 class="h5" id="importConfirmTitle">Importer et envoyer le quiz ?</h3>
@@ -320,10 +321,10 @@
 {% endblock %}
 {% block extra_css %}
 {% include "includes/katex.html" %}
-<link rel="stylesheet" href="/static/css/quiz-assign.css?v=3">
+<link rel="stylesheet" href="/static/css/quiz-assign.css?v=4">
 {% endblock %}
 {% block extra_js %}
-<script src="/static/js/quiz-assign.js?v=3"></script>
+<script src="/static/js/quiz-assign.js?v=4"></script>
 <script>
 (() => {
     const level = document.getElementById('quizLevel');

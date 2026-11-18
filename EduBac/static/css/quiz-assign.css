@@ -60,3 +60,5 @@ html[data-theme="dark"] .qb-assign-summary { background: var(--nb-teal-soft); }
 .qi-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding-top: 4px; }
 .qi-actions .form-text { flex-basis: 100%; margin: 0; }
 @media (max-width: 575.98px) { .qi-actions .btn { width: 100%; } .qi-step { padding: 12px; gap: 10px; } }
+.qi-drop.is-invalid { border-color: #dc3545; color: #b02a37; background: #fdf0f1; }
+.qi-drop.is-dragover { border-color: var(--nb-teal); background: var(--nb-teal-soft); }

@@ -111,25 +111,85 @@
     if (level) level.addEventListener('change', function () { setTimeout(autoCourse, 0); });
     setTimeout(autoCourse, 0);
 
-    if (file && fileName) {
-      file.addEventListener('change', function () {
-        fileName.textContent = file.files && file.files[0] ? '✓ ' + file.files[0].name : 'Choisir ou déposer le fichier .json';
-        fileName.parentElement.classList.toggle('has-file', !!(file.files && file.files[0]));
+    var errorBox = document.getElementById('quizImportError');
+    var drop = fileName ? fileName.parentElement : null;
+    var labels = { quizTargetClass: 'la classe', quizLevel: 'le niveau', quizCourse: 'le cours',
+      quizLesson: 'la leçon', secondsPerQuestion: 'le temps par question', quizJsonFile: 'le fichier JSON du quiz' };
+
+    function showFile() {
+      var has = !!(file.files && file.files[0]);
+      if (fileName) fileName.textContent = has ? '✓ ' + file.files[0].name : 'Choisir ou déposer le fichier .json';
+      if (drop) { drop.classList.toggle('has-file', has); drop.classList.remove('is-invalid'); }
+      if (has && errorBox) errorBox.hidden = true;
+    }
+    if (file) file.addEventListener('change', showFile);
+    // Glisser-déposer le fichier sur la zone (une étiquette seule ne le reçoit pas).
+    if (drop && file) {
+      ['dragenter', 'dragover'].forEach(function (name) {
+        drop.addEventListener(name, function (event) { event.preventDefault(); drop.classList.add('is-dragover'); });
+      });
+      drop.addEventListener('dragleave', function () { drop.classList.remove('is-dragover'); });
+      drop.addEventListener('drop', function (event) {
+        event.preventDefault();
+        drop.classList.remove('is-dragover');
+        if (event.dataTransfer && event.dataTransfer.files.length) {
+          try { file.files = event.dataTransfer.files; } catch (e) { return; }
+          showFile();
+        }
       });
     }
 
+    // Message visible au lieu d'un clic « sans effet » quand un champ manque.
+    function check(needClass) {
+      var missing = [];
+      var first = null;
+      if (needClass && target && !target.value) { missing.push(labels.quizTargetClass); first = target; }
+      Array.prototype.forEach.call(form.querySelectorAll('select[required], input[required]'), function (field) {
+        if (field.checkValidity()) return;
+        missing.push(labels[field.id] || field.name);
+        first = first || field;
+      });
+      if (drop) drop.classList.toggle('is-invalid', !!(file && !file.checkValidity()));
+      if (!missing.length) { if (errorBox) errorBox.hidden = true; return true; }
+      if (errorBox) {
+        errorBox.textContent = 'Il manque : ' + missing.join(', ') + '.';
+        errorBox.hidden = false;
+      }
+      var focusTarget = first === file && drop ? drop : first;
+      if (focusTarget && focusTarget.scrollIntoView) focusTarget.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      if (first && first !== file) first.focus({ preventScroll: true });
+      return false;
+    }
+
+    function sendNow() {
+      // Envoi direct, sans requestSubmit (absent des anciens Safari) : on ajoute send_now=1.
+      confirmed = true;
+      var flag = document.createElement('input');
+      flag.type = 'hidden';
+      flag.name = 'send_now';
+      flag.value = '1';
+      form.appendChild(flag);
+      if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = 'Envoi…'; }
+      HTMLFormElement.prototype.submit.call(form);
+    }
+
+    form.setAttribute('novalidate', '');
+    var clicked = null;
+    Array.prototype.forEach.call(form.querySelectorAll('button[type="submit"]'), function (button) {
+      button.addEventListener('click', function () { clicked = button; });
+    });
     form.addEventListener('submit', function (event) {
-      var submitter = event.submitter;
-      if (!submitter || submitter.value !== '1' || confirmed) return;
+      if (confirmed) return;
+      var submitter = event.submitter || clicked;
+      clicked = null;
+      var sending = !submitter || submitter.id !== 'importDraftBtn';
+      if (!check(sending)) { event.preventDefault(); return; }
+      if (!sending) return;  // brouillon : envoi normal du formulaire
       event.preventDefault();
-      if (!target.value) {
-        target.setCustomValidity('Choisissez la classe qui recevra le quiz.');
-        target.reportValidity();
-        target.addEventListener('change', function () { target.setCustomValidity(''); }, { once: true });
+      if (!dialog || !dialog.showModal) {
+        if (window.confirm('Importer le quiz et l’envoyer à la classe choisie ?')) sendNow();
         return;
       }
-      if (!form.reportValidity()) return;
-      if (!dialog || !dialog.showModal) { confirmed = true; form.requestSubmit(sendBtn); return; }
       var option = target.options[target.selectedIndex];
       var students = Number(option.dataset.students || 0);
       var lessonName = lesson.options[lesson.selectedIndex].textContent.trim();
@@ -143,10 +203,9 @@
     if (dialog) {
       document.getElementById('importCancel').addEventListener('click', function () { dialog.close(); });
       document.getElementById('importConfirmBtn').addEventListener('click', function () {
-        confirmed = true;
         this.disabled = true;
         this.textContent = 'Envoi…';
-        form.requestSubmit(sendBtn);
+        sendNow();
       });
     }
   });

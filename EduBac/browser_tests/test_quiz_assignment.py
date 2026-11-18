@@ -285,3 +285,48 @@ class QuizAssignmentJourneyTests(StaticLiveServerTestCase):
         quiz = Quiz.objects.get()
         self.assertEqual((quiz.status, quiz.classroom, quiz.seconds_per_question), ('published', self.target, 40))
         self.assertEqual(set(QuizAssignment.objects.values_list('student__username', flat=True)), {'qa-omar', 'qa-salma'})
+
+    def test_send_without_file_explains_and_works_on_older_browsers(self):
+        self.errors = []
+        base = self.live_server_url
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(
+                executable_path=os.environ.get('CHROMIUM_EXECUTABLE') or shutil.which('chromium'),
+                headless=True, args=['--no-sandbox'])
+            try:
+                teacher = self.login(browser, 'qa-prof')
+                # Ancien Safari (iPhone) : ni requestSubmit, ni event.submitter.
+                teacher.add_init_script("""
+                    delete HTMLFormElement.prototype.requestSubmit;
+                    Object.defineProperty(SubmitEvent.prototype, 'submitter', { get() { return undefined; } });
+                """)
+                teacher.goto(base + reverse('quizzes:teacher_ai'))
+                teacher.locator('#quizTargetClass').select_option(str(self.target.pk))
+                teacher.locator('#quizLesson').select_option(str(self.lesson.pk))
+                # Sans fichier : un message clair, pas un clic sans effet.
+                teacher.locator('#importSendBtn').click()
+                expect(teacher.locator('#quizImportError')).to_be_visible()
+                expect(teacher.locator('#quizImportError')).to_contain_text('le fichier JSON du quiz')
+                expect(teacher.locator('.qi-drop')).to_have_class(re.compile('is-invalid'))
+                self.assertTrue(teacher.url.endswith(reverse('quizzes:teacher_ai')))  # rien n'a été envoyé
+                teacher.locator('#quizJsonFile').set_input_files({
+                    'name': 'equations.json', 'mimeType': 'application/json',
+                    'buffer': json.dumps(self.document, ensure_ascii=False).encode('utf-8')})
+                expect(teacher.locator('#quizImportError')).to_be_hidden()
+                teacher.locator('#importSendBtn').click()
+                teacher.locator('#importConfirm').get_by_role('button', name='Importer et envoyer').click()
+                teacher.wait_for_url(re.compile(re.escape(base + reverse('quizzes:manage')) + r'(#.*)?$'))
+                expect(teacher.locator('.alert-success')).to_contain_text('envoyé à la classe TC A : 2 élève(s) notifié(s)')
+                # Le bouton « brouillon » ne déclenche pas l'envoi.
+                teacher.goto(base + reverse('quizzes:teacher_ai'))
+                teacher.locator('#quizTargetClass').select_option(str(self.target.pk))
+                teacher.locator('#quizLesson').select_option(str(self.lesson.pk))
+                teacher.locator('#quizJsonFile').set_input_files({
+                    'name': 'equations.json', 'mimeType': 'application/json',
+                    'buffer': json.dumps(self.document, ensure_ascii=False).encode('utf-8')})
+                teacher.locator('#importDraftBtn').click()
+                teacher.wait_for_url(re.compile(r'\?quiz=\d+'))
+                self.assertEqual(self.errors, [])
+            finally:
+                browser.close()
+        self.assertEqual(sorted(Quiz.objects.values_list('status', flat=True)), ['draft', 'published'])
