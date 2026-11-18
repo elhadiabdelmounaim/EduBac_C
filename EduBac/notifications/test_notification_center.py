@@ -225,16 +225,30 @@ class NewEventTests(NotificationCenterBase):
         self.assertIn('1 élève(s)', alert.message)
         self.assertIn('Amal', alert.message)
 
-    def test_scheduled_publication_notifies_author(self):
+    def test_scheduled_publication_goes_to_the_chosen_class_and_notifies_author(self):
         draft = Quiz.objects.create(
             title='Programmé', lesson=self.lesson, created_by=self.teacher, status='draft',
-            publish_at=timezone.now() - timedelta(minutes=1),
+            publish_at=timezone.now() - timedelta(minutes=1), classroom=self.classroom,
         )
         self.login_as(self.teacher)
         self.client.get(reverse('quizzes:manage'))
         draft.refresh_from_db()
         self.assertEqual(draft.status, 'published')
+        self.assertEqual(set(draft.assignments.values_list('student', flat=True)), {self.student.pk, self.other.pk})
+        self.assertTrue(Notification.objects.filter(recipient=self.student, title='Nouveau quiz assigné').exists())
         self.assertTrue(Notification.objects.filter(recipient=self.teacher, title='Quiz publié').exists())
+
+    def test_scheduled_publication_without_class_stays_draft_and_warns_author(self):
+        draft = Quiz.objects.create(
+            title='Sans classe', lesson=self.lesson, created_by=self.teacher, status='draft',
+            publish_at=timezone.now() - timedelta(minutes=1),
+        )
+        self.login_as(self.teacher)
+        self.client.get(reverse('quizzes:manage'))
+        draft.refresh_from_db()
+        self.assertEqual(draft.status, 'draft', 'jamais publié pour personne')
+        self.assertIsNone(draft.publish_at)
+        self.assertTrue(Notification.objects.filter(recipient=self.teacher, title='Quiz non envoyé').exists())
 
 
 class HistoryPageTests(NotificationCenterBase):

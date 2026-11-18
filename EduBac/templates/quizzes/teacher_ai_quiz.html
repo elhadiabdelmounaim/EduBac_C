@@ -88,6 +88,19 @@
                                value="{{ selected_seconds_per_question|default:20 }}" required>
                         <div class="form-text">Ce temps s’applique à chaque question du quiz.</div>
                     </div>
+                    <div class="col-md-8">
+                        <label class="form-label fw-semibold" for="quizTargetClass">Classe destinataire</label>
+                        <select class="form-select" id="quizTargetClass" name="target_classroom">
+                            <option value="">— Choisir la classe —</option>
+                            {% for classroom in import_classrooms %}
+                            <option value="{{ classroom.pk }}" data-niveau="{{ classroom.niveau }}"
+                                    {% if selected_target_id == classroom.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ classroom.name }} · {{ classroom.get_niveau_display }} · {{ classroom.student_count }} élève{{ classroom.student_count|pluralize }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text" id="quizTargetHelp">Le quiz sera envoyé à cette classe après votre relecture et votre confirmation.</div>
+                    </div>
                 </div>
                 <label class="form-label fw-semibold" for="quizJsonFile">Choisir un fichier JSON</label>
                 <input class="form-control" type="file" id="quizJsonFile" name="quiz_json"
@@ -151,6 +164,11 @@
                 <a href="{% url 'quizzes:edit_questions' quiz_created.pk %}" class="btn btn-sm btn-outline-primary">
                     <i class="bi bi-pencil"></i> Modifier le quiz
                 </a>
+                {% if quiz_created.status != 'published' %}
+                <a href="#quizAssign" class="btn btn-sm btn-edubac">
+                    <i class="bi bi-send"></i> {% if quiz_created.classroom %}Confirmer l’envoi à {{ quiz_created.classroom.name }}{% else %}Choisir la classe et envoyer{% endif %}
+                </a>
+                {% endif %}
                 <a href="{% url 'quizzes:schedule' quiz_created.pk %}" class="btn btn-sm btn-outline-secondary">
                     <i class="bi bi-clock"></i> Programmer
                 </a>
@@ -216,6 +234,7 @@
                             {% for classroom in classrooms %}
                             <label class="qb-class-card{% if not classroom.can_receive %} is-disabled{% endif %}">
                                 <input type="radio" name="classroom" value="{{ classroom.pk }}" required
+                                       {% if classroom.pk == quiz_created.classroom_id and classroom.can_receive and quiz_created.status != 'published' %}checked{% endif %}
                                        data-name="{{ classroom.name }}" data-students="{{ classroom.student_count }}"
                                        {% if not classroom.can_receive %}disabled{% endif %}>
                                 <span class="qb-class-avatar" aria-hidden="true">{{ classroom.name|slice:":1"|upper }}</span>
@@ -274,7 +293,7 @@
 <link rel="stylesheet" href="/static/css/quiz-assign.css?v=1">
 {% endblock %}
 {% block extra_js %}
-<script src="/static/js/quiz-assign.js?v=1"></script>
+<script src="/static/js/quiz-assign.js?v=2"></script>
 <script>
 (() => {
     const level = document.getElementById('quizLevel');

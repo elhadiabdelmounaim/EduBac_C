@@ -302,3 +302,64 @@ class ImportedQuizClassListTests(QuizJsonImportTests):
         page = self.client.get(self.post_json(document, selected_lesson=lesson)['Location'])
         self.assertContains(page, 'Autre niveau : ce quiz ne peut pas lui être affecté')
         self.assertContains(page, 'aucune de vos classes n’est à ce niveau')
+
+
+class QuizGoesToTheChosenClassTests(QuizJsonImportTests):
+    """La classe choisie à la création est celle qui reçoit le quiz, et elle seule."""
+
+    def post_with_class(self, classroom):
+        content = json.dumps(self.document, ensure_ascii=False).encode('utf-8')
+        return self.client.post(self.url, {
+            'action': 'import_json', 'niveau': self.lesson.course.niveau, 'course': self.lesson.course_id,
+            'lesson': self.lesson.pk, 'seconds_per_question': 20, 'generation_id': str(uuid.uuid4()),
+            'target_classroom': classroom.pk if classroom else '',
+            'quiz_json': SimpleUploadedFile('quiz.json', content, content_type='application/json'),
+        })
+
+    def test_class_chosen_at_import_is_remembered_but_nothing_is_sent_before_confirmation(self):
+        response = self.post_with_class(self.classroom)
+        quiz = Quiz.objects.get()
+        self.assertEqual(quiz.classroom, self.classroom)
+        self.assertEqual(quiz.status, 'draft')
+        self.assertFalse(QuizAssignment.objects.exists())
+        page = self.client.get(response['Location'])
+        self.assertContains(page, f'Confirmer l’envoi à {self.classroom.name}')
+        self.assertRegex(page.content.decode(), rf'value="{self.classroom.pk}" required\s+checked')
+
+    def test_class_of_another_level_or_teacher_is_refused_at_import(self):
+        other_teacher = User.objects.create_user(username='autre-prof', email='ap@example.test', role='teacher')
+        foreign = Classroom.objects.create(name='Autre', niveau='tronc_commun', teacher=other_teacher)
+        wrong_level = Classroom.objects.create(name='SM', niveau='1ere_bac_sm', teacher=self.teacher)
+        for classroom in (foreign, wrong_level):
+            self.post_with_class(classroom)
+        self.assertFalse(Quiz.objects.exists())
+
+    def test_publish_button_sends_to_the_remembered_class_only(self):
+        self.post_with_class(self.classroom)
+        quiz = Quiz.objects.get()
+        response = self.client.post(reverse('quizzes:publish', args=[quiz.pk]))
+        self.assertRedirects(response, reverse('quizzes:manage'), fetch_redirect_response=False)
+        quiz.refresh_from_db()
+        self.assertEqual(quiz.status, 'published')
+        self.assertEqual(list(QuizAssignment.objects.values_list('student', flat=True)), [self.student.pk])
+
+    def test_publish_without_class_asks_for_one_instead_of_publishing_to_nobody(self):
+        self.post_with_class(None)
+        quiz = Quiz.objects.get()
+        response = self.client.post(reverse('quizzes:publish', args=[quiz.pk]))
+        self.assertEqual(response['Location'], f"{reverse('quizzes:teacher_ai')}?quiz={quiz.pk}#quizAssign")
+        quiz.refresh_from_db()
+        self.assertEqual(quiz.status, 'draft')
+        self.assertFalse(QuizAssignment.objects.exists())
+
+    def test_scheduling_requires_and_remembers_the_class(self):
+        self.post_with_class(None)
+        quiz = Quiz.objects.get()
+        url = reverse('quizzes:schedule', args=[quiz.pk])
+        self.client.post(url, {'publish_at': '2030-01-01T08:00'})
+        quiz.refresh_from_db()
+        self.assertIsNone(quiz.publish_at)
+        self.client.post(url, {'publish_at': '2030-01-01T08:00', 'classroom': self.other_class.pk})
+        quiz.refresh_from_db()
+        self.assertEqual(quiz.classroom, self.other_class)
+        self.assertIsNotNone(quiz.publish_at)

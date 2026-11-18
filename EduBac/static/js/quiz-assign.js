@@ -32,3 +32,39 @@
     });
   });
 })();
+
+/** Formulaire d'import : seules les classes du niveau choisi sont proposées. */
+(function () {
+  'use strict';
+  document.addEventListener('DOMContentLoaded', function () {
+    var level = document.getElementById('quizLevel');
+    var target = document.getElementById('quizTargetClass');
+    var help = document.getElementById('quizTargetHelp');
+    if (!level || !target) return;
+    var defaultHelp = help ? help.textContent : '';
+    function filter() {
+      var visible = 0;
+      Array.prototype.forEach.call(target.options, function (option) {
+        if (!option.value) return;
+        var ok = !level.value || option.dataset.niveau === level.value;
+        option.hidden = !ok;
+        option.disabled = !ok;
+        if (ok) visible += 1;
+        if (!ok && option.selected) target.value = '';
+      });
+      // Une seule classe à ce niveau : elle est choisie d'office.
+      if (level.value && visible === 1 && !target.value) {
+        var only = Array.prototype.find.call(target.options, function (o) { return o.value && !o.disabled; });
+        if (only) target.value = only.value;
+      }
+      if (help) {
+        help.textContent = level.value && !visible
+          ? 'Aucune de vos classes n’est à ce niveau : vous pourrez choisir la classe plus tard.'
+          : defaultHelp;
+        help.classList.toggle('text-danger', !!(level.value && !visible));
+      }
+    }
+    level.addEventListener('change', filter);
+    filter();
+  });
+})();

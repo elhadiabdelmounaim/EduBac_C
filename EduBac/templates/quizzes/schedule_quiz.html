@@ -11,7 +11,21 @@
         <label class="form-label fw-semibold">Date et heure de publication</label>
         <input type="datetime-local" name="publish_at" class="form-control"
                value="{% if quiz.publish_at %}{{ quiz.publish_at|date:'Y-m-d\\TH:i' }}{% endif %}">
-        <div class="form-text">Le quiz restera en brouillon jusqu'à cette date, puis sera publié automatiquement.</div>
+        <div class="form-text">Le quiz restera en brouillon jusqu'à cette date, puis sera envoyé automatiquement.</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold" for="scheduleClass">Classe destinataire</label>
+        <select name="classroom" id="scheduleClass" class="form-select">
+          <option value="">— Choisir la classe —</option>
+          {% for classroom in schedule_classrooms %}
+          <option value="{{ classroom.pk }}" {% if classroom.pk == quiz.classroom_id %}selected{% endif %}>
+            {{ classroom.name }} · {{ classroom.student_count }} élève{{ classroom.student_count|pluralize }}
+          </option>
+          {% empty %}
+          <option value="" disabled>Aucune classe de ce niveau</option>
+          {% endfor %}
+        </select>
+        <div class="form-text">Seuls les élèves de cette classe recevront le quiz et une notification.</div>
       </div>
       <button type="submit" class="btn btn-edubac">Enregistrer</button>
       <a href="{% url 'quizzes:manage' %}" class="btn btn-link">Annuler</a>

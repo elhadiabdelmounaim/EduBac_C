@@ -114,16 +114,29 @@ def notify_attempt_comment(attempt):
     )
 
 
-def notify_quiz_published(quiz):
-    if quiz.created_by_id:
+def notify_quiz_published(quiz, failed=False):
+    if not quiz.created_by_id:
+        return
+    if failed:
+        # Publication programmée impossible (aucune classe valide) : le quiz reste en brouillon.
         notify_user(
             user=quiz.created_by,
-            title='Quiz publié',
-            message=f'La publication programmée du quiz « {quiz.title} » a eu lieu.',
+            title='Quiz non envoyé',
+            message=f'« {quiz.title} » n’a pas été publié : choisissez une classe avec des élèves.',
             type='system',
-            link=reverse('quizzes:manage'),
+            link=f"{reverse('quizzes:teacher_ai')}?quiz={quiz.pk}#quizAssign",
             send_email=False,
         )
+        return
+    where = f' à la classe {quiz.classroom.name}' if quiz.classroom_id else ''
+    notify_user(
+        user=quiz.created_by,
+        title='Quiz publié',
+        message=f'La publication programmée du quiz « {quiz.title} »{where} a eu lieu.',
+        type='system',
+        link=reverse('quizzes:manage'),
+        send_email=False,
+    )
 
 
 # ─── Classes et comptes ──────────────────────────────────────────────────────

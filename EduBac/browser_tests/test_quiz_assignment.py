@@ -181,3 +181,61 @@ class QuizAssignmentJourneyTests(StaticLiveServerTestCase):
         notified = set(Notification.objects.filter(title='Nouveau quiz assigné').values_list(
             'recipient__username', flat=True))
         self.assertEqual(notified, {'qa-omar', 'qa-salma'})
+
+    def test_class_chosen_in_the_import_form_receives_the_quiz(self):
+        self.errors = []
+        base = self.live_server_url
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(
+                executable_path=os.environ.get('CHROMIUM_EXECUTABLE') or shutil.which('chromium'),
+                headless=True, args=['--no-sandbox'])
+            try:
+                teacher = self.login(browser, 'qa-prof')
+                teacher.goto(base + reverse('quizzes:teacher_ai'))
+                target = teacher.locator('#quizTargetClass')
+                teacher.locator('#quizLevel').select_option('tronc_commun')
+                # Seules les classes du niveau choisi sont proposées.
+                options = target.locator('option:not([disabled]):not([value=""])')
+                expect(options).to_have_count(3)
+                expect(target.locator(f'option[value="{self.other_level.pk}"]')).to_be_disabled()
+                target.select_option(str(self.other.pk))
+                teacher.locator('#quizCourse').select_option(str(self.course.pk))
+                teacher.locator('#quizLesson').select_option(str(self.lesson.pk))
+                teacher.locator('#quizJsonFile').set_input_files({
+                    'name': 'quiz.json', 'mimeType': 'application/json',
+                    'buffer': json.dumps(self.document, ensure_ascii=False).encode('utf-8')})
+                teacher.get_by_role('button', name='Valider et créer le brouillon').click()
+                teacher.wait_for_url(re.compile(r'\?quiz=\d+$'))
+                quiz_id = int(re.search(r'\?quiz=(\d+)$', teacher.url).group(1))
+                expect(teacher.locator('.alert-success')).to_contain_text('Brouillon créé pour la classe TC B')
+
+                # Raccourci vers l'envoi : la classe choisie est déjà sélectionnée.
+                teacher.get_by_role('link', name='Confirmer l’envoi à TC B').click()
+                expect(teacher.locator(f'#classroomChoices input[value="{self.other.pk}"]')).to_be_checked()
+                teacher.get_by_role('button', name='Affecter le quiz à cette classe').click()
+                expect(teacher.locator('#assignConfirm')).to_contain_text('TC B')
+                teacher.locator('#assignConfirm').get_by_role('button', name='Confirmer l’affectation').click()
+                # Le navigateur garde l'ancre #quizAssign après la redirection.
+                teacher.wait_for_url(re.compile(re.escape(base + reverse('quizzes:manage')) + r'(#.*)?$'))
+                expect(teacher.locator('.alert-success')).to_contain_text('envoyé à la classe TC B')
+
+                yassine = self.login(browser, 'qa-yassine')
+                expect(yassine.locator('#notifBadge')).to_have_text('1', timeout=10000)
+                yassine.goto(base + reverse('quizzes:assigned'))
+                expect(yassine.locator('main h2', has_text='Équations — import')).to_be_visible()
+                omar = self.login(browser, 'qa-omar')
+                omar.goto(base + reverse('quizzes:assigned'))
+                expect(omar.locator('main h2', has_text='Équations — import')).to_have_count(0)
+                omar.goto(base + reverse('quizzes:detail', args=[quiz_id]))
+                self.assertIn(reverse('quizzes:assigned'), omar.url)
+
+                # « Mes quiz » : un brouillon avec classe s'envoie à cette classe, sans en changer.
+                teacher.goto(base + reverse('quizzes:manage'))
+                expect(teacher.locator('td', has_text='TC B').first).to_be_visible()
+                self.assertEqual(self.errors, [])
+            finally:
+                browser.close()
+        quiz = Quiz.objects.get(pk=quiz_id)
+        self.assertEqual(quiz.classroom, self.other)
+        self.assertEqual(list(QuizAssignment.objects.filter(quiz=quiz).values_list('student__username', flat=True)),
+                         ['qa-yassine'])
