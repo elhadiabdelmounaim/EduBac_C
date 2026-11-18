@@ -179,60 +179,102 @@
                 {% endfor %}
             </ol>
         </div>
-        <div class="qb-detail-card__foot">
-            <form method="post" id="sendQuizForm">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="send">
-                <input type="hidden" name="quiz_id" value="{{ quiz_created.pk }}">
-                <div class="row g-3 mb-3 align-items-end">
-                    <div class="col-md-5">
-                        <label class="form-label small fw-semibold" for="classroomSelect">
-                            Classe concernée <span class="text-danger">*</span>
-                        </label>
-                        <select name="classroom" id="classroomSelect" class="form-select" required>
-                            <option value="">— Choisir une classe —</option>
-                            {% for classroom in classrooms %}
-                            {% if classroom.matches_level %}
-                            <option value="{{ classroom.pk }}">{{ classroom.name }} ({{ classroom.code }})</option>
+        <div class="qb-detail-card__foot qb-assign" id="quizAssign">
+            <h3 class="h5 mb-1"><i class="bi bi-send-check" aria-hidden="true"></i> Affecter le quiz à une classe</h3>
+            <p class="text-muted small mb-3">Seuls les élèves de la classe choisie verront ce quiz et recevront une notification.</p>
+            <div class="qb-assign-grid">
+                <aside class="qb-assign-summary" aria-labelledby="quizSummaryTitle">
+                    <h4 class="qb-assign-label" id="quizSummaryTitle">Récapitulatif</h4>
+                    <dl>
+                        <div><dt>Quiz</dt><dd>{{ quiz_created.title }}</dd></div>
+                        <div><dt>Niveau</dt><dd>{{ quiz_level_label }}</dd></div>
+                        <div><dt>Leçon</dt><dd>{{ quiz_created.lesson.title }}</dd></div>
+                        <div><dt>Questions</dt><dd>{{ quiz_summary.questions }}</dd></div>
+                        <div><dt>Temps</dt><dd>{{ quiz_created.seconds_per_question }} s par question · {{ quiz_summary.duration }} au total</dd></div>
+                        <div><dt>Points</dt><dd>{{ quiz_summary.points|floatformat:"-2" }}</dd></div>
+                        <div><dt>Difficulté</dt><dd>{{ quiz_created.get_difficulty_display }}</dd></div>
+                        <div><dt>État</dt><dd>
+                            {% if quiz_summary.assigned_classroom %}
+                            <span class="qb-state is-published">Déjà affecté à {{ quiz_summary.assigned_classroom.name }} ({{ quiz_summary.assigned_students }} élève{{ quiz_summary.assigned_students|pluralize }})</span>
                             {% else %}
-                            <option value="" disabled>{{ classroom.name }} — {{ classroom.get_niveau_display }} (autre niveau)</option>
+                            <span class="qb-state">Brouillon, pas encore envoyé</span>
                             {% endif %}
+                        </dd></div>
+                    </dl>
+                    <a href="{% url 'quizzes:edit_questions' quiz_created.pk %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-pencil"></i> Modifier avant publication
+                    </a>
+                </aside>
+
+                <form method="post" id="sendQuizForm" class="qb-assign-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="send">
+                    <input type="hidden" name="quiz_id" value="{{ quiz_created.pk }}">
+                    <fieldset>
+                        <legend class="qb-assign-label">Classe destinataire <span class="text-danger">*</span></legend>
+                        <div class="qb-class-list" id="classroomChoices">
+                            {% for classroom in classrooms %}
+                            <label class="qb-class-card{% if not classroom.can_receive %} is-disabled{% endif %}">
+                                <input type="radio" name="classroom" value="{{ classroom.pk }}" required
+                                       data-name="{{ classroom.name }}" data-students="{{ classroom.student_count }}"
+                                       {% if not classroom.can_receive %}disabled{% endif %}>
+                                <span class="qb-class-avatar" aria-hidden="true">{{ classroom.name|slice:":1"|upper }}</span>
+                                <span class="qb-class-body">
+                                    <strong>{{ classroom.name }}</strong>
+                                    <span class="qb-class-meta">{{ classroom.get_niveau_display }} · code {{ classroom.code }}</span>
+                                    {% if not classroom.matches_level %}
+                                    <span class="qb-class-warn">Autre niveau : ce quiz ne peut pas lui être affecté</span>
+                                    {% elif not classroom.student_count %}
+                                    <span class="qb-class-warn">Aucun élève inscrit</span>
+                                    {% endif %}
+                                </span>
+                                <span class="qb-class-count" title="Élèves inscrits">
+                                    <i class="bi bi-people" aria-hidden="true"></i> {{ classroom.student_count }}
+                                    <span class="visually-hidden">élève{{ classroom.student_count|pluralize }}</span>
+                                </span>
+                                <i class="bi bi-check-circle-fill qb-class-check" aria-hidden="true"></i>
+                            </label>
                             {% empty %}
-                            <option value="" disabled>Aucune classe — créez-en une d’abord</option>
+                            <p class="qb-class-empty">Vous n’avez encore aucune classe. <a href="{% url 'classrooms:list' %}">Créer une classe</a></p>
                             {% endfor %}
-                        </select>
+                        </div>
                         {% if classrooms and not matching_classrooms %}
                         <div class="form-text text-danger" role="alert">
                             Ce quiz est rattaché au niveau « {{ quiz_level_label }} », et aucune de vos classes n’est à ce niveau.
                             Réimportez-le en choisissant la leçon du niveau de votre classe.
                         </div>
-                        {% else %}
-                        <div class="form-text">Quiz de niveau « {{ quiz_level_label }} ». Seuls les élèves inscrits dans la classe choisie recevront le quiz.</div>
                         {% endif %}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold" for="deadlineInput">Date limite (facultative)</label>
-                        <input type="datetime-local" name="deadline" id="deadlineInput" class="form-control">
-                    </div>
-                    <div class="col-md-3">
-                        <button type="submit" class="btn btn-edubac w-100">
-                            <i class="bi bi-send"></i> Publier et affecter
-                        </button>
-                    </div>
-                </div>
-                <a href="{% url 'quizzes:edit_questions' quiz_created.pk %}" class="btn btn-outline-primary btn-sm">
-                    <i class="bi bi-pencil"></i> Modifier avant publication
-                </a>
-            </form>
+                    </fieldset>
+                    <label class="form-label small fw-semibold mt-3" for="deadlineInput">Date limite (facultative)</label>
+                    <input type="datetime-local" name="deadline" id="deadlineInput" class="form-control">
+                    <button type="submit" class="btn btn-edubac w-100 mt-3" id="assignQuizBtn">
+                        <i class="bi bi-send"></i> Affecter le quiz à cette classe
+                    </button>
+                </form>
+            </div>
         </div>
+        <dialog class="qb-confirm" id="assignConfirm" aria-labelledby="assignConfirmTitle">
+            <h3 class="h5" id="assignConfirmTitle">Confirmer l’affectation</h3>
+            <p id="assignConfirmText"></p>
+            <ul class="small text-muted">
+                <li>Le quiz sera publié et visible uniquement par les élèves de cette classe.</li>
+                <li>Chaque élève recevra une notification « Nouveau quiz ».</li>
+            </ul>
+            <div class="d-flex gap-2 justify-content-end">
+                <button type="button" class="btn btn-outline-secondary" id="assignCancel">Annuler</button>
+                <button type="button" class="btn btn-edubac" id="assignConfirmBtn">Confirmer l’affectation</button>
+            </div>
+        </dialog>
     </section>
     {% endif %}
 </main>
 {% endblock %}
 {% block extra_css %}
 {% include "includes/katex.html" %}
+<link rel="stylesheet" href="/static/css/quiz-assign.css?v=1">
 {% endblock %}
 {% block extra_js %}
+<script src="/static/js/quiz-assign.js?v=1"></script>
 <script>
 (() => {
     const level = document.getElementById('quizLevel');

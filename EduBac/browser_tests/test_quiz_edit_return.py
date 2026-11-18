@@ -1,3 +1,4 @@
+import os
 import re
 import shutil
 from tempfile import TemporaryDirectory
@@ -35,12 +36,12 @@ class QuizEditReturnBrowserTests(StaticLiveServerTestCase):
             preview_url = self.live_server_url + reverse('quizzes:teacher_ai') + f'?quiz={quiz.pk}'
             with sync_playwright() as pw, patch('ai.services.AIService.generate_quiz_from_lesson') as generate:
                 browser = pw.chromium.launch(
-                    executable_path=shutil.which('chromium'), headless=True, args=['--no-sandbox'],
+                    executable_path=os.environ.get('CHROMIUM_EXECUTABLE') or shutil.which('chromium'), headless=True, args=['--no-sandbox'],
                 )
                 try:
                     page = browser.new_page()
                     page.goto(self.live_server_url + reverse('accounts:login'))
-                    page.locator('input[name="email"]').fill(teacher.email)
+                    page.locator('input[name="username"]').fill(teacher.username)
                     page.locator('input[name="password"]').fill('Browser-test-only-123!')
                     page.get_by_role('button', name='Se connecter', exact=True).click()
                     page.wait_for_url(self.live_server_url + reverse('accounts:dashboard'))

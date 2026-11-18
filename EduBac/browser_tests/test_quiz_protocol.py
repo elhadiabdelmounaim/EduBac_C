@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import shutil
 from unittest.mock import patch
@@ -68,9 +69,12 @@ class QuizJsonImportBrowserTests(StaticLiveServerTestCase):
         }
         base_url = self.live_server_url
 
+        usernames = {user.email: user.username for user in (teacher, student, outsider)}
+
         def log_in(page, email):
+            # Connexion par nom d'utilisateur depuis le commit de72037.
             page.goto(base_url + reverse('accounts:login'))
-            page.locator('[name="email"]').fill(email)
+            page.locator('[name="username"]').fill(usernames[email])
             page.locator('[name="password"]').fill('Browser-test-only-123!')
             page.get_by_role('button', name='Se connecter', exact=True).click()
             page.wait_for_url(base_url + reverse('accounts:dashboard'))
@@ -80,7 +84,7 @@ class QuizJsonImportBrowserTests(StaticLiveServerTestCase):
             side_effect=AssertionError('Le flux JSON ne doit pas appeler l’IA.'),
         ), sync_playwright() as pw:
             browser = pw.chromium.launch(
-                executable_path=shutil.which('chromium'),
+                executable_path=os.environ.get('CHROMIUM_EXECUTABLE') or shutil.which('chromium'),
                 headless=True,
                 args=['--no-sandbox'],
             )
@@ -139,8 +143,9 @@ class QuizJsonImportBrowserTests(StaticLiveServerTestCase):
                 ))
                 expect(teacher_page.get_by_text('50 s/question')).to_be_visible()
 
-                teacher_page.locator('#classroomSelect').select_option(str(classroom.pk))
-                teacher_page.get_by_role('button', name='Publier et affecter').click()
+                teacher_page.locator(f'#classroomChoices label:has(input[value="{classroom.pk}"])').click()
+                teacher_page.get_by_role('button', name='Affecter le quiz à cette classe').click()
+                teacher_page.locator('#assignConfirm').get_by_role('button', name='Confirmer l’affectation').click()
                 teacher_page.wait_for_url(base_url + reverse('quizzes:manage'))
 
                 student_context = browser.new_context(viewport={'width': 1280, 'height': 1000})
