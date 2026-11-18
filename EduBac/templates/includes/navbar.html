@@ -74,6 +74,10 @@
                     <div id="notifList" class="notif-list" style="max-height:360px;overflow-y:auto;">
                         <div class="px-3 py-4 text-center text-muted small">Chargement…</div>
                     </div>
+                    <div class="d-flex justify-content-between px-3 py-2 border-top small">
+                        <a href="{% url 'notifications:history' %}" class="text-decoration-none">Voir tout l’historique</a>
+                        <a href="{% url 'notifications:preferences' %}" class="text-decoration-none">Préférences</a>
+                    </div>
                 </div>
             </div>
 

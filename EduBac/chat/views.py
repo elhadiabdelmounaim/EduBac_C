@@ -1,9 +1,7 @@
 import json
-import mimetypes
-from pathlib import Path
 from datetime import timedelta
 
-from django.http import FileResponse, Http404, JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
@@ -15,22 +13,30 @@ from accounts.decorators import login_required_simple
 from classrooms.models import Classroom, ClassroomMember
 from accounts.models import User
 
+from . import realtime
+from .attachments import AttachmentError, serve_attachment, validate_upload
+from .conversation_api import conversation_messages_response, parse_send_request
 from .models import (
+    EDIT_WINDOW_SECONDS,
     ClassChatRoom,
+    ChatBlock,
     ChatMessage,
     ChatPresence,
     DirectConversation,
-    DirectMessage,
     PrivateConversation,
     PrivateMessage,
 )
+from .payloads import conversation_message_payload, parse_since
 from .permissions import (
+    accessible_direct_conversations,
+    can_moderate_classroom,
+    class_post_restriction,
     classrooms_for_user,
-    direct_conversation_start_context,
     direct_conversations_for,
     get_edubac_user,
     is_platform_admin,
     platform_admin_user,
+    student_quiet_hours_restriction,
     user_can_access_classroom,
     user_can_access_direct_conversation,
 )
@@ -49,6 +55,25 @@ def _require_access(request, classroom_id):
     return user, classroom, None
 
 
+def _last_message_preview(last, user):
+    """Aperçu du dernier message pour la liste des conversations."""
+    if not last:
+        return ''
+    if last.body:
+        text = last.body[:100]
+    elif last.is_voice:
+        text = '🎤 Message vocal'
+    elif last.attachment and last.is_image:
+        text = '📷 Photo'
+    elif last.attachment:
+        text = '📎 ' + (last.attachment_name or 'Fichier')
+    else:
+        text = ''
+    if text and user and last.sender_id == user.pk:
+        return 'Vous : ' + text
+    return text
+
+
 def _room_payload(room, user):
     last = room.last_message()
     classroom = room.classroom
@@ -61,12 +86,9 @@ def _room_payload(room, user):
         'niveau': classroom.get_niveau_display(),
         'members_count': members_count,
         'unread': room.unread_count_for(user),
-        'last_message': (
-            (last.body[:80] if last and last.body else '')
-            or (('📎 ' + last.attachment_name) if last and last.attachment else '')
-        ),
+        'last_message': _last_message_preview(last, user),
         'last_message_time': (
-            last.created_at.strftime('%H:%M') if last else ''
+            timezone.localtime(last.created_at).strftime('%H:%M') if last else ''
         ),
         'last_message_at': last.created_at.isoformat() if last else '',
         'last_message_date': (
@@ -140,10 +162,7 @@ def _direct_conversation_payload(conversation, user, now=None):
         'name': name,
         'subtitle': class_label,
         'kind': 'direct',
-        'last_message': (
-            (last.body[:100] if last and last.body else '')
-            or (('📎 ' + last.attachment_name) if last and last.attachment else '')
-        ),
+        'last_message': _last_message_preview(last, user),
         'last_message_time': (
             timezone.localtime(last.created_at).strftime('%d/%m %H:%M')
             if last else ''
@@ -178,10 +197,7 @@ def _consultation_payload(conversation, user, now=None):
         'name': name,
         'subtitle': subtitle,
         'kind': 'consultation',
-        'last_message': (
-            (last.body[:100] if last and last.body else '')
-            or (('📎 ' + last.attachment_name) if last and last.attachment else '')
-        ),
+        'last_message': _last_message_preview(last, user),
         'last_message_time': (
             timezone.localtime(last.created_at).strftime('%d/%m %H:%M')
             if last else ''
@@ -215,17 +231,27 @@ def _messaging_context(user, active_tab='groups'):
             DirectConversation.get_or_create_for(user, admin)
 
     conversations = []
-    for conversation in direct_conversations_for(user):
-        if user_can_access_direct_conversation(user, conversation):
-            item = _direct_conversation_payload(conversation, user, now)
-            if item:
-                conversations.append(item)
+    for conversation in accessible_direct_conversations(user):
+        item = _direct_conversation_payload(conversation, user, now)
+        if item:
+            conversations.append(item)
     for conversation in _private_conversations_for(user):
         conversations.append(_consultation_payload(conversation, user, now))
     conversations.sort(key=lambda item: item['last_message_at'], reverse=True)
+    rooms.sort(key=lambda item: item['last_message_at'], reverse=True)
+    # Liste unique (classes et conversations privées) triée par activité.
+    threads = [
+        {**room, 'kind': 'class', 'id': room['classroom_id'],
+         'url': reverse('chat:room', args=[room['classroom_id']]),
+         'subtitle': room['niveau']}
+        for room in rooms
+    ] + conversations
+    threads.sort(key=lambda item: item['last_message_at'] or '', reverse=True)
     return {
         'rooms': rooms,
         'conversations': conversations,
+        'threads': threads,
+        'unread_threads': sum(1 for item in threads if item['unread']),
         'class_options': [{'id': classroom.pk, 'name': classroom.name} for classroom in classrooms],
         'is_admin': is_platform_admin(user),
         'is_teacher': user.is_teacher(),
@@ -238,24 +264,8 @@ def _messaging_context(user, active_tab='groups'):
     }
 
 
-def _private_message_payload(message):
-    sender = message.sender
-    return {
-        'id': message.pk,
-        'body': message.body,
-        'sender_id': sender.pk,
-        'sender_name': sender.get_full_name() or sender.username,
-        'created_at': message.created_at.isoformat(),
-        'time_display': timezone.localtime(message.created_at).strftime('%d/%m/%Y %H:%M'),
-        'is_read': message.read_at is not None,
-        'is_voice': message.is_voice,
-        'is_image': message.is_image,
-        'attachment_url': (
-            reverse('chat:private_attachment', args=[message.pk])
-            if message.attachment else ''
-        ),
-        'attachment_name': message.attachment_name,
-    }
+def _private_message_payload(message, user=None):
+    return conversation_message_payload(message, user, 'chat:private_attachment')
 
 
 @login_required_simple
@@ -283,15 +293,9 @@ def chat_room(request, classroom_id):
     if classroom.teacher_id in online_ids:
         online_count += 1
 
-    classes = classrooms_for_user(user)
-    rooms_data = []
-    for c in classes:
-        r = ClassChatRoom.get_or_create_for(c)
-        rooms_data.append(_room_payload(r, user))
-    rooms_data.sort(key=lambda r: r.get('last_message_at') or '', reverse=True)
-
     return render(request, 'chat/room.html', {
-        'rooms': rooms_data,
+        **_messaging_context(user),
+        'active_thread': f'class-{classroom.pk}',
         'active_classroom': classroom,
         'active_room': room,
         'members_count': classroom.members.count() + (1 if classroom.teacher_id else 0),
@@ -322,30 +326,54 @@ def api_messages(request, classroom_id):
     if err:
         return err
     room = ClassChatRoom.get_or_create_for(classroom)
+    server_time = timezone.now()
 
     after_id = request.GET.get('after_id')
-    qs = room.messages.select_related('sender').order_by('created_at')
+    qs = room.messages.select_related(
+        'sender', 'reply_to__sender', 'whiteboard_share',
+    ).order_by('created_at')
     if after_id:
         try:
-            qs = qs.filter(pk__gt=int(after_id))
+            after_id = int(after_id)
         except (TypeError, ValueError):
-            pass
+            return JsonResponse({'error': 'Identifiant de message invalide.'}, status=400)
+        messages_list = list(qs.filter(pk__gt=after_id)[:50])
+        # Messages déjà affichés qui ont été modifiés, supprimés ou épinglés depuis.
+        since = parse_since(request.GET.get('since'))
+        if since:
+            messages_list = list(
+                qs.filter(pk__lte=after_id, updated_at__gt=since)[:100]
+            ) + messages_list
+        extra = {}
     else:
         # Derniers 100 messages au chargement
-        qs = qs.order_by('-created_at')[:100]
-        messages_list = list(reversed(list(qs)))
-        return JsonResponse({
-            'messages': [m.to_dict() for m in messages_list],
-            'classroom_id': classroom.pk,
+        messages_list = list(reversed(list(qs.order_by('-created_at')[:100])))
+        extra = {
             'classroom_name': classroom.name,
             'members_count': classroom.members.count(),
-        })
-
-    messages_list = list(qs[:50])
+        }
     return JsonResponse({
-        'messages': [m.to_dict() for m in messages_list],
+        'messages': [m.to_dict(user) for m in messages_list],
         'classroom_id': classroom.pk,
+        'server_time': server_time.isoformat(),
+        'room': _room_state(room, user),
+        **extra,
     })
+
+
+def _room_state(room, user):
+    """Ce que l'utilisateur peut faire dans le salon, pour adapter l'interface."""
+    restriction = class_post_restriction(user, room)
+    return {
+        'can_post': not restriction,
+        'restriction': restriction,
+        'can_moderate': can_moderate_classroom(user, room.classroom),
+        'is_locked': room.is_locked,
+        'allow_student_direct': room.allow_student_direct,
+        'quiet_hours_start': room.quiet_hours_start.strftime('%H:%M') if room.quiet_hours_start else '',
+        'quiet_hours_end': room.quiet_hours_end.strftime('%H:%M') if room.quiet_hours_end else '',
+        'edit_window_seconds': EDIT_WINDOW_SECONDS,
+    }
 
 
 @login_required_simple
@@ -354,25 +382,14 @@ def attachment(request, message_id):
     message = get_object_or_404(
         ChatMessage.objects.select_related('room__classroom'),
         pk=message_id,
+        deleted_at__isnull=True,
     )
     _, _, err = _require_access(request, message.room.classroom_id)
     if err:
         return err
-    if not message.attachment:
-        raise Http404
-    try:
-        handle = message.attachment.open('rb')
-    except FileNotFoundError:
-        raise Http404
-    content_type = mimetypes.guess_type(message.attachment_name)[0]
-    response = FileResponse(
-        handle,
-        content_type=content_type or 'application/octet-stream',
-        filename=message.attachment_name,
+    return serve_attachment(
+        message.attachment, message.attachment_name, legacy_media_fallback=True,
     )
-    response['Cache-Control'] = 'private, no-store'
-    response['X-Content-Type-Options'] = 'nosniff'
-    return response
 
 
 @login_required_simple
@@ -422,57 +439,38 @@ def api_send(request, classroom_id):
         return JsonResponse({'error': 'Message vide.'}, status=400)
     if len(body) > 4000:
         return JsonResponse({'error': 'Message trop long (max 4000).'}, status=400)
-    if is_announcement and not (
-        is_platform_admin(user)
-        or (user.is_teacher() and classroom.teacher_id == user.pk)
-    ):
+    restriction = class_post_restriction(user, room)
+    if restriction:
+        return JsonResponse({'error': restriction}, status=403)
+    if is_announcement and not can_moderate_classroom(user, classroom):
         return JsonResponse(
             {'error': 'Seuls le professeur de la classe et l’administration peuvent publier une annonce.'},
             status=403,
         )
 
+    attachment_name = ''
     if upload:
-        if upload.size > 10 * 1024 * 1024:
-            return JsonResponse({'error': 'Fichier trop volumineux (max 10 Mo).'}, status=400)
-        allowed_ext = (
-            '.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp',
-            '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt', '.zip',
-            '.webm', '.ogg', '.mp3', '.wav', '.m4a',
-        )
-        name_lower = (upload.name or '').lower()
-        if not any(name_lower.endswith(ext) for ext in allowed_ext):
-            # voice blobs sometimes have no extension
-            if not is_voice:
-                return JsonResponse({
-                    'error': 'Type de fichier non autorisé.'
-                }, status=400)
-        if is_voice or any(name_lower.endswith(e) for e in ('.webm', '.ogg', '.mp3', '.wav', '.m4a')):
-            is_voice = True
+        try:
+            attachment_name, is_voice = validate_upload(upload, is_voice=is_voice)
+        except AttachmentError as exc:
+            return JsonResponse({'error': str(exc)}, status=400)
+        upload.name = attachment_name
 
     msg = ChatMessage.objects.create(
         room=room,
         sender=user,
         body=body,
         attachment=upload if upload else None,
-        reply_to=reply_to,
+        reply_to=reply_to if reply_to and not reply_to.is_deleted else None,
         is_voice=is_voice,
         is_announcement=is_announcement,
     )
     room.mark_read(user)
-
-    try:
-        from asgiref.sync import async_to_sync
-        from channels.layers import get_channel_layer
-        layer = get_channel_layer()
-        if layer:
-            async_to_sync(layer.group_send)(
-                f'chat_{classroom.pk}',
-                {'type': 'chat.message', 'message': msg.to_dict()},
-            )
-    except Exception:
-        pass
-
-    return JsonResponse({'ok': True, 'message': msg.to_dict()})
+    realtime.class_message(classroom.pk, msg)
+    if is_announcement:
+        from notifications.services import notify_class_announcement
+        notify_class_announcement(msg)
+    return JsonResponse({'ok': True, 'message': msg.to_dict(user)})
 
 
 @login_required_simple
@@ -504,19 +502,19 @@ def api_pin(request, classroom_id, message_id):
     user, classroom, err = _require_access(request, classroom_id)
     if err:
         return err
-    if not (
-        is_platform_admin(user)
-        or (user.is_teacher() and classroom.teacher_id == user.id)
-    ):
+    if not can_moderate_classroom(user, classroom):
         return JsonResponse({'error': 'Seul le professeur peut épingler.'}, status=403)
     room = ClassChatRoom.get_or_create_for(classroom)
     try:
         msg = ChatMessage.objects.get(pk=message_id, room=room)
     except ChatMessage.DoesNotExist:
         return JsonResponse({'error': 'Message introuvable.'}, status=404)
+    if msg.is_deleted:
+        return JsonResponse({'error': 'Ce message a été supprimé.'}, status=400)
     msg.is_pinned = not msg.is_pinned
-    msg.save(update_fields=['is_pinned'])
-    return JsonResponse({'ok': True, 'is_pinned': msg.is_pinned, 'message': msg.to_dict()})
+    msg.touch('is_pinned')
+    realtime.class_update(classroom.pk, msg)
+    return JsonResponse({'ok': True, 'is_pinned': msg.is_pinned, 'message': msg.to_dict(user)})
 
 
 @login_required_simple
@@ -540,7 +538,83 @@ def private_student_chat(request, classroom_id):
         student=user,
         teacher=classroom.teacher,
     )
-    return redirect('chat:private_room', conversation_id=conversation.pk)
+    return redirect(
+        reverse('chat:private_room', args=[conversation.pk]) + _context_query(request)
+    )
+
+
+def _context_query(request):
+    """Conserve ?question= / ?lesson= pour pré-remplir le contexte d'une consultation."""
+    for key in ('question', 'lesson'):
+        value = (request.GET.get(key) or '').strip()
+        if value.isdecimal():
+            return f'?{key}={value}'
+    return ''
+
+
+@login_required_simple
+def teacher_consult_student(request, student_id):
+    """Professeur : ouvrir la consultation avec un élève de ses classes."""
+    user = get_edubac_user(request)
+    if not user.is_teacher():
+        return HttpResponseForbidden('Réservé à l’équipe pédagogique.')
+    student = get_object_or_404(User, pk=student_id, role='student')
+    memberships = ClassroomMember.objects.filter(
+        user=student, classroom__is_active=True,
+    ).select_related('classroom')
+    if not is_platform_admin(user):
+        memberships = memberships.filter(classroom__teacher=user)
+    membership = memberships.exclude(classroom__teacher__isnull=True).first()
+    if membership is None:
+        from django.contrib import messages
+        messages.error(request, 'Cet élève ne fait partie d’aucune de vos classes actives.')
+        return redirect('quizzes:student_results')
+    conversation, _ = PrivateConversation.objects.get_or_create(
+        classroom=membership.classroom,
+        student=student,
+        teacher=membership.classroom.teacher,
+    )
+    if conversation.teacher_id != user.pk:
+        # Administration : la consultation appartient au professeur de la classe.
+        from django.contrib import messages
+        messages.info(request, 'Cette consultation est gérée par le professeur de la classe.')
+        return redirect('chat:home')
+    return redirect(
+        reverse('chat:private_room', args=[conversation.pk]) + _context_query(request)
+    )
+
+
+def _consultation_context_options(conversation):
+    """Leçons du niveau et questions récemment ratées, pour lier un message."""
+    from education.models import Lesson
+    from quizzes.models import StudentAnswer
+
+    lessons = list(
+        Lesson.objects.filter(course__niveau=conversation.classroom.niveau)
+        .order_by('course__order', 'order')
+        .values('pk', 'title')[:80]
+    )
+    wrong = (
+        StudentAnswer.objects.filter(
+            attempt__student=conversation.student,
+            attempt__submitted_at__isnull=False,
+            is_correct=False,
+        )
+        .select_related('question__quiz')
+        .order_by('-attempt__submitted_at', 'question__order')[:15]
+    )
+    questions = []
+    seen = set()
+    for answer in wrong:
+        question = answer.question
+        if question.pk in seen:
+            continue
+        seen.add(question.pk)
+        questions.append({
+            'pk': question.pk,
+            'label': f'Q{question.order} — {question.quiz.title}',
+        })
+    return {'lessons': lessons, 'questions': questions}
 
 
 @login_required_simple
@@ -571,6 +645,9 @@ def private_room(request, conversation_id):
         else conversation.student
     )
     return render(request, 'chat/private_room.html', {
+        **_messaging_context(user),
+        'active_thread': f'consultation-{conversation.pk}',
+        'contact_online': _is_online(contact),
         'conversation': conversation,
         'contact': contact,
         'contact_display_name': contact.get_full_name() or contact.username,
@@ -588,8 +665,34 @@ def private_room(request, conversation_id):
             if user.pk == conversation.teacher_id
             else reverse('classrooms:detail', args=[conversation.classroom_id])
         ),
+        'ws_path': f'/ws/chat/consultation/{conversation.pk}/',
+        'ai_draft_url': (
+            reverse('chat:api_ai_draft', args=[conversation.pk])
+            if user.pk == conversation.teacher_id else ''
+        ),
+        'context_options': _consultation_context_options(conversation),
+        'initial_context': _initial_context(request, user, conversation),
+        'message_kind': 'consultation',
         'page_title': 'Consultation avec le professeur',
     })
+
+
+def _initial_context(request, user, conversation):
+    parsed = {'lesson_id': None, 'question_id': None}
+    for key in ('question', 'lesson'):
+        value = (request.GET.get(key) or '').strip()
+        if value.isdecimal():
+            parsed[f'{key}_id'] = int(value)
+            break
+    if not (parsed['lesson_id'] or parsed['question_id']):
+        return None
+    lesson, question, error = _resolve_message_context(user, conversation, parsed)
+    if error:
+        return None
+    if question:
+        return {'kind': 'question', 'id': question.pk,
+                'label': f'Question {question.order} — {question.quiz.title}'}
+    return {'kind': 'lesson', 'id': lesson.pk, 'label': f'Leçon : {lesson.title}'}
 
 
 @login_required_simple
@@ -606,6 +709,9 @@ def direct_room(request, conversation_id):
         contact.get_full_name() or contact.username
     )
     return render(request, 'chat/private_room.html', {
+        **_messaging_context(user),
+        'active_thread': f'direct-{conversation.pk}',
+        'contact_online': _is_online(contact),
         'conversation': conversation,
         'contact': contact,
         'contact_display_name': contact_name,
@@ -620,6 +726,10 @@ def direct_room(request, conversation_id):
         'send_url': reverse('chat:api_direct_send', args=[conversation.pk]),
         'presence_url': reverse('chat:api_presence'),
         'back_url': reverse('chat:home') + '?tab=individuals',
+        'ws_path': f'/ws/chat/direct/{conversation.pk}/',
+        'message_kind': 'direct',
+        'can_block': user.is_student() and contact.is_student(),
+        'is_blocked': ChatBlock.objects.filter(blocker=user, blocked=contact).exists(),
         'page_title': (
             'Conversation avec ' + contact_name
         ),
@@ -636,31 +746,12 @@ def api_private_messages(request, conversation_id):
             {'error': 'Cette conversation n’est plus accessible.'},
             status=404,
         )
-    conversation.messages.filter(
-        read_at__isnull=True,
-    ).exclude(sender=user).update(read_at=timezone.now())
-    messages_qs = conversation.messages.select_related('sender').order_by('created_at')
-    after_id = request.GET.get('after_id')
-    if after_id:
-        try:
-            after_id = int(after_id)
-        except (TypeError, ValueError):
-            return JsonResponse({'error': 'Identifiant de message invalide.'}, status=400)
-        if after_id < 0:
-            return JsonResponse({'error': 'Identifiant de message invalide.'}, status=400)
-        messages_qs = messages_qs.filter(pk__gt=after_id)[:50]
-    else:
-        messages_qs = messages_qs.order_by('-created_at')[:100]
-        messages_qs = reversed(list(messages_qs))
-    return JsonResponse({
-        'messages': [_private_message_payload(message) for message in messages_qs],
-        'read_ids': list(
-            conversation.messages.filter(
-                sender=user,
-                read_at__isnull=False,
-            ).order_by('-created_at').values_list('pk', flat=True)[:100]
-        ),
-    })
+    return conversation_messages_response(
+        request, user, conversation,
+        payload=_private_message_payload,
+        kind=realtime.KIND_CONSULTATION,
+        select=('sender', 'lesson', 'question__quiz'),
+    )
 
 
 @login_required_simple
@@ -673,54 +764,60 @@ def api_private_send(request, conversation_id):
             {'error': 'Cette conversation n’est plus accessible.'},
             status=404,
         )
-    upload = None
-    is_voice = False
-    if request.FILES or 'multipart/form-data' in (request.content_type or ''):
-        body = (request.POST.get('body') or '').strip()
-        upload = request.FILES.get('attachment')
-        is_voice = (request.POST.get('is_voice') or '').lower() in {'1', 'true'}
-    else:
-        try:
-            payload = json.loads(request.body.decode('utf-8') or '{}')
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            return JsonResponse({'error': 'Requête invalide.'}, status=400)
-        if not isinstance(payload, dict) or not isinstance(payload.get('body', ''), str):
-            return JsonResponse({'error': 'Requête invalide.'}, status=400)
-        body = payload.get('body', '').strip()
-    if not body and not upload:
-        return JsonResponse({'error': 'Écrivez un message.'}, status=400)
-    if len(body) > 4000:
-        return JsonResponse({'error': 'Message trop long (4 000 caractères maximum).'}, status=400)
-    attachment_name = ''
-    if upload:
-        if upload.size > 10 * 1024 * 1024:
-            return JsonResponse({'error': 'Fichier trop volumineux (maximum 10 Mo).'}, status=400)
-        from pathlib import Path
-        original_name = (upload.name or '').replace('\\', '/')
-        attachment_name = Path(original_name).name[:255]
-        extension = Path(attachment_name).suffix.lower()
-        allowed_extensions = {
-            '.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp',
-            '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt', '.zip',
-            '.webm', '.ogg', '.mp3', '.wav', '.m4a', '.aac',
-        }
-        if extension not in allowed_extensions:
-            return JsonResponse({'error': 'Type de fichier non autorisé.'}, status=400)
-        is_voice = is_voice or extension in {
-            '.webm', '.ogg', '.mp3', '.wav', '.m4a', '.aac',
-        }
+    restriction = student_quiet_hours_restriction(user, conversation.classroom)
+    if restriction:
+        return JsonResponse({'error': restriction}, status=403)
+    parsed = parse_send_request(request)
+    if isinstance(parsed, JsonResponse):
+        return parsed
+    lesson, question, context_error = _resolve_message_context(user, conversation, parsed)
+    if context_error:
+        return JsonResponse({'error': context_error}, status=400)
     message = PrivateMessage(
         conversation=conversation,
         sender=user,
-        body=body,
-        attachment_name=attachment_name,
-        is_voice=is_voice,
+        body=parsed['body'],
+        attachment_name=parsed['attachment_name'],
+        is_voice=parsed['is_voice'],
+        lesson=lesson,
+        question=question,
     )
-    if upload:
-        message.attachment = upload
+    if parsed['upload']:
+        message.attachment = parsed['upload']
     message.save()
     conversation.save(update_fields=['updated_at'])
-    return JsonResponse({'ok': True, 'message': _private_message_payload(message)})
+    realtime.conversation_changed(realtime.KIND_CONSULTATION, conversation.pk)
+    from notifications.services import notify_new_private_message
+    notify_new_private_message(
+        realtime.KIND_CONSULTATION, conversation, message,
+        conversation.teacher if user.pk == conversation.student_id else conversation.student,
+    )
+    return JsonResponse({'ok': True, 'message': _private_message_payload(message, user)})
+
+
+def _resolve_message_context(user, conversation, parsed):
+    """Valide la leçon ou la question jointe à un message de consultation."""
+    from education.models import Lesson
+    from quizzes.models import Attempt, Question
+
+    lesson = question = None
+    if parsed['question_id']:
+        question = Question.objects.select_related('quiz').filter(pk=parsed['question_id']).first()
+        if question is None:
+            return None, None, 'Question introuvable.'
+        quiz = question.quiz
+        allowed = (
+            quiz.created_by_id == conversation.teacher_id
+            or Attempt.objects.filter(student=conversation.student, quiz=quiz).exists()
+        )
+        if not allowed:
+            return None, None, 'Cette question ne concerne pas cette conversation.'
+        lesson = quiz.lesson
+    elif parsed['lesson_id']:
+        lesson = Lesson.objects.filter(pk=parsed['lesson_id']).first()
+        if lesson is None:
+            return None, None, 'Leçon introuvable.'
+    return lesson, question, ''
 
 
 @login_required_simple
@@ -730,22 +827,7 @@ def private_attachment(request, message_id):
     message = get_object_or_404(
         PrivateMessage.objects.select_related('conversation'),
         pk=message_id,
+        deleted_at__isnull=True,
         conversation__in=_private_conversations_for(user),
     )
-    if not message.attachment:
-        raise Http404
-    try:
-        handle = message.attachment.open('rb')
-    except FileNotFoundError:
-        raise Http404
-    content_type = mimetypes.guess_type(message.attachment_name)[0]
-    inline = message.is_image or message.is_voice
-    response = FileResponse(
-        handle,
-        content_type=content_type or 'application/octet-stream',
-        as_attachment=not inline,
-        filename=message.attachment_name or 'piece-jointe',
-    )
-    response['Cache-Control'] = 'private, no-store'
-    response['X-Content-Type-Options'] = 'nosniff'
-    return response
+    return serve_attachment(message.attachment, message.attachment_name)

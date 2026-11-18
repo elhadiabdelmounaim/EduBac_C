@@ -1,11 +1,33 @@
 from django.urls import path
 from . import views
 from . import direct_views
+from . import moderation_views
 
 app_name = 'chat'
 
+MESSAGE_KINDS = '<str:kind>/<int:message_id>'
+
 urlpatterns = [
     path('', views.chat_home, name='home'),
+    # Modération et outils
+    path('moderation/', moderation_views.moderation_dashboard, name='moderation'),
+    path('moderation/<int:report_id>/', moderation_views.moderation_action, name='moderation_action'),
+    path(f'api/messages/{MESSAGE_KINDS}/edit/', moderation_views.api_message_edit, name='api_message_edit'),
+    path(f'api/messages/{MESSAGE_KINDS}/delete/', moderation_views.api_message_delete, name='api_message_delete'),
+    path(f'api/messages/{MESSAGE_KINDS}/report/', moderation_views.api_message_report, name='api_message_report'),
+    path('api/classe/<int:classroom_id>/settings/', moderation_views.api_room_settings, name='api_room_settings'),
+    path('api/classe/<int:classroom_id>/mute/', moderation_views.api_room_mute, name='api_room_mute'),
+    path('api/block/', moderation_views.api_block, name='api_block'),
+    path(
+        'api/consultations/<int:conversation_id>/brouillon-ia/',
+        moderation_views.api_ai_draft,
+        name='api_ai_draft',
+    ),
+    path(
+        'consultations/eleve/<int:student_id>/',
+        views.teacher_consult_student,
+        name='teacher_consult_student',
+    ),
     path('consultations/', views.private_inbox, name='private_inbox'),
     path(
         'consultations/classe/<int:classroom_id>/',

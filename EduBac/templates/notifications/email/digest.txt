@@ -1,0 +1,16 @@
+EduBac — Mathématiques
+======================
+
+Bonjour {{ recipient_name }},
+
+Voici votre résumé EduBac ({{ items|length }} notification{{ items|length|pluralize }}) :
+{% for item in items %}
+• {{ item.title }}
+  {{ item.message }}{% if item.link %}
+  {{ item.link }}{% endif %}
+{% endfor %}
+Toutes vos notifications : {{ history_url }}
+Choisir ce que vous recevez par e-mail : {{ preferences_url }}
+
+—
+Message automatique EduBac

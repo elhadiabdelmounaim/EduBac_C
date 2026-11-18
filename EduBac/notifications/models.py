@@ -1,21 +1,27 @@
 from django.conf import settings
-from django.db import models
-from django.urls import reverse
+from django.db import models, transaction
 from django.utils import timezone
+
+from . import catalog
 
 
 class Notification(models.Model):
     """
     Notification utilisateur EduBac.
-    Types : quiz assigné, résultat, classe, système, IA, etc.
+
+    Une notification peut être « regroupée » (group_key) : tant qu'elle n'est pas
+    lue, les nouveaux événements du même groupe la mettent à jour au lieu d'en
+    créer une autre (ex. « 12 élèves ont terminé le quiz »).
     """
-    TYPE_CHOICES = [
-        ('quiz_assigned', 'Quiz assigné'),
-        ('quiz_result', 'Résultat de quiz'),
-        ('classroom', 'Classe'),
-        ('lesson', 'Leçon'),
-        ('ai', 'Assistant IA'),
-        ('system', 'Système'),
+    TYPE_CHOICES = catalog.TYPE_CHOICES
+
+    EMAIL_NONE = ''
+    EMAIL_DIGEST = 'digest'
+    EMAIL_SENT = 'sent'
+    EMAIL_STATUS_CHOICES = [
+        (EMAIL_NONE, 'Aucun'),
+        (EMAIL_DIGEST, 'En attente du résumé'),
+        (EMAIL_SENT, 'Envoyé'),
     ]
 
     recipient = models.ForeignKey(
@@ -48,13 +54,20 @@ class Notification(models.Model):
     )
     is_read = models.BooleanField(default=False, verbose_name='Lu')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Créée le')
+    updated_at = models.DateTimeField(default=timezone.now, db_index=True, verbose_name='Mise à jour le')
+    group_key = models.CharField(max_length=120, blank=True, db_index=True)
+    count = models.PositiveIntegerField(default=1, verbose_name='Événements regroupés')
+    email_status = models.CharField(
+        max_length=10, blank=True, choices=EMAIL_STATUS_CHOICES, db_index=True,
+    )
 
     class Meta:
         verbose_name = 'Notification'
         verbose_name_plural = 'Notifications'
-        ordering = ['-created_at']
+        ordering = ['-updated_at', '-pk']
         indexes = [
             models.Index(fields=['recipient', 'is_read', '-created_at']),
+            models.Index(fields=['recipient', '-updated_at']),
         ]
 
     def __str__(self):
@@ -67,9 +80,19 @@ class Notification(models.Model):
             self.save(update_fields=['is_read'])
 
     @property
+    def icon(self):
+        return catalog.icon_for(self.type)
+
+    @property
+    def safe_link(self):
+        """Lien interne uniquement (jamais vers un autre site)."""
+        link = self.link or ''
+        return link if link.startswith('/') and not link.startswith('//') else ''
+
+    @property
     def time_ago(self):
         """Texte relatif simple en français."""
-        delta = timezone.now() - self.created_at
+        delta = timezone.now() - self.updated_at
         seconds = int(delta.total_seconds())
         if seconds < 60:
             return "À l'instant"
@@ -84,11 +107,45 @@ class Notification(models.Model):
             return "Hier"
         if days < 7:
             return f"Il y a {days} j"
-        return self.created_at.strftime('%d/%m/%Y')
+        return timezone.localtime(self.updated_at).strftime('%d/%m/%Y')
 
     @classmethod
-    def notify(cls, recipient, title, message, type='system', actor=None, link='', send_email=True):
-        """Crée une notification in-app et envoie un e-mail si demandé."""
+    def notify(cls, recipient, title, message, type='system', actor=None, link='',
+               send_email=True, group_key=''):
+        """Crée (ou met à jour, si regroupée) une notification et gère l'e-mail.
+
+        `send_email` indique que l'événement mérite un e-mail ; c'est la
+        préférence du destinataire qui décide ensuite : immédiat, résumé
+        quotidien ou jamais.
+        """
+        preference = NotificationPreference.for_user(recipient, type)
+        email_mode = preference['email'] if send_email else catalog.EMAIL_OFF
+        now = timezone.now()
+
+        obj = None
+        if group_key:
+            with transaction.atomic():
+                obj = (
+                    cls.objects.select_for_update()
+                    .filter(recipient=recipient, group_key=group_key, is_read=False)
+                    .order_by('-updated_at')
+                    .first()
+                )
+                if obj is not None:
+                    obj.title = title
+                    obj.message = message
+                    obj.actor = actor
+                    obj.link = link or ''
+                    obj.updated_at = now
+                    obj.count += 1
+                    fields = ['title', 'message', 'actor', 'link', 'updated_at', 'count']
+                    if email_mode == catalog.EMAIL_DIGEST and obj.email_status != cls.EMAIL_DIGEST:
+                        obj.email_status = cls.EMAIL_DIGEST
+                        fields.append('email_status')
+                    obj.save(update_fields=fields)
+                    # Pas de nouvel e-mail immédiat pour un même groupe déjà signalé.
+                    return obj
+
         obj = cls.objects.create(
             recipient=recipient,
             actor=actor,
@@ -96,17 +153,94 @@ class Notification(models.Model):
             title=title,
             message=message,
             link=link or '',
+            group_key=group_key or '',
+            updated_at=now,
+            is_read=not preference['in_app'],
+            email_status=cls.EMAIL_DIGEST if email_mode == catalog.EMAIL_DIGEST else cls.EMAIL_NONE,
         )
-        if send_email:
+        if email_mode == catalog.EMAIL_INSTANT:
             try:
                 from .email_utils import send_notification_email
-                send_notification_email(
+                if send_notification_email(
                     recipient=recipient,
                     title=title,
                     message=message,
                     link=link or '',
                     type_code=type,
-                )
+                ):
+                    obj.email_status = cls.EMAIL_SENT
+                    obj.save(update_fields=['email_status'])
             except Exception:
                 pass
         return obj
+
+    @classmethod
+    def notify_many(cls, recipients, title, message, type='system', actor=None, link='', group_key=''):
+        """Notification in-app pour beaucoup de destinataires en une requête (pas d'e-mail)."""
+        recipients = list(recipients)
+        if not recipients:
+            return 0
+        muted = NotificationPreference.muted_user_ids(recipients, type)
+        now = timezone.now()
+        cls.objects.bulk_create([
+            cls(
+                recipient=user,
+                actor=actor,
+                type=type,
+                title=title,
+                message=message,
+                link=link or '',
+                group_key=group_key or '',
+                created_at=now,
+                updated_at=now,
+                is_read=user.pk in muted,
+            )
+            for user in recipients
+        ])
+        return len(recipients)
+
+    @classmethod
+    def mark_group_read(cls, recipient, group_key):
+        return cls.objects.filter(
+            recipient=recipient, group_key=group_key, is_read=False,
+        ).update(is_read=True)
+
+
+class NotificationPreference(models.Model):
+    """Choix de l'utilisateur, type par type : {type: {'in_app': bool, 'email': mode}}."""
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='notification_preference',
+    )
+    values = models.JSONField(default=dict, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Préférences de notification'
+        verbose_name_plural = 'Préférences de notification'
+
+    @classmethod
+    def for_user(cls, user, type_code):
+        preference = catalog.default_preference(user, type_code)
+        stored = cls.objects.filter(user=user).values_list('values', flat=True).first() or {}
+        chosen = stored.get(type_code) or {}
+        if isinstance(chosen.get('in_app'), bool):
+            preference['in_app'] = chosen['in_app']
+        if chosen.get('email') in dict(catalog.EMAIL_CHOICES):
+            preference['email'] = chosen['email']
+        return preference
+
+    @classmethod
+    def all_for_user(cls, user):
+        return {code: cls.for_user(user, code) for code in catalog.types_for(user)}
+
+    @classmethod
+    def muted_user_ids(cls, users, type_code):
+        """Utilisateurs ayant désactivé ce type « dans EduBac »."""
+        ids = {user.pk for user in users}
+        muted = set()
+        for user_id, values in cls.objects.filter(user_id__in=ids).values_list('user_id', 'values'):
+            if (values or {}).get(type_code, {}).get('in_app') is False:
+                muted.add(user_id)
+        return muted

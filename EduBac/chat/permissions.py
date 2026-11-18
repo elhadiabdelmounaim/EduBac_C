@@ -1,6 +1,7 @@
 """Contrôle d'accès Backend pour Prof-Étudiant Chat."""
 from django.db.models import Q
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from chat.models import DirectConversation
 from classrooms.models import Classroom, ClassroomMember
@@ -65,6 +66,51 @@ def classrooms_for_user(user):
     return Classroom.objects.none()
 
 
+def _peer_chat_classrooms(user_ref, other_ref):
+    """Classes actives communes où le professeur autorise les messages entre élèves."""
+    return Classroom.objects.filter(
+        is_active=True,
+        chat_room__allow_student_direct=True,
+        members__user=user_ref,
+    ).filter(members__user=other_ref)
+
+
+def accessible_direct_conversations(user):
+    """Conversations individuelles que l'utilisateur peut lire et alimenter.
+
+    - Administration : conversations élève ↔ administration.
+    - Élève : avec l'administration, ou avec un camarade d'une classe active
+      commune dont le professeur a autorisé les messages entre élèves, et sans
+      blocage entre eux.
+    """
+    from django.db.models import Exists, OuterRef
+
+    if not user or not getattr(user, 'is_authenticated', False):
+        return DirectConversation.objects.none()
+    if is_platform_admin(user):
+        return direct_conversations_for(user)
+    if not user.is_student():
+        return DirectConversation.objects.none()
+
+    user_model = get_user_model()
+    admin_ids = user_model.objects.filter(
+        Q(is_staff=True) | Q(is_superuser=True),
+    ).values('pk')
+    mine = DirectConversation.objects.filter(
+        Q(participant_one=user) | Q(participant_two=user),
+    )
+    with_admin = Q(participant_one_id__in=admin_ids) | Q(participant_two_id__in=admin_ids)
+    peer_allowed = (
+        (Q(participant_one=user) & Exists(_peer_chat_classrooms(user, OuterRef('participant_two'))))
+        | (Q(participant_two=user) & Exists(_peer_chat_classrooms(user, OuterRef('participant_one'))))
+    )
+    # Un blocage n'empêche pas de relire l'historique (ni de débloquer) :
+    # il interdit l'envoi, vérifié par api_direct_send et le démarrage.
+    return mine.filter(with_admin | peer_allowed).select_related(
+        'participant_one', 'participant_two', 'classroom',
+    ).order_by('-updated_at')
+
+
 def direct_conversations_for(user):
     if not user or not getattr(user, 'is_authenticated', False):
         return DirectConversation.objects.none()
@@ -99,7 +145,6 @@ def direct_conversations_for(user):
 def user_can_access_direct_conversation(user, conversation):
     if not user or not getattr(user, 'is_authenticated', False):
         return False
-    other = conversation.other_participant(user)
     if is_platform_admin(user):
         return bool(
             conversation.participant_one.is_student()
@@ -109,19 +154,52 @@ def user_can_access_direct_conversation(user, conversation):
                 or is_platform_admin(conversation.participant_two)
             )
         )
-    if other is None:
-        return False
-    if not user.is_student():
-        return False
-    if is_platform_admin(other):
-        return True
-    if not other.is_student() or not conversation.classroom_id:
-        return False
-    return ClassroomMember.objects.filter(
-        user=user,
-        classroom__is_active=True,
-        classroom__members__user=other,
-    ).exists()
+    return accessible_direct_conversations(user).filter(pk=conversation.pk).exists()
+
+
+def can_moderate_classroom(user, classroom):
+    """Professeur de la classe ou administration."""
+    return bool(
+        user
+        and getattr(user, 'is_authenticated', False)
+        and (
+            is_platform_admin(user)
+            or (user.is_teacher() and classroom.teacher_id == user.pk)
+        )
+    )
+
+
+def class_post_restriction(user, room):
+    """Raison pour laquelle l'utilisateur ne peut pas écrire dans le salon, ou ''."""
+    if can_moderate_classroom(user, room.classroom):
+        return ''
+    if room.is_locked:
+        return 'Le professeur a réservé ce salon à ses messages.'
+    mute = room.active_mute_for(user)
+    if mute:
+        local = timezone.localtime(mute.until)
+        return f'Vous ne pouvez pas écrire dans ce salon avant le {local:%d/%m à %H:%M}.'
+    if room.in_quiet_hours():
+        return quiet_hours_message(room)
+    return ''
+
+
+def quiet_hours_message(room):
+    return (
+        f'Heures de silence ({room.quiet_hours_start:%H:%M} – '
+        f'{room.quiet_hours_end:%H:%M}) : les messages des élèves reprendront ensuite.'
+    )
+
+
+def student_quiet_hours_restriction(user, classroom):
+    """Heures de silence de la classe appliquées aux messages privés d'un élève."""
+    if not classroom or not user or not user.is_student():
+        return ''
+    from chat.models import ClassChatRoom
+    room = ClassChatRoom.objects.filter(classroom=classroom).first()
+    if room and room.in_quiet_hours():
+        return quiet_hours_message(room)
+    return ''
 
 
 def direct_conversation_start_context(user, target, classroom_id=None):
@@ -149,10 +227,14 @@ def direct_conversation_start_context(user, target, classroom_id=None):
                 return {'kind': 'consultation', 'classroom': teacher_membership.classroom}
         if not target.is_student():
             return None
+        from chat.models import ChatBlock
+        if ChatBlock.between(user, target):
+            return None
         memberships = ClassroomMember.objects.filter(
             user=user,
             classroom__members__user=target,
             classroom__is_active=True,
+            classroom__chat_room__allow_student_direct=True,
         )
         if classroom_id:
             memberships = memberships.filter(classroom_id=classroom_id)

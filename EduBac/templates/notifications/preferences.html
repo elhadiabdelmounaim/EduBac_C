@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Préférences de notification{% endblock %}
+{% block content %}
+<div class="notif-preferences" style="max-width: 860px;">
+    <header class="mb-3">
+        <a href="{% url 'notifications:history' %}" class="small text-decoration-none">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i> Mes notifications
+        </a>
+        <h1 class="h3 mt-2 mb-1"><i class="bi bi-sliders" aria-hidden="true"></i> Préférences de notification</h1>
+        <p class="text-muted small mb-0">
+            « Dans EduBac » : la notification apparaît sous la cloche. Décochée, elle est rangée
+            directement dans l’historique sans vous déranger.
+            {% if has_email %}
+            Le résumé quotidien regroupe les e-mails en un seul message par jour.
+            {% else %}
+            Aucune adresse e-mail n’est associée à votre compte : les notifications restent dans EduBac.
+            {% endif %}
+        </p>
+    </header>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">Type</th>
+                        <th scope="col" class="text-center">Dans EduBac</th>
+                        {% if has_email %}<th scope="col">E-mail</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                    <tr>
+                        <th scope="row" class="fw-normal">
+                            <i class="bi {{ row.icon }} me-1" aria-hidden="true"></i>{{ row.label }}
+                        </th>
+                        <td class="text-center">
+                            <input class="form-check-input" type="checkbox" name="in_app_{{ row.code }}"
+                                   id="in_app_{{ row.code }}" {% if row.in_app %}checked{% endif %}
+                                   aria-label="{{ row.label }} : afficher dans EduBac">
+                        </td>
+                        {% if has_email %}
+                        <td>
+                            <select name="email_{{ row.code }}" class="form-select form-select-sm"
+                                    aria-label="{{ row.label }} : e-mail">
+                                {% for value, label in email_choices %}
+                                <option value="{{ value }}" {% if value == row.email %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <button type="submit" class="btn btn-edubac">Enregistrer</button>
+    </form>
+</div>
+{% endblock %}

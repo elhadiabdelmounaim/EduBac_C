@@ -243,14 +243,33 @@ if os.getenv('DJANGO_PRODUCTION') == '1':
 
 
 # ---------------------------------------------------------------------------
-# Django Channels (WebSocket) — InMemory pour le dev (pas de Redis requis)
+# Django Channels (WebSocket) et cache
+# Sans REDIS_URL : couche en mémoire (un seul processus, développement).
+# Avec REDIS_URL (ex. redis://127.0.0.1:6379/0) : WebSocket partagés entre
+# processus et cache commun (limites de débit, etc.). Paquets requis :
+# channels-redis et redis (voir requirements.txt).
 # ---------------------------------------------------------------------------
 ASGI_APPLICATION = 'config.asgi.application'
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
-    },
-}
+REDIS_URL = os.getenv('REDIS_URL', '').strip()
+if REDIS_URL:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {'hosts': [REDIS_URL]},
+        },
+    }
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_URL,
+        },
+    }
+else:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        },
+    }
 
 # Quiz and email diagnostics exclude prompts, credentials, tokens, and recipients.
 LOGGING = {

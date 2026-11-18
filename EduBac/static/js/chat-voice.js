@@ -1,18 +1,40 @@
 /**
- * Progressive, dependency-free voice controls.
- * chat.js calls EduBacVoice.enhance(row) after inserting each message.
+ * Lecteur des messages vocaux (style messagerie mobile), sans dépendance.
+ * chat.js / private-chat.js appellent EduBacVoice.enhance(row) après chaque insertion.
+ *
+ * - bouton lecture/pause, forme d'onde cliquable et déplaçable (souris, doigt, clavier) ;
+ * - temps écoulé / durée totale, vitesse 1x · 1.5x · 2x commune à tous les messages ;
+ * - un seul message vocal joue à la fois ; pause automatique si la page est masquée.
+ * La forme d'onde réelle est calculée quand le message devient visible ; à défaut,
+ * une forme d'onde stable (dérivée de l'adresse) est affichée.
  */
 (function () {
   'use strict';
   if (window.EduBacVoice) return;
   var enhanced = new WeakMap();
+  var players = [];
   var active = null;
   var serial = 0;
+  var BAR_COUNT = 36;
+  var SPEEDS = [1, 1.5, 2];
+  var SEEK_STEP = 5;
+  var rate = readRate();
   var icons = {
-    play: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 4v16l14-8z"/></svg>',
-    pause: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 4h4v16H6zm8 0h4v16h-4z"/></svg>',
-    stop: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6h12v12H6z"/></svg>'
+    play: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5.2v13.6c0 .8.9 1.3 1.6.8l10.2-6.8c.6-.4.6-1.2 0-1.6L9.6 4.4C8.9 3.9 8 4.4 8 5.2z"/></svg>',
+    pause: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="6" y="4.5" width="4.2" height="15" rx="1.3"/><rect x="13.8" y="4.5" width="4.2" height="15" rx="1.3"/></svg>',
+    retry: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg>'
   };
+
+  function readRate() {
+    try {
+      var saved = Number(window.localStorage && window.localStorage.getItem('edubac-voice-rate'));
+      return SPEEDS.indexOf(saved) !== -1 ? saved : 1;
+    } catch (error) { return 1; }
+  }
+
+  function saveRate(value) {
+    try { if (window.localStorage) window.localStorage.setItem('edubac-voice-rate', String(value)); } catch (error) {}
+  }
 
   function clock(seconds) {
     if (!Number.isFinite(seconds) || seconds < 0) return '—';
@@ -20,6 +42,119 @@
     return Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0');
   }
 
+  function speedLabel(value) { return String(value).replace('.', ',') + '×'; }
+
+  /** Forme d'onde stable dérivée d'une chaîne (affichée avant l'analyse réelle). */
+  function fallbackPeaks(seed) {
+    var hash = 2166136261;
+    seed = String(seed || 'voice');
+    for (var i = 0; i < seed.length; i++) hash = Math.imul(hash ^ seed.charCodeAt(i), 16777619);
+    var peaks = [];
+    var previous = 0.5;
+    for (var b = 0; b < BAR_COUNT; b++) {
+      hash = Math.imul(hash ^ (hash >>> 15), 2246822507) >>> 0;
+      var value = 0.22 + (hash % 1000) / 1000 * 0.7;
+      previous = previous * 0.45 + value * 0.55;
+      peaks.push(previous);
+    }
+    return peaks;
+  }
+
+  /* ---- Analyse réelle (forme d'onde et durée), mise en cache par adresse ---- */
+  var analyses = new Map();
+  var queue = [];
+  var running = 0;
+
+  function canAnalyse() {
+    return typeof window.fetch === 'function' && typeof window.Blob === 'function' &&
+      !!(window.OfflineAudioContext || window.webkitOfflineAudioContext);
+  }
+
+  function decode(buffer) {
+    var Offline = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    var ctx = new Offline(1, 1, 44100);
+    return new Promise(function (resolve, reject) {
+      var result = ctx.decodeAudioData(buffer, resolve, reject);
+      if (result && typeof result.then === 'function') result.then(resolve, reject);
+    });
+  }
+
+  function computePeaks(audioBuffer) {
+    var data = audioBuffer.getChannelData(0);
+    var bucket = Math.max(1, Math.floor(data.length / BAR_COUNT));
+    var stride = Math.max(1, Math.floor(bucket / 400));
+    var peaks = [];
+    var max = 0;
+    for (var b = 0; b < BAR_COUNT; b++) {
+      var start = b * bucket;
+      var end = Math.min(data.length, start + bucket);
+      var sum = 0;
+      var count = 0;
+      for (var i = start; i < end; i += stride) { sum += data[i] * data[i]; count++; }
+      var rms = count ? Math.sqrt(sum / count) : 0;
+      peaks.push(rms);
+      if (rms > max) max = rms;
+    }
+    return peaks.map(function (value) { return max ? Math.max(0.12, value / max) : 0.12; });
+  }
+
+  function pump() {
+    while (running < 2 && queue.length) {
+      var job = queue.shift();
+      running++;
+      job().then(done, done);
+    }
+    function done() { running--; pump(); }
+  }
+
+  function analyse(url) {
+    if (analyses.has(url)) return analyses.get(url);
+    var promise = new Promise(function (resolve, reject) {
+      queue.push(function () {
+        var type = '';
+        return window.fetch(url, { credentials: 'same-origin' }).then(function (response) {
+          if (!response.ok) throw new Error('HTTP ' + response.status);
+          type = response.headers.get('content-type') || '';
+          return response.arrayBuffer();
+        }).then(function (buffer) {
+          // Copie locale : le déplacement dans l'audio fonctionne même si le
+          // serveur ne gère pas les requêtes partielles.
+          var blobUrl = '';
+          if (buffer.byteLength < 15 * 1024 * 1024 && window.URL && window.URL.createObjectURL) {
+            blobUrl = window.URL.createObjectURL(new Blob([buffer], { type: type || 'audio/webm' }));
+          }
+          return decode(buffer.slice(0)).then(function (audioBuffer) {
+            return { peaks: computePeaks(audioBuffer), duration: audioBuffer.duration, blobUrl: blobUrl };
+          }, function () {
+            return { peaks: null, duration: NaN, blobUrl: blobUrl };
+          });
+        }).then(resolve, reject);
+      });
+      pump();
+    });
+    analyses.set(url, promise);
+    return promise;
+  }
+
+  var observer = null;
+  function whenVisible(element, callback) {
+    if (typeof window.IntersectionObserver !== 'function') { callback(); return; }
+    if (!observer) {
+      observer = new window.IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          observer.unobserve(entry.target);
+          var run = entry.target.__edubacVisible;
+          entry.target.__edubacVisible = null;
+          if (run) run();
+        });
+      }, { rootMargin: '200px 0px' });
+    }
+    element.__edubacVisible = callback;
+    observer.observe(element);
+  }
+
+  /* ---- Lecteur ---- */
   function enhanceOne(audio) {
     if (enhanced.has(audio) || !audio.parentNode) return;
     var parent = audio.parentNode;
@@ -36,46 +171,100 @@
       wrapper.className = 'chat-voice';
       wrapper.setAttribute('role', 'group');
       wrapper.setAttribute('aria-label', 'Message vocal');
+      wrapper.setAttribute('data-state', 'paused');
       wrapper.innerHTML =
-        '<button type="button" class="chat-voice-button chat-voice-play" aria-label="Lire le message vocal"></button>' +
-        '<div class="chat-voice-timeline">' +
-          '<input type="range" class="chat-voice-seek" min="0" max="1" step="0.1" value="0" disabled aria-label="Position de lecture">' +
-          '<div class="chat-voice-times"><span class="chat-voice-elapsed">0:00</span><span class="chat-voice-duration">—</span></div>' +
+        '<button type="button" class="chat-voice-play" aria-label="Lire le message vocal"></button>' +
+        '<div class="chat-voice-body">' +
+          '<div class="chat-voice-wave" role="slider" tabindex="0" aria-label="Position de lecture" aria-valuemin="0"></div>' +
+          '<div class="chat-voice-meta">' +
+            '<span class="chat-voice-times"><span class="chat-voice-elapsed">0:00</span>' +
+            '<span class="chat-voice-sep" aria-hidden="true"> / </span>' +
+            '<span class="chat-voice-duration">—</span></span>' +
+            '<button type="button" class="chat-voice-speed"></button>' +
+          '</div>' +
         '</div>' +
-        '<button type="button" class="chat-voice-button chat-voice-stop" aria-label="Arrêter et revenir au début"></button>' +
         '<div class="chat-voice-status" role="status" aria-live="polite" aria-atomic="true"></div>';
       var play = wrapper.querySelector('.chat-voice-play');
-      var stop = wrapper.querySelector('.chat-voice-stop');
-      var seek = wrapper.querySelector('.chat-voice-seek');
+      var wave = wrapper.querySelector('.chat-voice-wave');
       var elapsed = wrapper.querySelector('.chat-voice-elapsed');
       var duration = wrapper.querySelector('.chat-voice-duration');
+      var speed = wrapper.querySelector('.chat-voice-speed');
       var status = wrapper.querySelector('.chat-voice-status');
       status.id = 'chat-voice-status-' + (++serial);
       play.setAttribute('aria-describedby', status.id);
-      seek.setAttribute('aria-describedby', status.id);
-      stop.innerHTML = icons.stop;
-      state = { audio: audio, pending: false, token: 0, loading: false, message: '' };
+      state = {
+        audio: audio, pending: false, token: 0, loading: false, message: '',
+        decodedDuration: NaN, bars: [], started: false, dragging: false
+      };
+
+      var source = audio.getAttribute ? (audio.getAttribute('src') || '') : '';
+      for (var b = 0; b < BAR_COUNT; b++) {
+        var bar = document.createElement('span');
+        bar.className = 'chat-voice-bar';
+        wave.appendChild(bar);
+        state.bars.push(bar);
+      }
+      function paintPeaks(peaks, estimated) {
+        for (var i = 0; i < state.bars.length; i++) {
+          var height = Math.round(14 + (peaks[i] || 0.12) * 86);
+          if (state.bars[i].style) state.bars[i].style.height = height + '%';
+        }
+        if (wrapper.classList) wrapper.classList.toggle('is-estimated', !!estimated);
+      }
+      paintPeaks(fallbackPeaks(source), true);
+
+      function total() {
+        var value = audio.duration;
+        if (Number.isFinite(value) && value > 0) return value;
+        return Number.isFinite(state.decodedDuration) && state.decodedDuration > 0 ? state.decodedDuration : NaN;
+      }
 
       function render() {
-        var total = audio.duration;
-        var known = Number.isFinite(total) && total > 0;
+        var length = total();
+        var known = Number.isFinite(length) && length > 0;
         var current = Number.isFinite(audio.currentTime) ? Math.max(0, audio.currentTime) : 0;
+        if (known) current = Math.min(current, length);
         var playing = !audio.paused && !audio.ended;
-        play.innerHTML = playing || state.pending ? icons.pause : icons.play;
-        var label = playing || state.pending ? 'Mettre en pause' : (audio.error ? 'Réessayer la lecture' : 'Lire le message vocal');
+        var busy = playing || state.pending;
+        if (current > 0.05 || busy) state.started = true;
+        play.innerHTML = busy ? icons.pause : (audio.error ? icons.retry : icons.play);
+        var label = busy ? 'Mettre en pause' : (audio.error ? 'Réessayer la lecture' : 'Lire le message vocal');
         play.setAttribute('aria-label', label);
         play.title = label;
-        stop.title = 'Arrêter et revenir au début';
-        seek.disabled = !known || !!audio.error;
-        seek.max = known ? total : 1;
-        seek.value = known ? Math.min(current, total) : 0;
-        seek.setAttribute('aria-valuetext', clock(current) + (known ? ' sur ' + clock(total) : ' ; durée indisponible'));
+        wrapper.setAttribute('data-state', busy ? 'playing' : 'paused');
+        if (wrapper.classList) {
+          wrapper.classList.toggle('is-started', state.started);
+          wrapper.classList.toggle('is-loading', !!state.loading);
+        }
+        var ratio = known ? current / length : 0;
+        var playedBars = Math.round(ratio * state.bars.length);
+        for (var i = 0; i < state.bars.length; i++) {
+          var played = i < playedBars;
+          if (state.bars[i].classList) state.bars[i].classList.toggle('is-played', played);
+        }
+        if (wave.style && wave.style.setProperty) wave.style.setProperty('--progress', String(ratio));
+        var disabled = !known || !!audio.error;
+        wave.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+        wave.setAttribute('aria-valuemax', known ? String(Math.round(length)) : '0');
+        wave.setAttribute('aria-valuenow', String(Math.round(current)));
+        wave.setAttribute('aria-valuetext', clock(current) + (known ? ' sur ' + clock(length) : ' ; durée indisponible'));
         elapsed.textContent = clock(current);
-        duration.textContent = known ? clock(total) : '—';
-        duration.setAttribute('aria-label', known ? 'Durée : ' + clock(total) : 'Durée indisponible');
+        duration.textContent = known ? clock(length) : '—';
+        duration.setAttribute('aria-label', known ? 'Durée : ' + clock(length) : 'Durée indisponible');
+        speed.textContent = speedLabel(rate);
+        speed.setAttribute('aria-label', 'Vitesse de lecture : ' + speedLabel(rate) + '. Changer la vitesse');
+        speed.title = 'Vitesse de lecture';
         var text = state.message || (state.loading ? 'Chargement du message vocal…' :
           (!known && audio.readyState >= 1 ? 'Durée indisponible ; lecture possible.' : ''));
         if (status.textContent !== text) status.textContent = text;
+      }
+      state.render = render;
+
+      function applyRate() {
+        try {
+          audio.defaultPlaybackRate = rate;
+          audio.playbackRate = rate;
+        } catch (error) { /* Lecteur sans réglage de vitesse. */ }
       }
 
       state.pause = function () {
@@ -96,6 +285,26 @@
         render();
       }
 
+      function seekTo(seconds) {
+        var length = total();
+        if (!(length > 0) || audio.error) return;
+        var target = Math.max(0, Math.min(seconds, length));
+        try {
+          audio.currentTime = target;
+          state.message = '';
+          state.started = true;
+        } catch (error) { state.message = 'Déplacement indisponible pour le moment.'; }
+        render();
+      }
+
+      function seekFromPointer(event) {
+        if (!wave.getBoundingClientRect) return;
+        var rect = wave.getBoundingClientRect();
+        if (!rect.width) return;
+        var ratio = (event.clientX - rect.left) / rect.width;
+        seekTo(Math.max(0, Math.min(1, ratio)) * total());
+      }
+
       listen(play, 'click', function () {
         if (!audio.paused || state.pending) { state.pause(); return; }
         if (active && active !== state) active.pause();
@@ -108,6 +317,7 @@
         try {
           if (audio.error) audio.load();
           if (audio.ended) audio.currentTime = 0;
+          applyRate();
           var promise = audio.play();
           if (promise && typeof promise.then === 'function') {
             promise.then(function () {
@@ -118,19 +328,45 @@
           }
         } catch (error) { failed(error, token); }
       });
-      listen(stop, 'click', function () {
-        state.pause();
-        state.message = '';
-        try { audio.currentTime = 0; } catch (error) { /* Metadata may not yet exist. */ }
-        render();
+      listen(speed, 'click', function () {
+        rate = SPEEDS[(SPEEDS.indexOf(rate) + 1) % SPEEDS.length];
+        saveRate(rate);
+        players.forEach(function (player) {
+          try {
+            player.audio.defaultPlaybackRate = rate;
+            player.audio.playbackRate = rate;
+          } catch (error) {}
+          player.render();
+        });
       });
-      listen(seek, 'input', function () {
-        if (seek.disabled) return;
-        try {
-          audio.currentTime = Math.max(0, Math.min(Number(seek.value), audio.duration));
-          state.message = '';
-        } catch (error) { state.message = 'Déplacement indisponible pour le moment.'; }
-        render();
+      listen(wave, 'pointerdown', function (event) {
+        if (wave.getAttribute('aria-disabled') === 'true') return;
+        state.dragging = true;
+        if (wave.setPointerCapture && event.pointerId != null) {
+          try { wave.setPointerCapture(event.pointerId); } catch (error) {}
+        }
+        seekFromPointer(event);
+        if (event.preventDefault) event.preventDefault();
+      });
+      listen(wave, 'pointermove', function (event) {
+        if (state.dragging) seekFromPointer(event);
+      });
+      ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (name) {
+        listen(wave, name, function () { state.dragging = false; });
+      });
+      listen(wave, 'keydown', function (event) {
+        var length = total();
+        if (!(length > 0)) return;
+        var current = audio.currentTime || 0;
+        var next = null;
+        if (event.key === 'ArrowRight' || event.key === 'ArrowUp') next = current + SEEK_STEP;
+        else if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') next = current - SEEK_STEP;
+        else if (event.key === 'Home') next = 0;
+        else if (event.key === 'End') next = length;
+        else if (event.key === ' ' || event.key === 'Enter') { play.click ? play.click() : null; event.preventDefault(); return; }
+        if (next === null) return;
+        event.preventDefault();
+        seekTo(next);
       });
       listen(audio, 'play', function () {
         if (document.hidden) { state.pause(); return; }
@@ -138,6 +374,7 @@
         active = state;
         state.pending = false;
         state.message = '';
+        applyRate();
         render();
       });
       listen(audio, 'playing', function () { state.loading = false; state.message = ''; render(); });
@@ -149,8 +386,9 @@
       });
       listen(audio, 'ended', function () {
         state.pause();
-        try { audio.currentTime = 0; } catch (error) { /* Non-seekable media. */ }
+        try { audio.currentTime = 0; } catch (error) { /* Média non déplaçable. */ }
         state.message = '';
+        state.started = false;
         render();
       });
       listen(audio, 'error', function () {
@@ -164,7 +402,7 @@
           render();
         });
       });
-      ['loadedmetadata', 'durationchange', 'timeupdate', 'seeked', 'emptied'].forEach(function (name) {
+      ['loadedmetadata', 'durationchange', 'timeupdate', 'seeked', 'emptied', 'ratechange'].forEach(function (name) {
         listen(audio, name, render);
       });
       listen(audio, 'canplay', function () { state.loading = false; render(); });
@@ -172,15 +410,35 @@
       render();
       parent.insertBefore(wrapper, audio);
       wrapper.appendChild(audio);
-      // Only remove the browser fallback once the complete controls are ready.
+      // Les contrôles natifs ne disparaissent qu'une fois le lecteur prêt.
       enhanced.set(audio, state);
+      players.push(state);
       audio.controls = false;
       audio.hidden = true;
+
+      if (source && canAnalyse()) {
+        whenVisible(wrapper, function () {
+          analyse(source).then(function (result) {
+            if (result.peaks) paintPeaks(result.peaks, false);
+            if (Number.isFinite(result.duration)) state.decodedDuration = result.duration;
+            var untouched = audio.paused && !state.pending && !(audio.currentTime > 0);
+            if (result.blobUrl && untouched && audio.getAttribute('src') === source) {
+              audio.src = result.blobUrl;
+              applyRate();
+            }
+            render();
+          }, function () {
+            if (audio.preload === 'none') audio.preload = 'metadata';
+          });
+        });
+      } else if (audio.preload === 'none') {
+        audio.preload = 'metadata';
+      }
     } catch (error) {
       listeners.forEach(function (entry) { entry[0].removeEventListener(entry[1], entry[2]); });
       enhanced.delete(audio);
       if (audio.parentNode === wrapper) parent.insertBefore(audio, wrapper);
-      wrapper.remove();
+      if (wrapper.remove) wrapper.remove();
       audio.hidden = originalHidden;
       audio.controls = originalControls;
     }
@@ -201,7 +459,7 @@
       else audio.pause();
     });
   }
-  window.EduBacVoice = { enhance: enhance };
+  window.EduBacVoice = { enhance: enhance, pauseAll: pauseAll };
   document.addEventListener('visibilitychange', function () { if (document.hidden) pauseAll(); });
   window.addEventListener('pagehide', pauseAll);
   window.addEventListener('beforeunload', pauseAll);
@@ -237,7 +495,14 @@
   var audio = document.getElementById('chatVoicePreviewAudio');
   var timerEl = document.getElementById('chatVoiceRecTime');
   var wave = document.getElementById('chatVoiceWave');
-  var emojiPanel = document.getElementById('chatEmojiPanel');
+  var emojiPanel = document.getElementById('chatEmojiPanel') || document.getElementById('privateEmojiPanel');
+  var restartBtn = document.getElementById('chatVoiceRestart');
+  var recSendBtn = document.getElementById('chatVoiceRecSend');
+  var previewWave = document.getElementById('chatVoicePreviewWave');
+  var PREVIEW_BARS = 40;
+  var levels = [];
+  var previewBars = [];
+  var sendAfterStop = false;
 
   var mediaRecorder = null;
   var stream = null;
@@ -346,10 +611,14 @@
       var tick = function () {
         if (!analyser) return;
         analyser.getByteFrequencyData(data);
+        var total = 0;
         for (var i = 0; i < bars.length; i++) {
           var value = data[Math.min(data.length - 1, Math.floor(i * data.length / bars.length))] || 0;
+          total += value;
           bars[i].style.height = (4 + Math.round((value / 255) * 22)) + 'px';
         }
+        // Niveau moyen conservé pour dessiner la forme d'onde de l'aperçu.
+        if (levels.length < 6000) levels.push(bars.length ? total / bars.length / 255 : 0);
         raf = requestAnimationFrame(tick);
       };
       raf = requestAnimationFrame(tick);
@@ -428,10 +697,45 @@
     }
     if (elapsedEl) elapsedEl.textContent = clock(current);
     if (durationEl) durationEl.textContent = shown ? clock(shown) : '0:00';
+    paintPreviewProgress(shown ? current / shown : 0);
     var label = playing ? 'Lecture' : (!audio.ended && current > 0.05 ? 'Pause' : 'Aperçu');
     if (stateEl && !sending) stateEl.textContent = label;
     preview.setAttribute('data-playback', playing ? 'playing' : 'paused');
     setPlayIcon(playing);
+  }
+
+  function buildPreviewWave() {
+    if (!previewWave) return;
+    previewWave.innerHTML = '';
+    previewBars = [];
+    var count = PREVIEW_BARS;
+    var max = 0;
+    var samples = [];
+    for (var i = 0; i < count; i++) {
+      var start = Math.floor(i * levels.length / count);
+      var end = Math.max(start + 1, Math.floor((i + 1) * levels.length / count));
+      var sum = 0;
+      var n = 0;
+      for (var j = start; j < end && j < levels.length; j++) { sum += levels[j]; n++; }
+      var value = n ? sum / n : 0;
+      samples.push(value);
+      if (value > max) max = value;
+    }
+    for (var b = 0; b < count; b++) {
+      var bar = document.createElement('span');
+      bar.className = 'chat-voice-bar';
+      var ratio = max ? samples[b] / max : 0.35 + 0.25 * Math.abs(Math.sin(b * 1.7));
+      if (bar.style) bar.style.height = Math.round(14 + Math.max(0.1, ratio) * 86) + '%';
+      previewWave.appendChild(bar);
+      previewBars.push(bar);
+    }
+  }
+
+  function paintPreviewProgress(ratio) {
+    var played = Math.round(ratio * previewBars.length);
+    for (var i = 0; i < previewBars.length; i++) {
+      if (previewBars[i].classList) previewBars[i].classList.toggle('is-played', i < played);
+    }
   }
 
   function showPreview(blob) {
@@ -447,6 +751,7 @@
       try { audio.load(); } catch (error) {}
       try { audio.currentTime = 0; } catch (error) {}
     }
+    buildPreviewWave();
     renderPreview();
     setComposerState('preview');
     setMicBusy(false);
@@ -577,6 +882,7 @@
       releaseStream();
       discard = false;
       if (wasDiscard) {
+        sendAfterStop = false;
         showIdle();
         return;
       }
@@ -588,6 +894,10 @@
       }
       recordedSeconds = elapsed;
       showPreview(blob);
+      if (sendAfterStop) {
+        sendAfterStop = false;
+        sendPreview();
+      }
     };
     mediaRecorder.onerror = function () {
       discard = true;
@@ -612,6 +922,8 @@
     }
     requesting = false;
     recording = true;
+    levels = [];
+    sendAfterStop = false;
     startedAt = Date.now();
     recordedSeconds = 0;
     if (timerEl) timerEl.textContent = '0:00';
@@ -663,6 +975,7 @@
   }
 
   function cancelRecording() {
+    sendAfterStop = false;
     cancelRequested = true;
     discard = true;
     chunks = [];
@@ -676,6 +989,7 @@
   }
 
   function abandon() {
+    sendAfterStop = false;
     discard = true;
     cancelRequested = true;
     var stopping = mediaRecorder && mediaRecorder.state !== 'inactive';
@@ -696,6 +1010,15 @@
   if (deleteBtn) deleteBtn.addEventListener('click', deletePreview);
   if (playBtn) playBtn.addEventListener('click', togglePlay);
   if (sendBtn) sendBtn.addEventListener('click', sendPreview);
+  if (restartBtn) restartBtn.addEventListener('click', function () {
+    if (sending) return;
+    deletePreview();
+    startRecording();
+  });
+  if (recSendBtn) recSendBtn.addEventListener('click', function () {
+    sendAfterStop = true;
+    stopRecording();
+  });
   if (seek) {
     seek.addEventListener('input', function () {
       if (!audio || seek.disabled) return;

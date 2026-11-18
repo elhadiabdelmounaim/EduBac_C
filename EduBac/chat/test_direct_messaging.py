@@ -7,6 +7,7 @@ from accounts.models import User
 from classrooms.models import Classroom, ClassroomMember
 from .models import (
     ChatMessage,
+    ClassChatRoom,
     ChatPresence,
     DirectConversation,
     DirectMessage,
@@ -67,6 +68,10 @@ class DirectMessagingTests(TestCase):
         ClassroomMember.objects.create(classroom=self.classroom, user=self.student)
         ClassroomMember.objects.create(classroom=self.classroom, user=self.classmate)
         ClassroomMember.objects.create(classroom=self.other_class, user=self.outsider)
+        # Les messages entre élèves sont désactivés par défaut ; ces tests
+        # couvrent le cas où le professeur les a autorisés pour la classe.
+        for classroom in (self.classroom, self.other_class):
+            ClassChatRoom.objects.create(classroom=classroom, allow_student_direct=True)
 
     def login_as(self, user):
         session = self.client.session
@@ -171,6 +176,7 @@ class DirectMessagingTests(TestCase):
             teacher=self.teacher,
             is_active=True,
         )
+        ClassChatRoom.objects.create(classroom=shared_class, allow_student_direct=True)
         ClassroomMember.objects.create(classroom=shared_class, user=self.student)
         ClassroomMember.objects.create(classroom=shared_class, user=self.classmate)
         conversation, _ = DirectConversation.get_or_create_for(

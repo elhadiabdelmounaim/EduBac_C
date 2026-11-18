@@ -283,6 +283,7 @@ def admin_teacher_dashboard(request):
 
     request.session['user_id'] = user.pk
     request.session['role'] = user.role
+    request.session['password_session_version'] = user.password_session_version
     request.session.cycle_key()
     return redirect('accounts:teacher_portal')
 
@@ -377,6 +378,8 @@ def register_student(request):
                     except IntegrityError:
                         error = 'Ce nom d’utilisateur est déjà utilisé.'
                     else:
+                        from notifications.services import notify_registration_pending
+                        notify_registration_pending(user)
                         messages.success(
                             request,
                             'Votre demande a été envoyée. Connectez-vous après '
@@ -796,6 +799,18 @@ def review_registration(request, user_id):
             user.approval_status = 'approved'
             user.is_active = True
             user.save(update_fields=['approval_status', 'is_active'])
+            from classrooms.models import ClassroomMember
+            from notifications.services import (
+                notify_classroom_joined,
+                notify_registration_approved,
+            )
+
+            def _announce(approved=user):
+                notify_registration_approved(approved)
+                for member in ClassroomMember.objects.filter(user=approved).select_related('classroom'):
+                    notify_classroom_joined(member)
+
+            transaction.on_commit(_announce)
             messages.success(
                 request,
                 f'Le compte de {user.get_full_name()} a été approuvé.',
@@ -871,7 +886,8 @@ def teacher_dashboard(request):
     classrooms = classrooms_qs.annotate(nb_eleves=Count('members'))
     total_students = memberships.values('user').distinct().count()
     my_quizzes = quizzes_qs.annotate(
-        nb_q=Count('questions'), nb_att=Count('attempts'),
+        nb_q=Count('questions', distinct=True),
+        nb_att=Count('attempts', distinct=True),
     ).order_by('-created_at')[:8]
     recent_attempts = Attempt.objects.filter(
         submitted_at__isnull=False,

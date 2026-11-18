@@ -23,7 +23,7 @@ class NotificationBrowserTests(StaticLiveServerTestCase):
         self.addCleanup(context.close)
         page = context.new_page()
         page.goto(self.live_server_url + reverse("accounts:login"))
-        page.locator('[name="email"]').fill(user.email)
+        page.locator('[name="username"]').fill(user.email)
         page.locator('[name="password"]').fill("Browser-test-only-123!")
         page.get_by_role("button", name="Se connecter", exact=True).click()
         page.wait_for_url(lambda url: "/connexion/" not in url)

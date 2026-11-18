@@ -68,18 +68,8 @@ def _read_png(upload):
 
 
 def _notify(share):
-    from notifications.services import notify_user
-    link = reverse('whiteboard:share_view', args=[share.pk])
-    for member in share.classroom.members.select_related('user'):
-        notify_user(
-            user=member.user,
-            title='Whiteboard partagé',
-            message=f'« {share.title} » a été partagé avec la classe {share.classroom.name}.',
-            type='classroom',
-            actor=share.teacher,
-            link=link,
-            send_email=False,
-        )
+    from notifications.services import notify_whiteboard_share
+    notify_whiteboard_share(share)
 
 
 def _broadcast(share):
@@ -128,7 +118,25 @@ def share_create(request):
     except Exception:
         logger.warning('whiteboard share notification failed', exc_info=True)
     _broadcast(share)
+    _post_to_class_chat(share)
     return JsonResponse({'ok': True, 'share': share_payload(share)})
+
+
+def _post_to_class_chat(share):
+    """Publie le tableau partagé dans le salon de la classe (sans bloquer le partage)."""
+    try:
+        from chat import realtime
+        from chat.models import ChatMessage, ClassChatRoom
+        room = ClassChatRoom.get_or_create_for(share.classroom)
+        message = ChatMessage.objects.create(
+            room=room,
+            sender=share.teacher,
+            body=f'📋 Tableau partagé : {share.title}',
+            whiteboard_share=share,
+        )
+        realtime.class_message(share.classroom_id, message)
+    except Exception:
+        logger.warning('whiteboard share chat post failed', exc_info=True)
 
 
 def _deny():

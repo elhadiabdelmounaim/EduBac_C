@@ -1,0 +1,47 @@
+{# Enregistreur vocal partagé (chat-voice.js). Rien n'est envoyé avant un clic sur Envoyer. #}
+<div class="chat-voice-recorder" id="chatVoiceRecorder" hidden data-state="idle">
+  <div class="chat-voice-rec" id="chatVoiceRec" hidden role="group" aria-label="Enregistrement en cours">
+    <button type="button" class="chat-voice-icon-btn chat-voice-rec-cancel" id="chatVoiceCancel" title="Annuler l’enregistrement">
+      <i class="bi bi-trash3" aria-hidden="true"></i><span class="chat-voice-label">Annuler</span>
+    </button>
+    <div class="chat-voice-rec-live">
+      <span class="chat-voice-rec-dot" aria-hidden="true"></span>
+      <span class="chat-voice-rec-time" id="chatVoiceRecTime" aria-live="off">0:00</span>
+      <div class="chat-voice-wave is-fallback" id="chatVoiceWave" aria-hidden="true"></div>
+      <span class="chat-voice-state" id="chatVoiceRecLabel">Enregistrement</span>
+    </div>
+    <button type="button" class="chat-voice-icon-btn chat-voice-rec-stop" id="chatVoiceStop" title="Arrêter et écouter" aria-label="Arrêter l’enregistrement et l’écouter">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor"/></svg>
+    </button>
+    <button type="button" class="chat-round-btn chat-voice-rec-send" id="chatVoiceRecSend" title="Arrêter et envoyer" aria-label="Arrêter et envoyer le message vocal">
+      <i class="bi bi-send-fill" aria-hidden="true"></i>
+    </button>
+  </div>
+  <div class="chat-voice-preview" id="chatVoicePreview" hidden data-playback="paused" role="group" aria-label="Aperçu du message vocal">
+    <button type="button" class="chat-voice-icon-btn chat-voice-delete" id="chatVoiceDelete" title="Supprimer l’enregistrement">
+      <i class="bi bi-trash3" aria-hidden="true"></i><span class="chat-voice-label">Supprimer</span>
+    </button>
+    <button type="button" class="chat-voice-icon-btn chat-voice-restart" id="chatVoiceRestart" title="Recommencer l’enregistrement">
+      <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i><span class="chat-voice-label">Recommencer</span>
+    </button>
+    <div class="chat-voice-preview-main">
+      <button type="button" class="chat-voice-play" id="chatVoicePlay" aria-label="Lecture"></button>
+      <div class="chat-voice-preview-timeline">
+        <div class="chat-voice-track">
+          <div class="chat-voice-bars" id="chatVoicePreviewWave" aria-hidden="true"></div>
+          <input type="range" id="chatVoiceSeek" min="0" max="1" step="0.01" value="0" disabled aria-label="Position de lecture">
+        </div>
+        <div class="chat-voice-preview-meta">
+          <span class="chat-voice-preview-times">
+            <span id="chatVoiceElapsed">0:00</span><span aria-hidden="true"> / </span><span id="chatVoiceDuration">0:00</span>
+          </span>
+          <span class="chat-voice-state" id="chatVoicePreviewState" role="status">Aperçu</span>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="chat-round-btn chat-voice-send" id="chatVoiceSend" title="Envoyer le message vocal">
+      <i class="bi bi-send-fill" aria-hidden="true"></i><span class="chat-voice-label">Envoyer</span>
+    </button>
+    <audio id="chatVoicePreviewAudio" preload="auto" playsinline hidden></audio>
+  </div>
+</div>

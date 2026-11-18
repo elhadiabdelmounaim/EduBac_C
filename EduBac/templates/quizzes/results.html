@@ -108,6 +108,12 @@
                    class="btn btn-sm btn-edubac">
                     <i class="bi bi-easel"></i> Ouvrir le tableau de correction
                 </a>
+                {% if consult_classroom_id %}
+                <a href="{% url 'chat:private_student_chat' consult_classroom_id %}?question={{ item.question.pk }}"
+                   class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-chat-dots"></i> Poser une question au professeur
+                </a>
+                {% endif %}
             </div>
         </div>
         {% empty %}

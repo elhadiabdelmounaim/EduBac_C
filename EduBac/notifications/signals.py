@@ -19,10 +19,11 @@ def on_attempt_submitted(sender, instance, **kwargs):
         from .services import notify_quiz_result
         # Éviter les doublons : une seule notif par tentative
         from .models import Notification
+        from django.urls import reverse
         already = Notification.objects.filter(
             recipient=instance.student,
             type='quiz_result',
-            link=f'/quizzes/tentative/{instance.pk}/resultats/',
+            link=reverse('quizzes:results', args=[instance.pk]),
         ).exists()
         if not already:
             notify_quiz_result(instance)
@@ -30,6 +31,8 @@ def on_attempt_submitted(sender, instance, **kwargs):
 
 @receiver(post_save, sender='classrooms.ClassroomMember')
 def on_classroom_joined(sender, instance, created, **kwargs):
-    if created:
+    # Une inscription en attente n'est annoncée au professeur qu'après validation
+    # (voir accounts.views.review_registration).
+    if created and getattr(instance.user, 'approval_status', 'approved') != 'pending':
         from .services import notify_classroom_joined
         notify_classroom_joined(instance)

@@ -171,7 +171,7 @@ class PrivateConsultationTests(TestCase):
             {
                 'body': 'Regardez cette image.',
                 'attachment': SimpleUploadedFile(
-                    'exercice.png', b'private-image-data', content_type='image/png',
+                    'exercice.png', b'\x89PNG\r\n\x1a\nprivate-image-data', content_type='image/png',
                 ),
             },
         )
@@ -192,7 +192,7 @@ class PrivateConsultationTests(TestCase):
             reverse('chat:api_private_send', args=[self._conversation().pk]),
             {
                 'attachment': SimpleUploadedFile(
-                    'explication.mp3', b'private-audio-data', content_type='audio/mpeg',
+                    'explication.mp3', b'ID3private-audio-data', content_type='audio/mpeg',
                 ),
             },
         )

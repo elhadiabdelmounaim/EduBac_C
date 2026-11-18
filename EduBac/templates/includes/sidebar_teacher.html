@@ -26,7 +26,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.app_name == 'chat' and request.resolver_match.url_name != 'private_inbox' and request.resolver_match.url_name != 'private_room' and request.resolver_match.url_name != 'direct_room' and request.GET.tab != 'individuals' %}active{% endif %}"
+                <a class="nav-link {% if request.resolver_match.app_name == 'chat' and request.resolver_match.url_name != 'private_inbox' and request.resolver_match.url_name != 'private_room' and request.resolver_match.url_name != 'direct_room' and request.resolver_match.url_name != 'moderation' and request.GET.tab != 'individuals' %}active{% endif %}"
                    href="{% url 'chat:home' %}">
                     <i class="bi bi-chat-dots"></i><span>Messagerie</span>
                     {% if chat_unread_total %}<span class="sidebar-badge">{{ chat_unread_total }}</span>{% endif %}
@@ -36,6 +36,12 @@
                 <a class="nav-link {% if request.GET.tab == 'individuals' or request.resolver_match.url_name == 'private_inbox' or request.resolver_match.url_name == 'private_room' or request.resolver_match.url_name == 'direct_room' %}active{% endif %}"
                    href="{% url 'chat:home' %}?tab=individuals">
                     <i class="bi bi-person-lines-fill"></i><span>Conversations individuelles</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'moderation' %}active{% endif %}"
+                   href="{% url 'chat:moderation' %}">
+                    <i class="bi bi-shield-check"></i><span>Modération</span>
                 </a>
             </li>
             <li class="nav-item">

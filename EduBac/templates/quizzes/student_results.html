@@ -105,6 +105,10 @@
                     <td class="small">{{ a.submitted_at|date:"H:i" }}</td>
                     <td>
                         <a href="{% url 'quizzes:comment' a.pk %}" class="btn btn-sm btn-outline-primary">Commenter</a>
+                        <a href="{% url 'chat:teacher_consult_student' a.student_id %}" class="btn btn-sm btn-outline-secondary"
+                           title="Ouvrir la consultation privée avec cet élève">
+                            <i class="bi bi-chat-dots" aria-hidden="true"></i> Écrire
+                        </a>
                     </td>
                 </tr>
             {% empty %}

@@ -69,3 +69,39 @@ def send_notification_email(recipient, title, message, link='', type_code='syste
             type(exc).__name__,
         )
         return False
+
+
+def send_digest_email(recipient, notifications):
+    """Un seul e-mail récapitulant plusieurs notifications. Retourne True si envoyé."""
+    from django.urls import reverse
+
+    if not email_enabled() or not notifications:
+        return False
+    email = getattr(recipient, 'email', '') or ''
+    if not email or '@' not in email:
+        return False
+    items = [
+        {
+            'title': n.title,
+            'message': n.message,
+            'link': absolute_url(n.safe_link) if n.safe_link else '',
+        }
+        for n in notifications
+    ]
+    context = {
+        'recipient_name': recipient.get_full_name() or recipient.username,
+        'items': items,
+        'history_url': absolute_url(reverse('notifications:history')),
+        'preferences_url': absolute_url(reverse('notifications:preferences')),
+    }
+    subject = f'EduBac — votre résumé ({len(items)} notification{"s" if len(items) > 1 else ""})'
+    try:
+        text = render_to_string('notifications/email/digest.txt', context)
+        html = render_to_string('notifications/email/digest.html', context)
+        msg = EmailMultiAlternatives(subject, text, settings.DEFAULT_FROM_EMAIL, [email])
+        msg.attach_alternative(html, 'text/html')
+        msg.send(fail_silently=False)
+        return True
+    except Exception as exc:
+        logger.error('Échec envoi du résumé de notifications (%s).', type(exc).__name__)
+        return False

@@ -1,0 +1,131 @@
+{# Liste des conversations partagée : accueil de la messagerie, salon de classe et conversations privées. #}
+<aside class="chat-sidebar" id="messagingRoot" aria-label="Conversations"
+       data-contacts-url="{{ contacts_url }}"
+       data-start-url="{{ start_url }}"
+       data-presence-url="{{ presence_url }}"
+       data-active-tab="{{ active_tab|default:'groups' }}"
+       data-active-thread="{{ active_thread|default:'' }}"
+       data-is-admin="{% if is_admin %}1{% else %}0{% endif %}"
+       data-is-teacher="{% if is_teacher %}1{% else %}0{% endif %}"
+       data-is-student="{% if is_student %}1{% else %}0{% endif %}">
+  <form id="messagingCsrfForm" hidden>{% csrf_token %}</form>
+
+  <header class="chat-sidebar-head">
+    {% if active_thread %}
+    <p class="chat-sidebar-title" role="heading" aria-level="2">Discussions</p>
+    {% else %}
+    <h1 class="chat-sidebar-title">Discussions</h1>
+    {% endif %}
+    <div class="chat-sidebar-tools">
+      {% if is_teacher or is_admin %}
+      <a class="chat-icon-btn" href="{% url 'chat:moderation' %}" title="Modération" aria-label="Modération des messages">
+        <i class="bi bi-shield-check" aria-hidden="true"></i>
+      </a>
+      {% endif %}
+      <button class="chat-icon-btn chat-icon-btn-accent" type="button" id="newConversationBtn"
+              title="Nouveau message" aria-label="Nouveau message">
+        <i class="bi bi-pencil-square" aria-hidden="true"></i>
+      </button>
+    </div>
+  </header>
+
+  <div class="chat-sidebar-search">
+    <label class="chat-search" for="messagingSearch">
+      <i class="bi bi-search" aria-hidden="true"></i>
+      <span class="visually-hidden">Rechercher une conversation</span>
+      <input id="messagingSearch" type="search" placeholder="Rechercher une discussion" autocomplete="off">
+    </label>
+  </div>
+
+  <div class="chat-filters">
+    <div class="chat-chips" id="messageTabs" role="group" aria-label="Filtrer les conversations">
+      <button type="button" class="chat-chip" data-filter="all" aria-pressed="true">Toutes</button>
+      <button type="button" class="chat-chip" data-filter="unread" aria-pressed="false">
+        Non lues{% if unread_threads %} <span class="chat-chip-count">{{ unread_threads }}</span>{% endif %}
+      </button>
+      <button type="button" class="chat-chip" id="messageTabGroups" data-filter="groups" aria-pressed="false">Classes</button>
+      <button type="button" class="chat-chip" id="messageTabIndividuals" data-filter="individuals" aria-pressed="false">Privées</button>
+    </div>
+    <label class="chat-class-filter" for="classFilter" {% if class_options|length < 2 %}hidden{% endif %}>
+      <span class="visually-hidden">Filtrer par classe</span>
+      <i class="bi bi-funnel" aria-hidden="true"></i>
+      <select id="classFilter">
+        <option value="">Toutes les classes</option>
+        {% for option in class_options %}
+        <option value="{{ option.id }}">{{ option.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  </div>
+
+  <nav class="chat-thread-list" id="threadList" aria-label="Liste des discussions">
+    {% for thread in threads %}
+    {% with tid=thread.id|stringformat:"s" %}{% with key=thread.kind|add:"-"|add:tid %}
+    <a class="chat-thread{% if key == active_thread %} is-active{% endif %}{% if thread.unread %} has-unread{% endif %}"
+       href="{{ thread.url }}"
+       {% if key == active_thread %}aria-current="page"{% endif %}
+       data-thread="{{ key }}"
+       data-kind="{{ thread.kind }}"
+       data-classroom-id="{{ thread.classroom_id|default:'' }}"
+       data-search="{{ thread.search_text|default:thread.name|lower }} {{ thread.subtitle|default:''|lower }} {{ thread.last_message|default:''|lower }}"
+       data-unread="{% if thread.unread %}1{% else %}0{% endif %}">
+      <span class="chat-avatar{% if thread.kind == 'class' %} is-group{% endif %}" data-avatar-seed="{{ thread.name }}" aria-hidden="true">
+        {% if thread.kind == 'class' %}<i class="bi bi-people-fill"></i>{% else %}{{ thread.avatar_letter|default:thread.name|slice:":1"|upper }}{% endif %}
+        {% if thread.is_online %}<span class="chat-presence-dot"></span>{% endif %}
+      </span>
+      <span class="chat-thread-body">
+        <span class="chat-thread-top">
+          <span class="chat-thread-name">{{ thread.name }}</span>
+          <time class="chat-thread-time" {% if thread.last_message_at %}datetime="{{ thread.last_message_at }}"{% endif %}>{{ thread.last_message_time|default:"" }}</time>
+        </span>
+        <span class="chat-thread-bottom">
+          <span class="chat-thread-preview">
+            {% if thread.kind == 'class' %}<span class="chat-thread-tag">Classe</span>
+            {% elif thread.kind == 'consultation' %}<span class="chat-thread-tag is-teacher">Consultation</span>{% endif %}
+            {% if thread.last_message %}{{ thread.last_message|truncatechars:90 }}{% else %}<span class="chat-thread-empty">{% if thread.kind == 'class' %}Aucun message pour le moment{% else %}Commencez la conversation{% endif %}</span>{% endif %}
+          </span>
+          {% if thread.unread %}<span class="chat-unread" aria-label="{{ thread.unread }} message{{ thread.unread|pluralize }} non lu{{ thread.unread|pluralize }}">{{ thread.unread }}</span>{% endif %}
+        </span>
+      </span>
+    </a>
+    {% endwith %}{% endwith %}
+    {% empty %}
+    <div class="chat-list-empty">
+      <span class="chat-list-empty-icon"><i class="bi bi-chat-square-dots" aria-hidden="true"></i></span>
+      <strong>Aucune discussion pour le moment</strong>
+      <p>{% if is_teacher %}Créez une classe ou écrivez à un élève pour commencer.{% else %}Rejoignez une classe ou écrivez à votre professeur.{% endif %}</p>
+      <button type="button" class="chat-text-btn" data-open-contacts>Écrire un premier message</button>
+    </div>
+    {% endfor %}
+    <div class="chat-list-empty" id="messagingEmpty" hidden role="status" aria-live="polite">
+      <span class="chat-list-empty-icon"><i class="bi bi-search" aria-hidden="true"></i></span>
+      <strong>Aucun résultat</strong>
+      <p>Essayez un autre nom ou un autre filtre.</p>
+    </div>
+  </nav>
+
+  <p class="chat-sidebar-foot">
+    <i class="bi bi-shield-lock-fill" aria-hidden="true"></i>
+    Espace encadré : les échanges restent dans votre classe et votre équipe pédagogique.
+  </p>
+
+  <dialog class="chat-dialog new-message-dialog" id="newConversationDialog" aria-labelledby="newConversationTitle">
+    <header class="chat-dialog-head">
+      <div>
+        <h2 id="newConversationTitle">Nouveau message</h2>
+        <p>Choisissez un contact autorisé dans votre espace EduBac.</p>
+      </div>
+      <button type="button" class="chat-icon-btn" aria-label="Fermer" data-close-dialog>
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
+      </button>
+    </header>
+    <label class="chat-search" for="contactSearch">
+      <i class="bi bi-search" aria-hidden="true"></i>
+      <span class="visually-hidden">Rechercher un contact</span>
+      <input type="search" id="contactSearch" placeholder="Nom, classe ou rôle…" autocomplete="off">
+    </label>
+    <div class="contact-results" id="contactResults" aria-live="polite" aria-busy="false">
+      <p class="contact-message">Chargement des contacts…</p>
+    </div>
+  </dialog>
+</aside>

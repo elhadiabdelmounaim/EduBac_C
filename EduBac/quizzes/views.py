@@ -4,10 +4,11 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from accounts.decorators import login_required_simple
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.db.models import Avg, Count, Q
 from django.db import transaction
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 
 from accounts.decorators import teacher_required, student_required
 from accounts.models import User
@@ -62,9 +63,62 @@ def _student_can_access_quiz(user, quiz):
     return QuizAssignment.objects.filter(quiz=quiz, student=user).exists()
 
 
+def _assignable_quizzes(user):
+    """Quiz qu'un enseignant peut affecter : les siens (tous pour l'administration)."""
+    if _is_platform_admin(user):
+        return Quiz.objects.all()
+    return Quiz.objects.filter(created_by=user)
+
+
+def _managed_students(user):
+    """Élèves que l'enseignant encadre via ses classes (tous pour l'administration)."""
+    students = User.objects.filter(role='student', is_staff=False, is_superuser=False)
+    if not _is_platform_admin(user):
+        students = students.filter(classroom_memberships__classroom__teacher=user)
+    return students.distinct()
+
+
+def _commentable_attempts(user):
+    """Tentatives soumises sur les quiz de l'enseignant ou par les élèves de ses classes."""
+    attempts = Attempt.objects.filter(submitted_at__isnull=False)
+    if not _is_platform_admin(user):
+        attempts = attempts.filter(
+            Q(quiz__created_by=user)
+            | Q(student__classroom_memberships__classroom__teacher=user)
+        ).distinct()
+    return attempts
+
+
+# Tolérance réseau entre l'expiration du chronomètre et la réception de la réponse.
+ANSWER_GRACE_SECONDS = 3
+
+
+def _finalize_attempt(request, attempt):
+    """Clôture une tentative une seule fois : score, Excel, badges.
+
+    Les notifications de résultat sont créées par le signal post_save d'Attempt.
+    Les badges obtenus sont conservés en session pour la page de résultats, afin
+    que le simple affichage des résultats n'ait aucun effet de bord.
+    """
+    attempt.submitted_at = timezone.now()
+    attempt.save(update_fields=['submitted_at'])
+    attempt.calculate_score()
+    _sync_excel_after_submit(attempt)
+    try:
+        from accounts.engagement import check_badges_after_quiz
+        new_badges = check_badges_after_quiz(attempt.student, attempt.score) or []
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception(
+            "Échec attribution des badges pour attempt=%s", attempt.pk
+        )
+        new_badges = []
+    if new_badges:
+        request.session[f'new_badges_{attempt.pk}'] = new_badges
+
+
 def _notify_assignments(quiz, students, deadline=None):
-    """Crée les affectations + notifications uniquement pour la liste donnée."""
-    from notifications.services import notify_quiz_assigned
+    """Crée les affectations ; le signal post_save envoie la notification."""
     created = 0
     for st in students:
         obj, was = QuizAssignment.objects.get_or_create(
@@ -74,10 +128,6 @@ def _notify_assignments(quiz, students, deadline=None):
         )
         if was:
             created += 1
-            try:
-                notify_quiz_assigned(obj)
-            except Exception:
-                pass
         elif deadline and not obj.deadline:
             obj.deadline = deadline
             obj.save(update_fields=['deadline'])
@@ -144,10 +194,7 @@ def take_quiz(request, attempt_id):
     current = next((q for q in questions if q.id not in answered_ids), None)
 
     if current is None:
-        attempt.submitted_at = timezone.now()
-        attempt.save(update_fields=['submitted_at'])
-        attempt.calculate_score()
-        _sync_excel_after_submit(attempt)
+        _finalize_attempt(request, attempt)
         return redirect('quizzes:results', attempt_id=attempt.pk)
 
     # Chronomètre PAR QUESTION (défaut 20 s)
@@ -170,8 +217,12 @@ def take_quiz(request, attempt_id):
 
     if request.method == 'POST':
         answer_text = request.POST.get('answer', '').strip()
-        timed_out = answer_text == '__timeout__' or timezone.now() >= deadline_q
-        if timed_out and not answer_text:
+        # Le chronomètre fait foi côté serveur : une réponse reçue après
+        # l'échéance (plus une courte tolérance réseau) n'est pas notée.
+        expired = timezone.now() >= deadline_q + timedelta(seconds=ANSWER_GRACE_SECONDS)
+        if expired or answer_text == '__timeout__' or (
+            not answer_text and timezone.now() >= deadline_q
+        ):
             answer_text = '__timeout__'
         if answer_text == '__timeout__':
             # Question sans réponse → incorrecte, passer à la suivante
@@ -187,10 +238,7 @@ def take_quiz(request, attempt_id):
             request.session.pop(sess_key, None)
             # Si c'était la dernière question
             if len(answered_ids) + 1 >= len(questions):
-                attempt.submitted_at = timezone.now()
-                attempt.save(update_fields=['submitted_at'])
-                attempt.calculate_score()
-                _sync_excel_after_submit(attempt)
+                _finalize_attempt(request, attempt)
                 messages.warning(request, 'Temps écoulé sur une ou plusieurs questions.')
                 return redirect('quizzes:results', attempt_id=attempt.pk)
             return redirect('quizzes:take', attempt_id=attempt.pk)
@@ -209,15 +257,7 @@ def take_quiz(request, attempt_id):
             request.session.pop(sess_key, None)
             # Pas de feedback / solution pendant le quiz → question suivante ou résultats
             if len(answered_ids) + 1 >= len(questions):
-                attempt.submitted_at = timezone.now()
-                attempt.save(update_fields=['submitted_at'])
-                attempt.calculate_score()
-                _sync_excel_after_submit(attempt)
-                try:
-                    from notifications.services import notify_quiz_result
-                    notify_quiz_result(attempt)
-                except Exception:
-                    pass
+                _finalize_attempt(request, attempt)
                 return redirect('quizzes:results', attempt_id=attempt.pk)
             return redirect('quizzes:take', attempt_id=attempt.pk)
 
@@ -265,10 +305,6 @@ def question_feedback(request, attempt_id, question_id):
 
     if request.method == 'POST':
         if is_last:
-            if not attempt.submitted_at:
-                attempt.submitted_at = timezone.now()
-                attempt.calculate_score()
-                _sync_excel_after_submit(attempt)
             return redirect('quizzes:results', attempt_id=attempt.pk)
         return redirect('quizzes:take', attempt_id=attempt.pk)
 
@@ -301,12 +337,8 @@ def quiz_results(request, attempt_id):
     )
     correct = answers.filter(is_correct=True).count()
     total = answers.count()
-    new_badges = []
-    try:
-        from accounts.engagement import check_badges_after_quiz
-        new_badges = check_badges_after_quiz(request.user, attempt.score) or []
-    except Exception:
-        new_badges = []
+    # Badges calculés une seule fois à la soumission (voir _finalize_attempt).
+    new_badges = request.session.pop(f'new_badges_{attempt.pk}', [])
 
     # Enrichir chaque réponse avec la bonne réponse (côté serveur, après fin du quiz)
     detailed = []
@@ -334,7 +366,19 @@ def quiz_results(request, attempt_id):
             'choices': choices_list,
         })
 
+    # Classe à utiliser pour « Poser une question au professeur » : de préférence
+    # celle du professeur auteur du quiz.
+    student_memberships = ClassroomMember.objects.filter(
+        user=request.user,
+        classroom__is_active=True,
+        classroom__teacher__isnull=False,
+    ).order_by('joined_at')
+    consult_membership = (
+        student_memberships.filter(classroom__teacher_id=attempt.quiz.created_by_id).first()
+        or student_memberships.first()
+    )
     return render(request, 'quizzes/results.html', {
+        'consult_classroom_id': consult_membership.classroom_id if consult_membership else None,
         'attempt': attempt,
         'new_badges': new_badges,
         'answers': answers,
@@ -441,10 +485,16 @@ def training(request):
 
 def _publish_scheduled_quizzes():
     """Passe en publié les quiz dont publish_at est atteint."""
+    from notifications.services import notify_quiz_published
     now = timezone.now()
-    Quiz.objects.filter(
+    due = list(Quiz.objects.filter(
         status='draft', publish_at__isnull=False, publish_at__lte=now
-    ).update(status='published')
+    ).select_related('created_by'))
+    if not due:
+        return
+    Quiz.objects.filter(pk__in=[quiz.pk for quiz in due]).update(status='published')
+    for quiz in due:
+        notify_quiz_published(quiz)
 
 
 @teacher_required
@@ -504,7 +554,10 @@ def manage_quizzes(request):
     quizzes = (
         quizzes
         .select_related('lesson', 'lesson__course')
-        .annotate(nb_questions=Count('questions'), nb_attempts=Count('attempts'))
+        .annotate(
+            nb_questions=Count('questions', distinct=True),
+            nb_attempts=Count('attempts', distinct=True),
+        )
         .order_by('-created_at')
     )
     niveaux = CURRICULUM
@@ -565,19 +618,18 @@ def create_quiz(request):
 @teacher_required
 def assign_quiz(request, pk=None):
     """Affecter un quiz à des élèves ou une classe."""
-    is_admin = _is_platform_admin(request.user)
-    quizzes = (
-        Quiz.objects.all() if is_admin
-        else Quiz.objects.filter(Q(created_by=request.user) | Q(status='published'))
-    ).order_by('-created_at')
+    quizzes = _assignable_quizzes(request.user).order_by('-created_at')
     classrooms = _managed_classrooms(request.user)
-    students = User.objects.filter(role='student').order_by('username')
+    students = _managed_students(request.user).order_by('username')
 
-    selected_quiz = get_object_or_404(Quiz, pk=pk) if pk else None
+    selected_quiz = get_object_or_404(quizzes, pk=pk) if pk else None
 
     if request.method == 'POST':
         quiz_id = request.POST.get('quiz') or (pk and str(pk))
-        quiz = get_object_or_404(Quiz, pk=quiz_id)
+        if not str(quiz_id or '').isdecimal():
+            messages.error(request, "Sélectionnez un quiz.")
+            return redirect('quizzes:assign')
+        quiz = get_object_or_404(quizzes, pk=quiz_id)
         target = request.POST.get('target', 'students')  # students | classroom
         deadline_raw = request.POST.get('deadline') or None
         deadline = None
@@ -608,10 +660,12 @@ def assign_quiz(request, pk=None):
             return redirect('quizzes:manage')
         else:
             # Affectation individuelle (liste d'élèves)
-            student_ids = request.POST.getlist('students')
-            student_list = list(
-                User.objects.filter(pk__in=student_ids, role='student')
-            )
+            student_ids = [
+                value for value in request.POST.getlist('students')
+                if value.isdecimal()
+            ]
+            # Seuls les élèves encadrés par l'enseignant peuvent être ciblés.
+            student_list = list(students.filter(pk__in=student_ids))
             if student_list:
                 quiz.status = 'published'
                 quiz.save(update_fields=['status'])
@@ -686,6 +740,7 @@ def student_results(request):
 
 
 @teacher_required
+@require_POST
 def publish_quiz(request, pk):
     quiz = get_object_or_404(Quiz, pk=pk)
     if quiz.created_by_id and quiz.created_by_id != request.user.id and not _is_platform_admin(request.user):
@@ -1227,10 +1282,15 @@ def question_stats(request, pk):
 
 @teacher_required
 def comment_attempt(request, attempt_id):
-    attempt = get_object_or_404(Attempt, pk=attempt_id, submitted_at__isnull=False)
+    attempt = get_object_or_404(_commentable_attempts(request.user), pk=attempt_id)
     if request.method == 'POST':
-        attempt.teacher_comment = (request.POST.get('comment') or '').strip()
+        comment = (request.POST.get('comment') or '').strip()
+        changed = comment != attempt.teacher_comment
+        attempt.teacher_comment = comment
         attempt.save(update_fields=['teacher_comment'])
+        if comment and changed:
+            from notifications.services import notify_attempt_comment
+            notify_attempt_comment(attempt)
         messages.success(request, 'Commentaire enregistré.')
         return redirect('quizzes:student_results')
     return render(request, 'quizzes/comment_attempt.html', {
@@ -1240,6 +1300,8 @@ def comment_attempt(request, attempt_id):
 
 
 @teacher_required
+@require_POST
+@transaction.atomic
 def duplicate_quiz(request, pk):
     quiz = get_object_or_404(Quiz, pk=pk)
     if quiz.created_by_id and quiz.created_by_id != request.user.id and not _is_platform_admin(request.user):
@@ -1266,6 +1328,8 @@ def duplicate_quiz(request, pk):
             correct_answer=q.correct_answer,
             explanation=q.explanation,
             hint=getattr(q, 'hint', '') or '',
+            difficulty=q.difficulty,
+            points=q.points,
             order=q.order,
         )
         for c in q.choices.all():

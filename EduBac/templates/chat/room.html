@@ -1,87 +1,106 @@
 {% extends "base.html" %}
-{% block title %}Prof-Étudiant Chat{% endblock %}
+{% block title %}{{ active_classroom.name }} — Messagerie{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="/static/css/chat.css?v=app-palette-2">
-<link rel="stylesheet" href="/static/css/chat-voice.css?v=app-palette-2">
+<link rel="stylesheet" href="/static/css/chat.css?v=redesign-1">
+<link rel="stylesheet" href="/static/css/chat-voice.css?v=redesign-1">
+{% include "includes/katex.html" %}
 {% endblock %}
 {% block content %}
-<div class="chat-app {% if active_classroom %}chat-room-open{% endif %}"
+<div class="chat-app is-thread-open"
      id="chatApp"
      data-user-id="{{ user.id }}"
      data-classroom-id="{{ active_classroom.pk|default:'' }}"
      data-presence-url="{{ presence_url|default:'' }}"
      data-csrf="{{ csrf_token }}" data-user-role="{% if user.is_teacher or user.is_staff %}teacher{% else %}{{ user.role }}{% endif %}" data-is-teacher="{% if user.is_teacher or user.is_staff %}1{% else %}0{% endif %}">
 
-  {# ---- Liste des Classes ---- #}
-  <aside class="chat-sidebar" id="chatSidebar">
-    <div class="chat-sidebar-header">
-      <h1 class="chat-title">💬 Prof-Étudiant Chat</h1>
-      <p class="chat-subtitle mb-0">Discussions de classe sécurisées</p>
-      <div class="chat-search-box">
-        <i class="bi bi-search"></i>
-        <input type="search" id="chatRoomSearch" placeholder="Rechercher une classe…" autocomplete="off">
-      </div>
-    </div>
-    <div class="chat-room-list" id="chatRoomList">
-      {% for r in rooms %}
-      <a href="{% url 'chat:room' r.classroom_id %}"
-         class="chat-room-item {% if active_classroom and active_classroom.pk == r.classroom_id %}active{% endif %}"
-         data-classroom-id="{{ r.classroom_id }}"
-         data-name="{{ r.name|lower }}">
-        <div class="chat-avatar">{{ r.avatar_letter }}</div>
-        <div class="chat-room-meta">
-          <div class="chat-room-top">
-            <span class="chat-room-name">{{ r.name }}</span>
-            <span class="chat-room-time">{{ r.last_message_time }}</span>
-          </div>
-          <div class="chat-room-bottom">
-            <span class="chat-room-preview">{% if r.last_message %}{{ r.last_message }}{% else %}Aucun message{% endif %}</span>
-            {% if r.unread %}<span class="chat-unread-badge">{{ r.unread }}</span>{% endif %}
-          </div>
-        </div>
-      </a>
-      {% empty %}
-      <div class="chat-empty-list">
-        <i class="bi bi-chat-square-dots"></i>
-        <p class="mb-0">{% if user.is_teacher %}Créez une classe pour discuter avec vos élèves.{% else %}Rejoignez une classe pour discuter avec votre professeur.{% endif %}</p>
-      </div>
-      {% endfor %}
-    </div>
-  </aside>
+  {% include "chat/_conversation_list.html" %}
 
-  {# ---- Zone de conversation ---- #}
-  <section class="chat-main" id="chatMain">
-    {% if active_classroom %}
+  <section class="chat-main" id="chatMain" aria-labelledby="chatThreadTitle">
     <header class="chat-main-header">
-      <button type="button" class="chat-back-btn d-lg-none" id="chatBackBtn" aria-label="Retour">
-        <i class="bi bi-arrow-left"></i>
-      </button>
-      <div class="chat-avatar chat-avatar-lg">{{ active_classroom.name|slice:":1"|upper }}</div>
+      <a class="chat-back-btn" id="chatBackBtn" href="{% url 'chat:home' %}" aria-label="Retour aux discussions">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+      </a>
+      <span class="chat-avatar is-group" data-avatar-seed="{{ active_classroom.name }}" aria-hidden="true"><i class="bi bi-people-fill"></i></span>
       <div class="chat-header-info">
-        <div class="chat-header-name">{{ active_classroom.name }}</div>
-        <div class="chat-header-status">
+        <h1 class="chat-header-name" id="chatThreadTitle">{{ active_classroom.name }}</h1>
+        <p class="chat-header-status">
           {{ members_count }} membre{{ members_count|pluralize }}
-          <span>•</span>
-          <span class="chat-online-dot" title="{{ online_count }} en ligne"></span>
+          <span aria-hidden="true">·</span>
+          <span class="chat-online-dot" aria-hidden="true"></span>
           <span id="chatOnlineCount">{{ online_count }} en ligne</span>
-        </div>
+        </p>
       </div>
       <div class="chat-header-actions">
-        <button type="button" title="Rechercher" aria-label="Rechercher"><i class="bi bi-search"></i></button>
-        <button type="button" id="chatMembersBtn" title="Membres et participation" aria-label="Voir les membres et leur participation"><i class="bi bi-people"></i></button>
+        <button type="button" class="chat-icon-btn" id="chatPinnedListBtn" title="Messages épinglés (FAQ de la classe)" aria-label="Voir les messages épinglés"><i class="bi bi-pin-angle" aria-hidden="true"></i></button>
+        <button type="button" class="chat-icon-btn" id="chatMembersBtn" title="Membres et participation" aria-label="Voir les membres et leur participation"><i class="bi bi-people" aria-hidden="true"></i></button>
+        {% if user.is_teacher or user.is_staff %}
+        <button type="button" class="chat-icon-btn" id="chatSettingsBtn" title="Réglages du salon" aria-label="Réglages du salon"><i class="bi bi-gear" aria-hidden="true"></i></button>
+        {% endif %}
       </div>
     </header>
 
-    <dialog class="chat-members-dialog" id="chatMembersDialog" aria-labelledby="chatMembersTitle">
-      <header class="chat-members-dialog-header">
-        <div><h2 id="chatMembersTitle">Membres et participation</h2><p>{{ active_classroom.name }}</p></div>
-        <button type="button" id="chatMembersClose" aria-label="Fermer">&times;</button>
+    <button type="button" class="chat-pinned-bar" id="chatPinnedBar" hidden></button>
+
+    <dialog class="chat-dialog" id="chatPinnedDialog" aria-labelledby="chatPinnedTitle">
+      <header class="chat-dialog-head">
+        <div><h2 id="chatPinnedTitle">Épinglés · FAQ de la classe</h2><p>{{ active_classroom.name }}</p></div>
+        <button type="button" class="chat-icon-btn" data-close aria-label="Fermer"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
       </header>
-      <div id="chatMembersContent" class="chat-members-content" aria-live="polite"></div>
+      <div id="chatPinnedList" class="chat-dialog-body"></div>
     </dialog>
 
-    <div class="chat-messages" id="chatMessages" aria-live="polite">
-      <div class="chat-messages-loading text-center py-4" style="color:var(--nb-muted);">Chargement…</div>
+    {% if user.is_teacher or user.is_staff %}
+    <dialog class="chat-dialog" id="chatSettingsDialog" aria-labelledby="chatSettingsTitle">
+      <form>
+        <header class="chat-dialog-head">
+          <div><h2 id="chatSettingsTitle">Réglages du salon</h2><p>{{ active_classroom.name }}</p></div>
+          <button type="button" class="chat-icon-btn" data-close aria-label="Fermer"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+        </header>
+        <div class="chat-dialog-body chat-settings">
+          <label class="chat-setting">
+            <input type="checkbox" name="is_locked">
+            <span><strong>Mode annonces</strong><small>Seul le professeur peut écrire dans le salon.</small></span>
+          </label>
+          <label class="chat-setting">
+            <input type="checkbox" name="allow_student_direct">
+            <span><strong>Messages privés entre élèves</strong><small>Désactivés par défaut. Les élèves peuvent signaler ou bloquer un camarade.</small></span>
+          </label>
+          <fieldset class="chat-setting">
+            <legend><strong>Heures de silence</strong></legend>
+            <small>Les élèves ne peuvent pas écrire (salon et messages privés) pendant cette plage. Laissez vide pour désactiver.</small>
+            <div class="chat-quiet-hours">
+              <label>De <input type="time" name="quiet_hours_start" class="form-control form-control-sm"></label>
+              <label>à <input type="time" name="quiet_hours_end" class="form-control form-control-sm"></label>
+            </div>
+          </fieldset>
+          <p class="chat-settings-note">La mise en sourdine d’un élève se fait depuis la liste des <i class="bi bi-people" aria-hidden="true"></i> membres.
+            Les signalements sont dans <a href="{% url 'chat:moderation' %}">la modération</a>.</p>
+          <p class="chat-settings-error" role="alert" hidden></p>
+          <div class="chat-dialog-actions">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-close>Annuler</button>
+            <button type="submit" class="btn btn-edubac btn-sm">Enregistrer</button>
+          </div>
+        </div>
+      </form>
+    </dialog>
+    {% endif %}
+
+    <dialog class="chat-dialog" id="chatMembersDialog" aria-labelledby="chatMembersTitle">
+      <header class="chat-dialog-head">
+        <div><h2 id="chatMembersTitle">Membres et participation</h2><p>{{ active_classroom.name }}</p></div>
+        <button type="button" class="chat-icon-btn" id="chatMembersClose" aria-label="Fermer"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+      </header>
+      <div id="chatMembersContent" class="chat-dialog-body" aria-live="polite"></div>
+    </dialog>
+
+    <div class="chat-thread-body">
+      <div class="chat-messages" id="chatMessages" aria-live="polite" aria-label="Messages de la classe" data-group="1">
+        <div class="chat-messages-status">Chargement…</div>
+      </div>
+      <button type="button" class="chat-jump" id="chatJumpBtn" hidden aria-label="Aller aux derniers messages">
+        <i class="bi bi-chevron-down" aria-hidden="true"></i>
+        <span class="chat-jump-count" hidden></span>
+      </button>
     </div>
 
     <footer class="chat-composer">
@@ -93,13 +112,14 @@
           <span class="chat-reply-bar-label">Répondre à <strong id="chatReplyName"></strong></span>
           <span class="chat-reply-bar-text" id="chatReplyText"></span>
         </div>
-        <button type="button" id="chatReplyCancel" title="Annuler">&times;</button>
+        <button type="button" class="chat-icon-btn" id="chatReplyCancel" title="Annuler la réponse" aria-label="Annuler la réponse"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
       </div>
       <div class="chat-file-preview" id="chatFilePreview" hidden>
+        <i class="bi bi-paperclip" aria-hidden="true"></i>
         <span id="chatFilePreviewName"></span>
-        <button type="button" id="chatFileClear" title="Retirer">&times;</button>
+        <button type="button" class="chat-icon-btn" id="chatFileClear" title="Retirer la pièce jointe" aria-label="Retirer la pièce jointe"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
       </div>
-      <div class="chat-pinned-bar" id="chatPinnedBar" hidden></div>
+      <p class="chat-restriction" id="chatRestriction" role="status" hidden></p>
       {% if user.is_teacher or user.is_staff %}
       <label class="chat-announcement-toggle" for="chatAnnouncementInput">
         <input type="checkbox" id="chatAnnouncementInput">
@@ -107,74 +127,36 @@
         <span>Publier comme annonce importante</span>
       </label>
       {% endif %}
-      <form id="chatForm" autocomplete="off" enctype="multipart/form-data">
-        <div class="chat-composer-tools">
+      <form id="chatForm" class="chat-compose-row" autocomplete="off" enctype="multipart/form-data">
+        <div class="chat-input-pill">
           <button type="button" class="chat-tool-btn" id="chatEmojiBtn" title="Emoji" aria-label="Emoji">
-            <i class="bi bi-emoji-smile"></i>
+            <i class="bi bi-emoji-smile" aria-hidden="true"></i>
           </button>
-          <button type="button" class="chat-tool-btn" id="chatAttachBtn" title="Image ou fichier" aria-label="Pièce jointe">
-            <i class="bi bi-paperclip"></i>
-          </button>
-          <button type="button" class="chat-tool-btn" id="chatVoiceBtn" title="Message vocal" aria-label="Enregistrer un message vocal" aria-pressed="false">
-            <svg class="chat-mic-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path fill="currentColor" d="M12 14.6a3.1 3.1 0 0 0 3.1-3.1V6.2a3.1 3.1 0 0 0-6.2 0v5.3a3.1 3.1 0 0 0 3.1 3.1zm5.5-3.1a.8.8 0 0 0-1.6.1 3.9 3.9 0 0 1-7.8 0 .8.8 0 1 0-1.6.1 5.5 5.5 0 0 0 4.7 5.2V19H9.4a.8.8 0 0 0 0 1.6h5.2a.8.8 0 0 0 0-1.6h-1.8v-2.2a5.5 5.5 0 0 0 4.7-5.3z"/>
-            </svg>
+          <label for="chatInput" class="visually-hidden">Votre message</label>
+          <textarea id="chatInput" rows="1" placeholder="Écrire un message…" maxlength="4000"></textarea>
+          <button type="button" class="chat-tool-btn" id="chatAttachBtn" title="Image ou fichier" aria-label="Joindre une image ou un fichier">
+            <i class="bi bi-paperclip" aria-hidden="true"></i>
           </button>
           <input type="file" id="chatFileInput" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,audio/*" hidden>
         </div>
-        <div class="chat-input-wrap">
-          <textarea id="chatInput" rows="1" placeholder="Écrire un message…" maxlength="4000"></textarea>
-        </div>
-        <button type="submit" class="chat-send-btn" title="Envoyer" aria-label="Envoyer">
-          <i class="bi bi-send-fill"></i>
+        <button type="submit" class="chat-round-btn chat-send-btn" title="Envoyer" aria-label="Envoyer">
+          <i class="bi bi-send-fill" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="chat-round-btn chat-mic-btn" id="chatVoiceBtn" title="Message vocal" aria-label="Enregistrer un message vocal" aria-pressed="false">
+          <svg class="chat-mic-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path fill="currentColor" d="M12 14.6a3.1 3.1 0 0 0 3.1-3.1V6.2a3.1 3.1 0 0 0-6.2 0v5.3a3.1 3.1 0 0 0 3.1 3.1zm5.5-3.1a.8.8 0 0 0-1.6.1 3.9 3.9 0 0 1-7.8 0 .8.8 0 1 0-1.6.1 5.5 5.5 0 0 0 4.7 5.2V19H9.4a.8.8 0 0 0 0 1.6h5.2a.8.8 0 0 0 0-1.6h-1.8v-2.2a5.5 5.5 0 0 0 4.7-5.3z"/>
+          </svg>
         </button>
       </form>
-      <div class="chat-voice-recorder" id="chatVoiceRecorder" hidden data-state="idle">
-        <div class="chat-voice-rec" id="chatVoiceRec" hidden role="group" aria-label="Enregistrement en cours">
-          <button type="button" class="chat-voice-text-btn chat-voice-rec-cancel" id="chatVoiceCancel">Annuler</button>
-          <div class="chat-voice-rec-live">
-            <span class="chat-voice-rec-dot" aria-hidden="true"></span>
-            <span class="chat-voice-rec-time" id="chatVoiceRecTime">0:00</span>
-            <div class="chat-voice-wave is-fallback" id="chatVoiceWave" aria-hidden="true"></div>
-            <span class="chat-voice-state" id="chatVoiceRecLabel">Enregistrement</span>
-          </div>
-          <button type="button" class="chat-voice-rec-stop" id="chatVoiceStop" aria-label="Arrêter l'enregistrement">
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M7 7h10v10H7z"/></svg>
-          </button>
-        </div>
-        <div class="chat-voice-preview" id="chatVoicePreview" hidden data-playback="paused" role="group" aria-label="Aperçu du message vocal">
-          <button type="button" class="chat-voice-text-btn chat-voice-delete" id="chatVoiceDelete">Supprimer</button>
-          <div class="chat-voice-preview-main">
-            <button type="button" class="chat-voice-play" id="chatVoicePlay" aria-label="Lecture"></button>
-            <div class="chat-voice-preview-timeline">
-              <input type="range" id="chatVoiceSeek" min="0" max="1" step="0.01" value="0" disabled aria-label="Position de lecture">
-              <div class="chat-voice-preview-meta">
-                <span class="chat-voice-preview-times">
-                  <span id="chatVoiceElapsed">0:00</span>
-                  <span aria-hidden="true">/</span>
-                  <span id="chatVoiceDuration">0:00</span>
-                </span>
-                <span class="chat-voice-state" id="chatVoicePreviewState" role="status">Aperçu</span>
-              </div>
-            </div>
-          </div>
-          <button type="button" class="chat-voice-send" id="chatVoiceSend">Envoyer</button>
-          <audio id="chatVoicePreviewAudio" preload="auto" playsinline hidden></audio>
-        </div>
-      </div>
+      {% include "chat/_voice_recorder.html" %}
     </footer>
-    {% else %}
-    <div class="chat-placeholder">
-      <div class="chat-placeholder-icon">💬</div>
-      <h2>Prof-Étudiant Chat</h2>
-      <p>Sélectionnez une classe pour commencer la conversation avec votre {% if user.is_teacher %}classe{% else %}professeur{% endif %}.</p>
-    </div>
-    {% endif %}
   </section>
 </div>
 {% endblock %}
 {% block extra_js %}
-<script src="/static/js/chat-voice.js"></script>
+<script src="/static/js/chat-voice.js?v=redesign-1"></script>
 <script src="/static/js/chat-presence.js"></script>
-<script src="/static/js/chat.js"></script>
+<script src="/static/js/chat-actions.js?v=redesign-1"></script>
+<script src="/static/js/messaging-home.js?v=redesign-1"></script>
+<script src="/static/js/chat.js?v=redesign-1"></script>
 {% endblock %}

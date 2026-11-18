@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Modération de la messagerie{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/chat.css?v=moderation-1">
+{% endblock %}
+{% block content %}
+<div class="moderation-page">
+    <header class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <div>
+            <h1 class="h3 mb-1"><i class="bi bi-shield-check" aria-hidden="true"></i> Modération de la messagerie</h1>
+            <p class="text-muted mb-0 small">
+                Messages signalés par les élèves. Seuls le message signalé et les messages qui le précèdent
+                vous sont montrés, figés au moment du signalement.
+            </p>
+        </div>
+        <a href="{% url 'chat:home' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i> Messagerie
+        </a>
+    </header>
+
+    <nav class="nav nav-pills mb-3" aria-label="Filtrer les signalements">
+        {% for code, label in status_choices %}
+        <a class="nav-link {% if status == code %}active{% endif %}" href="?statut={{ code }}">
+            {{ label }}{% if code == 'open' and open_count %} <span class="badge bg-danger">{{ open_count }}</span>{% endif %}
+        </a>
+        {% endfor %}
+    </nav>
+
+    {% for report in reports %}
+    <article class="moderation-card card mb-3">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+                <div>
+                    <span class="badge bg-warning text-dark">{{ report.get_reason_display }}</span>
+                    <span class="badge bg-light text-dark border">{{ report.get_kind_display }}</span>
+                    {% if report.classroom %}<span class="small text-muted">{{ report.classroom.name }}</span>{% endif %}
+                </div>
+                <span class="small text-muted">Signalé le {{ report.created_at|date:"d/m/Y H:i" }}</span>
+            </div>
+            <p class="small mb-2">
+                Message de <strong>{{ report.reported_user.get_full_name|default:"compte supprimé" }}</strong>,
+                signalé par {{ report.reporter.get_full_name }}.
+                {% if report.details %}<br>Précisions : « {{ report.details }} »{% endif %}
+            </p>
+            <ol class="moderation-snapshot list-unstyled mb-3">
+                {% for item in report.snapshot %}
+                <li class="{% if item.reported %}is-reported{% endif %}">
+                    <span class="small text-muted">{{ item.created_at }} · {{ item.sender }}</span>
+                    <div class="moderation-snapshot-body">{{ item.body }}</div>
+                </li>
+                {% endfor %}
+            </ol>
+            {% if report.status == 'open' %}
+            <form method="post" action="{% url 'chat:moderation_action' report.pk %}" class="moderation-actions">
+                {% csrf_token %}
+                <label class="visually-hidden" for="note-{{ report.pk }}">Note de traitement</label>
+                <input type="text" id="note-{{ report.pk }}" name="note" maxlength="500"
+                       class="form-control form-control-sm" placeholder="Note (facultatif)">
+                <button name="action" value="delete" class="btn btn-sm btn-danger">
+                    <i class="bi bi-trash" aria-hidden="true"></i> Supprimer le message
+                </button>
+                {% if report.classroom and report.reported_user.role == 'student' %}
+                <button name="action" value="mute" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-mic-mute" aria-hidden="true"></i> Sourdine 24 h
+                </button>
+                {% endif %}
+                <button name="action" value="resolve" class="btn btn-sm btn-outline-success">Marquer traité</button>
+                <button name="action" value="dismiss" class="btn btn-sm btn-outline-secondary">Classer sans suite</button>
+            </form>
+            {% else %}
+            <p class="small text-muted mb-0">
+                {{ report.get_status_display }} par {{ report.handled_by.get_full_name|default:"—" }}
+                le {{ report.handled_at|date:"d/m/Y H:i" }}{% if report.resolution_note %} — {{ report.resolution_note }}{% endif %}
+            </p>
+            {% endif %}
+        </div>
+    </article>
+    {% empty %}
+    <div class="text-center text-muted py-5">
+        <i class="bi bi-shield-check fs-1 d-block mb-2" aria-hidden="true"></i>
+        Aucun signalement dans cette catégorie.
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

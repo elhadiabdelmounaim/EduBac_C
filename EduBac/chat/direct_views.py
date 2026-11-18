@@ -1,12 +1,10 @@
 import json
-import mimetypes
-from pathlib import Path
-from datetime import timedelta
 from collections import defaultdict
+from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Max, Q
-from django.http import FileResponse, Http404, JsonResponse
+from django.http import Http404, JsonResponse
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
@@ -14,32 +12,29 @@ from django.views.decorators.http import require_GET, require_POST
 from accounts.decorators import login_required_simple
 from classrooms.models import Classroom, ClassroomMember
 
+from . import realtime
+from .attachments import serve_attachment
+from .conversation_api import conversation_messages_response, parse_send_request
 from .models import (
-    ChatMessage,
+    ChatBlock,
     ChatPresence,
     ClassChatRoom,
     DirectConversation,
     DirectMessage,
     PrivateConversation,
 )
+from .payloads import conversation_message_payload
 from .permissions import (
+    can_moderate_classroom,
     direct_conversation_start_context,
     direct_conversations_for,
     get_edubac_user,
     is_platform_admin,
     platform_admin_user,
+    student_quiet_hours_restriction,
     user_can_access_classroom,
     user_can_access_direct_conversation,
 )
-
-
-ALLOWED_EXTENSIONS = {
-    '.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp',
-    '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt', '.zip',
-    '.webm', '.ogg', '.mp3', '.wav', '.m4a', '.aac',
-}
-AUDIO_EXTENSIONS = {'.webm', '.ogg', '.mp3', '.wav', '.m4a', '.aac'}
-MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 
 
 def _is_online(user):
@@ -49,110 +44,66 @@ def _is_online(user):
     ).exists())
 
 
-def _direct_message_payload(message):
-    sender = message.sender
-    return {
-        'id': message.pk,
-        'body': message.body,
-        'sender_id': sender.pk,
-        'sender_name': sender.get_full_name() or sender.username,
-        'created_at': message.created_at.isoformat(),
-        'time_display': timezone.localtime(message.created_at).strftime('%d/%m/%Y %H:%M'),
-        'is_read': message.read_at is not None,
-        'is_voice': message.is_voice,
-        'is_image': message.is_image,
-        'attachment_url': (
-            reverse('chat:direct_attachment', args=[message.pk])
-            if message.attachment else ''
-        ),
-        'attachment_name': message.attachment_name,
-    }
+def _direct_message_payload(message, user=None):
+    return conversation_message_payload(message, user, 'chat:direct_attachment')
+
+
+def _accessible_conversation(user, conversation_id):
+    conversation = direct_conversations_for(user).filter(pk=conversation_id).first()
+    if not conversation or not user_can_access_direct_conversation(user, conversation):
+        return None
+    return conversation
 
 
 @login_required_simple
 @require_GET
 def api_direct_messages(request, conversation_id):
     user = get_edubac_user(request)
-    conversation = direct_conversations_for(user).filter(pk=conversation_id).first()
-    if not conversation or not user_can_access_direct_conversation(user, conversation):
+    conversation = _accessible_conversation(user, conversation_id)
+    if conversation is None:
         return JsonResponse({'error': 'Cette conversation n’est plus accessible.'}, status=404)
-
-    conversation.messages.filter(read_at__isnull=True).exclude(sender=user).update(
-        read_at=timezone.now(),
+    return conversation_messages_response(
+        request, user, conversation,
+        payload=_direct_message_payload,
+        kind=realtime.KIND_DIRECT,
     )
-    messages = conversation.messages.select_related('sender').order_by('created_at')
-    after_id = request.GET.get('after_id')
-    if after_id:
-        try:
-            after_id = int(after_id)
-        except (TypeError, ValueError):
-            return JsonResponse({'error': 'Identifiant de message invalide.'}, status=400)
-        if after_id < 0:
-            return JsonResponse({'error': 'Identifiant de message invalide.'}, status=400)
-        messages = messages.filter(pk__gt=after_id)[:50]
-    else:
-        messages = reversed(list(messages.order_by('-created_at')[:100]))
-    return JsonResponse({
-        'messages': [_direct_message_payload(message) for message in messages],
-        'read_ids': list(
-            conversation.messages.filter(
-                sender=user,
-                read_at__isnull=False,
-            ).order_by('-created_at').values_list('pk', flat=True)[:100]
-        ),
-    })
 
 
 @login_required_simple
 @require_POST
 def api_direct_send(request, conversation_id):
     user = get_edubac_user(request)
-    conversation = direct_conversations_for(user).filter(pk=conversation_id).first()
-    if not conversation or not user_can_access_direct_conversation(user, conversation):
+    conversation = _accessible_conversation(user, conversation_id)
+    if conversation is None:
         return JsonResponse({'error': 'Cette conversation n’est plus accessible.'}, status=404)
-
-    upload = None
-    is_voice = False
-    if request.FILES or 'multipart/form-data' in (request.content_type or ''):
-        body = (request.POST.get('body') or '').strip()
-        upload = request.FILES.get('attachment')
-        is_voice = (request.POST.get('is_voice') or '').lower() in {'1', 'true'}
-    else:
-        try:
-            payload = json.loads(request.body.decode('utf-8') or '{}')
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            return JsonResponse({'error': 'Requête invalide.'}, status=400)
-        if not isinstance(payload, dict) or not isinstance(payload.get('body', ''), str):
-            return JsonResponse({'error': 'Requête invalide.'}, status=400)
-        body = payload.get('body', '').strip()
-    if not body and not upload:
-        return JsonResponse({'error': 'Écrivez un message.'}, status=400)
-    if len(body) > 4000:
-        return JsonResponse({'error': 'Message trop long (4 000 caractères maximum).'}, status=400)
-
-    attachment_name = ''
-    if upload:
-        if upload.size > MAX_UPLOAD_BYTES:
-            return JsonResponse({'error': 'Fichier trop volumineux (maximum 10 Mo).'}, status=400)
-        original_name = (upload.name or '').replace('\\', '/')
-        attachment_name = Path(original_name).name[:255]
-        extension = Path(attachment_name).suffix.lower()
-        if extension not in ALLOWED_EXTENSIONS:
-            return JsonResponse({'error': 'Type de fichier non autorisé.'}, status=400)
-        is_voice = is_voice or extension in AUDIO_EXTENSIONS
-
+    other = conversation.other_participant(user)
+    if other and ChatBlock.between(user, other):
+        return JsonResponse(
+            {'error': 'Les messages sont bloqués entre vous et ce camarade.'}, status=403,
+        )
+    if other and other.is_student() and user.is_student():
+        restriction = student_quiet_hours_restriction(user, conversation.classroom)
+        if restriction:
+            return JsonResponse({'error': restriction}, status=403)
+    parsed = parse_send_request(request)
+    if isinstance(parsed, JsonResponse):
+        return parsed
     message = DirectMessage(
         conversation=conversation,
         sender=user,
-        body=body,
-        attachment_name=attachment_name,
-        is_voice=is_voice,
+        body=parsed['body'],
+        attachment_name=parsed['attachment_name'],
+        is_voice=parsed['is_voice'],
     )
-    if upload:
-        message.attachment = upload
+    if parsed['upload']:
+        message.attachment = parsed['upload']
     message.save()
     conversation.save(update_fields=['updated_at'])
-    return JsonResponse({'ok': True, 'message': _direct_message_payload(message)})
+    realtime.conversation_changed(realtime.KIND_DIRECT, conversation.pk)
+    if other:
+        from notifications.services import notify_new_private_message
+        notify_new_private_message(realtime.KIND_DIRECT, conversation, message, other)
+    return JsonResponse({'ok': True, 'message': _direct_message_payload(message, user)})
 
 
 @login_required_simple
@@ -162,29 +113,13 @@ def direct_attachment(request, message_id):
     message = DirectMessage.objects.select_related(
         'conversation__participant_one', 'conversation__participant_two',
         'conversation__classroom',
-    ).filter(pk=message_id).first()
+    ).filter(pk=message_id, deleted_at__isnull=True).first()
     if (
         not message
         or not user_can_access_direct_conversation(user, message.conversation)
     ):
         raise Http404
-    if not message.attachment:
-        raise Http404
-    try:
-        handle = message.attachment.open('rb')
-    except FileNotFoundError:
-        raise Http404
-    inline = message.is_image or message.is_voice
-    response = FileResponse(
-        handle,
-        content_type=mimetypes.guess_type(message.attachment_name)[0]
-        or 'application/octet-stream',
-        as_attachment=not inline,
-        filename=message.attachment_name or 'piece-jointe',
-    )
-    response['Cache-Control'] = 'private, no-store'
-    response['X-Content-Type-Options'] = 'nosniff'
-    return response
+    return serve_attachment(message.attachment, message.attachment_name)
 
 
 def _student_contact_queryset(user, query=''):
@@ -206,7 +141,12 @@ def _student_contact_queryset(user, query=''):
         users = users.filter(
             classroom_memberships__classroom__members__user=user,
             classroom_memberships__classroom__is_active=True,
-        ).exclude(pk=user.pk)
+            classroom_memberships__classroom__chat_room__allow_student_direct=True,
+        ).exclude(pk=user.pk).exclude(
+            pk__in=ChatBlock.objects.filter(blocker=user).values('blocked'),
+        ).exclude(
+            pk__in=ChatBlock.objects.filter(blocked=user).values('blocker'),
+        )
     else:
         users = users.none()
     if query:
@@ -293,6 +233,7 @@ def api_direct_contacts(request):
         shared_class_ids = set(ClassroomMember.objects.filter(
             user=user,
             classroom__is_active=True,
+            classroom__chat_room__allow_student_direct=True,
         ).values_list('classroom_id', flat=True))
     else:
         shared_class_ids = set()
@@ -441,6 +382,11 @@ def api_room_members(request, classroom_id):
             ),
             'is_online': teacher.pk in online_ids,
         })
+    moderator = can_moderate_classroom(user, classroom)
+    mutes = {
+        mute.user_id: mute.until
+        for mute in room.mutes.filter(until__gt=timezone.now())
+    } if moderator else {}
     for membership in classroom.members.select_related('user').order_by(
         'user__last_name', 'user__first_name', 'user__username',
     )[:300]:
@@ -450,6 +396,10 @@ def api_room_members(request, classroom_id):
             'id': member.pk,
             'name': member.get_full_name() or member.username,
             'role': 'Élève',
+            'muted_until': (
+                timezone.localtime(mutes[member.pk]).strftime('%d/%m %H:%M')
+                if member.pk in mutes else ''
+            ),
             'message_count': member_stats.get('message_count', 0),
             'last_message_at': (
                 timezone.localtime(member_stats['last_message_at']).strftime('%d/%m/%Y %H:%M')
@@ -464,4 +414,5 @@ def api_room_members(request, classroom_id):
         'members': members,
         'classroom': classroom.name,
         'online_count': online_count,
+        'can_moderate': moderator,
     })

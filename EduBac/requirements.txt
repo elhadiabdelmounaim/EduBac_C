@@ -12,3 +12,7 @@ pylatexenc>=2.10,<3
 pypdf>=6.21.4
 channels>=4.0
 requests>=2.34.2
+# Temps réel en production (facultatif, activé par REDIS_URL)
+channels-redis>=4.2
+redis>=5.0
+daphne>=4.1
