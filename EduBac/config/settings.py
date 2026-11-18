@@ -60,6 +60,9 @@ INSTALLED_APPS = [
     'channels',
 ]
 
+# Jeton CSRF périmé : formulaire réaffiché au lieu d'une page 403 brute.
+CSRF_FAILURE_VIEW = 'accounts.views.csrf_failure'
+
 MIDDLEWARE = [
     'quizzes.performance.GenerationTimingMiddleware',
     'django.middleware.security.SecurityMiddleware',

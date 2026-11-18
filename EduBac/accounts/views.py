@@ -8,6 +8,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.http import HttpResponseForbidden
 from django.urls import reverse
+from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from django.db.models import Count, Avg, Q, Prefetch
 from django.core import signing
@@ -205,6 +207,9 @@ def _login_session(request, user):
     request.session.cycle_key()
 
 
+# Formulaire public : jamais servi depuis le cache, sinon son jeton CSRF peut être périmé.
+@never_cache
+@ensure_csrf_cookie
 def login_view(request, *, teacher_entry=False):
     """
     Login unique : e-mail + mot de passe.
@@ -294,6 +299,9 @@ def register_choice(request):
     return redirect('accounts:register_student')
 
 
+# Formulaire public : jamais servi depuis le cache, sinon son jeton CSRF peut être périmé.
+@never_cache
+@ensure_csrf_cookie
 def register_student(request):
     """
     Inscription élève : nom complet, nom d’utilisateur, mot de passe et code classe.
@@ -1008,3 +1016,30 @@ def my_badges(request):
         'weekly': weekly_goal_progress(request.user),
         'page_title': 'Mes badges',
     })
+
+
+# Pages dont le formulaire peut simplement être réaffiché avec un jeton neuf.
+_CSRF_RETRY_URL_NAMES = ('login', 'login_student', 'login_teacher', 'register', 'register_student')
+
+
+def csrf_failure(request, reason=''):
+    """Jeton CSRF périmé (onglet ancien, bouton Retour…).
+
+    Sur les formulaires de connexion et d'inscription, on réaffiche le
+    formulaire avec un jeton neuf au lieu d'une page 403 incompréhensible.
+    Rien n'est traité : l'utilisateur doit renvoyer le formulaire.
+    """
+    from django.urls import Resolver404, resolve
+
+    try:
+        match = resolve(request.path_info)
+    except Resolver404:
+        match = None
+    logger.warning('csrf_failure path=%s reason=%s', request.path_info, reason)
+    if match and match.namespace == 'accounts' and match.url_name in _CSRF_RETRY_URL_NAMES:
+        messages.warning(
+            request,
+            'La page avait expiré. Saisissez de nouveau vos informations, puis validez.',
+        )
+        return redirect(request.path_info)
+    return render(request, '403.html', status=403)
