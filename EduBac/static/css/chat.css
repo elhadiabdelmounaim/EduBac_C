@@ -749,6 +749,11 @@ html body :is(.chat-app, .chat-report-dialog) :where(strong, b) { font-weight: 6
 }
 .chat-message-text .katex-display { margin: 0.35rem 0; overflow-x: auto; overflow-y: hidden; }
 .chat-link { color: var(--ch-read); text-decoration: underline; text-underline-offset: 2px; }
+.chat-link-board {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; padding: 4px 12px;
+  border-radius: 999px; background: var(--ch-accent); color: var(--ch-on-accent); text-decoration: none;
+}
+.chat-link-board:hover { background: var(--ch-accent-strong); color: var(--ch-on-accent); }
 .chat-att-caption { display: block; margin-top: 4px; }
 .chat-bubble-meta {
   position: relative;
@@ -1396,6 +1401,17 @@ fieldset.chat-setting { display: block; }
 @media (prefers-reduced-motion: reduce) {
   .chat-app *, .chat-dialog, .chat-report-dialog { animation: none !important; transition: none !important; }
 }
+
+/* Partage d'un tableau depuis une conversation */
+.chat-board-form { display: flex; flex-direction: column; gap: 10px; }
+.chat-board-new { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--ch-ink); }
+.chat-board-or { margin: 0; color: var(--ch-muted); font-size: .78rem; text-align: center; }
+.chat-board-list { display: flex; flex-direction: column; gap: 4px; max-height: 40vh; overflow-y: auto; color: var(--ch-muted); font-size: .85rem; }
+.chat-board-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; cursor: pointer; color: var(--ch-ink); }
+.chat-board-item:hover { background: var(--ch-hover); }
+.chat-board-item span { display: flex; flex-direction: column; }
+.chat-board-item small { color: var(--ch-muted); font-size: .75rem; }
+.chat-board-item input { accent-color: var(--ch-accent); }
 
 /* =========================================================================
    Page de modération

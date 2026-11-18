@@ -246,3 +246,49 @@ def notify_whiteboard_share(share):
         actor=share.teacher,
         link=reverse('whiteboard:share_view', args=[share.pk]),
     )
+
+
+# --- Tableau collaboratif -------------------------------------------------
+
+def notify_whiteboard_live_share(board, recipients, actor):
+    """Tableau vivant ouvert à des élèves (classe entière ou sélection)."""
+    recipients = [user for user in recipients if user.pk != actor.pk]
+    if not recipients:
+        return
+    where = f' ({board.classroom.name})' if board.classroom_id else ''
+    Notification.notify_many(
+        recipients,
+        title='Tableau partagé avec vous',
+        message=f'« {board.title} »{where} : rejoignez le tableau en direct.',
+        type='classroom',
+        actor=actor,
+        link=reverse('whiteboard:room', args=[board.pk]),
+        group_key=f'whiteboard_share:{board.pk}',
+    )
+
+
+def notify_whiteboard_turn(board, student, actor, event):
+    """L'élève reçoit la main (contrôle) ou l'autorisation d'écrire."""
+    titles = {
+        'control': ('C’est à vous !', f'{_name(actor)} vous donne la main sur « {board.title} ».'),
+        'granted': ('Vous pouvez participer', f'Vous pouvez écrire sur « {board.title} ».'),
+    }
+    title, message = titles[event]
+    notify_user(
+        user=student, title=title, message=message, type='classroom', actor=actor,
+        link=reverse('whiteboard:room', args=[board.pk]), send_email=False,
+        group_key=f'whiteboard_turn:{board.pk}',
+    )
+
+
+def notify_whiteboard_hand(board, student, managers):
+    """Un élève demande l'autorisation d'écrire (une notification regroupée par tableau)."""
+    for manager in managers:
+        notify_user(
+            user=manager,
+            title='Demande de participation',
+            message=f'{_name(student)} demande à écrire sur « {board.title} ».',
+            type='classroom', actor=student,
+            link=reverse('whiteboard:room', args=[board.pk]), send_email=False,
+            group_key=f'whiteboard_hand:{board.pk}',
+        )

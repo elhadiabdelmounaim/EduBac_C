@@ -40,7 +40,7 @@ class WhiteboardToolsBrowserTests(StaticLiveServerTestCase):
                 page.on("request", lambda request: external_recognition.append(request.url)
                         if "api.mathpix.com" in request.url else None)
                 page.goto(self.live_server_url + reverse("accounts:login"))
-                page.locator('input[name="email"]').fill(teacher.email)
+                page.locator('input[name="username"]').fill(teacher.username)
                 page.locator('input[name="password"]').fill("Browser-test-only-123!")
                 page.get_by_role("button", name="Se connecter", exact=True).click()
                 page.wait_for_url(lambda url: "/connexion/" not in url)
@@ -90,16 +90,20 @@ class WhiteboardToolsBrowserTests(StaticLiveServerTestCase):
                     self.assertEqual(page.evaluate("EduBacBoard.getObjects()"), before)
                     previews.add(canvas.evaluate("el => el.toDataURL()"))
                 self.assertEqual(len(previews), 4, "Every paper style renders differently")
+                # Mode collaboratif : la sauvegarde passe par /sync/ (opérations par élément).
                 with page.expect_response(
-                    lambda response: response.url.endswith(f"/{board.pk}/api/")
+                    lambda response: response.url.endswith(f"/{board.pk}/sync/")
                     and response.request.method == "POST" and response.ok
                 ):
                     page.locator("#wbSaveBtn").click()
+                page.wait_for_function("!window.EduBacCollab || document.getElementById('wbConnection').textContent !== 'Envoi…'")
                 page.reload()
                 page.wait_for_function("window.EduBacBoard?.getObjects().length === 2")
                 restored = page.evaluate("EduBacBoard.getObjects()")
                 expect(page.locator("#wbBackground")).to_have_value("ruled")
-                self.assertEqual(restored, before)
+                # `by` : auteur de l'élément, ajouté par le serveur (contributions, droits).
+                without_author = lambda objects: [{k: v for k, v in o.items() if k != "by"} for o in objects]
+                self.assertEqual(without_author(restored), without_author(before))
                 self.assertEqual(restored[0]["x"], moved["x"])
                 page.locator('[data-tool="text"]').click()
                 page.mouse.click(*point(500, 320))

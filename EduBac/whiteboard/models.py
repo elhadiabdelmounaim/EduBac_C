@@ -35,11 +35,46 @@ class WhiteboardBoard(models.Model):
     content = models.JSONField(default=dict, blank=True)
     students_can_edit = models.BooleanField(
         default=False,
-        verbose_name='Les élèves peuvent dessiner',
+        verbose_name='Les élèves peuvent participer',
     )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # --- Partage du tableau vivant -------------------------------------
+    ACCESS_CLASS = 'class'
+    ACCESS_SELECTED = 'selected'
+    ACCESS_CHOICES = [
+        (ACCESS_CLASS, 'Toute la classe'),
+        (ACCESS_SELECTED, 'Élèves sélectionnés'),
+    ]
+    access_mode = models.CharField(
+        max_length=10, choices=ACCESS_CHOICES, default=ACCESS_CLASS,
+        verbose_name='Accès',
+    )
+    participants = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, blank=True, related_name='shared_whiteboards',
+        verbose_name='Élèves invités',
+        help_text='Utilisé quand l’accès est limité aux élèves sélectionnés (ou sans classe).',
+    )
+    editors = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, blank=True, related_name='whiteboard_edit_grants',
+        verbose_name='Élèves autorisés individuellement',
+    )
+
+    # --- Permissions des élèves ------------------------------------------
+    is_locked = models.BooleanField(default=False, verbose_name='Tableau verrouillé')
+    allow_draw = models.BooleanField(default=True, verbose_name='Dessin autorisé')
+    allow_text = models.BooleanField(default=True, verbose_name='Écriture autorisée')
+    allow_delete = models.BooleanField(default=False, verbose_name='Suppression autorisée')
+    allow_images = models.BooleanField(default=False, verbose_name='Images autorisées')
+    controller = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='controlled_whiteboards', verbose_name='Élève qui a la main',
+    )
+    # [{"label": "Groupe 1", "members": [user_id, ...]}, ...] : colonnes de largeur égale.
+    zones = models.JSONField(default=list, blank=True, verbose_name='Espaces de travail')
+    revision = models.PositiveIntegerField(default=0)
 
     class Meta:
         ordering = ['-updated_at']
@@ -48,6 +83,44 @@ class WhiteboardBoard(models.Model):
 
     def __str__(self):
         return f'{self.title} (#{self.pk})'
+
+
+class WhiteboardOp(models.Model):
+    """Une modification appliquée au tableau (synchronisation et contributions)."""
+
+    board = models.ForeignKey(WhiteboardBoard, on_delete=models.CASCADE, related_name='ops')
+    revision = models.PositiveIntegerField()
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='+',
+    )
+    client = models.CharField(max_length=64, blank=True)
+    kind = models.CharField(max_length=20)
+    object_id = models.CharField(max_length=100, blank=True)
+    payload = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['revision']
+        constraints = [
+            models.UniqueConstraint(fields=['board', 'revision'], name='unique_whiteboard_op_revision'),
+        ]
+
+
+class WhiteboardPresence(models.Model):
+    """Participant d'un tableau : présence, curseur, main levée, contributions."""
+
+    board = models.ForeignKey(WhiteboardBoard, on_delete=models.CASCADE, related_name='presences')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='+')
+    last_seen = models.DateTimeField(default=timezone.now)
+    cursor_x = models.FloatField(null=True, blank=True)
+    cursor_y = models.FloatField(null=True, blank=True)
+    hand_raised_at = models.DateTimeField(null=True, blank=True)
+    contributions = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['board', 'user'], name='unique_whiteboard_presence'),
+        ]
 
 
 class WhiteboardShare(models.Model):

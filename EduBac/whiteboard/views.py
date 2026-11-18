@@ -5,7 +5,10 @@ from django.views.decorators.http import require_POST, require_GET, require_http
 from accounts.decorators import login_required_simple, teacher_required
 from classrooms.models import Classroom, ClassroomMember
 from .models import WhiteboardBoard
-from .permissions import user_can_access_board, user_can_edit_board, visible_shares
+from .permissions import (
+    accessible_boards, board_capabilities, is_board_manager, user_can_access_board,
+    user_can_edit_board, visible_shares,
+)
 from django.db.models import Q
 from education.models import Lesson
 
@@ -40,9 +43,8 @@ def board_list(request):
         class_ids = ClassroomMember.objects.filter(user=user).values_list(
             'classroom_id', flat=True
         )
-        boards = WhiteboardBoard.objects.filter(
-            Q(classroom_id__in=class_ids) | Q(created_by=user), is_active=True
-        ).select_related('classroom', 'lesson')
+        # Tableaux de la classe et tableaux partagés avec l'élève personnellement.
+        boards = accessible_boards(user).select_related('classroom', 'lesson')
         classrooms = Classroom.objects.filter(id__in=class_ids)
     shares = list(visible_shares(user).select_related('classroom', 'teacher')[:30])
     is_student = user.is_student()
@@ -110,15 +112,8 @@ def board_room(request, pk):
             'Accès refusé : vous n\'êtes pas membre de cette classe.'
         )
     can_edit = user_can_edit_board(user, board)
-    is_teacher_owner = (
-        user.is_staff
-        or user.is_superuser
-        or (
-            user.is_teacher()
-            and (board.created_by_id == user.id
-                 or (board.classroom_id and board.classroom.teacher_id == user.id))
-        )
-    )
+    is_teacher_owner = is_board_manager(user, board)
+    caps = board_capabilities(user, board)
     share_classrooms = []
     if is_teacher_owner:
         classrooms = Classroom.objects.filter(is_active=True)
@@ -135,6 +130,8 @@ def board_room(request, pk):
         'share_classrooms': share_classrooms,
         'page_title': board.title,
         'ws_path': f'/ws/whiteboard/{board.pk}/',
+        'caps': caps,
+        'can_participate': caps['draw'] or caps['text'] or caps['images'],
     })
 
 
@@ -148,6 +145,9 @@ def board_api_content(request, pk):
         return JsonResponse({'error': 'Accès refusé'}, status=403)
 
     if request.method == 'GET':
+        from .collab import ensure_ids
+        if ensure_ids(board.pk):
+            board.refresh_from_db(fields=['content'])
         return JsonResponse({
             'id': board.pk,
             'title': board.title,
@@ -155,6 +155,7 @@ def board_api_content(request, pk):
             'students_can_edit': board.students_can_edit,
             'can_edit': user_can_edit_board(user, board),
             'updated_at': board.updated_at.isoformat(),
+            'revision': board.revision,
         })
 
     if not user_can_edit_board(user, board):
@@ -169,7 +170,14 @@ def board_api_content(request, pk):
         board.title = str(body['title'])[:200]
     if 'students_can_edit' in body and user.is_teacher():
         board.students_can_edit = bool(body['students_can_edit'])
-    board.save()
+    # Jamais `revision` ni les réglages de collaboration : ils évoluent en parallèle.
+    board.save(update_fields=['content', 'title', 'students_can_edit', 'updated_at'])
+    if 'content' in body:
+        # Sauvegarde globale (ancien format) : les participants rechargent le contenu.
+        from .collab import record_replace
+        from .realtime import board_state
+        record_replace(board, user)
+        board_state(board.pk)
     return JsonResponse({'ok': True, 'updated_at': board.updated_at.isoformat()})
 
 

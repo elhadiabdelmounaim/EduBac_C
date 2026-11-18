@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ active_classroom.name }} — Messagerie{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="/static/css/chat.css?v=redesign-2">
+<link rel="stylesheet" href="/static/css/chat.css?v=redesign-3">
 <link rel="stylesheet" href="/static/css/chat-voice.css?v=redesign-2">
 {% include "includes/katex.html" %}
 {% endblock %}
@@ -34,6 +34,7 @@
         <button type="button" class="chat-icon-btn" id="chatPinnedListBtn" title="Messages épinglés (FAQ de la classe)" aria-label="Voir les messages épinglés"><i class="bi bi-pin-angle" aria-hidden="true"></i></button>
         <button type="button" class="chat-icon-btn" id="chatMembersBtn" title="Membres et participation" aria-label="Voir les membres et leur participation"><i class="bi bi-people" aria-hidden="true"></i></button>
         {% if user.is_teacher or user.is_staff %}
+        <button type="button" class="chat-icon-btn" id="chatBoardBtn" data-kind="class" data-conversation-id="{{ active_classroom.pk }}" title="Partager un tableau en direct" aria-label="Partager un tableau en direct avec la classe"><i class="bi bi-easel" aria-hidden="true"></i></button>
         <button type="button" class="chat-icon-btn" id="chatSettingsBtn" title="Réglages du salon" aria-label="Réglages du salon"><i class="bi bi-gear" aria-hidden="true"></i></button>
         {% endif %}
       </div>
@@ -84,6 +85,8 @@
       </form>
     </dialog>
     {% endif %}
+
+    {% if user.is_teacher or user.is_staff %}{% include "chat/_whiteboard_share_dialog.html" %}{% endif %}
 
     <dialog class="chat-dialog" id="chatMembersDialog" aria-labelledby="chatMembersTitle">
       <header class="chat-dialog-head">
@@ -156,7 +159,8 @@
 {% block extra_js %}
 <script src="/static/js/chat-voice.js?v=redesign-2"></script>
 <script src="/static/js/chat-presence.js"></script>
-<script src="/static/js/chat-actions.js?v=redesign-2"></script>
+<script src="/static/js/chat-actions.js?v=redesign-3"></script>
 <script src="/static/js/messaging-home.js?v=redesign-2"></script>
 <script src="/static/js/chat.js?v=redesign-2"></script>
+{% if user.is_teacher or user.is_staff %}<script src="/static/js/chat-whiteboard.js?v=1"></script>{% endif %}
 {% endblock %}

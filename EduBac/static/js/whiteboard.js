@@ -12,6 +12,17 @@
   var apiUrl = app.dataset.apiUrl;
   var wsPath = app.dataset.wsPath;
   var csrf = app.dataset.csrf;
+  // Mode collaboratif (whiteboard-collab.js) : synchronisation par opérations.
+  var collabMode = !!app.dataset.syncUrl;
+  var studentLocked = isStudent && !collabMode;
+  var myId = Number(app.dataset.currentUser || 0);
+  var caps = {draw:canEdit, text:canEdit, images:canEdit, delete:canEdit, manage:canEdit, control:false};
+  var hooks = {};
+  function can(kind) { return canEdit && !!caps[kind]; }
+  function canModify(o) {
+    if (!collabMode) return canEdit;
+    return canEdit && (caps.manage || caps.control || (o && o.by === myId));
+  }
 
   var canvas = document.getElementById('wbCanvas');
   var ctx = canvas.getContext('2d');
@@ -70,6 +81,7 @@
   }
   function deleteSelected() {
     if (!canEdit || !contentReady || !selected()) return;
+    if (!canModify(selected()) && !can('delete')) { alert('Suppression non autorisée sur ce tableau.'); return; }
     if (!confirm('Supprimer cet élément ?')) return;
     pushUndo();
     objects = objects.filter(function(o){return o.id !== selectedId;});
@@ -80,6 +92,7 @@
   function editSelected() {
     var o=selected();
     if (!canEdit || !contentReady || !o || !editor) return;
+    if (!canModify(o)) { alert('Vous ne pouvez modifier que vos propres éléments.'); return; }
     openEditor(o,false);
   }
   function openEditor(o,creating) {
@@ -391,6 +404,7 @@
       renderObject(o);
     });
     renderMathLayer();
+    if (hooks.decorate) hooks.decorate(ctx, canvas, objects);
     var selection=selected();
     if(selection) {
       var b=model.bounds(selection);ctx.save();ctx.strokeStyle='#a45e17';ctx.lineWidth=2;ctx.setLineDash([7,4]);
@@ -428,6 +442,7 @@
   }
 
   function broadcast(payload) {
+    if (collabMode) return; // le module collaboratif envoie des opérations
     if(!canEdit && ['object','content_sync','clear'].includes(payload.type))return;
     if(payload.type==='object' && payload.object && !payload.object.id) payload.object.id=model.id();
     if (ws && ws.readyState === 1) {
@@ -437,12 +452,14 @@
 
   function scheduleSave() {
     if (!canEdit) return;
+    if (hooks.changed) { hooks.changed(); return; }
     clearTimeout(saveTimer);
     saveTimer = setTimeout(saveContent, 1200);
   }
 
   function saveContent() {
     if (!canEdit || !contentReady) return;
+    if (hooks.flush) { hooks.flush(); return; }
     setStatus('saving');
     var content = boardContent();
     fetch(apiUrl, {
@@ -494,13 +511,14 @@
         setStatus('saved');
         document.getElementById('wbLoadError').hidden=true;
         redraw();
+        if (hooks.loaded) hooks.loaded(data);
       })
       .catch(function () { document.getElementById('wbLoadError').hidden=false;redraw(); });
   }
 
   // --- events ---
   function onStart(e) {
-    if (isStudent) return;
+    if (studentLocked) return;
     if(drawing || dragging || editor.open || (e.button != null && e.button!==0)) return;
     var p = getPos(e);
     lastPointer=p;
@@ -509,10 +527,11 @@
       var hit=objects.slice().reverse().find(function(o){return !o.erase && model.hit(o,p,10*canvas.width/canvas.getBoundingClientRect().width);});
       selectedId=hit?hit.id:null;
       notifySelection();redraw();
-      if(canEdit && contentReady && hit) {dragging=hit;dragBefore=model.state(objects);}
+      if(canEdit && contentReady && hit && canModify(hit)) {dragging=hit;dragBefore=model.state(objects);}
       return;
     }
     if (!canEdit || !contentReady) return;
+    if (!can(tool==='text' ? 'text' : tool==='eraser' ? 'delete' : 'draw')) return;
     e.preventDefault();
     if(tool==='text') {
       var existing=objects.slice().reverse().find(function(o){return (o.type==='text' || o.type==='note') && model.hit(o,p,4);});
@@ -527,6 +546,7 @@
     if (tool === 'pencil' || tool === 'pen' || tool === 'highlighter' || tool === 'eraser') {
       pushUndo();
       currentPath = {
+        id: model.id(),
         type: 'stroke',
         color: tool === 'eraser' ? '#000' : color,
         size: tool === 'pen' ? size * 1.4 : tool === 'highlighter' ? size * 3 : size,
@@ -627,6 +647,7 @@
     }
     var shape = shapeFromDrag(startX, startY, p.x, p.y);
     if (shape && ['line','arrow','rect','circle','triangle','ruler','protractor'].includes(tool)) {
+      shape.id = model.id();
       pushUndo();
       objects.push(shape);
       broadcast({ type: 'object', object: shape });
@@ -667,7 +688,7 @@
   window.addEventListener('blur',function(){finishPointer();});
   canvas.addEventListener('dblclick',function(){if(tool==='select') editSelected();});
   document.addEventListener('keydown',function(e){
-    if (isStudent) return;
+    if (studentLocked) return;
     if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || e.target.isContentEditable || editor.open) return;
     if(e.key==='Delete' || e.key==='Backspace') {if(selected()){e.preventDefault();deleteSelected();}}
     if(e.key==='Escape') {selectedId=null;notifySelection();redraw();}
@@ -729,6 +750,7 @@
   });
   document.getElementById('wbClear').addEventListener('click', function () {
     if (!canEdit || !contentReady) return;
+    if (collabMode && !caps.manage && !caps.control) return;
     if (!confirm('Effacer tout le tableau ?')) return;
     pushUndo();
     objects = [];
@@ -738,7 +760,7 @@
     broadcast({ type: 'clear' });
   });
   if (backgroundControl) backgroundControl.addEventListener('change', function (e) {
-    if (!canEdit || !contentReady || !backgroundTypes.includes(e.target.value)) {
+    if (!canEdit || !contentReady || !backgroundTypes.includes(e.target.value) || (collabMode && !caps.manage && !caps.control)) {
       e.target.value = background;
       return;
     }
@@ -771,7 +793,7 @@
   var mathInput = document.getElementById('wbMathInput');
   var mathPreview = document.getElementById('wbMathPreview');
   document.getElementById('wbMathBtn').addEventListener('click', function () {
-    if (!canEdit) return;
+    if (!can('text')) return;
     if (window.bootstrap) new bootstrap.Modal(mathModal).show();
     else mathModal.classList.add('show');
   });
@@ -790,11 +812,11 @@
   }
   if (mathInput) mathInput.addEventListener('input', previewMath);
   document.getElementById('wbMathPlace').addEventListener('click', function () {
-    if(!canEdit || !contentReady) return;
+    if(!can('text') || !contentReady) return;
     var latex = (mathInput.value || '').trim();
     if (!latex) return;
     pushUndo();
-    var obj = { type: 'math', latex: latex, x: 80, y: 80 + objects.filter(function (o) { return o.type === 'math'; }).length * 40 };
+    var obj = { id: model.id(), type: 'math', latex: latex, x: hooks.placeX ? hooks.placeX(80) : 80, y: 80 + objects.filter(function (o) { return o.type === 'math'; }).length * 40 };
     objects.push(obj);
     redraw();
     scheduleSave();
@@ -805,11 +827,11 @@
   // Graph
   var graphModal = document.getElementById('wbGraphModal');
   document.getElementById('wbGraphBtn').addEventListener('click', function () {
-    if (!canEdit) return;
+    if (!can('draw')) return;
     if (window.bootstrap) new bootstrap.Modal(graphModal).show();
   });
   document.getElementById('wbGraphPlace').addEventListener('click', function () {
-    if(!canEdit || !contentReady) return;
+    if(!can('draw') || !contentReady) return;
     var expr = document.getElementById('wbGraphFn').value.trim();
     var xmin = parseFloat(document.getElementById('wbGraphXmin').value);
     var xmax = parseFloat(document.getElementById('wbGraphXmax').value);
@@ -819,7 +841,7 @@
     pushUndo();
     var obj = {
       type: 'graph', expr: expr, xmin: xmin, xmax: xmax, ymin: xmin, ymax: xmax,
-      x: 100, y: 100, w: 400, h: 300, color: color, _fn: fn,
+      x: hooks.placeX ? hooks.placeX(100) : 100, y: 100, w: 400, h: 300, color: color, _fn: fn,
     };
     objects.push(obj);
     redraw();
@@ -830,7 +852,7 @@
 
   // Image
   document.getElementById('wbImageBtn').addEventListener('click', function () {
-    if (!canEdit) return;
+    if (!can('images')) return;
     document.getElementById('wbImageInput').click();
   });
   document.getElementById('wbImageInput').addEventListener('change', function (e) {
@@ -848,7 +870,7 @@
         var maxW = 500;
         var w = Math.min(maxW, img.width);
         var h = img.height * (w / img.width);
-        var obj = { type: 'image', src: src, x: 60, y: 60, w: w, h: h, _img: img };
+        var obj = { id: model.id(), type: 'image', src: src, x: hooks.placeX ? hooks.placeX(60) : 60, y: 60, w: w, h: h, _img: img };
         objects.push(obj);
         redraw();
         scheduleSave();
@@ -861,6 +883,7 @@
 
   // WebSocket
   function connectWs() {
+    if (collabMode) return; // whiteboard-collab.js gère la connexion
     var proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
     try {
       ws = new WebSocket(proto + '//' + location.host + wsPath);
@@ -904,8 +927,49 @@
   document.getElementById('wbLoadRetry').addEventListener('click',loadContent);
   var permissionToggle=document.getElementById('wbStudentsEdit');
   if(permissionToggle) permissionToggle.addEventListener('change',saveContent);
+  function applyCapabilities(next) {
+    caps = Object.assign({draw:false,text:false,images:false,delete:false,manage:false,control:false}, next || {});
+    canEdit = !!(caps.draw || caps.text || caps.images || caps.manage || caps.control);
+    if (window.EduBacBoard) window.EduBacBoard.canEdit = canEdit;
+    var need = {text:'text', eraser:'delete'};
+    document.querySelectorAll('.wb-tool[data-tool]').forEach(function (b) {
+      var kind = need[b.dataset.tool] || 'draw';
+      b.disabled = b.dataset.tool !== 'select' && !can(kind);
+    });
+    [['wbMathBtn','text'],['wbGraphBtn','draw'],['wbImageBtn','images']].forEach(function (pair) {
+      var b = document.getElementById(pair[0]); if (b) b.disabled = !can(pair[1]);
+    });
+    var clear = document.getElementById('wbClear');
+    if (clear) clear.disabled = !(caps.manage || caps.control);
+    if (backgroundControl) backgroundControl.disabled = !(caps.manage || caps.control);
+    ['wbEditSelected','wbDeleteSelected','wbSaveBtn'].forEach(function (id) {
+      var b = document.getElementById(id); if (b) b.disabled = !canEdit;
+    });
+    var current = document.querySelector('.wb-tool[data-tool="' + tool + '"]');
+    if (current && current.disabled) setTool('select');
+    else if (canEdit && tool === 'select' && !selectedId && can('draw')) setTool('pencil');
+    redraw();
+  }
   window.EduBacBoard = {
     canEdit:canEdit,
+    _collab: {
+      objects:function(){return objects;},
+      setObjects:function(list){
+        objects = model.normalize(list);
+        if (selectedId && !objects.some(function(o){return o.id===selectedId;})) {selectedId=null;notifySelection();}
+        if (dragging && !objects.includes(dragging)) {dragging=null;dragBefore=null;}
+        redraw();
+      },
+      background:function(value){ if (value !== undefined) loadBackground({background:value}); return background; },
+      remapHistory:function(fn){ undoStack=undoStack.map(fn); redoStack=redoStack.map(fn); },
+      setCapabilities:applyCapabilities,
+      setHooks:function(next){ hooks = next || {}; },
+      redraw:redraw,
+      busy:function(){ return drawing || dragging || (editor && editor.open); },
+      canvas:canvas,
+      setStatus:setStatus,
+      contentReady:function(){ return contentReady; },
+    },
     getObjects:function(){return objects.map(serializeObj);},
     getSelected:function(){var o=selected();return o?serializeObj(o):null;},
     snapshot:function(){return canvas.toDataURL('image/png');},
@@ -935,6 +999,6 @@
   loadContent();
   connectWs();
   window.addEventListener('beforeunload', function () {
-    if (canEdit) saveContent();
+    if (canEdit && !collabMode) saveContent();
   });
 })();

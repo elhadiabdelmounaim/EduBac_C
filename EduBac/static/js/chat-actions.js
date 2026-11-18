@@ -308,7 +308,8 @@
   /** Texte du message : liens http(s) cliquables, sans jamais interpréter de HTML. */
   function renderText(element, text) {
     element.textContent = '';
-    var pattern = /\bhttps?:\/\/[^\s<>"']+/gi;
+    // Liens web, et liens internes vers un tableau partagé (/tableau/12/).
+    var pattern = /\bhttps?:\/\/[^\s<>"']+|(?:^|(?<=\s))\/tableau\/\d+\//gi;
     var last = 0;
     var match;
     text = String(text || '');
@@ -317,10 +318,10 @@
       if (match.index > last) element.append(text.slice(last, match.index));
       var link = document.createElement('a');
       link.href = url;
-      link.textContent = url;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.className = 'chat-link';
+      var internal = url.charAt(0) === '/';
+      link.textContent = internal ? 'Ouvrir le tableau' : url;
+      if (!internal) { link.target = '_blank'; link.rel = 'noopener noreferrer'; }
+      link.className = 'chat-link' + (internal ? ' chat-link-board' : '');
       element.append(link);
       last = match.index + url.length;
       pattern.lastIndex = last;

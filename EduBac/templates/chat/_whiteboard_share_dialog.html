@@ -1,0 +1,25 @@
+{# Partager un tableau en direct depuis une conversation (enseignant). #}
+<dialog class="chat-dialog" id="chatBoardDialog" aria-labelledby="chatBoardTitle"
+        data-boards-url="{% url 'whiteboard:my_boards' %}"
+        data-share-url="{% url 'whiteboard:share_to_conversation' %}">
+  <header class="chat-dialog-head">
+    <div>
+      <h2 id="chatBoardTitle">Partager un tableau</h2>
+      <p>Les participants de cette conversation pourront le suivre en direct.</p>
+    </div>
+    <button type="button" class="chat-icon-btn" data-close aria-label="Fermer"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+  </header>
+  <form class="chat-dialog-body chat-board-form">
+    <label class="chat-board-new">
+      <span>Nouveau tableau</span>
+      <input type="text" name="title" maxlength="200" placeholder="Ex. : Exercice 3 — équations" class="form-control form-control-sm">
+    </label>
+    <p class="chat-board-or">ou un tableau existant</p>
+    <div class="chat-board-list" id="chatBoardList" role="radiogroup" aria-label="Mes tableaux">Chargement…</div>
+    <p class="chat-settings-error" id="chatBoardError" role="alert" hidden></p>
+    <div class="chat-dialog-actions">
+      <button type="button" class="btn btn-outline-secondary btn-sm" data-close>Annuler</button>
+      <button type="submit" class="btn btn-edubac btn-sm">Partager et ouvrir</button>
+    </div>
+  </form>
+</dialog>

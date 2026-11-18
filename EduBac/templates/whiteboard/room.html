@@ -3,6 +3,7 @@
 <link rel="stylesheet" href="/static/css/whiteboard.css?v=20261009-tools2">
 {% if not is_student %}<link rel="stylesheet" href="/static/css/whiteboard-tutor.css">{% endif %}
 <link rel="stylesheet" href="/static/css/whiteboard-share.css">
+<link rel="stylesheet" href="/static/css/whiteboard-collab.css?v=collab-2">
 {% include "includes/katex.html" %}
 {% endblock %}
 {% block content %}
@@ -13,19 +14,49 @@
      data-api-url="{% url 'whiteboard:api_content' board.pk %}"
      {% if not is_student %}data-tutor-url="{% url 'whiteboard:tutor' board.pk %}"{% endif %}
      data-ws-path="{{ ws_path }}"
-     data-csrf="{{ csrf_token }}">
+     data-csrf="{{ csrf_token }}"
+     data-current-user="{{ user.pk }}"
+     data-is-manager="{{ is_teacher_owner|yesno:'1,0' }}"
+     data-sync-url="{% url 'whiteboard:sync' board.pk %}"
+     data-hand-url="{% url 'whiteboard:hand' board.pk %}"
+     {% if is_teacher_owner %}
+     data-settings-url="{% url 'whiteboard:settings' board.pk %}"
+     data-control-url="{% url 'whiteboard:control' board.pk %}"
+     data-grant-url="{% url 'whiteboard:grant' board.pk %}"
+     data-zones-url="{% url 'whiteboard:zones' board.pk %}"
+     data-share-live-url="{% url 'whiteboard:share_live' board.pk %}"
+     data-share-options-url="{% url 'whiteboard:share_options' board.pk %}"
+     {% endif %}>
 
-    <div class="wb-topbar"{% if is_student %} hidden inert{% endif %}>
+    <div class="wb-topbar">
         <div class="d-flex align-items-center gap-2 flex-wrap min-width-0">
             <a href="{% url 'whiteboard:list' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
             <strong class="text-truncate" id="wbTitleLabel">{{ board.title }}</strong>
             {% if board.classroom %}
             <span class="badge" style="background:var(--edubac-light);color:var(--edubac-teal);">{{ board.classroom.name }}</span>
             {% endif %}
-            {% if not can_edit %}
-            <span class="badge bg-secondary">Lecture seule</span>
+            <span class="wb-connection is-sync" id="wbConnection" role="status">Connexion…</span>
+            <span class="wb-status small text-muted visually-hidden" id="wbStatus">●</span>
+        </div>
+        <div class="wb-topbar-actions">
+            {% if is_student %}
+            <button type="button" class="wb-chip-btn wb-hand-btn" id="wbHandBtn" aria-pressed="false" title="Demander à écrire ou dessiner">
+                <span>Lever la main</span>
+            </button>
             {% endif %}
-            <span class="wb-status small text-muted" id="wbStatus">●</span>
+            <button type="button" class="wb-chip-btn" id="wbPeopleToggle" aria-expanded="false" aria-controls="wbPeoplePanel" title="Participants">
+                <i class="bi bi-people" aria-hidden="true"></i> <span class="wb-people-count" id="wbPeopleCount">0</span>
+                <span class="wb-hand-count" id="wbHandCount" hidden>0</span>
+                <span class="visually-hidden">participants en ligne</span>
+            </button>
+            {% if is_teacher_owner %}
+            <button type="button" class="wb-chip-btn is-accent" id="wbLiveShare" title="Partager le tableau en direct avec une classe ou des élèves">
+                <i class="bi bi-person-plus" aria-hidden="true"></i> Inviter
+            </button>
+            {% endif %}
+            <button type="button" class="wb-chip-btn" id="wbFullscreen" aria-pressed="false" title="Plein écran">
+                <i class="bi bi-arrows-fullscreen" aria-hidden="true"></i><span class="visually-hidden">Plein écran</span>
+            </button>
         </div>
         <div class="d-flex align-items-center gap-1 flex-wrap">
             {% if is_teacher_owner %}
@@ -40,7 +71,7 @@
             </button>
             <button type="button" class="btn btn-sm btn-outline-success" id="wbExportPng">PNG</button>
             {% if is_teacher_owner %}
-            <button type="button" class="btn btn-sm btn-edubac" id="wbShare" data-share-url="{% url 'whiteboard:share_create' %}">Partager</button>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="wbShare" data-share-url="{% url 'whiteboard:share_create' %}" title="Envoyer une capture PNG à une classe">Envoyer une image</button>
             {% endif %}
             {% if not is_student %}
             <button type="button" class="btn btn-sm btn-edubac" id="wbTutorToggle" aria-expanded="false" aria-controls="wbTutor"><i class="bi bi-chat-square-text" aria-hidden="true"></i> Assistant IA</button>
@@ -48,8 +79,13 @@
         </div>
     </div>
 
+    <div class="wb-control-banner" id="wbControlBanner" role="status" hidden>
+        <span></span>
+        {% if is_teacher_owner %}<button type="button" class="btn btn-sm btn-light">Reprendre la main</button>{% endif %}
+    </div>
+
     <div class="wb-workspace">
-        <aside class="wb-toolbar" id="wbToolbar"{% if is_student %} hidden inert{% endif %}>
+        <aside class="wb-toolbar" id="wbToolbar"{% if is_student and not can_participate %} hidden{% endif %}>
             <button type="button" class="wb-tool" data-tool="select" title="Sélectionner" aria-label="Sélectionner"><i class="bi bi-cursor"></i></button>
             <button type="button" class="wb-tool active" data-tool="pencil" title="Crayon" aria-label="Crayon"><i class="bi bi-pencil"></i></button>
             <button type="button" class="wb-tool" data-tool="pen" title="Stylo" aria-label="Stylo"><i class="bi bi-pen"></i></button>
@@ -75,9 +111,9 @@
         </aside>
 
         <div class="wb-board-column">
-          <p class="wb-hint" id="wbToolHint"{% if is_student %} hidden{% endif %} role="status">Crayon : trace librement. Le trait est lissé localement, sans conversion en texte.</p>
+          <p class="wb-hint" id="wbToolHint" role="status">Crayon : trace librement. Le trait est lissé localement, sans conversion en texte.</p>
           <div id="wbLoadError" class="alert alert-warning small" role="alert" hidden>Le tableau n’a pas pu être chargé. <button type="button" class="btn btn-sm btn-outline-secondary" id="wbLoadRetry">Réessayer</button></div>
-          <div class="wb-selection-bar" id="wbSelectionBar" aria-label="Actions sur la sélection" hidden{% if is_student %} inert{% endif %}>
+          <div class="wb-selection-bar" id="wbSelectionBar" aria-label="Actions sur la sélection" hidden>
             <span class="wb-selection-label" id="wbSelectionLabel"></span>
             <button type="button" data-tutor-intent="explain">Expliquer</button>
             <button type="button" data-tutor-intent="hint">Indice</button>
@@ -91,9 +127,41 @@
            <div class="wb-canvas-wrap" id="wbCanvasWrap">
             <canvas id="wbCanvas" width="1600" height="1000"></canvas>
             <div id="wbMathLayer" class="wb-math-layer"></div>
+            <div id="wbCursorLayer" class="wb-cursor-layer" aria-hidden="true"></div>
            </div>
           </div>
         </div>
+        <aside class="wb-people" id="wbPeoplePanel" aria-label="Participants et autorisations" hidden>
+          <header class="wb-people-head">
+            <strong>Participants</strong>
+            <button type="button" id="wbPeopleClose" aria-label="Fermer le panneau"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+          </header>
+          {% if is_student %}
+          <p class="wb-my-status" id="wbMyStatus">Lecture seule.</p>
+          {% endif %}
+          {% if is_teacher_owner %}
+          <form class="wb-perm" id="wbPermForm" aria-label="Autorisations des élèves">
+            <label class="wb-switch is-main"><input type="checkbox" name="students_can_edit"><span>Les élèves participent</span></label>
+            <div class="wb-perm-grid">
+              <label class="wb-switch"><input type="checkbox" name="allow_draw"><span>Dessiner</span></label>
+              <label class="wb-switch"><input type="checkbox" name="allow_text"><span>Écrire</span></label>
+              <label class="wb-switch"><input type="checkbox" name="allow_images"><span>Images</span></label>
+              <label class="wb-switch"><input type="checkbox" name="allow_delete"><span>Supprimer</span></label>
+            </div>
+            <label class="wb-switch is-lock"><input type="checkbox" name="is_locked"><span><i class="bi bi-lock" aria-hidden="true"></i> Verrouiller le tableau</span></label>
+            <label class="wb-zones">Espaces de travail
+              <select id="wbZoneCount">
+                <option value="0">Un seul tableau</option>
+                <option value="2">2 groupes</option>
+                <option value="3">3 groupes</option>
+                <option value="4">4 groupes</option>
+              </select>
+            </label>
+            <p class="wb-perm-help">« Donner la main » invite un élève à résoudre au tableau ; « Autoriser » lui permet d’écrire même si la classe ne le peut pas.</p>
+          </form>
+          {% endif %}
+          <ul class="wb-people-list" id="wbPeopleList"></ul>
+        </aside>
         {% if not is_student %}
         <aside class="wb-tutor" id="wbTutor" aria-label="Assistant de mathématiques" hidden>
           <header class="wb-tutor-head"><div><small>Apprendre, étape par étape</small><strong>Assistant EduBac</strong></div><button type="button" id="wbTutorClose" aria-label="Fermer l’assistant"><i class="bi bi-x-lg"></i></button></header>
@@ -128,7 +196,7 @@
         {% endif %}
     </div>
 
-    <div class="wb-bottombar"{% if is_student %} hidden inert{% endif %}>
+    <div class="wb-bottombar" id="wbBottombar"{% if is_student and not can_participate %} hidden{% endif %}>
         <label class="small mb-0">Couleur <input type="color" id="wbColor" value="#1e2a4a"></label>
         <label class="small mb-0">Taille <input type="range" id="wbSize" min="1" max="40" value="4"></label>
         <label for="wbBackground" class="small mb-0">Fond du tableau</label>
@@ -142,13 +210,8 @@
         <span class="small" id="wbZoomLabel">100%</span>
         <button type="button" class="btn btn-sm btn-outline-secondary" id="wbZoomIn">+</button>
         <button type="button" class="btn btn-sm btn-outline-secondary" id="wbZoomReset">Réinitialiser</button>
-        {% if is_teacher_owner %}
-        <label class="small mb-0 form-check form-check-inline ms-2">
-            <input type="checkbox" class="form-check-input" id="wbStudentsEdit" {% if board.students_can_edit %}checked{% endif %}>
-            Élèves peuvent dessiner
-        </label>
-        {% endif %}
     </div>
+    <div class="wb-toast" id="wbToast" role="status" aria-live="polite" hidden></div>
 </div>
 <dialog id="wbObjectEditor" class="wb-editor">
   <form id="wbEditorForm">
@@ -238,11 +301,32 @@
         </div>
     </form>
 </dialog>
+<dialog id="wbLiveShareDialog" class="wb-share-dialog" aria-labelledby="wbLiveShareHeading">
+    <form>
+        <h5 id="wbLiveShareHeading" class="fw-bold wb-share-head">Partager le tableau en direct</h5>
+        <p class="small text-muted">Les élèves invités voient le tableau et ce que vous écrivez en temps réel. Réglez ensuite leurs droits dans le panneau Participants.</p>
+        <label class="form-label fw-semibold" for="wbLiveClass">Classe</label>
+        <select id="wbLiveClass" class="form-select mb-3"></select>
+        <fieldset class="mb-2">
+            <legend class="form-label fw-semibold fs-6">Avec qui ?</legend>
+            <label class="d-block"><input type="radio" name="mode" value="class" checked> Toute la classe</label>
+            <label class="d-block"><input type="radio" name="mode" value="selected"> Seulement les élèves cochés</label>
+        </fieldset>
+        <div class="wb-live-students" id="wbLiveStudents" hidden></div>
+        <label class="d-block small mt-2"><input type="checkbox" id="wbLivePost" checked> Publier le lien dans la discussion de la classe</label>
+        <p id="wbLiveShareError" class="small text-danger" role="alert"></p>
+        <div class="d-flex gap-2 justify-content-end">
+            <button type="button" class="btn btn-outline-secondary" data-close>Annuler</button>
+            <button type="submit" class="btn btn-edubac">Partager et prévenir</button>
+        </div>
+    </form>
+</dialog>
 {% endif %}
 {% endblock %}
 {% block extra_js %}
 <script src="/static/js/whiteboard-objects.js?v=20261009-tools2"></script>
-<script src="/static/js/whiteboard.js?v=20261009-tools2"></script>
+<script src="/static/js/whiteboard.js?v=collab-1"></script>
+<script src="/static/js/whiteboard-collab.js?v=collab-1"></script>
 {% if not is_student %}<script src="/static/js/whiteboard-tutor.js"></script>{% endif %}
 {% if is_teacher_owner %}<script src="/static/js/whiteboard-share-publish.js"></script>{% endif %}
 {% endblock %}

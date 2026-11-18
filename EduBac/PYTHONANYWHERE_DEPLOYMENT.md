@@ -8,7 +8,7 @@ Ce guide décrit le projet présent dans `EduBac/`. Il prépare un déploiement 
 - SQLite est la configuration locale par défaut. Le projet prend aussi en charge PostgreSQL via `DATABASE_URL` et MySQL via des variables dédiées.
 - La base `db.sqlite3` et certains téléversements ne sont pas suivis par Git. Les données et médias existants doivent être transférés séparément, de façon privée.
 - Ne rendez pas `MEDIA_ROOT` public. Les pièces jointes, résultats de classe et ressources protégées doivent rester servis par des vues Django soumises aux permissions du projet.
-- Le site fonctionne sur WSGI pour les pages HTTP habituelles. Le chat a une actualisation périodique de secours. La collaboration WebSocket en direct du tableau blanc nécessite ASGI et ne fonctionne pas sur le WSGI standard.
+- Le site fonctionne sur WSGI pour les pages HTTP habituelles. Le chat a une actualisation périodique de secours. La collaboration du tableau blanc fonctionne en WSGI par synchronisation HTTP ; WebSocket (ASGI) la rend seulement instantanée.
 - Le dépôt configuré dans ce workspace n’est pas une URL publique clonable. Remplacez le marqueur ci-dessous par l’URL réelle d’un dépôt auquel PythonAnywhere peut accéder.
 
 ### Vérifications exécutées
@@ -208,7 +208,7 @@ Rechargez l’application depuis l’onglet **Web** après avoir vérifié le WS
 | Import/export JSON et Excel | Oui | `openpyxl` est inclus. |
 | Génération IA | Oui, conditionnel | Clé configurée et API accessible en sortie. |
 | Chat | Partiellement | Interrogation HTTP disponible; la diffusion instantanée requiert WebSocket. |
-| Tableau blanc collaboratif | Partiellement | Le direct utilise WebSocket; non pris en charge en WSGI classique. |
+| Tableau blanc collaboratif | Oui | Synchronisation HTTP en WSGI ; instantanée avec WebSocket. |
 | Rappels par courriel | Conditionnel | SMTP configuré et tâche planifiée disponible. |
 
 Si les tâches planifiées sont proposées dans le compte, créez un rappel quotidien :

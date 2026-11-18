@@ -22,7 +22,7 @@ Guide établi à partir de l’arborescence actuelle d’EduBac. Le compte Pytho
 
 C’est le mode à utiliser dans l’onglet **Web** de PythonAnywhere pour les pages Django habituelles. Il prend en charge les requêtes HTTP, les formulaires, les quiz, l’import/export et les téléchargements.
 
-Le chat dispose déjà d’une interrogation HTTP périodique, ce qui lui permet de continuer à actualiser les messages sans WebSocket, avec un délai plutôt qu’une diffusion instantanée. Le partage en lecture seule du tableau blanc a également une interrogation de secours. En revanche, la collaboration en direct sur le tableau blanc utilise WebSocket et ne fonctionnera pas sur un déploiement WSGI classique.
+Le chat dispose déjà d’une interrogation HTTP périodique, ce qui lui permet de continuer à actualiser les messages sans WebSocket, avec un délai plutôt qu’une diffusion instantanée. Le partage en lecture seule du tableau blanc a également une interrogation de secours. La collaboration sur le tableau blanc fonctionne aussi en WSGI : les modifications passent par `/tableau/<id>/sync/` (interrogation toutes les 1 à 3 s) ; WebSocket, s'il est disponible, ne fait qu'accélérer la diffusion et les curseurs.
 
 ### WebSockets / ASGI
 
@@ -238,7 +238,7 @@ Sur un compte sans tâches planifiées, les rappels automatiques ne seront pas d
 | Génération IA | Oui, si l’API est accessible | Configurer une clé côté serveur et vérifier les connexions sortantes du compte. |
 | Documents de cours, PDF et pièces jointes | Oui | Servis par Django; ne pas exposer le répertoire média entier. |
 | Chat | Partiellement | Les messages sont enregistrés et le client interroge déjà l’API; la diffusion WebSocket instantanée demande ASGI. |
-| Tableau blanc collaboratif | Partiellement | Les pages et partages peuvent s’afficher, mais les modifications en direct utilisent WebSocket. |
+| Tableau blanc collaboratif | Oui | Synchronisation HTTP (1 à 3 s de délai) ; instantanée avec WebSocket. |
 | Rappels par courriel | Conditionnel | SMTP configuré et tâche planifiée disponible; le backend par défaut n’envoie pas les courriels. |
 
 ## 9. Vérification après publication et diagnostic

@@ -17,6 +17,8 @@ class WhiteboardConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
         self.can_edit = await self._can_edit(user, self.board_id)
+        self.user_id = user.pk
+        self.user_name = user.get_full_name() or user.username
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
         await self.send(text_data=json.dumps({
@@ -37,18 +39,28 @@ class WhiteboardConsumer(AsyncWebsocketConsumer):
         except json.JSONDecodeError:
             return
         msg_type = data.get('type')
+        if msg_type == 'cursor':
+            # Curseur des participants : relayé tel quel, jamais enregistré.
+            x, y = data.get('x'), data.get('y')
+            if not all(isinstance(v, (int, float)) and abs(v) < 1e6 for v in (x, y)):
+                return
+            await self.channel_layer.group_send(self.group_name, {'type': 'board.event', 'payload': {
+                'type': 'cursor', 'user_id': self.user_id, 'name': self.user_name,
+                'x': x, 'y': y, 'sender': self.channel_name,
+            }})
+            return
         if msg_type in ('stroke', 'object', 'clear', 'undo_remote', 'content_sync'):
             # Recheck permissions: a teacher may revoke editing during a session.
             self.can_edit = await self._can_edit(self.scope.get('user'), self.board_id)
             if not self.can_edit:
                 return
             data['sender'] = self.channel_name
+            # Ancien protocole : simple relais. L'enregistrement passe par HTTP
+            # (/api/ ou /sync/), seul chemin où chaque modification est vérifiée.
             await self.channel_layer.group_send(
                 self.group_name,
                 {'type': 'board.event', 'payload': data},
             )
-            if msg_type == 'content_sync' and self.can_edit:
-                await self._save_content(data.get('content'))
 
     async def board_event(self, event):
         payload = event['payload']
@@ -81,12 +93,6 @@ class WhiteboardConsumer(AsyncWebsocketConsumer):
             return False
         return user_can_edit_board(user, board)
 
-    @database_sync_to_async
-    def _save_content(self, content):
-        if not content:
-            return
-        from .models import WhiteboardBoard
-        WhiteboardBoard.objects.filter(pk=self.board_id).update(content=content)
 
 
 class WhiteboardShareConsumer(AsyncWebsocketConsumer):

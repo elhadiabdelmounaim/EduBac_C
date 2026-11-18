@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ page_title|default:"Conversation privée" }}{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="/static/css/chat.css?v=redesign-2">
+<link rel="stylesheet" href="/static/css/chat.css?v=redesign-3">
 <link rel="stylesheet" href="/static/css/chat-voice.css?v=redesign-2">
 {% include "includes/katex.html" %}
 {% endblock %}
@@ -37,6 +37,9 @@
                 </p>
             </div>
             <div class="chat-header-actions">
+                {% if not user.is_student and contact.is_student %}
+                <button type="button" class="chat-icon-btn" id="chatBoardBtn" data-kind="{{ conversation_kind }}" data-conversation-id="{{ conversation.pk }}" title="Partager un tableau en direct" aria-label="Partager un tableau en direct avec {{ contact_display_name }}"><i class="bi bi-easel" aria-hidden="true"></i></button>
+                {% endif %}
                 {% if can_block %}
                 <button type="button" class="chat-pill-btn is-danger" id="privateBlockBtn"
                         data-blocked="{{ is_blocked|yesno:'1,0' }}"
@@ -50,6 +53,7 @@
             </div>
         </header>
 
+        {% if not user.is_student and contact.is_student %}{% include "chat/_whiteboard_share_dialog.html" %}{% endif %}
         <div class="chat-scroll-area">
             <div class="chat-messages" id="privateChatMessages" aria-live="polite" aria-label="Messages privés">
                 <div class="chat-messages-status" id="privateChatStatus">Chargement…</div>
@@ -146,7 +150,8 @@
 {% block extra_js %}
 <script src="/static/js/chat-voice.js?v=redesign-2"></script>
 <script src="/static/js/chat-presence.js"></script>
-<script src="/static/js/chat-actions.js?v=redesign-2"></script>
+<script src="/static/js/chat-actions.js?v=redesign-3"></script>
 <script src="/static/js/messaging-home.js?v=redesign-2"></script>
 <script src="/static/js/private-chat.js?v=redesign-2"></script>
+{% if not user.is_student and contact.is_student %}<script src="/static/js/chat-whiteboard.js?v=1"></script>{% endif %}
 {% endblock %}
