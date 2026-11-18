@@ -192,12 +192,23 @@
                         <select name="classroom" id="classroomSelect" class="form-select" required>
                             <option value="">— Choisir une classe —</option>
                             {% for classroom in classrooms %}
+                            {% if classroom.matches_level %}
                             <option value="{{ classroom.pk }}">{{ classroom.name }} ({{ classroom.code }})</option>
+                            {% else %}
+                            <option value="" disabled>{{ classroom.name }} — {{ classroom.get_niveau_display }} (autre niveau)</option>
+                            {% endif %}
                             {% empty %}
-                            <option value="" disabled>Aucune classe à ce niveau — créez-en une d’abord</option>
+                            <option value="" disabled>Aucune classe — créez-en une d’abord</option>
                             {% endfor %}
                         </select>
-                        <div class="form-text">Seuls les élèves inscrits dans cette classe recevront le quiz.</div>
+                        {% if classrooms and not matching_classrooms %}
+                        <div class="form-text text-danger" role="alert">
+                            Ce quiz est rattaché au niveau « {{ quiz_level_label }} », et aucune de vos classes n’est à ce niveau.
+                            Réimportez-le en choisissant la leçon du niveau de votre classe.
+                        </div>
+                        {% else %}
+                        <div class="form-text">Quiz de niveau « {{ quiz_level_label }} ». Seuls les élèves inscrits dans la classe choisie recevront le quiz.</div>
+                        {% endif %}
                     </div>
                     <div class="col-md-4">
                         <label class="form-label small fw-semibold" for="deadlineInput">Date limite (facultative)</label>

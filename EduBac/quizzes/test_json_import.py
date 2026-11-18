@@ -281,3 +281,23 @@ class QuizJsonImportTests(TestCase):
         self.assertNotEqual(
             self.client.get(reverse('quizzes:detail', args=[quiz.pk])).status_code, 200,
         )
+
+
+class ImportedQuizClassListTests(QuizJsonImportTests):
+    """La liste des classes ne disparaît plus sans explication."""
+
+    def test_classes_of_the_quiz_level_are_selectable_and_others_explained(self):
+        Classroom.objects.create(name='1BAC SM', niveau='1ere_bac_sm', teacher=self.teacher)
+        page = self.client.get(self.post_json()['Location'])
+        self.assertContains(page, f'<option value="{self.classroom.pk}">TC A')
+        self.assertContains(page, '1BAC SM — 1ère Bac Sciences Mathématiques (autre niveau)')
+        self.assertNotContains(page, 'aucune de vos classes n’est à ce niveau')
+
+    def test_quiz_of_another_level_tells_the_teacher_why_no_class_is_selectable(self):
+        course = Course.objects.create(name='Maths SM', niveau='1ere_bac_sm')
+        lesson = Lesson.objects.create(course=course, title='Les nombres réels', order=1, content='…')
+        document = json.loads(json.dumps(self.document))
+        document['quiz']['level'] = '1BAC_SM'
+        page = self.client.get(self.post_json(document, selected_lesson=lesson)['Location'])
+        self.assertContains(page, 'TC A — Tronc Commun (autre niveau)')
+        self.assertContains(page, 'aucune de vos classes n’est à ce niveau')

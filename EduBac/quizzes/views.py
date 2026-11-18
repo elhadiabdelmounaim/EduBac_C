@@ -918,9 +918,14 @@ def teacher_ai_quiz(request):
         n_questions = quiz_created.questions.count()
         sec = quiz_created.seconds_per_question
         difficulty = quiz_created.difficulty
-    classrooms = _managed_classrooms(
-        request.user, is_active=True, niveau=selected_niveau,
-    ) if selected_niveau else Classroom.objects.none()
+    # Toutes les classes de l'enseignant ; seules celles du niveau du quiz sont
+    # sélectionnables (les autres restent visibles, grisées, avec leur niveau).
+    classrooms = list(_managed_classrooms(request.user, is_active=True).order_by('name')) if selected_niveau else []
+    for classroom in classrooms:
+        classroom.matches_level = classroom.niveau == selected_niveau
+    classrooms.sort(key=lambda c: not c.matches_level)
+    matching_classrooms = sum(1 for c in classrooms if c.matches_level)
+    quiz_level_label = dict(Classroom.NIVEAU_CHOICES).get(selected_niveau, selected_niveau)
     courses = Course.objects.order_by('niveau', 'order', 'name')
     lessons = Lesson.objects.select_related('course').order_by(
         'course__order', 'order', 'title',
@@ -942,6 +947,8 @@ def teacher_ai_quiz(request):
         'restored_quiz': restored_quiz is not None,
         'generation_id': generation_id,
         'classrooms': classrooms,
+        'matching_classrooms': matching_classrooms,
+        'quiz_level_label': quiz_level_label,
         'error': error,
         'page_title': 'Importer un quiz',
     })
