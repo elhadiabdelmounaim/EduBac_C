@@ -15,8 +15,10 @@ from django.utils import timezone
 
 from .models import WhiteboardBoard, WhiteboardOp, WhiteboardPresence
 
-DRAW_TYPES = {'stroke', 'line', 'arrow', 'rect', 'circle', 'triangle', 'graph'}
-TEXT_TYPES = {'text', 'note', 'math'}
+DRAW_TYPES = {'stroke', 'line', 'arrow', 'rect', 'circle', 'triangle', 'graph', 'plot', 'plotanswer'}
+TEXT_TYPES = {'text', 'note', 'math', 'vartable', 'probtree'}
+MAX_PLOT_ITEMS = 60
+MAX_PLOT_LINE = 600
 IMAGE_TYPES = {'image'}
 OBJECT_TYPES = DRAW_TYPES | TEXT_TYPES | IMAGE_TYPES
 BACKGROUNDS = {'plain', 'grid', 'ruled', 'dots'}
@@ -58,6 +60,23 @@ def clean_object(raw):
     limit = MAX_IMAGE_BYTES if obj['type'] == 'image' else MAX_OBJECT_BYTES
     if size > limit:
         raise OpError('Élément trop volumineux.')
+    if obj['type'] == 'plot':
+        items = obj.get('items')
+        if not isinstance(items, list) or len(items) > MAX_PLOT_ITEMS:
+            raise OpError(f'Un repère contient au plus {MAX_PLOT_ITEMS} éléments.')
+        for item in items:
+            if not isinstance(item, dict) or not isinstance(item.get('line'), str) or len(item['line']) > MAX_PLOT_LINE:
+                raise OpError('Commande de repère invalide.')
+        if not all(isinstance(_num(obj.get(k)), (int, float)) and obj[k] > 0 for k in ('w', 'h')):
+            raise OpError('Taille de repère invalide.')
+    if obj['type'] == 'plotanswer':
+        if not isinstance(obj.get('plot'), str) or not isinstance(obj.get('target'), str) or len(obj['target']) > 40:
+            raise OpError('Réponse d’exercice invalide.')
+        if _num(obj.get('mx')) is None or _num(obj.get('my')) is None:
+            raise OpError('Réponse d’exercice invalide.')
+    if obj['type'] in ('vartable', 'probtree'):
+        if not isinstance(obj.get('text'), str) or len(obj['text']) > 4000:
+            raise OpError('Tableau ou arbre invalide.')
     if obj['type'] == 'image':
         src = obj.get('src') or ''
         if not isinstance(src, str) or not (

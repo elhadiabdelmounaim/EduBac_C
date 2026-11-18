@@ -57,6 +57,9 @@
   var activePointer = null;
   var previewFrame = null;
   var editor = document.getElementById('wbObjectEditor');
+  var plotDrag = null;      // geste en cours dans un repère (point, curseur, déplacement de la vue)
+  var wheelTimer = null;
+  var MATH_TYPES = ['plot', 'vartable', 'probtree'];
   var toolNames={select:'Sélection',pencil:'Crayon',pen:'Stylo',highlighter:'Surligneur',eraser:'Gomme',text:'Texte',line:'Ligne',arrow:'Flèche',rect:'Rectangle',circle:'Cercle',triangle:'Triangle',ruler:'Règle',protractor:'Rapporteur'};
 
   function selected() { return objects.find(function (o) { return o.id === selectedId; }) || null; }
@@ -64,7 +67,7 @@
     var o = selected(), bar = document.getElementById('wbSelectionBar');
     if (bar) bar.hidden = !o;
     var label = document.getElementById('wbSelectionLabel');
-    if (label) label.textContent = o ? (o.latex || o.text || o.expr || toolNames[o.geometry] || toolNames[o.type] || {stroke:'Trait',math:'Équation',graph:'Graphique',image:'Image',note:'Note'}[o.type] || o.type) : '';
+    if (label) label.textContent = o ? (o.type==='plot' ? (o.title || 'Repère') : o.type==='vartable' ? 'Tableau de variations' : o.type==='probtree' ? 'Arbre de probabilités' : (o.latex || o.text || o.expr || toolNames[o.geometry] || toolNames[o.type] || {stroke:'Trait',math:'Équation',graph:'Graphique',image:'Image',note:'Note'}[o.type] || o.type)) : '';
     window.dispatchEvent(new CustomEvent('edubac:selection', { detail: o ? serializeObj(o) : null }));
   }
   function commit() {
@@ -93,6 +96,9 @@
     var o=selected();
     if (!canEdit || !contentReady || !o || !editor) return;
     if (!canModify(o)) { alert('Vous ne pouvez modifier que vos propres éléments.'); return; }
+    if (o.type === 'plot') { openPlotEditor(o); return; }
+    if (o.type === 'vartable' || o.type === 'probtree') { openTextObject(o.type, o); return; }
+    if (o.type === 'plotanswer') return;
     openEditor(o,false);
   }
   function openEditor(o,creating) {
@@ -279,6 +285,12 @@
       });
     } else if (o.type === 'graph') {
       drawGraphObject(o);
+    } else if (o.type === 'plot' && window.EduBacPlot) {
+      o._layout = window.EduBacPlot.render(ctx, plotView(o), plotState(o));
+    } else if (o.type === 'vartable' && window.EduBacTables) {
+      window.EduBacTables.renderTable(ctx, o);
+    } else if (o.type === 'probtree' && window.EduBacTables) {
+      window.EduBacTables.renderTree(ctx, o);
     } else if (o.type === 'image' && o._img) {
       ctx.drawImage(o._img, o.x, o.y, o.w, o.h);
     } else if(o.type==='image' && o._imgError) {
@@ -367,11 +379,144 @@
   }
 
   function compileFn(expr) {
-    // safe-ish math expression
-    var cleaned = String(expr).replace(/[^0-9xX+\-*/().,\sMathsincotaqrtpowe]/g, '');
-    cleaned = cleaned.replace(/x/gi, 'x');
-    // eslint-disable-next-line no-new-func
-    return new Function('x', 'with(Math){ return (' + cleaned + '); }');
+    // Analyse sûre (aucun code exécuté) ; accepte aussi l'ancienne écriture Math.sin(x), x*x.
+    return window.EduBacMath.compileFunction(String(expr || ''));
+  }
+
+  /* ---------- Repère interactif, tableau de variations, arbre ---------- */
+  // Un utilisateur sans droit de modification explore une copie locale (jamais envoyée).
+  // Première place libre (de haut en bas) pour un nouvel objet de taille w × h.
+  function freeSpot(x, y, w, h) {
+    var boxes = objects.map(model.bounds), tries = 0;
+    function overlaps(){ return boxes.some(function(b){return x < b.x+b.w+24 && x+w+24 > b.x && y < b.y+b.h+24 && y+h+24 > b.y;}); }
+    while (overlaps() && tries++ < 400) y += 40;
+    return {x:x, y:y};
+  }
+  function plotView(o) {
+    return o._local ? Object.assign({}, o._local, {x:o.x, y:o.y, w:o.w, h:o.h, id:o.id}) : o;
+  }
+  function plotState(o) {
+    var names = window.EduBacBoardNames || {};
+    return {
+      editable: canEdit && contentReady && canModify(o),
+      reviewer: !isStudent,
+      me: myId,
+      traces: o._traces || {},
+      answers: objects.filter(function(a){return a.type==='plotanswer' && a.plot===o.id;}).map(function(a){
+        return {target:a.target, mx:a.mx, my:a.my, by:a.by, byName:names[a.by]};
+      }),
+    };
+  }
+  function plotAt(p) {
+    return objects.slice().reverse().find(function(o){
+      return o.type==='plot' && p.x>=o.x && p.x<=o.x+o.w && p.y>=o.y && p.y<=o.y+o.h;
+    }) || null;
+  }
+  function plotTarget(o, editable) {
+    if (editable) { delete o._local; return o; }
+    if (!o._local) o._local = JSON.parse(JSON.stringify(model.serialize(o)));
+    return Object.assign(o._local, {x:o.x, y:o.y, w:o.w, h:o.h});
+  }
+  function recordTraces(o, target) {
+    var info = window.EduBacPlot.pointPositions(target);
+    if (!info.traced.length) return;
+    o._traces = o._traces || {};
+    info.traced.forEach(function(name){
+      var pt = info.points[name];
+      if (!pt || !isFinite(pt.x) || !isFinite(pt.y)) return;
+      var list = o._traces[name] = o._traces[name] || [];
+      if (list.length < 4000) list.push({x:pt.x, y:pt.y});
+    });
+  }
+  function handlePlotPointer(o, p, e) {
+    var editable = canEdit && contentReady && canModify(o);
+    // Coin bas-droit : redimensionner.
+    if (editable && p.x > o.x+o.w-16 && p.y > o.y+o.h-16) {
+      e.preventDefault(); selectedId=o.id; notifySelection();
+      plotDrag = {obj:o, hit:{type:'resize'}, last:p, before:model.state(objects), editable:true, moved:false};
+      return true;
+    }
+    var hit = window.EduBacPlot.hitTest(plotView(o), o._layout, p);
+    if (!hit || hit.type === 'header') return false;
+    e.preventDefault();
+    // Un élève qui répond à l'exercice ne « sélectionne » pas le repère du professeur.
+    if (editable) { selectedId = o.id; notifySelection(); }
+    if (hit.type === 'button') {
+      if (hit.name === 'edit') { if (editable) openPlotEditor(o); return true; }
+      var before = model.state(objects), target = plotTarget(o, editable);
+      if (hit.name === 'zoomIn') window.EduBacPlot.zoom(target, 0.8);
+      else if (hit.name === 'zoomOut') window.EduBacPlot.zoom(target, 1.25);
+      else window.EduBacPlot.resetView(target);
+      if (editable) { undoStack.push(before); if(undoStack.length>80)undoStack.shift(); redoStack=[]; commit(); } else redraw();
+      return true;
+    }
+    if (hit.type === 'pan' && isStudent && hasTargets(o)) {
+      if (can('draw') && contentReady) placeAnswer(o, p);
+      else alert('Pour répondre, demandez au professeur le droit de dessiner sur le tableau.');
+      return true;
+    }
+    plotDrag = {obj:o, hit:hit, last:p, before:model.state(objects), editable:editable, moved:false};
+    return true;
+  }
+  function hasTargets(o) {
+    return !!(o._layout && o._layout.scene.list.some(function(it){return it.k==='target';}));
+  }
+  function placeAnswer(o, p) {
+    var targets = o._layout.scene.list.filter(function(it){return it.k==='target';});
+    var mine = objects.filter(function(a){return a.type==='plotanswer' && a.plot===o.id && a.by===myId;});
+    var m = window.EduBacPlot.toMath(plotView(o), p);
+    var target = targets.find(function(t){return !mine.some(function(a){return a.target===t.label;});});
+    var existing = null;
+    if (!target) { // tout est placé : on déplace la réponse la plus proche
+      existing = mine.slice().sort(function(a,b){return Math.hypot(a.mx-m.x,a.my-m.y)-Math.hypot(b.mx-m.x,b.my-m.y);})[0];
+      target = targets.find(function(t){return existing && t.label===existing.target;});
+    }
+    if (!target) return;
+    pushUndo();
+    var answer = {id: existing ? existing.id : model.id(), type:'plotanswer', plot:o.id, target:target.label,
+      mx:m.x, my:m.y, x:p.x-6, y:p.y-6, w:12, h:12, color:'#2b8a3e', by:myId};
+    if (existing) { answer.by = existing.by; objects[objects.indexOf(existing)] = answer; } else objects.push(answer);
+    commit();
+  }
+  function openPlotEditor(o) {
+    if (!window.EduBacPlotEditor) return;
+    window.EduBacPlotEditor.openPlot(model.serialize(o), {
+      creating:false,
+      onSave:function(result){
+        var current = objects.find(function(item){return item.id===o.id;});
+        if (!current) return;
+        pushUndo();
+        objects[objects.indexOf(current)] = Object.assign(result, {id:current.id, type:'plot', x:current.x, y:current.y, w:current.w, h:current.h, by:current.by});
+        selectedId = current.id; notifySelection(); commit();
+      },
+      onTable: placeTableNextTo,
+    });
+  }
+  function placeTableNextTo(text, plot) {
+    if (!can('text') || !contentReady) return;
+    pushUndo();
+    var start = {x:(plot && plot.x != null ? plot.x + (plot.w || 0) + 30 : (hooks.placeX ? hooks.placeX(80) : 80)), y:plot && plot.y != null ? plot.y : 80};
+    var spot = freeSpot(start.x, start.y, 420, 180);
+    var table = {id:model.id(), type:'vartable', text:text, color:'#12306b', size:3, x:spot.x, y:spot.y};
+    objects.push(table); selectedId=table.id; notifySelection(); commit();
+  }
+  function openTextObject(kind, o) {
+    if (!window.EduBacPlotEditor) return;
+    window.EduBacPlotEditor.openText(kind, o ? o.text : '', {
+      creating:!o,
+      onSave:function(text){
+        pushUndo();
+        if (o) {
+          var current = objects.find(function(item){return item.id===o.id;});
+          if (current) current.text = text;
+        } else {
+          var spot = freeSpot(hooks.placeX ? hooks.placeX(80) : 80, 80, 460, 220);
+          var obj = {id:model.id(), type:kind, text:text, color:'#12306b', size:3, x:spot.x, y:spot.y};
+          objects.push(obj); selectedId=obj.id;
+        }
+        notifySelection(); commit();
+      },
+    });
   }
 
   function redraw() {
@@ -524,7 +669,9 @@
     lastPointer=p;
     if(tool==='select') {
       e.preventDefault();
-      var hit=objects.slice().reverse().find(function(o){return !o.erase && model.hit(o,p,10*canvas.width/canvas.getBoundingClientRect().width);});
+      var plot=plotAt(p);
+      if(plot && window.EduBacPlot && handlePlotPointer(plot,p,e)) return;
+      var hit=objects.slice().reverse().find(function(o){return !o.erase && o.type!=='plotanswer' && model.hit(o,p,10*canvas.width/canvas.getBoundingClientRect().width);});
       selectedId=hit?hit.id:null;
       notifySelection();redraw();
       if(canEdit && contentReady && hit && canModify(hit)) {dragging=hit;dragBefore=model.state(objects);}
@@ -558,6 +705,17 @@
   }
 
   function onMove(e) {
+    if(plotDrag) {
+      e.preventDefault();
+      var pp=getPos(e), d=plotDrag, o=d.obj;
+      if(d.hit.type==='resize') {
+        o.w=Math.max(260,o.w+pp.x-d.last.x); o.h=Math.max(200,o.h+pp.y-d.last.y); d.moved=true;
+      } else {
+        var target=plotTarget(o,d.editable);
+        if(window.EduBacPlot.drag(target,d.hit,pp,d.last)) { d.moved=true; recordTraces(o,target); }
+      }
+      d.last=pp; requestPreview(); return;
+    }
     if(dragging && canEdit) {
       e.preventDefault();var pos=getPos(e);
       model.move(dragging,pos.x-lastPointer.x,pos.y-lastPointer.y);lastPointer=pos;
@@ -584,7 +742,7 @@
   }
 
   function paintPreview() {
-    if(dragging) {redraw();return;}
+    if(dragging || plotDrag) {redraw();return;}
     if(!drawing)return;
     if(currentPath) {redraw();renderObject(currentPath);return;}
     // shape preview
@@ -621,6 +779,12 @@
 
   function onEnd(e) {
     if(previewFrame!==null) {window.cancelAnimationFrame(previewFrame);previewFrame=null;}
+    if(plotDrag) {
+      var done=plotDrag; plotDrag=null;
+      if(done.moved && done.editable) { undoStack.push(done.before); if(undoStack.length>80)undoStack.shift(); redoStack=[]; commit(); }
+      else redraw();
+      return;
+    }
     if(dragging) {
       if(e && e.clientX != null) {
         var end=getPos(e);model.move(dragging,end.x-lastPointer.x,end.y-lastPointer.y);lastPointer=end;
@@ -661,7 +825,7 @@
     canvas.addEventListener('pointerdown',function(e){
       if(activePointer!==null || (e.button!=null && e.button!==0))return;
       onStart(e);
-      if(!drawing && !dragging)return;
+      if(!drawing && !dragging && !plotDrag)return;
       activePointer=e.pointerId;
       try {canvas.setPointerCapture(e.pointerId);} catch(err) { /* Window listeners still finish the gesture. */ }
     });
@@ -686,7 +850,27 @@
     if(pointer!==null && canvas.hasPointerCapture && canvas.hasPointerCapture(pointer))canvas.releasePointerCapture(pointer);
   }
   window.addEventListener('blur',function(){finishPointer();});
-  canvas.addEventListener('dblclick',function(){if(tool==='select') editSelected();});
+  canvas.addEventListener('dblclick',function(e){
+    if(tool!=='select') return;
+    var plot=plotAt(getPos(e));
+    if(plot && plot._layout && window.EduBacPlot.hitTest(plotView(plot),plot._layout,getPos(e)) && window.EduBacPlot.hitTest(plotView(plot),plot._layout,getPos(e)).type!=='header') return;
+    editSelected();
+  });
+  canvas.addEventListener('wheel',function(e){
+    if(tool!=='select' || !window.EduBacPlot) return;
+    var p=getPos(e), plot=plotAt(p);
+    if(!plot || p.y<plot.y+window.EduBacPlot.HEADER) return;
+    e.preventDefault();
+    var editable=canEdit && contentReady && canModify(plot), target=plotTarget(plot,editable);
+    var before=model.state(objects);
+    if(!window.EduBacPlot.zoom(target,e.deltaY>0?1.15:0.87,p)) return;
+    redraw();
+    if(editable) {
+      if(!wheelTimer) { undoStack.push(before); if(undoStack.length>80)undoStack.shift(); redoStack=[]; }
+      clearTimeout(wheelTimer);
+      wheelTimer=setTimeout(function(){wheelTimer=null;commit();},400);
+    }
+  },{passive:false});
   document.addEventListener('keydown',function(e){
     if (studentLocked) return;
     if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || e.target.isContentEditable || editor.open) return;
@@ -697,7 +881,7 @@
 
   // tools
   function setTool(next) {
-    if(drawing || dragging)finishPointer();
+    if(drawing || dragging || plotDrag)finishPointer();
     tool=next;
     document.querySelectorAll('.wb-tool[data-tool]').forEach(function(b){
       b.classList.remove('active');b.setAttribute('aria-pressed',String(b.dataset.tool===tool));
@@ -824,31 +1008,25 @@
     if (window.bootstrap) bootstrap.Modal.getInstance(mathModal).hide();
   });
 
-  // Graph
-  var graphModal = document.getElementById('wbGraphModal');
+  // Repère interactif, tableau de variations, arbre de probabilités
   document.getElementById('wbGraphBtn').addEventListener('click', function () {
-    if (!can('draw')) return;
-    if (window.bootstrap) new bootstrap.Modal(graphModal).show();
+    if (!can('draw') || !contentReady || !window.EduBacPlotEditor) return;
+    var fresh = window.EduBacPlot.defaultPlot(hooks.placeX ? hooks.placeX(100) : 100, 100);
+    window.EduBacPlotEditor.openPlot(fresh, {
+      creating:true,
+      onSave:function(result){
+        if (!can('draw') || !contentReady) return;
+        pushUndo();
+        result.id = model.id();
+        var spot = freeSpot(result.x, result.y, result.w, result.h); result.x = spot.x; result.y = spot.y;
+        objects.push(result); selectedId=result.id; notifySelection(); setTool('select'); commit();
+      },
+      onTable: placeTableNextTo,
+    });
   });
-  document.getElementById('wbGraphPlace').addEventListener('click', function () {
-    if(!can('draw') || !contentReady) return;
-    var expr = document.getElementById('wbGraphFn').value.trim();
-    var xmin = parseFloat(document.getElementById('wbGraphXmin').value);
-    var xmax = parseFloat(document.getElementById('wbGraphXmax').value);
-    if (!expr || !isFinite(xmin) || !isFinite(xmax) || xmin >= xmax) return;
-    var fn;
-    try { fn = compileFn(expr); fn(0); } catch (e) { alert('Expression invalide'); return; }
-    pushUndo();
-    var obj = {
-      type: 'graph', expr: expr, xmin: xmin, xmax: xmax, ymin: xmin, ymax: xmax,
-      x: hooks.placeX ? hooks.placeX(100) : 100, y: 100, w: 400, h: 300, color: color, _fn: fn,
-    };
-    objects.push(obj);
-    redraw();
-    scheduleSave();
-    broadcast({ type: 'object', object: serializeObj(obj) });
-    if (window.bootstrap) bootstrap.Modal.getInstance(graphModal).hide();
-  });
+  var tableBtn = document.getElementById('wbTableBtn'), treeBtn = document.getElementById('wbTreeBtn');
+  if (tableBtn) tableBtn.addEventListener('click', function () { if (can('text') && contentReady) openTextObject('vartable', null); });
+  if (treeBtn) treeBtn.addEventListener('click', function () { if (can('text') && contentReady) openTextObject('probtree', null); });
 
   // Image
   document.getElementById('wbImageBtn').addEventListener('click', function () {
@@ -936,7 +1114,7 @@
       var kind = need[b.dataset.tool] || 'draw';
       b.disabled = b.dataset.tool !== 'select' && !can(kind);
     });
-    [['wbMathBtn','text'],['wbGraphBtn','draw'],['wbImageBtn','images']].forEach(function (pair) {
+    [['wbMathBtn','text'],['wbGraphBtn','draw'],['wbTableBtn','text'],['wbTreeBtn','text'],['wbImageBtn','images']].forEach(function (pair) {
       var b = document.getElementById(pair[0]); if (b) b.disabled = !can(pair[1]);
     });
     var clear = document.getElementById('wbClear');
@@ -958,6 +1136,7 @@
         objects = model.normalize(list);
         if (selectedId && !objects.some(function(o){return o.id===selectedId;})) {selectedId=null;notifySelection();}
         if (dragging && !objects.includes(dragging)) {dragging=null;dragBefore=null;}
+        if (plotDrag && !objects.includes(plotDrag.obj)) plotDrag=null;
         redraw();
       },
       background:function(value){ if (value !== undefined) loadBackground({background:value}); return background; },
@@ -965,7 +1144,10 @@
       setCapabilities:applyCapabilities,
       setHooks:function(next){ hooks = next || {}; },
       redraw:redraw,
-      busy:function(){ return drawing || dragging || (editor && editor.open); },
+      busy:function(){
+        var mathDialog = document.getElementById('wbPlotEditor'), textDialog = document.getElementById('wbTextObjEditor');
+        return drawing || dragging || plotDrag || (editor && editor.open) || (mathDialog && mathDialog.open) || (textDialog && textDialog.open);
+      },
       canvas:canvas,
       setStatus:setStatus,
       contentReady:function(){ return contentReady; },

@@ -4,6 +4,7 @@
 {% if not is_student %}<link rel="stylesheet" href="{% asset 'css/whiteboard-tutor.css' %}">{% endif %}
 <link rel="stylesheet" href="{% asset 'css/whiteboard-share.css' %}">
 <link rel="stylesheet" href="{% asset 'css/whiteboard-collab.css' %}">
+<link rel="stylesheet" href="{% asset 'css/whiteboard-math.css' %}">
 {% include "includes/katex.html" %}
 {% endblock %}
 {% block content %}
@@ -101,7 +102,9 @@
             <button type="button" class="wb-tool" data-tool="protractor" title="Rapporteur (angle modifiable)" aria-label="Rapporteur">180°</button>
             <hr class="wb-hr">
             <button type="button" class="wb-tool" id="wbMathBtn" title="Équation">∑</button>
-            <button type="button" class="wb-tool" id="wbGraphBtn" title="Graphique" aria-label="Graphique"><i class="bi bi-graph-up"></i></button>
+            <button type="button" class="wb-tool" id="wbGraphBtn" title="Repère interactif : fonctions, curseurs, géométrie" aria-label="Repère"><i class="bi bi-graph-up"></i></button>
+            <button type="button" class="wb-tool" id="wbTableBtn" title="Tableau de variations ou de signes" aria-label="Tableau"><i class="bi bi-table"></i></button>
+            <button type="button" class="wb-tool" id="wbTreeBtn" title="Arbre de probabilités" aria-label="Arbre"><i class="bi bi-diagram-3"></i></button>
             <button type="button" class="wb-tool" id="wbImageBtn" title="Image" aria-label="Image"><i class="bi bi-image"></i></button>
             <input type="file" id="wbImageInput" accept="image/*" class="d-none">
             <hr class="wb-hr">
@@ -253,30 +256,111 @@
     </div>
 </div>
 
-{# Modal Graph #}
-<div class="modal fade" id="wbGraphModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content border-0" style="border-radius:16px;">
-            <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold">Graphique de fonction</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <label class="form-label">f(x) =</label>
-                <input type="text" id="wbGraphFn" class="form-control font-monospace" value="x*x" placeholder="x*x + 2*x - 3">
-                <div class="row g-2 mt-2">
-                    <div class="col-6"><label class="small">x min</label><input type="number" id="wbGraphXmin" class="form-control form-control-sm" value="-5"></div>
-                    <div class="col-6"><label class="small">x max</label><input type="number" id="wbGraphXmax" class="form-control form-control-sm" value="5"></div>
-                </div>
-                <p class="small text-muted mt-2 mb-0">Opérateurs JS : + - * / Math.sin Math.cos Math.sqrt Math.pow(x,2)</p>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
-                <button type="button" class="btn btn-edubac" id="wbGraphPlace">Dessiner</button>
-            </div>
+{# Repère interactif #}
+<dialog id="wbPlotEditor" class="wb-plot-editor" aria-labelledby="wbPlotEditorTitle">
+  <form method="dialog" id="wbPlotForm" class="wb-plot-form">
+    <header class="wb-plot-head">
+      <h2 id="wbPlotEditorTitle" class="h5 mb-0">Repère interactif</h2>
+      <label class="wb-plot-title-field">Titre <input type="text" id="wbPlotTitle" maxlength="60" class="form-control form-control-sm"></label>
+      <label class="wb-plot-title-field">Modèle
+        <select id="wbPlotPreset" class="form-select form-select-sm">
+          <option value="">— Choisir —</option>
+          <option value="fonction">Étude de fonction</option>
+          <option value="second">Second degré (curseurs)</option>
+          <option value="asymptotes">Asymptotes</option>
+          <option value="integrale">Intégrale</option>
+          <option value="trigo">Cercle trigonométrique</option>
+          <option value="suite">Suite récurrente</option>
+          <option value="complexe">Plan complexe</option>
+          <option value="triangle">Triangle et médiatrices</option>
+          <option value="transformations">Transformations</option>
+          <option value="barycentre">Barycentre</option>
+          <option value="lieu">Lieu géométrique</option>
+          <option value="exercice">Exercice : placer des points</option>
+        </select>
+      </label>
+    </header>
+    <div class="wb-plot-body">
+      <div class="wb-plot-left">
+        <div class="wb-plot-cmd">
+          <label for="wbPlotCmd" class="visually-hidden">Nouvelle commande</label>
+          <input type="text" id="wbPlotCmd" class="form-control font-monospace" autocomplete="off" spellcheck="false"
+                 placeholder="f(x)=x^2-2   ·   A=(1;2)   ·   a=Curseur(-5;5;0.1)">
+          <button type="button" class="btn btn-edubac" id="wbPlotAdd">Ajouter</button>
         </div>
+        <p class="wb-plot-error" id="wbPlotCmdError" role="alert"></p>
+        <details class="wb-plot-snippets">
+          <summary>Outils (cliquer pour insérer un exemple)</summary>
+          <div id="wbPlotSnippets"></div>
+        </details>
+        <ol class="wb-plot-items" id="wbPlotItems" aria-label="Éléments du repère"></ol>
+        <fieldset class="wb-plot-view">
+          <legend>Fenêtre</legend>
+          <label>x min <input type="number" step="any" id="wbPlotXmin" class="form-control form-control-sm"></label>
+          <label>x max <input type="number" step="any" id="wbPlotXmax" class="form-control form-control-sm"></label>
+          <label>y min <input type="number" step="any" id="wbPlotYmin" class="form-control form-control-sm"></label>
+          <label>y max <input type="number" step="any" id="wbPlotYmax" class="form-control form-control-sm"></label>
+          <label class="wb-check"><input type="checkbox" id="wbPlotGrid"> Quadrillage</label>
+          <label class="wb-check"><input type="checkbox" id="wbPlotAxes"> Axes</label>
+          <label class="wb-check"><input type="checkbox" id="wbPlotOrtho"> Orthonormé</label>
+          <label class="wb-check"><input type="checkbox" id="wbPlotPi"> Graduations en π</label>
+          <label class="wb-check"><input type="checkbox" id="wbPlotComplex"> Plan complexe</label>
+        </fieldset>
+        <div class="wb-plot-table-gen">
+          <label for="wbPlotTableFn">Tableau de variations de</label>
+          <select id="wbPlotTableFn" class="form-select form-select-sm"></select>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="wbPlotTableGen">Générer</button>
+        </div>
+      </div>
+      <div class="wb-plot-right">
+        <canvas id="wbPlotPreview" width="560" height="420" aria-label="Aperçu du repère"></canvas>
+        <p class="wb-plot-tip">Dans l’aperçu comme sur le tableau : glissez les points et les curseurs, déplacez le repère à la main, molette pour zoomer.</p>
+        <details class="wb-plot-help">
+          <summary>Aide : toutes les commandes</summary>
+          <ul>
+            <li><code>f(x)=x^2-2x</code> · <code>g(x)=si(x&lt;0; -x; x^2)</code> · <code>h(x)=ln(x) [1;5]</code> (sur un intervalle) · <code>y=2x+1</code></li>
+            <li><code>a=Curseur(min;max;pas;valeur)</code> puis l’utiliser : <code>f(x)=a x^2</code></li>
+            <li><code>A=(1;2)</code> point mobile · <code>M=Point(f;1)</code> point sur une courbe, un cercle ou une droite</li>
+            <li><code>Dérivée(f)</code> · <code>Tangente(f;M)</code> · <code>Racines(f)</code> · <code>Extremums(f)</code> · <code>Asymptotes(f)</code> · <code>Intersection(f;g)</code></li>
+            <li><code>Intégrale(f;a;b)</code> · <code>Aire(f;g;a;b)</code> · <code>Aire(p)</code></li>
+            <li><code>Droite(A;B)</code> · <code>Segment</code> · <code>DemiDroite</code> · <code>Vecteur(A;B)</code> · <code>Cercle(O;2)</code> ou <code>Cercle(O;A)</code> · <code>Polygone(A;B;C)</code></li>
+            <li><code>Milieu(A;B)</code> · <code>Perpendiculaire(d;A)</code> · <code>Parallèle(d;A)</code> · <code>Médiatrice(A;B)</code> · <code>Bissectrice(A;B;C)</code></li>
+            <li><code>Distance(A;B)</code> · <code>Angle(A;B;C)</code> (angle en B) · <code>Barycentre(A;2;B;3)</code></li>
+            <li><code>Translation(p;u)</code> · <code>Symétrie(p;O)</code> ou <code>Symétrie(p;d)</code> · <code>Homothétie(p;O;k)</code> · <code>Rotation(p;O;90)</code></li>
+            <li><code>Lieu(I;M)</code> (M mobile ou curseur) · <code>Trace(M)</code></li>
+            <li><code>CercleTrigo(t)</code> · <code>Suite(f;u0;n)</code> (escalier ou escargot) · <code>z=Complexe(2;1)</code></li>
+            <li><code>Placer(A;2;3)</code> : exercice, chaque élève place le point et voit s’il a juste.</li>
+            <li>Écritures acceptées : <code>2x</code>, <code>x²</code>, <code>√(x)</code>, <code>e^x</code>, <code>π</code>, <code>f'(x)</code>, <code>C(5;2)</code>. Séparateur : <code>;</code>.</li>
+          </ul>
+        </details>
+      </div>
     </div>
-</div>
+    <footer class="wb-plot-foot">
+      <button type="button" class="btn btn-outline-secondary" id="wbPlotCancel">Annuler</button>
+      <button type="button" class="btn btn-edubac" id="wbPlotSave">Placer sur le tableau</button>
+    </footer>
+  </form>
+</dialog>
+
+{# Tableau de variations / arbre de probabilités #}
+<dialog id="wbTextObjEditor" class="wb-plot-editor wb-textobj-editor" aria-labelledby="wbTextObjTitle">
+  <form method="dialog" class="wb-plot-form" id="wbTextObjForm">
+    <header class="wb-plot-head"><h2 id="wbTextObjTitle" class="h5 mb-0">Tableau</h2></header>
+    <div class="wb-plot-body">
+      <div class="wb-plot-left">
+        <label for="wbTextObjInput" class="form-label small" id="wbTextObjHelp"></label>
+        <textarea id="wbTextObjInput" class="form-control font-monospace" rows="9" spellcheck="false"></textarea>
+        <p class="wb-plot-error" id="wbTextObjError" role="alert"></p>
+        <div class="wb-textobj-examples" id="wbTextObjExamples"></div>
+      </div>
+      <div class="wb-plot-right"><canvas id="wbTextObjPreview" width="560" height="320" aria-label="Aperçu"></canvas></div>
+    </div>
+    <footer class="wb-plot-foot">
+      <button type="button" class="btn btn-outline-secondary" id="wbTextObjCancel">Annuler</button>
+      <button type="button" class="btn btn-edubac" id="wbTextObjSave">Placer sur le tableau</button>
+    </footer>
+  </form>
+</dialog>
 {% if is_teacher_owner %}
 {{ share_classrooms|json_script:"wbShareClasses" }}
 <dialog id="wbShareDialog" class="wb-share-dialog" aria-labelledby="wbShareHeading">
@@ -325,6 +409,10 @@
 {% endblock %}
 {% block extra_js %}
 <script src="{% asset 'js/whiteboard-objects.js' %}"></script>
+<script src="{% asset 'js/whiteboard-math.js' %}"></script>
+<script src="{% asset 'js/whiteboard-plot.js' %}"></script>
+<script src="{% asset 'js/whiteboard-tables.js' %}"></script>
+<script src="{% asset 'js/whiteboard-plot-editor.js' %}"></script>
 <script src="{% asset 'js/whiteboard.js' %}"></script>
 <script src="{% asset 'js/whiteboard-collab.js' %}"></script>
 {% if not is_student %}<script src="{% asset 'js/whiteboard-tutor.js' %}"></script>{% endif %}

@@ -40,6 +40,10 @@
       if(typeof o[k]==='number' && Number.isFinite(o[k]))result[k]=Math.round(Math.max(-1e7,Math.min(1e7,o[k]))*1000)/1000;
     });
     ['erase','note'].forEach(function(k){if(typeof o[k]==='boolean')result[k]=o[k];});
+    // Repère interactif : le tuteur lit ses commandes comme du texte.
+    if(o.type==='plot' && Array.isArray(o.items)) {
+      result.text=((o.title || 'Repère')+'\n'+o.items.map(function(it){return it && it.line ? String(it.line) : '';}).filter(Boolean).join('\n')).slice(0,4000);
+    }
     if(Array.isArray(o.points)) {
       var points=o.points.filter(function(p){return p && Number.isFinite(p.x) && Number.isFinite(p.y);});
       var count=Math.min(200,points.length);

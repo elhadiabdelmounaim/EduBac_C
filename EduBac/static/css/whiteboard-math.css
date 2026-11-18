@@ -1,0 +1,63 @@
+/* Fenêtres du repère interactif, du tableau de variations et de l'arbre. */
+.wb-plot-editor {
+  width: min(1180px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  padding: 0;
+  border: 0;
+  border-radius: 18px;
+  background: var(--nb-surface, #fff);
+  color: var(--nb-ink, #263449);
+  box-shadow: 0 24px 60px rgba(18, 48, 107, .28);
+}
+.wb-plot-editor::backdrop { background: rgba(15, 23, 38, .45); }
+.wb-plot-form { display: flex; flex-direction: column; max-height: calc(100vh - 24px); margin: 0; }
+.wb-plot-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 14px 18px; border-bottom: 1px solid var(--nb-line, #d9e0ec); }
+.wb-plot-head h2 { margin-right: auto; }
+.wb-plot-title-field { display: flex; align-items: center; gap: 6px; margin: 0; font-size: .85rem; color: var(--nb-muted, #56627a); }
+.wb-plot-title-field .form-control, .wb-plot-title-field .form-select { width: 220px; }
+.wb-plot-body { display: grid; grid-template-columns: minmax(0, 1fr) 560px; gap: 16px; padding: 14px 18px; overflow: auto; }
+.wb-plot-left { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.wb-plot-right { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.wb-plot-right canvas { width: 100%; height: auto; border: 1px solid var(--nb-line, #d9e0ec); border-radius: 12px; background: #fff; touch-action: none; }
+.wb-plot-cmd { display: flex; gap: 8px; }
+.wb-plot-error { min-height: 1.2em; margin: 0; color: #b02a37; font-size: .85rem; }
+.wb-plot-snippets summary, .wb-plot-help summary { cursor: pointer; font-weight: 600; font-size: .9rem; }
+#wbPlotSnippets, .wb-textobj-examples { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.wb-plot-snippet { padding: 4px 10px; border: 1px solid var(--nb-line, #d9e0ec); border-radius: 999px; background: var(--nb-paper, #f4f6fb); color: var(--nb-ink, #263449); font-size: .8rem; }
+.wb-plot-snippet:hover, .wb-plot-snippet:focus-visible { border-color: var(--nb-teal, #1d4fa3); color: var(--nb-teal, #1d4fa3); }
+.wb-plot-items { display: flex; flex-direction: column; gap: 6px; max-height: 300px; margin: 0; padding: 0; overflow: auto; list-style: none; counter-reset: item; }
+.wb-plot-items li { padding: 6px 8px; border: 1px solid var(--nb-line, #d9e0ec); border-radius: 10px; background: var(--nb-paper, #f4f6fb); }
+.wb-plot-item-row { display: flex; align-items: center; gap: 6px; }
+.wb-plot-color { width: 30px; height: 30px; flex: 0 0 auto; padding: 0; border: 0; border-radius: 8px; background: none; }
+.wb-plot-line { flex: 1; min-width: 0; }
+.wb-plot-icon { display: grid; place-items: center; width: 30px; height: 30px; flex: 0 0 auto; border: 1px solid var(--nb-line, #d9e0ec); border-radius: 8px; background: var(--nb-surface, #fff); color: var(--nb-ink, #263449); }
+.wb-plot-icon.is-danger { color: #b02a37; }
+.wb-plot-item-msg { margin: 4px 0 0 36px; font-size: .78rem; }
+.wb-plot-item-msg:empty { display: none; }
+.wb-plot-item-msg.is-error { color: #b02a37; }
+.wb-plot-item-msg.is-info { color: var(--nb-muted, #56627a); font-style: italic; }
+.wb-plot-view { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px 10px; margin: 0; padding: 8px 10px; border: 1px solid var(--nb-line, #d9e0ec); border-radius: 10px; }
+.wb-plot-view legend { float: none; width: auto; margin: 0 4px; padding: 0 4px; font-size: .85rem; font-weight: 600; }
+.wb-plot-view label { margin: 0; font-size: .8rem; }
+.wb-plot-view .wb-check { display: flex; align-items: center; gap: 4px; }
+.wb-plot-table-gen { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: .85rem; }
+.wb-plot-table-gen .form-select { width: auto; }
+.wb-plot-tip { margin: 0; color: var(--nb-muted, #56627a); font-size: .8rem; }
+.wb-plot-help ul { margin: 8px 0 0; padding-left: 1.1rem; font-size: .82rem; line-height: 1.7; }
+.wb-plot-help code { white-space: nowrap; }
+.wb-plot-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 18px; border-top: 1px solid var(--nb-line, #d9e0ec); }
+.wb-textobj-editor .wb-plot-body { grid-template-columns: minmax(0, 1fr) minmax(0, 560px); }
+#wbTextObjInput { min-height: 200px; }
+html[data-theme="dark"] .wb-plot-right canvas { background: #fff; }
+@media (max-width: 991.98px) {
+  .wb-plot-body, .wb-textobj-editor .wb-plot-body { grid-template-columns: 1fr; }
+  .wb-plot-right { order: -1; }
+  .wb-plot-view { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wb-plot-title-field .form-control, .wb-plot-title-field .form-select { width: 160px; }
+}
+
+/* Barre de sélection : même style pour les élèves (whiteboard-tutor.css n'est chargé que pour l'enseignant). */
+.wb-selection-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; padding: 8px 10px; border: 1px solid var(--nb-line, #d9e0ec); border-radius: 12px; background: var(--nb-surface, #fff); font-size: .8rem; }
+.wb-selection-bar[hidden] { display: none; }
+.wb-selection-bar button { padding: 6px 9px; border: 1px solid var(--nb-line, #d9e0ec); border-radius: 8px; background: var(--nb-paper, #f4f6fb); color: var(--nb-ink, #263449); font: inherit; }
+.wb-selection-bar button:disabled { opacity: .5; }

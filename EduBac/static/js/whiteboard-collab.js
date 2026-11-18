@@ -427,6 +427,9 @@
     renderBanner(next);
     renderStudentStatus(next);
     renderSettings(next.settings);
+    // Noms des participants : affichés à côté des réponses d'exercice dans un repère.
+    window.EduBacBoardNames = {};
+    next.participants.forEach(function (p) { window.EduBacBoardNames[p.id] = p.name; });
     var peopleKey = JSON.stringify([next.participants.map(function (p) {
       return [p.id, p.online, p.hand, p.contributions, p.granted, p.controller, p.zone];
     }), next.zones, highlightAuthor]);

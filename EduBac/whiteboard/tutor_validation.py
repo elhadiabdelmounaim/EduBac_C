@@ -57,7 +57,8 @@ def validate_request(data):
     numeric = ('x', 'y', 'w', 'h', 'x1', 'y1', 'x2', 'y2', 'x3', 'y3', 'cx', 'cy',
                'r', 'size', 'xmin', 'xmax', 'ymin', 'ymax', 'angle')
     types = ('path', 'stroke', 'text', 'note', 'math', 'line', 'arrow', 'rect',
-             'circle', 'triangle', 'image', 'graph', 'ruler', 'protractor')
+             'circle', 'triangle', 'image', 'graph', 'ruler', 'protractor',
+             'plot', 'vartable', 'probtree', 'plotanswer')
     for obj in objects:
         if not isinstance(obj, dict) or obj.get('type') not in types:
             raise TutorInputError('Type d’élément du tableau invalide.')
