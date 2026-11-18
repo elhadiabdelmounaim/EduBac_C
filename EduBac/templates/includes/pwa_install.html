@@ -26,3 +26,16 @@
     <p class="pwa-help-note" id="pwaHelpNote" hidden>Sur iPhone et iPad, utilisez Safari pour ajouter EduBac à l’écran d’accueil.</p>
     <button type="button" class="pwa-help-close" id="pwaHelpClose">J’ai compris</button>
 </dialog>
+{% if user.is_authenticated %}
+<aside class="pwa-banner" id="pushBanner" role="dialog" aria-labelledby="pushBannerTitle" hidden>
+    <span class="push-banner-icon" aria-hidden="true"><i class="bi bi-bell-fill"></i></span>
+    <div class="pwa-banner-text">
+        <strong id="pushBannerTitle">Recevoir les messages</strong>
+        <span>Une notification sur ce téléphone à chaque nouveau message.</span>
+    </div>
+    <button type="button" class="pwa-banner-install" data-push-toggle>Activer</button>
+    <button type="button" class="pwa-banner-close" id="pushBannerClose" aria-label="Plus tard">
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
+    </button>
+</aside>
+{% endif %}

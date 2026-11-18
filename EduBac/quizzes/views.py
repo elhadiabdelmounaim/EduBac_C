@@ -134,6 +134,24 @@ def _notify_assignments(quiz, students, deadline=None):
     return created
 
 
+def _parse_deadline(raw):
+    """Date limite saisie dans un champ datetime-local ; None si vide. ValueError si invalide."""
+    from datetime import datetime
+    from django.utils.dateparse import parse_datetime
+    raw = (raw or '').strip()
+    if not raw:
+        return None
+    deadline = parse_datetime(raw)
+    if deadline is None:
+        try:
+            deadline = datetime.strptime(raw, '%Y-%m-%dT%H:%M')
+        except ValueError:
+            raise ValueError("La date limite n’est pas valide.") from None
+    if timezone.is_naive(deadline):
+        deadline = timezone.make_aware(deadline)
+    return deadline
+
+
 class AssignmentError(ValueError):
     """Le quiz ne peut pas être envoyé à cette classe (message pour l'enseignant)."""
 
@@ -875,6 +893,14 @@ def teacher_ai_quiz(request):
                         raise QuizImportError(
                             f"La classe « {target_classroom.name} » n’est pas du niveau choisi pour ce quiz."
                         )
+                # « Importer et envoyer » : tout est vérifié avant de créer le quiz.
+                send_now = request.POST.get('send_now') == '1'
+                if send_now and target_classroom is None:
+                    raise QuizImportError("Choisissez la classe qui recevra le quiz.")
+                try:
+                    send_deadline = _parse_deadline(request.POST.get('deadline'))
+                except ValueError as exc:
+                    raise QuizImportError(str(exc)) from None
                 quiz_created = create_quiz_from_json(
                     request.FILES.get('quiz_json'),
                     request.user,
@@ -898,6 +924,21 @@ def teacher_ai_quiz(request):
                 trace = current_trace.get()
                 if trace is not None:
                     trace.quiz_id = quiz_created.pk
+                if send_now:
+                    try:
+                        created = _publish_to_classroom(quiz_created, target_classroom, deadline=send_deadline)
+                    except AssignmentError as exc:
+                        # Le quiz reste en brouillon, rattaché à la classe : rien n'est perdu.
+                        quiz_created.classroom = target_classroom
+                        quiz_created.save(update_fields=['classroom'])
+                        messages.error(request, f"Quiz importé mais non envoyé : {exc}")
+                        return redirect(f"{reverse('quizzes:teacher_ai')}?quiz={quiz_created.pk}")
+                    messages.success(
+                        request,
+                        f"Quiz « {quiz_created.title} » ({quiz_created.question_count} question(s)) envoyé à la "
+                        f"classe {target_classroom.name} : {created} élève(s) notifié(s).",
+                    )
+                    return redirect('quizzes:manage')
                 if target_classroom:
                     # Mémorisée sur le brouillon ; aucun élève n'y a accès avant l'envoi.
                     quiz_created.classroom = target_classroom
@@ -925,18 +966,11 @@ def teacher_ai_quiz(request):
             classroom = _managed_classroom(
                 request.user, classroom_id, is_active=True,
             )
-            deadline_raw = (request.POST.get('deadline') or '').strip()
-            deadline = None
-            if deadline_raw:
-                deadline = parse_datetime(deadline_raw)
-                if deadline is None:
-                    try:
-                        deadline = datetime.strptime(deadline_raw, '%Y-%m-%dT%H:%M')
-                    except ValueError:
-                        messages.error(request, "La date limite n’est pas valide.")
-                        return redirect(f"{reverse('quizzes:teacher_ai')}?quiz={quiz.pk}")
-                if timezone.is_naive(deadline):
-                    deadline = timezone.make_aware(deadline)
+            try:
+                deadline = _parse_deadline(request.POST.get('deadline'))
+            except ValueError as exc:
+                messages.error(request, str(exc))
+                return redirect(f"{reverse('quizzes:teacher_ai')}?quiz={quiz.pk}")
             try:
                 created = _publish_to_classroom(quiz, classroom, deadline=deadline)
             except AssignmentError as exc:

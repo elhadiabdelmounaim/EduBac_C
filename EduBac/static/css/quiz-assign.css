@@ -47,3 +47,16 @@ html[data-theme="dark"] .qb-assign-summary { background: var(--nb-teal-soft); }
   .qb-assign-grid { grid-template-columns: 1fr; }
   .qb-class-list { grid-template-columns: 1fr; }
 }
+
+/* Import en une page */
+.qi-form { display: flex; flex-direction: column; gap: 14px; }
+.qi-step { display: flex; gap: 14px; padding: 14px; border: 1px solid var(--nb-line); border-radius: 16px; background: var(--nb-paper); }
+.qi-step-num { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 auto; border-radius: 50%; background: var(--nb-teal); color: #fff; font-weight: 700; }
+.qi-step-body { flex: 1; min-width: 0; }
+.qi-drop { display: flex; align-items: center; gap: 12px; padding: 18px; border: 2px dashed var(--nb-line); border-radius: 14px; background: var(--nb-surface); color: var(--nb-muted); cursor: pointer; transition: border-color .15s, background-color .15s; }
+.qi-drop:hover, #quizJsonFile:focus-visible + .form-text, .qi-drop.has-file { border-color: var(--nb-teal); color: var(--nb-teal); }
+.qi-drop.has-file { background: var(--nb-teal-soft); font-weight: 600; }
+.qi-drop i { font-size: 1.8rem; }
+.qi-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding-top: 4px; }
+.qi-actions .form-text { flex-basis: 100%; margin: 0; }
+@media (max-width: 575.98px) { .qi-actions .btn { width: 100%; } .qi-step { padding: 12px; gap: 10px; } }

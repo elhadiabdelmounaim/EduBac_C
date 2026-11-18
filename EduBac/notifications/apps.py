@@ -8,3 +8,4 @@ class NotificationsConfig(AppConfig):
 
     def ready(self):
         import notifications.signals  # noqa: F401
+        import notifications.push  # noqa: F401  (envoi après la réponse HTTP)

@@ -239,3 +239,49 @@ class QuizAssignmentJourneyTests(StaticLiveServerTestCase):
         self.assertEqual(quiz.classroom, self.other)
         self.assertEqual(list(QuizAssignment.objects.filter(quiz=quiz).values_list('student__username', flat=True)),
                          ['qa-yassine'])
+
+    def test_one_page_import_and_send(self):
+        self.errors = []
+        base = self.live_server_url
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(
+                executable_path=os.environ.get('CHROMIUM_EXECUTABLE') or shutil.which('chromium'),
+                headless=True, args=['--no-sandbox'])
+            try:
+                teacher = self.login(browser, 'qa-prof')
+                teacher.goto(base + reverse('quizzes:teacher_ai'))
+                # 1. La classe d'abord : le niveau et le cours se remplissent seuls.
+                teacher.locator('#quizTargetClass').select_option(str(self.target.pk))
+                expect(teacher.locator('#quizLevel')).to_have_value('tronc_commun')
+                expect(teacher.locator('#quizCourse')).to_have_value(str(self.course.pk))
+                teacher.locator('#quizLesson').select_option(str(self.lesson.pk))
+                teacher.locator('#secondsPerQuestion').fill('40')
+                teacher.locator('#importDeadline').fill('2030-06-01T18:00')
+                teacher.locator('#quizJsonFile').set_input_files({
+                    'name': 'equations.json', 'mimeType': 'application/json',
+                    'buffer': json.dumps(self.document, ensure_ascii=False).encode('utf-8')})
+                expect(teacher.locator('#quizFileName')).to_contain_text('equations.json')
+                self.shot(teacher, 'one-page')
+                # 2. Un clic, une confirmation, et c'est envoyé.
+                teacher.get_by_role('button', name='Importer et envoyer à la classe').click()
+                dialog = teacher.locator('#importConfirm')
+                expect(dialog).to_contain_text('TC A')
+                expect(dialog).to_contain_text('2 élèves')
+                self.shot(teacher, 'one-page-confirm')
+                dialog.get_by_role('button', name='Importer et envoyer').click()
+                teacher.wait_for_url(re.compile(re.escape(base + reverse('quizzes:manage')) + r'(#.*)?$'))
+                expect(teacher.locator('.alert-success')).to_contain_text('envoyé à la classe TC A : 2 élève(s) notifié(s)')
+
+                omar = self.login(browser, 'qa-omar')
+                expect(omar.locator('#notifBadge')).to_have_text('1', timeout=10000)
+                omar.goto(base + reverse('quizzes:assigned'))
+                expect(omar.locator('main h2', has_text='Équations — import')).to_be_visible()
+                yassine = self.login(browser, 'qa-yassine')
+                yassine.goto(base + reverse('quizzes:assigned'))
+                expect(yassine.locator('main h2', has_text='Équations — import')).to_have_count(0)
+                self.assertEqual(self.errors, [])
+            finally:
+                browser.close()
+        quiz = Quiz.objects.get()
+        self.assertEqual((quiz.status, quiz.classroom, quiz.seconds_per_question), ('published', self.target, 40))
+        self.assertEqual(set(QuizAssignment.objects.values_list('student__username', flat=True)), {'qa-omar', 'qa-salma'})

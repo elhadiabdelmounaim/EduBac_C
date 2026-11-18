@@ -470,7 +470,35 @@ def api_send(request, classroom_id):
     if is_announcement:
         from notifications.services import notify_class_announcement
         notify_class_announcement(msg)
+    else:
+        _push_class_message(classroom, msg, user)
     return JsonResponse({'ok': True, 'message': msg.to_dict(user)})
+
+
+def _push_class_message(classroom, message, sender):
+    """Message du salon : notification sur le téléphone des membres (une par salon, remplacée)."""
+    try:
+        from notifications.models import NotificationPreference
+        from notifications.push import is_configured, push_to_users
+        if not is_configured():
+            return
+        member_ids = set(classroom.members.values_list('user_id', flat=True))
+        if classroom.teacher_id:
+            member_ids.add(classroom.teacher_id)
+        member_ids.discard(sender.pk)
+        members = list(User.objects.filter(pk__in=member_ids, is_active=True))
+        muted = NotificationPreference.muted_user_ids(members, 'message')
+        body = message.body[:160] if message.body else ('🎤 Message vocal' if message.is_voice else '📎 Pièce jointe')
+        push_to_users(
+            [m.pk for m in members if m.pk not in muted],
+            title=classroom.name,
+            body=f'{sender.get_full_name() or sender.username} : {body}',
+            url=reverse('chat:room', args=[classroom.pk]),
+            tag=f'chat-class-{classroom.pk}',
+        )
+    except Exception:
+        import logging
+        logging.getLogger(__name__).warning('class message push failed', exc_info=True)
 
 
 @login_required_simple

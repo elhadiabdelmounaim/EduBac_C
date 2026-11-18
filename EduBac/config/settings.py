@@ -89,6 +89,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'accounts.context_processors.student_sidebar',
                 'chat.context_processors.chat_unread',
+                'notifications.context_processors.web_push',
             ],
         },
     },
@@ -190,6 +191,11 @@ SERVER_EMAIL = (
     os.getenv('SERVER_EMAIL', '').strip() or DEFAULT_FROM_EMAIL
 )
 EMAIL_NOTIFICATIONS_ENABLED = os.getenv('EMAIL_NOTIFICATIONS_ENABLED', 'True').lower() in ('true', '1', 'yes')
+
+# Notifications sur le téléphone (Web Push). Clés : python manage.py generate_vapid_keys
+WEBPUSH_VAPID_PUBLIC_KEY = os.getenv('WEBPUSH_VAPID_PUBLIC_KEY', '')
+WEBPUSH_VAPID_PRIVATE_KEY = os.getenv('WEBPUSH_VAPID_PRIVATE_KEY', '')
+WEBPUSH_CONTACT = os.getenv('WEBPUSH_CONTACT', '')
 _site_url_default = 'http://127.0.0.1:8000'
 _replit_dev_domain = os.getenv('REPLIT_DEV_DOMAIN', '').strip().strip('/')
 if os.getenv('DJANGO_PRODUCTION') != '1' and _replit_dev_domain:

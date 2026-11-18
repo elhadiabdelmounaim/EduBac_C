@@ -32,3 +32,30 @@
 `send_notification_digest --dry-run` affiche ce qui serait envoyé.
 Sans ces tâches, les rappels, les alertes et les résumés ne partent pas
 (les notifications dans EduBac, elles, fonctionnent).
+
+## Notifications sur le téléphone (Web Push)
+
+Chaque notification EduBac (message privé, consultation, quiz, annonce…) et
+chaque message du salon de classe s'affichent sur le téléphone, même EduBac
+fermé, dès que le téléphone est connecté à Internet. Une seule notification par
+conversation : la suivante la remplace.
+
+Mise en route (une seule fois, sur le serveur) :
+
+```bash
+python manage.py migrate                 # table notifications_pushsubscription
+python manage.py generate_vapid_keys     # copier les 3 lignes dans .env
+```
+
+Ne changez plus ces clés ensuite : les appareils déjà abonnés ne recevraient plus rien.
+
+Côté utilisateur : cloche ▸ « Activer », ou Notifications ▸ Préférences ▸
+« Notifications sur ce téléphone ».
+
+- Android (Chrome) : fonctionne depuis le navigateur ou l'application installée.
+- iPhone (iOS 16.4 ou plus) : **uniquement** depuis EduBac installé sur l'écran
+  d'accueil (Safari ▸ Partager ▸ Sur l'écran d'accueil), règle d'Apple.
+
+Les envois partent après la réponse HTTP : l'expéditeur n'attend jamais.
+Les préférences « Dans EduBac » s'appliquent aussi au téléphone (un type
+décoché n'envoie rien). Les appareils désinstallés sont oubliés automatiquement.

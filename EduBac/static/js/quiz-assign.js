@@ -68,3 +68,86 @@
     filter();
   });
 })();
+
+/** Import en une page : classe → niveau automatique, cours unique choisi d'office, confirmation d'envoi. */
+(function () {
+  'use strict';
+  document.addEventListener('DOMContentLoaded', function () {
+    var form = document.getElementById('quizImportForm');
+    if (!form) return;
+    var target = document.getElementById('quizTargetClass');
+    var level = document.getElementById('quizLevel');
+    var course = document.getElementById('quizCourse');
+    var courseField = document.getElementById('quizCourseField');
+    var lesson = document.getElementById('quizLesson');
+    var file = document.getElementById('quizJsonFile');
+    var fileName = document.getElementById('quizFileName');
+    var dialog = document.getElementById('importConfirm');
+    var sendBtn = document.getElementById('importSendBtn');
+    var confirmed = false;
+
+    function visibleOptions(select) {
+      return Array.prototype.filter.call(select.options, function (o) { return o.value && !o.disabled && !o.hidden; });
+    }
+    // Un seul cours pour ce niveau : il est choisi et le champ s'efface.
+    function autoCourse() {
+      var options = visibleOptions(course);
+      if (options.length === 1 && course.value !== options[0].value) {
+        course.value = options[0].value;
+        course.dispatchEvent(new Event('change'));
+      }
+      if (courseField) courseField.classList.toggle('is-auto', options.length === 1);
+    }
+    if (target && level) {
+      target.addEventListener('change', function () {
+        var option = target.options[target.selectedIndex];
+        if (option && option.dataset.niveau && level.value !== option.dataset.niveau) {
+          level.value = option.dataset.niveau;
+          level.dispatchEvent(new Event('change'));
+        }
+        autoCourse();
+      });
+    }
+    if (level) level.addEventListener('change', function () { setTimeout(autoCourse, 0); });
+    setTimeout(autoCourse, 0);
+
+    if (file && fileName) {
+      file.addEventListener('change', function () {
+        fileName.textContent = file.files && file.files[0] ? '✓ ' + file.files[0].name : 'Choisir ou déposer le fichier .json';
+        fileName.parentElement.classList.toggle('has-file', !!(file.files && file.files[0]));
+      });
+    }
+
+    form.addEventListener('submit', function (event) {
+      var submitter = event.submitter;
+      if (!submitter || submitter.value !== '1' || confirmed) return;
+      event.preventDefault();
+      if (!target.value) {
+        target.setCustomValidity('Choisissez la classe qui recevra le quiz.');
+        target.reportValidity();
+        target.addEventListener('change', function () { target.setCustomValidity(''); }, { once: true });
+        return;
+      }
+      if (!form.reportValidity()) return;
+      if (!dialog || !dialog.showModal) { confirmed = true; form.requestSubmit(sendBtn); return; }
+      var option = target.options[target.selectedIndex];
+      var students = Number(option.dataset.students || 0);
+      var lessonName = lesson.options[lesson.selectedIndex].textContent.trim();
+      var deadline = form.elements.deadline.value;
+      document.getElementById('importConfirmText').textContent =
+        'Le quiz du fichier « ' + file.files[0].name + ' » (leçon : ' + lessonName + ') sera envoyé à la classe '
+        + option.textContent.split('·')[0].trim() + ' : ' + students + ' élève' + (students > 1 ? 's' : '')
+        + (deadline ? ', à rendre avant le ' + new Date(deadline).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) : '') + '.';
+      dialog.showModal();
+    });
+    if (dialog) {
+      document.getElementById('importCancel').addEventListener('click', function () { dialog.close(); });
+      document.getElementById('importConfirmBtn').addEventListener('click', function () {
+        confirmed = true;
+        this.disabled = true;
+        this.textContent = 'Envoi…';
+        form.requestSubmit(sendBtn);
+      });
+    }
+  });
+})();

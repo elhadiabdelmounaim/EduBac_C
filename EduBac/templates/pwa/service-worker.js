@@ -77,3 +77,52 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('message', (event) => {
   if (event.data === 'skipWaiting') self.skipWaiting();
 });
+
+/* Notifications sur le téléphone (Web Push).
+ * Le message est chiffré par le serveur EduBac ; le navigateur le déchiffre ici.
+ * Une seule notification par conversation (tag) : la suivante la remplace. */
+self.addEventListener('push', (event) => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch (error) { data = { body: event.data && event.data.text() }; }
+  const title = data.title || 'EduBac';
+  const options = {
+    body: data.body || 'Vous avez une nouvelle notification.',
+    icon: data.icon || '/static/pwa/icon-192.png',
+    badge: data.badge || '/static/pwa/icon-maskable-192.png',
+    tag: data.tag || undefined,
+    renotify: !!data.tag,
+    data: { url: (data.url && data.url.startsWith('/')) ? data.url : '/' },
+    lang: 'fr',
+  };
+  event.waitUntil((async () => {
+    await self.registration.showNotification(title, options);
+    if (self.navigator && 'setAppBadge' in self.navigator) {
+      const shown = await self.registration.getNotifications();
+      self.navigator.setAppBadge(shown.length).catch(() => {});
+    }
+  })());
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = new URL((event.notification.data && event.notification.data.url) || '/', self.location.origin);
+  if (target.origin !== self.location.origin) return;
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of windows) {
+      if (new URL(client.url).origin === self.location.origin && 'focus' in client) {
+        await client.focus();
+        if ('navigate' in client) return client.navigate(target.href);
+        return undefined;
+      }
+    }
+    return self.clients.openWindow(target.href);
+  })());
+});
+
+// L'appareil a renouvelé son abonnement : on prévient le serveur au prochain affichage.
+self.addEventListener('pushsubscriptionchange', () => {
+  self.clients.matchAll({ type: 'window' }).then((clients) => {
+    clients.forEach((client) => client.postMessage({ type: 'edubac-push-resubscribe' }));
+  });
+});

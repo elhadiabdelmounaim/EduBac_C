@@ -119,3 +119,134 @@
     sync();
   }
 })();
+
+/**
+ * Notifications sur le téléphone (Web Push) : bouton d'activation, réabonnement
+ * silencieux, invitation dans l'application installée.
+ */
+(function () {
+  'use strict';
+  var config = window.EDUBAC_PUSH;
+  if (!config) return;
+  var ua = navigator.userAgent || '';
+  var isIOS = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  var supported = !!(config.publicKey && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && window.isSecureContext);
+  var BANNER_KEY = 'edubac-push-banner';
+
+  function keyBytes(base64) {
+    var padded = (base64 + '===='.slice(base64.length % 4)).replace(/-/g, '+').replace(/_/g, '/');
+    var raw = atob(padded), bytes = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+    return bytes;
+  }
+
+  function send(url, body) {
+    return fetch(url, {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': config.csrfToken, Accept: 'application/json' },
+      body: JSON.stringify(body),
+    }).then(function (r) { if (!r.ok) throw new Error('refus'); return r.json(); });
+  }
+
+  function registration() { return navigator.serviceWorker.ready; }
+
+  function currentSubscription() {
+    return registration().then(function (reg) { return reg.pushManager.getSubscription(); });
+  }
+
+  function subscribe() {
+    return registration().then(function (reg) {
+      return reg.pushManager.getSubscription().then(function (existing) {
+        return existing || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(config.publicKey) });
+      });
+    }).then(function (subscription) {
+      return send(config.subscribeUrl, subscription.toJSON()).then(function () { return subscription; });
+    });
+  }
+
+  function unsubscribe() {
+    return currentSubscription().then(function (subscription) {
+      if (!subscription) return null;
+      return send(config.unsubscribeUrl, { endpoint: subscription.endpoint }).catch(function () {})
+        .then(function () { return subscription.unsubscribe(); });
+    });
+  }
+
+  function render(state) {
+    var labels = {
+      on: ['Activées sur cet appareil', 'Désactiver', false],
+      off: ['Recevez une alerte à chaque nouveau message, même EduBac fermé.', 'Activer', false],
+      denied: ['Bloquées : autorisez EduBac dans les réglages du téléphone.', 'Activer', true],
+      ios: ['Sur iPhone : installez d’abord EduBac sur l’écran d’accueil (Partager → Sur l’écran d’accueil), puis ouvrez-le depuis son icône.', 'Activer', true],
+      busy: ['Activation…', '…', true],
+    }[state];
+    document.querySelectorAll('[data-push-panel]').forEach(function (panel) { panel.hidden = false; });
+    document.querySelectorAll('[data-push-status]').forEach(function (el) { el.textContent = labels[0]; });
+    document.querySelectorAll('[data-push-toggle]').forEach(function (button) {
+      button.textContent = labels[1];
+      button.disabled = labels[2];
+      button.dataset.pushState = state;
+    });
+    if (state !== 'off') hideBanner(false);
+  }
+
+  function hideBanner(remember) {
+    var banner = document.getElementById('pushBanner');
+    if (banner) banner.hidden = true;
+    if (remember) { try { localStorage.setItem(BANNER_KEY, String(Date.now())); } catch (e) {} }
+  }
+
+  function refresh() {
+    if (!supported) { if (isIOS && !standalone && config.publicKey) render('ios'); return; }
+    if (Notification.permission === 'denied') { render('denied'); return; }
+    currentSubscription().then(function (subscription) {
+      if (subscription && Notification.permission === 'granted') {
+        render('on');
+        // Garde le serveur à jour (réinstallation, changement de compte sur l'appareil).
+        send(config.subscribeUrl, subscription.toJSON()).catch(function () {});
+      } else {
+        render('off');
+        maybeBanner();
+      }
+    }).catch(function () { render('off'); });
+  }
+
+  function maybeBanner() {
+    var banner = document.getElementById('pushBanner');
+    if (!banner || !standalone) return;  // invitation dans l'application installée seulement
+    var last = 0;
+    try { last = Number(localStorage.getItem(BANNER_KEY) || 0); } catch (e) {}
+    if (Date.now() - last < 7 * 86400000) return;
+    var install = document.getElementById('pwaBanner');
+    if (install && !install.hidden) return;
+    banner.hidden = false;
+  }
+
+  function toggle(event) {
+    var state = event.currentTarget.dataset.pushState;
+    if (state === 'on') {
+      unsubscribe().then(function () { render('off'); });
+      return;
+    }
+    render('busy');
+    Notification.requestPermission().then(function (permission) {
+      if (permission !== 'granted') { render(permission === 'denied' ? 'denied' : 'off'); return null; }
+      return subscribe().then(function () { render('on'); hideBanner(true); });
+    }).catch(function () { render('off'); });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-push-toggle]').forEach(function (button) { button.addEventListener('click', toggle); });
+    var close = document.getElementById('pushBannerClose');
+    if (close) close.addEventListener('click', function () { hideBanner(true); });
+    if (supported) {
+      navigator.serviceWorker.addEventListener('message', function (event) {
+        if (event.data && event.data.type === 'edubac-push-resubscribe' && Notification.permission === 'granted') {
+          subscribe().catch(function () {});
+        }
+      });
+    }
+    refresh();
+  });
+})();

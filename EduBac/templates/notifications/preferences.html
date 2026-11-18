@@ -18,6 +18,14 @@
         </p>
     </header>
 
+    <section class="push-pref" data-push-panel hidden aria-labelledby="pushPrefTitle">
+        <div>
+            <h2 class="h6 mb-1" id="pushPrefTitle"><i class="bi bi-phone" aria-hidden="true"></i> Notifications sur ce téléphone</h2>
+            <p class="small text-muted mb-0" data-push-status>Recevez une alerte même quand EduBac est fermé.</p>
+        </div>
+        <button type="button" class="btn btn-edubac btn-sm" data-push-toggle>Activer</button>
+    </section>
+
     <form method="post">
         {% csrf_token %}
         <div class="table-responsive">

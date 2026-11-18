@@ -363,3 +363,56 @@ class QuizGoesToTheChosenClassTests(QuizJsonImportTests):
         quiz.refresh_from_db()
         self.assertEqual(quiz.classroom, self.other_class)
         self.assertIsNotNone(quiz.publish_at)
+
+
+class ImportAndSendInOnePageTests(QuizJsonImportTests):
+    """« Importer et envoyer » : un seul formulaire, envoi direct à la classe choisie."""
+
+    def send(self, classroom, document=None, **extra):
+        content = json.dumps(self.document if document is None else document, ensure_ascii=False).encode('utf-8')
+        return self.client.post(self.url, {
+            'action': 'import_json', 'send_now': '1', 'niveau': self.lesson.course.niveau,
+            'course': self.lesson.course_id, 'lesson': self.lesson.pk, 'seconds_per_question': 30,
+            'generation_id': str(uuid.uuid4()), 'target_classroom': classroom.pk if classroom else '',
+            'quiz_json': SimpleUploadedFile('quiz.json', content, content_type='application/json'), **extra,
+        })
+
+    def test_import_and_send_publishes_to_the_class_only(self):
+        from notifications.models import Notification
+        response = self.send(self.classroom, deadline='2030-05-01T18:00')
+        self.assertRedirects(response, reverse('quizzes:manage'), fetch_redirect_response=False)
+        quiz = Quiz.objects.get()
+        self.assertEqual(quiz.status, 'published')
+        self.assertEqual(quiz.classroom, self.classroom)
+        self.assertEqual(quiz.seconds_per_question, 30)
+        assignment = QuizAssignment.objects.get()
+        self.assertEqual(assignment.student, self.student)
+        self.assertEqual(assignment.deadline.year, 2030)
+        self.assertTrue(Notification.objects.filter(recipient=self.student, title='Nouveau quiz assigné').exists())
+        self.assertFalse(Notification.objects.filter(recipient=self.outsider, title='Nouveau quiz assigné').exists())
+        page = self.client.get(reverse('quizzes:manage'))
+        self.assertContains(page, 'envoyé à la classe TC A : 1 élève(s) notifié(s)')
+
+    def test_send_without_class_or_with_invalid_file_creates_nothing(self):
+        self.send(None)
+        bad = json.loads(json.dumps(self.document))
+        bad['quiz']['questions'] = []
+        self.send(self.classroom, document=bad)
+        self.send(self.classroom, deadline='pas-une-date')
+        self.assertFalse(Quiz.objects.exists())
+        self.assertFalse(QuizAssignment.objects.exists())
+
+    def test_class_without_students_keeps_the_draft_for_later(self):
+        empty = Classroom.objects.create(name='TC vide', niveau='tronc_commun', teacher=self.teacher)
+        response = self.send(empty)
+        quiz = Quiz.objects.get()
+        self.assertEqual(quiz.status, 'draft')
+        self.assertEqual(quiz.classroom, empty)
+        self.assertEqual(response['Location'], f"{reverse('quizzes:teacher_ai')}?quiz={quiz.pk}")
+
+    def test_one_page_form_offers_class_first_and_both_buttons(self):
+        page = self.client.get(self.url).content.decode()
+        self.assertLess(page.index('id="quizTargetClass"'), page.index('id="quizLevel"'))
+        self.assertIn('Importer et envoyer à la classe', page)
+        self.assertIn('Valider et créer le brouillon', page)
+        self.assertIn('name="deadline"', page)

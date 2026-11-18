@@ -146,7 +146,9 @@ class Notification(models.Model):
                         obj.email_status = cls.EMAIL_DIGEST
                         fields.append('email_status')
                     obj.save(update_fields=fields)
-                    # Pas de nouvel e-mail immédiat pour un même groupe déjà signalé.
+                    # Pas de nouvel e-mail immédiat pour un même groupe déjà signalé,
+                    # mais le téléphone est prévenu (la notification du groupe est remplacée).
+                    cls._push(recipient.pk, title, message, link, group_key)
                     return obj
 
         obj = cls.objects.create(
@@ -161,6 +163,8 @@ class Notification(models.Model):
             is_read=not preference['in_app'],
             email_status=cls.EMAIL_DIGEST if email_mode == catalog.EMAIL_DIGEST else cls.EMAIL_NONE,
         )
+        if preference['in_app']:
+            cls._push(recipient.pk, title, message, link, group_key or f'notif-{obj.pk}')
         if email_mode == catalog.EMAIL_INSTANT:
             try:
                 from .email_utils import send_notification_email
@@ -200,7 +204,19 @@ class Notification(models.Model):
             )
             for user in recipients
         ])
+        cls._push([user.pk for user in recipients if user.pk not in muted], title, message, link,
+                  group_key or f'many-{int(now.timestamp())}')
         return len(recipients)
+
+    @staticmethod
+    def _push(user_ids, title, message, link, tag):
+        """Notification sur les téléphones abonnés (Web Push), sans bloquer."""
+        try:
+            from .push import push_to_users
+            ids = user_ids if isinstance(user_ids, (list, tuple, set)) else [user_ids]
+            push_to_users(ids, title, message, url=link or '/notifications/', tag=tag)
+        except Exception:
+            pass
 
     @classmethod
     def mark_group_read(cls, recipient, group_key):
@@ -247,3 +263,25 @@ class NotificationPreference(models.Model):
             if (values or {}).get(type_code, {}).get('in_app') is False:
                 muted.add(user_id)
         return muted
+
+
+class PushSubscription(models.Model):
+    """Appareil (téléphone, ordinateur) abonné aux notifications Web Push d'un utilisateur."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='push_subscriptions',
+    )
+    endpoint = models.URLField(max_length=1000, unique=True)
+    p256dh = models.CharField(max_length=200)
+    auth = models.CharField(max_length=100)
+    user_agent = models.CharField(max_length=300, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_success_at = models.DateTimeField(null=True, blank=True)
+    failures = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        verbose_name = 'Abonnement aux notifications du téléphone'
+        verbose_name_plural = 'Abonnements aux notifications du téléphone'
+
+    def __str__(self):
+        return f'{self.user} — {self.user_agent[:40] or self.endpoint[:40]}'

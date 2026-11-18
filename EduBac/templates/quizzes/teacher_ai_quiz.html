@@ -6,23 +6,22 @@
     <header class="mb-4">
         <h1 class="quiz-builder-title">Importer un quiz</h1>
         <p class="qb-page-subtitle mb-0">
-            Importez un fichier JSON, relisez le brouillon, puis affectez-le à une classe.
-            EduBac n’appelle pas de service d’intelligence artificielle pendant l’import.
+            Choisissez la classe et la leçon, ajoutez le fichier JSON, puis envoyez : tout se fait sur cette page.
         </p>
     </header>
 
     <nav class="steps-bar mb-4" aria-label="Étapes de création du quiz">
         <div class="step-item {% if not quiz_created %}active{% else %}done{% endif %}">
             <span class="step-num">{% if quiz_created %}<i class="bi bi-check"></i>{% else %}1{% endif %}</span>
-                    <span class="step-label">Choisir et importer</span>
+                    <span class="step-label">Classe, leçon, fichier</span>
         </div>
         <div class="step-connector" aria-hidden="true"></div>
         <div class="step-item {% if quiz_created %}active{% endif %}">
-            <span class="step-num">2</span><span class="step-label">Relire et modifier</span>
+            <span class="step-num">2</span><span class="step-label">Relire (facultatif)</span>
         </div>
         <div class="step-connector" aria-hidden="true"></div>
         <div class="step-item {% if quiz_created %}active{% endif %}">
-            <span class="step-num">3</span><span class="step-label">Affecter à une classe</span>
+            <span class="step-num">3</span><span class="step-label">Envoyer à la classe</span>
         </div>
     </nav>
 
@@ -37,86 +36,117 @@
             </h2>
         </div>
         <div class="qb-section-card__body">
-            <form method="post" enctype="multipart/form-data" id="quizImportForm">
+            <form method="post" enctype="multipart/form-data" id="quizImportForm" class="qi-form">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="import_json">
                 <input type="hidden" name="generation_id" value="{{ generation_id }}">
-                <div class="row g-3 mb-3">
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold" for="quizLevel">Niveau scolaire</label>
-                        <select class="form-select" id="quizLevel" name="niveau" required>
-                            <option value="">— Choisir un niveau —</option>
-                            {% for niveau in niveaux %}
-                            <option value="{{ niveau.code }}" {% if selected_niveau == niveau.code %}selected{% endif %}>
-                                {{ niveau.label }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold" for="quizCourse">Cours</label>
-                        <select class="form-select" id="quizCourse" name="course" required>
-                            <option value="">— Choisir un cours —</option>
-                            {% for course in courses %}
-                            <option value="{{ course.pk }}" data-niveau="{{ course.niveau }}"
-                                    {% if selected_course_id == course.pk|stringformat:"s" %}selected{% endif %}>
-                                {{ course.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold" for="quizLesson">Leçon / notion</label>
-                        <select class="form-select" id="quizLesson" name="lesson" required>
-                            <option value="">— Choisir une leçon —</option>
-                            {% for lesson in lessons %}
-                            <option value="{{ lesson.pk }}" data-course="{{ lesson.course_id }}"
-                                    {% if selected_lesson_id == lesson.pk|stringformat:"s" %}selected{% endif %}>
-                                {{ lesson.title }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="row g-3 mb-3">
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold" for="secondsPerQuestion">
-                            Temps par question (secondes)
-                        </label>
-                        <input class="form-control" type="number" id="secondsPerQuestion"
-                               name="seconds_per_question" min="5" max="600" step="1"
-                               value="{{ selected_seconds_per_question|default:20 }}" required>
-                        <div class="form-text">Ce temps s’applique à chaque question du quiz.</div>
-                    </div>
-                    <div class="col-md-8">
+
+                <div class="qi-step">
+                    <span class="qi-step-num" aria-hidden="true">1</span>
+                    <div class="qi-step-body">
                         <label class="form-label fw-semibold" for="quizTargetClass">Classe destinataire</label>
-                        <select class="form-select" id="quizTargetClass" name="target_classroom">
+                        <select class="form-select form-select-lg" id="quizTargetClass" name="target_classroom">
                             <option value="">— Choisir la classe —</option>
                             {% for classroom in import_classrooms %}
-                            <option value="{{ classroom.pk }}" data-niveau="{{ classroom.niveau }}"
+                            <option value="{{ classroom.pk }}" data-niveau="{{ classroom.niveau }}" data-students="{{ classroom.student_count }}"
                                     {% if selected_target_id == classroom.pk|stringformat:"s" %}selected{% endif %}>
                                 {{ classroom.name }} · {{ classroom.get_niveau_display }} · {{ classroom.student_count }} élève{{ classroom.student_count|pluralize }}
                             </option>
                             {% endfor %}
                         </select>
-                        <div class="form-text" id="quizTargetHelp">Le quiz sera envoyé à cette classe après votre relecture et votre confirmation.</div>
+                        <div class="form-text" id="quizTargetHelp">Le niveau scolaire est rempli automatiquement d’après la classe.</div>
                     </div>
                 </div>
-                <label class="form-label fw-semibold" for="quizJsonFile">Choisir un fichier JSON</label>
-                <input class="form-control" type="file" id="quizJsonFile" name="quiz_json"
-                       accept=".json,application/json" required>
-                <div class="form-text mt-2">
-                    Fichier UTF-8, jusqu’à 1 Mio. Le niveau, le cours, la leçon et le temps par question
-                    se choisissent dans ce formulaire. Le fichier contient le titre et les questions.
-                    Les anciennes clés <code>level</code> et <code>lesson</code> restent acceptées si elles
-                    correspondent à vos choix ; la clé <code>duration</code> n’est pas utilisée.
-                    Les formules et le LaTeX restent inchangés ; aucun code contenu dans le fichier
-                    n’est exécuté.
+
+                <div class="qi-step">
+                    <span class="qi-step-num" aria-hidden="true">2</span>
+                    <div class="qi-step-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold" for="quizLevel">Niveau scolaire</label>
+                                <select class="form-select" id="quizLevel" name="niveau" required>
+                                    <option value="">— Choisir un niveau —</option>
+                                    {% for niveau in niveaux %}
+                                    <option value="{{ niveau.code }}" {% if selected_niveau == niveau.code %}selected{% endif %}>{{ niveau.label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4" id="quizCourseField">
+                                <label class="form-label fw-semibold" for="quizCourse">Cours</label>
+                                <select class="form-select" id="quizCourse" name="course" required>
+                                    <option value="">— Choisir un cours —</option>
+                                    {% for course in courses %}
+                                    <option value="{{ course.pk }}" data-niveau="{{ course.niveau }}"
+                                            {% if selected_course_id == course.pk|stringformat:"s" %}selected{% endif %}>{{ course.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-8 col-lg-4 qi-lesson-field">
+                                <label class="form-label fw-semibold" for="quizLesson">Leçon</label>
+                                <select class="form-select" id="quizLesson" name="lesson" required>
+                                    <option value="">— Choisir une leçon —</option>
+                                    {% for lesson in lessons %}
+                                    <option value="{{ lesson.pk }}" data-course="{{ lesson.course_id }}"
+                                            {% if selected_lesson_id == lesson.pk|stringformat:"s" %}selected{% endif %}>{{ lesson.title }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <button class="btn btn-edubac mt-3" type="submit">
-                    <i class="bi bi-check2-circle"></i> Valider et créer le brouillon
-                </button>
+
+                <div class="qi-step">
+                    <span class="qi-step-num" aria-hidden="true">3</span>
+                    <div class="qi-step-body">
+                        <div class="row g-3">
+                            <div class="col-sm-6 col-lg-4">
+                                <label class="form-label fw-semibold" for="secondsPerQuestion">Temps par question (secondes)</label>
+                                <input class="form-control" type="number" id="secondsPerQuestion" name="seconds_per_question"
+                                       min="5" max="600" step="1" value="{{ selected_seconds_per_question|default:20 }}" required>
+                            </div>
+                            <div class="col-sm-6 col-lg-4">
+                                <label class="form-label fw-semibold" for="importDeadline">Date limite <span class="text-muted fw-normal">(facultative)</span></label>
+                                <input class="form-control" type="datetime-local" id="importDeadline" name="deadline">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="qi-step">
+                    <span class="qi-step-num" aria-hidden="true">4</span>
+                    <div class="qi-step-body">
+                        <label class="form-label fw-semibold" for="quizJsonFile">Fichier JSON du quiz</label>
+                        <label class="qi-drop" for="quizJsonFile">
+                            <i class="bi bi-filetype-json" aria-hidden="true"></i>
+                            <span id="quizFileName">Choisir ou déposer le fichier .json</span>
+                        </label>
+                        <input class="visually-hidden" type="file" id="quizJsonFile" name="quiz_json" accept=".json,application/json" required>
+                        <div class="form-text">Le fichier contient le titre et les questions (UTF-8, 1 Mio maximum). Aucun code du fichier n’est exécuté, et EduBac n’appelle pas de service d’intelligence artificielle pendant l’import.</div>
+                    </div>
+                </div>
+
+                <div class="qi-actions">
+                    <button class="btn btn-accent btn-lg" type="submit" name="send_now" value="1" id="importSendBtn">
+                        <i class="bi bi-send-fill" aria-hidden="true"></i> Importer et envoyer à la classe
+                    </button>
+                    <button class="btn btn-outline-primary" type="submit" name="send_now" value="0" id="importDraftBtn">
+                        <i class="bi bi-check2-circle" aria-hidden="true"></i> Valider et créer le brouillon
+                    </button>
+                    <span class="form-text">Le brouillon permet de relire et modifier les questions avant l’envoi.</span>
+                </div>
             </form>
+            <dialog class="qb-confirm" id="importConfirm" aria-labelledby="importConfirmTitle">
+                <h3 class="h5" id="importConfirmTitle">Importer et envoyer le quiz ?</h3>
+                <p id="importConfirmText"></p>
+                <ul class="small text-muted">
+                    <li>Le fichier est vérifié : en cas d’erreur, rien n’est envoyé.</li>
+                    <li>Seuls les élèves de cette classe recevront le quiz et une notification.</li>
+                </ul>
+                <div class="d-flex gap-2 justify-content-end">
+                    <button type="button" class="btn btn-outline-secondary" id="importCancel">Annuler</button>
+                    <button type="button" class="btn btn-accent" id="importConfirmBtn">Importer et envoyer</button>
+                </div>
+            </dialog>
 
             <details class="mt-4">
                 <summary class="fw-semibold">Voir le format attendu</summary>
@@ -290,10 +320,10 @@
 {% endblock %}
 {% block extra_css %}
 {% include "includes/katex.html" %}
-<link rel="stylesheet" href="/static/css/quiz-assign.css?v=brand-1">
+<link rel="stylesheet" href="/static/css/quiz-assign.css?v=3">
 {% endblock %}
 {% block extra_js %}
-<script src="/static/js/quiz-assign.js?v=2"></script>
+<script src="/static/js/quiz-assign.js?v=3"></script>
 <script>
 (() => {
     const level = document.getElementById('quizLevel');

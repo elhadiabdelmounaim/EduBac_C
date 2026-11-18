@@ -16,3 +16,4 @@ requests>=2.34.2
 channels-redis>=4.2
 redis>=5.0
 daphne>=4.1
+cryptography>=42  # Web Push (chiffrement RFC 8291, VAPID) — déjà présent comme dépendance indirecte

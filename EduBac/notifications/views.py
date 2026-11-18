@@ -162,3 +162,46 @@ def preferences(request):
         'has_email': has_email,
         'page_title': 'Préférences de notification',
     })
+
+
+
+# --- Notifications sur le téléphone (Web Push) ------------------------------------
+
+@login_required_simple
+@require_POST
+def push_subscribe(request):
+    """Enregistre l'abonnement Web Push de cet appareil pour l'utilisateur connecté."""
+    import json
+    from .models import PushSubscription
+    from .push import endpoint_allowed, is_configured
+    if not is_configured():
+        return JsonResponse({'error': 'Notifications du téléphone non configurées.'}, status=503)
+    try:
+        data = json.loads(request.body.decode('utf-8') or '{}')
+        endpoint = str(data['endpoint'])
+        keys = data['keys']
+        p256dh, auth = str(keys['p256dh']), str(keys['auth'])
+    except (ValueError, KeyError, TypeError, UnicodeDecodeError):
+        return JsonResponse({'error': 'Abonnement invalide.'}, status=400)
+    if not endpoint_allowed(endpoint) or len(endpoint) > 1000 or not (40 <= len(p256dh) <= 200) or not (8 <= len(auth) <= 100):
+        return JsonResponse({'error': 'Abonnement refusé.'}, status=400)
+    user = _recipient(request)
+    PushSubscription.objects.update_or_create(
+        endpoint=endpoint,
+        defaults={'user': user, 'p256dh': p256dh, 'auth': auth, 'failures': 0,
+                  'user_agent': request.META.get('HTTP_USER_AGENT', '')[:300]},
+    )
+    return JsonResponse({'ok': True})
+
+
+@login_required_simple
+@require_POST
+def push_unsubscribe(request):
+    import json
+    from .models import PushSubscription
+    try:
+        endpoint = str(json.loads(request.body.decode('utf-8') or '{}').get('endpoint', ''))
+    except (ValueError, UnicodeDecodeError):
+        endpoint = ''
+    PushSubscription.objects.filter(user=_recipient(request), endpoint=endpoint).delete()
+    return JsonResponse({'ok': True})
