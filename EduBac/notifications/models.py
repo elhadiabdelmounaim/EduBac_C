@@ -111,15 +111,18 @@ class Notification(models.Model):
 
     @classmethod
     def notify(cls, recipient, title, message, type='system', actor=None, link='',
-               send_email=True, group_key=''):
+               send_email=True, group_key='', defer_email=False):
         """Crée (ou met à jour, si regroupée) une notification et gère l'e-mail.
 
         `send_email` indique que l'événement mérite un e-mail ; c'est la
         préférence du destinataire qui décide ensuite : immédiat, résumé
-        quotidien ou jamais.
+        quotidien ou jamais. `defer_email` reporte un envoi immédiat au résumé
+        quotidien : la requête en cours (ex. une inscription) n'attend pas SMTP.
         """
         preference = NotificationPreference.for_user(recipient, type)
         email_mode = preference['email'] if send_email else catalog.EMAIL_OFF
+        if defer_email and email_mode == catalog.EMAIL_INSTANT:
+            email_mode = catalog.EMAIL_DIGEST
         now = timezone.now()
 
         obj = None

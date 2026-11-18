@@ -374,8 +374,13 @@ def register_student(request):
                     except IntegrityError:
                         error = 'Ce nom d’utilisateur est déjà utilisé.'
                     else:
-                        from notifications.services import notify_registration_pending
-                        notify_registration_pending(user)
+                        # La notification ne doit jamais empêcher l'élève d'arriver
+                        # à la page de connexion : son compte est déjà enregistré.
+                        try:
+                            from notifications.services import notify_registration_pending
+                            notify_registration_pending(user)
+                        except Exception:
+                            logger.exception('registration_pending_notification_failed user_id=%s', user.pk)
                         messages.success(
                             request,
                             'Votre demande a été envoyée. Connectez-vous après '

@@ -36,10 +36,12 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         admin = self._admin(options.get('admin'))
-        teachers = list(
+        candidates = (
             User.objects.filter(role='teacher', is_staff=False, is_superuser=False)
             .exclude(pk=admin.pk).order_by('username')
         )
+        # Un compte déjà désactivé et vide n'est plus à traiter (relance sans effet).
+        teachers = [t for t in candidates if t.is_active or self._owns_something(t)]
         apply = options['apply']
         self.stdout.write(f'Administrateur enseignant : {admin.username}')
         if not teachers:
@@ -78,6 +80,11 @@ class Command(BaseCommand):
         if not admin:
             raise CommandError('Aucun administrateur actif. Créez-en un avec createsuperuser.')
         return admin
+
+    @staticmethod
+    def _owns_something(user):
+        return any(model.objects.filter(**{field: user}).exists() for _, model, field in OWNED) or \
+            PrivateConversation.objects.filter(teacher=user).exists()
 
     def _consultations(self, teachers, admin, apply):
         """Une consultation par (classe, élève, enseignant) : on évite les doublons."""

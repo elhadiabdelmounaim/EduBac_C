@@ -12,7 +12,8 @@ from django.urls import reverse
 from .models import Notification
 
 
-def notify_user(user, title, message, type='system', actor=None, link='', send_email=True, group_key=''):
+def notify_user(user, title, message, type='system', actor=None, link='', send_email=True, group_key='',
+                defer_email=False):
     return Notification.notify(
         recipient=user,
         title=title,
@@ -22,6 +23,7 @@ def notify_user(user, title, message, type='system', actor=None, link='', send_e
         link=link,
         send_email=send_email,
         group_key=group_key,
+        defer_email=defer_email,
     )
 
 
@@ -158,6 +160,8 @@ def notify_registration_pending(user):
             actor=user,
             link=reverse('accounts:admin_dashboard'),
             send_email=True,
+            # Pas de SMTP pendant l'inscription de l'élève : cloche immédiate, e-mail dans le résumé.
+            defer_email=True,
             group_key='registrations_pending',
         )
 

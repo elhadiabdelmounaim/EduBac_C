@@ -8,6 +8,8 @@ from django.test import SimpleTestCase, override_settings
 @override_settings(
     DEFAULT_FROM_EMAIL='edubac@example.test',
     EMAIL_HOST_USER='edubac@example.test',
+    # Valeur factice : la connexion est simulée, le test ne dépend pas du .env local.
+    EMAIL_HOST_PASSWORD='test-only-app-password',
 )
 class CheckEmailCommandTests(SimpleTestCase):
     def setUp(self):

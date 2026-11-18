@@ -223,3 +223,44 @@ class StudentRegistrationApprovalTests(TestCase):
         self.assertFalse(User.objects.filter(pk=user.pk).exists())
         self.assertFalse(StudentProfile.objects.filter(user_id=user.pk).exists())
         self.assertFalse(ClassroomMember.objects.filter(pk=membership.pk).exists())
+
+
+@override_settings(
+    ALLOWED_HOSTS=['testserver', 'localhost', '127.0.0.1'],
+    EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+)
+class RegistrationRedirectsToLoginTests(TestCase):
+    """L'élève arrive toujours à la page de connexion après son inscription."""
+
+    def setUp(self):
+        Classroom.objects.create(name='1BAC', niveau='tronc_commun', code='CODE01')
+        self.admin = User.objects.create(
+            username='admin', email='admin@example.test', is_staff=True, is_superuser=True,
+        )
+        self.data = {
+            'name': 'Yassine Amrani', 'username': 'yassine', 'password': 'LongPass123!',
+            'password2': 'LongPass123!', 'class_code': 'CODE01',
+        }
+
+    def test_signup_redirects_to_login_without_sending_email_during_the_request(self):
+        from django.core import mail
+        from notifications.models import Notification
+
+        response = self.client.post(reverse('accounts:register_student'), self.data)
+
+        self.assertRedirects(response, reverse('accounts:login'))
+        self.assertEqual(mail.outbox, [], 'aucun envoi SMTP ne retarde l’inscription')
+        notification = Notification.objects.get(recipient=self.admin, group_key='registrations_pending')
+        self.assertEqual(notification.email_status, Notification.EMAIL_DIGEST)
+
+    def test_signup_still_redirects_when_the_notification_fails(self):
+        from unittest import mock
+
+        with mock.patch(
+            'notifications.services.notify_registration_pending',
+            side_effect=RuntimeError('table notifications absente'),
+        ), self.assertLogs('accounts.views', level='ERROR'):
+            response = self.client.post(reverse('accounts:register_student'), self.data)
+
+        self.assertRedirects(response, reverse('accounts:login'))
+        self.assertTrue(User.objects.filter(username='yassine', approval_status='pending').exists())
