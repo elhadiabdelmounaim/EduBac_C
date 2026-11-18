@@ -1010,6 +1010,14 @@ html body :is(.chat-app, .chat-report-dialog) :where(strong, b) { font-weight: 6
   line-height: 1.4;
   resize: none;
 }
+/* Pas de cadre dans le champ quand on écrit : seul le contour arrondi réagit. */
+.chat-app .chat-input-pill textarea:focus,
+.chat-app .chat-input-pill textarea:focus-visible {
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+  background: transparent;
+}
 .chat-input-pill textarea::placeholder { color: var(--ch-muted); }
 .chat-input-pill textarea:disabled { cursor: not-allowed; }
 .chat-tool-btn {

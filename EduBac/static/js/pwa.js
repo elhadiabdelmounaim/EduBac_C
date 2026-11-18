@@ -188,7 +188,22 @@
       button.disabled = labels[2];
       button.dataset.pushState = state;
     });
+    document.querySelectorAll('[data-push-test]').forEach(function (button) { button.hidden = state !== 'on'; });
     if (state !== 'off') hideBanner(false);
+  }
+
+  function runTest(event) {
+    var button = event.currentTarget;
+    var status = document.querySelector('[data-push-status]');
+    button.disabled = true;
+    fetch(button.dataset.url, {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'X-CSRFToken': config.csrfToken, Accept: 'application/json' },
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (status) status.textContent = data.message || 'Réponse inattendue du serveur.';
+    }).catch(function () {
+      if (status) status.textContent = 'Le serveur n’a pas répondu : réessayez.';
+    }).then(function () { button.disabled = false; });
   }
 
   function hideBanner(remember) {
@@ -233,11 +248,17 @@
     Notification.requestPermission().then(function (permission) {
       if (permission !== 'granted') { render(permission === 'denied' ? 'denied' : 'off'); return null; }
       return subscribe().then(function () { render('on'); hideBanner(true); });
-    }).catch(function () { render('off'); });
+    }).catch(function () {
+      render('off');
+      document.querySelectorAll('[data-push-status]').forEach(function (el) {
+        el.textContent = 'Activation impossible : le serveur a refusé l’enregistrement de cet appareil. Réessayez plus tard ou prévenez votre professeur.';
+      });
+    });
   }
 
   document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('[data-push-toggle]').forEach(function (button) { button.addEventListener('click', toggle); });
+    document.querySelectorAll('[data-push-test]').forEach(function (button) { button.addEventListener('click', runTest); });
     var close = document.getElementById('pushBannerClose');
     if (close) close.addEventListener('click', function () { hideBanner(true); });
     if (supported) {

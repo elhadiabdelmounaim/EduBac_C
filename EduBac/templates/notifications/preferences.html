@@ -23,8 +23,18 @@
             <h2 class="h6 mb-1" id="pushPrefTitle"><i class="bi bi-phone" aria-hidden="true"></i> Notifications sur ce téléphone</h2>
             <p class="small text-muted mb-0" data-push-status>Recevez une alerte même quand EduBac est fermé.</p>
         </div>
-        <button type="button" class="btn btn-edubac btn-sm" data-push-toggle>Activer</button>
+        <div class="push-pref-actions">
+            <button type="button" class="btn btn-edubac btn-sm" data-push-toggle>Activer</button>
+            <button type="button" class="btn btn-outline-primary btn-sm" data-push-test data-url="{% url 'notifications:push_test' %}" hidden>Envoyer un test</button>
+        </div>
     </section>
+    {% if not webpush_public_key and not user.is_student %}
+    <div class="alert alert-warning small" role="status">
+        <strong>Notifications sur le téléphone désactivées sur ce serveur.</strong>
+        Lancez <code>python manage.py generate_vapid_keys</code>, copiez les 3 lignes dans <code>.env</code>, puis Reload.
+        Tant que ce n’est pas fait, les élèves ne voient pas le bouton « Activer ».
+    </div>
+    {% endif %}
 
     <form method="post">
         {% csrf_token %}

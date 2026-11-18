@@ -159,25 +159,59 @@ def _post(subscription, body, urgency='high', topic=''):
         return exc.code
 
 
-def send_to_subscription(subscription, payload):
-    """Envoie un message à un appareil. Les abonnements expirés sont supprimés."""
+def attempt(subscription, payload):
+    """Envoie à un appareil et renvoie (code HTTP ou None, erreur lisible).
+
+    Met à jour l'abonnement : supprimé si expiré (404/410), compteur d'échecs sinon.
+    """
     data = json.dumps(payload, ensure_ascii=False).encode('utf-8')[:MAX_PAYLOAD_BYTES]
+    error = ''
     try:
         body = encrypt(data, subscription.p256dh, subscription.auth)
         topic = ''.join(c for c in str(payload.get('tag', '')) if c.isalnum())[:32]
         status = _post(subscription, body, topic=topic)
-    except Exception:
+    except Exception as exc:
         logger.warning('web push failed endpoint=%s', subscription.endpoint[:60], exc_info=True)
-        status = None
+        status, error = None, f'{type(exc).__name__}: {exc}'[:300]
     if status in (404, 410):
         subscription.delete()  # désinstallé ou notifications révoquées sur l'appareil
-        return False
+        return status, 'Abonnement expiré sur cet appareil (supprimé) : réactivez les notifications.'
     if status and 200 <= status < 300:
         type(subscription).objects.filter(pk=subscription.pk).update(last_success_at=timezone.now(), failures=0)
-        return True
+        return status, ''
     from django.db.models import F
     type(subscription).objects.filter(pk=subscription.pk).update(failures=F('failures') + 1)
-    return False
+    if status == 403:
+        error = 'Refusé (403) : la clé VAPID a changé depuis l’activation. Réactivez les notifications sur l’appareil.'
+    elif status:
+        error = error or f'Le service de push a répondu {status}.'
+    return status, error
+
+
+def send_to_subscription(subscription, payload):
+    """Envoie un message à un appareil. Les abonnements expirés sont supprimés."""
+    status, _ = attempt(subscription, payload)
+    return bool(status and 200 <= status < 300)
+
+
+def device_label(subscription):
+    host = (urlsplit(subscription.endpoint).hostname or '').lower()
+    service = ('Android / Chrome' if 'google' in host else 'iPhone / Safari' if 'apple' in host
+               else 'Firefox' if 'mozilla' in host else 'Windows / Edge' if 'windows' in host else host)
+    ua = subscription.user_agent or ''
+    for name in ('Android', 'iPhone', 'iPad', 'Windows', 'Macintosh', 'Linux'):
+        if name in ua:
+            return f'{service} ({name})'
+    return service
+
+
+def test_payload():
+    from django.urls import reverse
+    return {
+        'title': 'EduBac — test', 'body': 'Les notifications fonctionnent sur cet appareil ✓',
+        'url': reverse('notifications:preferences'), 'tag': 'edubac-test',
+        'icon': '/static/pwa/icon-192.png', 'badge': '/static/pwa/icon-maskable-192.png',
+    }
 
 
 def deliver(user_ids, payload):

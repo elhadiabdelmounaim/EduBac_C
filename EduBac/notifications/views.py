@@ -205,3 +205,26 @@ def push_unsubscribe(request):
         endpoint = ''
     PushSubscription.objects.filter(user=_recipient(request), endpoint=endpoint).delete()
     return JsonResponse({'ok': True})
+
+
+@login_required_simple
+@require_POST
+def push_test(request):
+    """Envoie tout de suite une notification de test aux appareils de l'utilisateur."""
+    from .models import PushSubscription
+    from .push import attempt, device_label, is_configured, test_payload
+    if not is_configured():
+        return JsonResponse({'ok': False, 'message': 'Notifications du téléphone non configurées sur le serveur.'}, status=503)
+    results = []
+    for subscription in PushSubscription.objects.filter(user=_recipient(request)):
+        label = device_label(subscription)
+        status, error = attempt(subscription, test_payload())
+        results.append({'device': label, 'status': status, 'ok': bool(status and 200 <= status < 300), 'error': error})
+    if not results:
+        message = 'Aucun appareil enregistré : appuyez sur « Activer » puis acceptez.'
+    elif all(r['ok'] for r in results):
+        message = f'Test envoyé à {len(results)} appareil(s). La notification doit apparaître dans quelques secondes.'
+    else:
+        failed = [r for r in results if not r['ok']]
+        message = 'Échec : ' + ' ; '.join(f"{r['device']} — {r['error'] or 'erreur inconnue'}" for r in failed)
+    return JsonResponse({'ok': bool(results) and all(r['ok'] for r in results), 'message': message, 'results': results})

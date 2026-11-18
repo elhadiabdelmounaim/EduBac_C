@@ -284,3 +284,58 @@ class SendAndSharePushTests(TestCase):
         again = share()  # Il y avait déjà accès : il est prévenu du nouveau message.
         self.assertEqual([m['title'] for m in again['omar']], ['Consultation — nouveau message'])
         self.assertIn('Tableau en direct : Révisions', again['omar'][0]['body'])
+
+
+@override_settings(**KEYS)
+class PushDiagnosticsTests(TestCase):
+    def setUp(self):
+        self.student = User.objects.create(username='omar', email='o@t.test')
+        _, p256dh, auth = device_keys()
+        self.subscription = PushSubscription.objects.create(
+            user=self.student, endpoint=FCM, p256dh=p256dh, auth=auth, user_agent='Mozilla/5.0 (Linux; Android 14)')
+        session = self.client.session
+        session['user_id'] = self.student.pk
+        session.save()
+
+    def test_button_sends_a_test_and_reports_success(self):
+        with mock.patch('notifications.push._post', return_value=201) as post:
+            data = self.client.post(reverse('notifications:push_test')).json()
+        self.assertTrue(data['ok'])
+        self.assertIn('1 appareil', data['message'])
+        self.assertEqual(post.call_count, 1)  # envoyé tout de suite, pas après la réponse
+
+    def test_button_explains_a_failure(self):
+        import urllib.error
+        with mock.patch('notifications.push._post', side_effect=urllib.error.URLError('Tunnel connection failed: 403')):
+            data = self.client.post(reverse('notifications:push_test')).json()
+        self.assertFalse(data['ok'])
+        self.assertIn('Android / Chrome (Android)', data['message'])
+        self.assertIn('Tunnel connection failed', data['message'])
+        with mock.patch('notifications.push._post', return_value=403):
+            data = self.client.post(reverse('notifications:push_test')).json()
+        self.assertIn('clé VAPID a changé', data['message'])
+
+    def test_command_lists_devices_and_sends(self):
+        from io import StringIO
+        from django.core.management import call_command
+        out = StringIO()
+        with mock.patch('notifications.push._post', return_value=201):
+            call_command('push_check', send='omar', stdout=out)
+        text = out.getvalue()
+        self.assertIn('✓ Configurées', text)
+        self.assertIn('omar', text)
+        self.assertIn('accepté (201)', text)
+
+    @override_settings(WEBPUSH_VAPID_PRIVATE_KEY='')
+    def test_command_and_page_say_when_keys_are_missing(self):
+        from io import StringIO
+        from django.core.management import call_command
+        out = StringIO()
+        call_command('push_check', stdout=out)
+        self.assertIn('generate_vapid_keys', out.getvalue())
+        teacher = User.objects.create(username='prof', email='p@t.test', role='teacher')
+        session = self.client.session
+        session['user_id'] = teacher.pk
+        session.save()
+        self.assertContains(self.client.get(reverse('notifications:preferences')),
+                            'Notifications sur le téléphone désactivées sur ce serveur')

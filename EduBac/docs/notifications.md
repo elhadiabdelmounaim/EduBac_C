@@ -59,3 +59,13 @@ Côté utilisateur : cloche ▸ « Activer », ou Notifications ▸ Préférence
 Les envois partent après la réponse HTTP : l'expéditeur n'attend jamais.
 Les préférences « Dans EduBac » s'appliquent aussi au téléphone (un type
 décoché n'envoie rien). Les appareils désinstallés sont oubliés automatiquement.
+
+### Diagnostic
+
+```bash
+python manage.py push_check                # clés, appareils enregistrés par utilisateur
+python manage.py push_check --send omar    # notification de test, avec la réponse du service de push
+```
+
+Chaque utilisateur peut aussi appuyer sur « Envoyer un test » dans Préférences de notification
+(visible une fois les notifications activées sur l'appareil).
