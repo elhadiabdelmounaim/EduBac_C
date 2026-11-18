@@ -75,7 +75,10 @@
       </span>
       <span class="chat-thread-body">
         <span class="chat-thread-top">
-          <span class="chat-thread-name">{{ thread.name }}</span>
+          <span class="chat-thread-title">
+            <span class="chat-thread-name">{{ thread.name }}</span>
+            {% if thread.subtitle %}<span class="chat-thread-sub">{{ thread.subtitle }}</span>{% endif %}
+          </span>
           <time class="chat-thread-time" {% if thread.last_message_at %}datetime="{{ thread.last_message_at }}"{% endif %}>{{ thread.last_message_time|default:"" }}</time>
         </span>
         <span class="chat-thread-bottom">
@@ -98,9 +101,10 @@
     </div>
     {% endfor %}
     <div class="chat-list-empty" id="messagingEmpty" hidden role="status" aria-live="polite">
-      <span class="chat-list-empty-icon"><i class="bi bi-search" aria-hidden="true"></i></span>
-      <strong>Aucun résultat</strong>
-      <p>Essayez un autre nom ou un autre filtre.</p>
+      <span class="chat-list-empty-icon"><i class="bi bi-search" id="messagingEmptyIcon" aria-hidden="true"></i></span>
+      <strong id="messagingEmptyTitle">Aucun résultat</strong>
+      <p id="messagingEmptyText">Essayez un autre nom ou un autre filtre.</p>
+      <button type="button" class="chat-text-btn" id="messagingEmptyAction" data-open-contacts hidden>Écrire un message</button>
     </div>
   </nav>
 

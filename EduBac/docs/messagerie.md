@@ -62,3 +62,26 @@ Le professeur peut demander un brouillon de réponse : l'IA reçoit la leçon ou
 question de quiz liée et les 10 derniers messages, et ne fait que remplir le
 champ de saisie. Rien n'est envoyé sans relecture. Limite : 6 demandes par
 minute et par professeur.
+
+## Interface
+
+- **Disposition** : liste des discussions à gauche (classes et conversations
+  privées triées par activité, filtres Toutes / Non lues / Classes / Privées,
+  recherche, filtre par classe), conversation à droite. Sur smartphone
+  (< 768 px), la liste s'affiche d'abord ; la conversation s'ouvre en plein
+  écran avec un bouton Retour.
+- **Gabarits partagés** : `templates/chat/_conversation_list.html` (liste et
+  fenêtre « Nouveau message ») et `templates/chat/_voice_recorder.html`.
+- **Messages** : séparateurs Aujourd'hui / Hier / date complète, messages
+  consécutifs regroupés (5 min), heure locale, liens cliquables. Statuts :
+  ✓ envoyé partout ; ✓✓ lu seulement dans les conversations privées (le salon
+  de classe ne suit pas la lecture par destinataire).
+- **Vocal** (`static/js/chat-voice.js`) : forme d'onde réelle calculée dans le
+  navigateur quand le message devient visible (sinon forme stable), clic ou
+  glisser pour se déplacer, flèches ±5 s, vitesse 1× / 1,5× / 2× mémorisée,
+  un seul message joué à la fois. Enregistreur : annuler, arrêter et écouter,
+  recommencer, supprimer, envoyer (ou arrêter et envoyer directement).
+- **Styles** : `static/css/chat.css` (variables `--ch-*`, thème sombre via
+  `html[data-theme="dark"]`) et `static/css/chat-voice.css`.
+- **Tests navigateur** : `browser_tests/test_chat_redesign.py`
+  (`CHAT_SCREENSHOT_DIR=/dossier` enregistre des captures d'écran).

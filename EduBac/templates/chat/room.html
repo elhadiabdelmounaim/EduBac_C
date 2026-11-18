@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block title %}{{ active_classroom.name }} — Messagerie{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="/static/css/chat.css?v=redesign-1">
-<link rel="stylesheet" href="/static/css/chat-voice.css?v=redesign-1">
+<link rel="stylesheet" href="/static/css/chat.css?v=redesign-2">
+<link rel="stylesheet" href="/static/css/chat-voice.css?v=redesign-2">
 {% include "includes/katex.html" %}
 {% endblock %}
 {% block content %}
@@ -93,7 +93,7 @@
       <div id="chatMembersContent" class="chat-dialog-body" aria-live="polite"></div>
     </dialog>
 
-    <div class="chat-thread-body">
+    <div class="chat-scroll-area">
       <div class="chat-messages" id="chatMessages" aria-live="polite" aria-label="Messages de la classe" data-group="1">
         <div class="chat-messages-status">Chargement…</div>
       </div>
@@ -133,7 +133,7 @@
             <i class="bi bi-emoji-smile" aria-hidden="true"></i>
           </button>
           <label for="chatInput" class="visually-hidden">Votre message</label>
-          <textarea id="chatInput" rows="1" placeholder="Écrire un message…" maxlength="4000"></textarea>
+          <textarea id="chatInput" rows="1" placeholder="Écrire un message…" title="Astuce : $x^2$ pour écrire une formule" maxlength="4000"></textarea>
           <button type="button" class="chat-tool-btn" id="chatAttachBtn" title="Image ou fichier" aria-label="Joindre une image ou un fichier">
             <i class="bi bi-paperclip" aria-hidden="true"></i>
           </button>
@@ -154,9 +154,9 @@
 </div>
 {% endblock %}
 {% block extra_js %}
-<script src="/static/js/chat-voice.js?v=redesign-1"></script>
+<script src="/static/js/chat-voice.js?v=redesign-2"></script>
 <script src="/static/js/chat-presence.js"></script>
-<script src="/static/js/chat-actions.js?v=redesign-1"></script>
-<script src="/static/js/messaging-home.js?v=redesign-1"></script>
-<script src="/static/js/chat.js?v=redesign-1"></script>
+<script src="/static/js/chat-actions.js?v=redesign-2"></script>
+<script src="/static/js/messaging-home.js?v=redesign-2"></script>
+<script src="/static/js/chat.js?v=redesign-2"></script>
 {% endblock %}

@@ -209,7 +209,8 @@
     Chat.placeMessage(messagesEl, row, message, existing, animate && !existing);
     lastId = Math.max(lastId, Number(message.id) || 0);
     if (window.EduBacVoice) window.EduBacVoice.enhance(row);
-    Chat.renderMath(bubble);
+    const mathTarget = bubble.querySelector('.chat-message-text');
+    if (mathTarget) Chat.renderMath(mathTarget);
   }
 
   function updateReadReceipts(ids) {

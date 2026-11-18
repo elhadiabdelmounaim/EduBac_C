@@ -133,7 +133,7 @@ class NavbarBrowserTests(StaticLiveServerTestCase):
                 try:
                     if user:
                         self.load(page, "accounts:login")
-                        page.locator('input[name="email"]').fill(user.email)
+                        page.locator('input[name="username"]').fill(user.username)
                         page.locator('input[name="password"]').fill("Browser-test-only-123!")
                         page.get_by_role("button", name="Se connecter", exact=True).click()
                         page.wait_for_url(lambda url: "/connexion/" not in url)
@@ -244,7 +244,7 @@ class NavbarBrowserTests(StaticLiveServerTestCase):
                     try:
                         page = context.new_page()
                         page.goto(self.live_server_url + reverse("accounts:login"))
-                        page.locator('input[name="email"]').fill(users[role].email)
+                        page.locator('input[name="username"]').fill(users[role].username)
                         page.locator('input[name="password"]').fill("Browser-test-only-123!")
                         page.locator('button[type="submit"]').click()
                         page.wait_for_url(self.live_server_url + reverse("accounts:dashboard"))

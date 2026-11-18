@@ -243,42 +243,12 @@ input[type="number"], textarea, select {
 .about-page .about-line, .about-page .about-path, .about-page .about-list li { border-color: var(--nb-line); }
 
 /* Chat keeps its two-pane geometry and message states; only its visual palette changes. */
-body:has(.chat-app) .edubac-main > main.container-fluid { background: var(--nb-paper); }
 body:has(.chat-app) .edubac-sidebar { background: #214f51 !important; }
 body:has(.chat-app) .sidebar-nav .nav-link.active {
     background: #f4f1e8 !important; color: #263449 !important;
     border-left: 3px solid var(--nb-ochre); box-shadow: none !important;
 }
-.chat-app, .chat-sidebar, .chat-sidebar-header, .chat-main-header, .chat-composer {
-    background-color: var(--nb-surface) !important;
-    border-color: var(--nb-line) !important;
-}
-.chat-app { border-radius: 5px 18px 18px 5px !important; box-shadow: var(--nb-shadow); }
-.chat-main { background-color: var(--nb-paper) !important; }
-.chat-title, .chat-room-name, .chat-header-name, .chat-placeholder h2,
-.chat-file-preview, .chat-reply-bar, .chat-pinned-bar { color: var(--nb-ink) !important; }
-.chat-search-box input, .chat-input-wrap, .chat-day-sep, .chat-room-item.active {
-    background-color: var(--nb-teal-soft) !important; border-color: var(--nb-line) !important;
-}
-.chat-room-item.active { border-left-color: var(--nb-ochre) !important; }
-.chat-avatar, .chat-placeholder-icon { background: var(--nb-teal) !important; }
-.chat-room-item.active .chat-room-time, .chat-sender-name { color: var(--nb-ochre) !important; }
-.chat-bubble-row.mine .chat-bubble, .chat-send-btn { background: var(--nb-teal) !important; }
-.chat-bubble-row.theirs .chat-bubble { background: var(--nb-surface) !important; border-color: var(--nb-line) !important; }
-.chat-emoji-panel, .chat-file-preview { background: var(--nb-surface); border-color: var(--nb-line); }
-html[data-theme="dark"] .chat-bubble-row.theirs .chat-bubble { color: var(--nb-ink) !important; }
-html[data-theme="dark"] .chat-bubble-row.mine .chat-bubble,
-html[data-theme="dark"] .chat-bubble-row.mine .chat-att-file,
-html[data-theme="dark"] .chat-send-btn { color: var(--nb-surface) !important; }
-html[data-theme="dark"] .chat-app,
-html[data-theme="dark"] .chat-sidebar,
-html[data-theme="dark"] .chat-sidebar-header,
-html[data-theme="dark"] .chat-main-header,
-html[data-theme="dark"] .chat-composer {
-    background-color: var(--nb-surface) !important;
-    border-color: var(--nb-line) !important;
-}
-html[data-theme="dark"] .chat-main { background-color: var(--nb-paper) !important; }
+/* Messagerie : palette et composants dans chat.css / chat-voice.css. */
 
 /* Workspace chrome only. Never style the canvas, its drawing layer or math metrics. */
 .wb-topbar, .wb-bottombar, .wb-toolbar {
@@ -352,9 +322,7 @@ html[data-theme="dark"] .bg-edubac,
 html[data-theme="dark"] .bg-primary,
 html[data-theme="dark"] .qb-card-head,
 html[data-theme="dark"] .qb-generate-btn,
-html[data-theme="dark"] .wb-tool.active,
-html[data-theme="dark"] .chat-bubble-row.mine .chat-bubble,
-html[data-theme="dark"] .chat-send-btn {
+html[data-theme="dark"] .wb-tool.active {
     background: #185f60 !important;
     border-color: #185f60 !important;
     color: #fff !important;

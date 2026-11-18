@@ -149,7 +149,7 @@ class ResponsiveLayoutBrowserTests(StaticLiveServerTestCase):
                     self.live_server_url + reverse("accounts:login"),
                     wait_until="domcontentloaded",
                 )
-                page.locator('input[name="email"]').fill(user.email)
+                page.locator('input[name="username"]').fill(user.username)
                 page.locator('input[name="password"]').fill("Browser-test-only-123!")
                 page.locator('button[type="submit"]').click()
                 page.wait_for_url(lambda url: "/connexion/" not in url)

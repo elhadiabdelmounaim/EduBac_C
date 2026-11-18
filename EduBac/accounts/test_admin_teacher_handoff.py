@@ -70,10 +70,12 @@ class AdminTeacherHandoffTests(TestCase):
         self.assertContains(profile, 'Rôle :</strong> Enseignant')
         self.assertEqual(User.objects.get(pk=self.admin.pk).role, 'student')
 
-    def test_teacher_login_page_is_linked_from_regular_login(self):
+    def test_teacher_login_page_is_hidden_from_students_but_reachable_directly(self):
         regular_login = self.client.get(reverse('accounts:login'))
-        self.assertContains(
-            regular_login,
+        self.assertNotContains(regular_login, reverse('accounts:login_teacher'))
+        self.assertNotContains(regular_login, 'Connexion professeur')
+        self.assertNotContains(
+            self.client.get(reverse('accounts:register_student')),
             reverse('accounts:login_teacher'),
         )
 

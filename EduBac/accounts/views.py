@@ -112,20 +112,16 @@ def _duplicate_registration_response(request, user, role):
 
     context = {
         'page_title': (
-            'Inscription élève' if role == 'student'
-            else 'Inscription enseignant'
+            'Inscription élève'
         ),
         'error': (
             'Cette adresse e-mail est déjà utilisée. Connecte-toi avec ce '
             'compte ou utilise une autre adresse e-mail.'
         ),
     }
-    if role == 'student':
-        context['niveaux'] = StudentProfile.NIVEAU_CHOICES
-        template = 'accounts/register_student.html'
-    else:
-        template = 'accounts/register_teacher.html'
-    return render(request, template, context)
+    # Inscription publique réservée aux élèves : l'administrateur est l'unique enseignant.
+    context['niveaux'] = StudentProfile.NIVEAU_CHOICES
+    return render(request, 'accounts/register_student.html', context)
 
 
 def _create_registration_account(

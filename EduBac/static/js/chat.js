@@ -196,7 +196,10 @@
         var quote = el('button', 'chat-reply-quote');
         quote.type = 'button';
         quote.title = 'Voir le message d’origine';
-        quote.append(el('strong', '', m.reply_to.sender_name), el('span', '', m.reply_to.body));
+        var quoteText = el('span', '', m.reply_to.body);
+        quote.append(el('strong', '', m.reply_to.sender_name), quoteText);
+        // Formule rendue seulement si la citation n'a pas coupé un « $…$ ».
+        if (((m.reply_to.body || '').match(/\$/g) || []).length % 2 === 0) Chat.renderMath(quoteText);
         quote.addEventListener('click', function () {
           var original = document.getElementById('msg-' + m.reply_to.id);
           if (!original) return;
@@ -256,7 +259,9 @@
 
     Chat.placeMessage(messagesEl, row, m, existing, animate && !existing);
     if (window.EduBacVoice) window.EduBacVoice.enhance(row);
-    Chat.renderMath(bubble);
+    // Formules uniquement dans le texte : une citation tronquée ne doit pas casser le rendu.
+    var mathTarget = bubble.querySelector('.chat-message-text');
+    if (mathTarget) Chat.renderMath(mathTarget);
     bindActions(row, m);
 
     if (isNew && !mine && !m.is_deleted) {
@@ -301,7 +306,7 @@
     }
     if (form) {
       form.querySelectorAll('textarea, button').forEach(function (node) { node.disabled = !state.can_post; });
-      if (input) input.placeholder = state.can_post ? 'Écrire un message… ($x^2$ pour une formule)' : 'Écriture désactivée';
+      if (input) input.placeholder = state.can_post ? 'Écrire un message…' : 'Écriture désactivée';
     }
     var voiceBtn = document.getElementById('chatVoiceBtn');
     if (voiceBtn) voiceBtn.disabled = !state.can_post;

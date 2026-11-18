@@ -71,7 +71,27 @@
       row.hidden = !show;
       if (show) visible += 1;
     });
-    if (emptyState) emptyState.hidden = !rows.length || visible > 0;
+    if (emptyState) {
+      emptyState.hidden = !rows.length || visible > 0;
+      if (!emptyState.hidden) describeEmpty(query || selectedClass);
+    }
+  }
+
+  // Message adapté : une recherche sans résultat n'est pas une liste vide.
+  const EMPTY = {
+    search: ['bi-search', 'Aucun résultat', 'Essayez un autre nom ou un autre filtre.', false],
+    unread: ['bi-check2-all', 'Tout est lu', 'Aucune discussion n’a de nouveau message.', false],
+    groups: ['bi-people', 'Aucune classe', 'Les discussions de vos classes apparaîtront ici.', false],
+    individuals: ['bi-person-plus', 'Aucune conversation privée',
+      'Écrivez à un élève, un camarade ou un enseignant pour commencer.', true],
+  };
+  function describeEmpty(searching) {
+    const [iconName, title, text, action] = EMPTY[searching ? 'search' : activeFilter] || EMPTY.search;
+    const icon = document.getElementById('messagingEmptyIcon');
+    if (icon) icon.className = `bi ${iconName}`;
+    document.getElementById('messagingEmptyTitle').textContent = title;
+    document.getElementById('messagingEmptyText').textContent = text;
+    document.getElementById('messagingEmptyAction').hidden = !action;
   }
 
   function setFilter(filter, updateUrl = true) {
