@@ -4,8 +4,9 @@
 - Identification du serveur : VAPID, RFC 8292 (jeton JWT ES256).
 - Envoi : urllib, vers le service de push du navigateur (Google, Apple, Mozilla…).
 
-Les envois sont faits **après** la réponse HTTP (signal `request_finished`) :
-la personne qui écrit un message n'attend jamais les services de push.
+Les envois sont faits **après** la réponse HTTP (signal `request_finished`,
+voir `after_response`) : la personne qui écrit un message n'attend jamais les
+services de push. Les e-mails de notification utilisent la même file.
 Hors requête (commande, tâche planifiée), ils partent immédiatement.
 
 Clés : `python manage.py generate_vapid_keys`, puis WEBPUSH_VAPID_PUBLIC_KEY,
@@ -218,11 +219,26 @@ def push_to_users(user_ids, title, body, url='/', tag=''):
         'icon': '/static/pwa/icon-192.png',
         'badge': '/static/pwa/icon-maskable-192.png',
     }
-    state = _queue()
-    if state.in_request and not getattr(settings, 'WEBPUSH_SEND_IMMEDIATELY', False):
-        state.items.append((user_ids, payload))
-    else:
+    if getattr(settings, 'WEBPUSH_SEND_IMMEDIATELY', False):
         deliver(user_ids, payload)
+    else:
+        after_response(lambda: deliver(user_ids, payload))
+
+
+def after_response(task):
+    """Exécute `task` une fois la réponse HTTP envoyée (immédiatement hors requête).
+
+    Sert aux envois lents (push, e-mails SMTP) : le clic de l'utilisateur n'attend
+    jamais un service extérieur, et une panne SMTP ne peut plus faire échouer la requête.
+    """
+    state = _queue()
+    if state.in_request:
+        state.items.append(task)
+        return
+    try:
+        task()
+    except Exception:
+        logger.warning('after-response task failed', exc_info=True)
 
 
 def _request_started(**kwargs):
@@ -234,11 +250,11 @@ def _request_started(**kwargs):
 def _request_finished(**kwargs):
     state = _queue()
     items, state.items, state.in_request = state.items, [], False
-    for user_ids, payload in items:
+    for task in items:
         try:
-            deliver(user_ids, payload)
+            task()
         except Exception:
-            logger.warning('web push flush failed', exc_info=True)
+            logger.warning('after-response task failed', exc_info=True)
 
 
 request_started.connect(_request_started, dispatch_uid='edubac_push_started')

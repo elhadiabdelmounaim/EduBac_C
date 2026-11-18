@@ -168,3 +168,41 @@ def decrypt(body, device_private, auth):
     nonce = hkdf(salt, ikm, b'Content-Encoding: nonce\x00', 12)
     plain = AESGCM(cek).decrypt(nonce, ciphertext, None)
     return json.loads(plain.rstrip(b'\x02').decode('utf-8'))
+
+
+class EmailAfterResponseTests(TestCase):
+    """Un SMTP lent ou en panne ne bloque plus l'envoi d'un quiz à une classe."""
+
+    def setUp(self):
+        from education.models import Course, Lesson
+        from quizzes.models import Choice, Question, Quiz
+        self.teacher = User.objects.create(username='prof', email='p@t.test', role='teacher')
+        self.students = [User.objects.create(username=f'el{i}', email=f'el{i}@t.test') for i in range(3)]
+        self.classroom = Classroom.objects.create(name='1bac1', niveau='1ere_bac_sc', teacher=self.teacher)
+        for student in self.students:
+            self.classroom.add_member(student)
+        lesson = Lesson.objects.create(
+            course=Course.objects.create(name='Maths', niveau='1ere_bac_sc'), title='Fonctions', order=1)
+        self.quiz = Quiz.objects.create(title='Généralités sur les fonctions numériques', lesson=lesson,
+                                        created_by=self.teacher, status='draft', classroom=self.classroom)
+        question = Question.objects.create(quiz=self.quiz, text='?')
+        Choice.objects.create(question=question, text='a', is_correct=True)
+        session = self.client.session
+        session['user_id'] = self.teacher.pk
+        session.save()
+
+    def test_quiz_is_sent_even_if_smtp_fails_and_emails_wait_for_the_response(self):
+        during_request = []
+
+        def smtp_down(**kwargs):
+            during_request.append(push._queue().in_request)
+            raise ConnectionError('SMTP en panne')
+        with self.assertLogs('notifications', level='WARNING'), \
+                mock.patch('notifications.email_utils.send_notification_email', side_effect=smtp_down):
+            response = self.client.post(reverse('quizzes:publish', args=[self.quiz.pk]))
+        self.assertRedirects(response, reverse('quizzes:manage'), fetch_redirect_response=False)
+        self.quiz.refresh_from_db()
+        self.assertEqual(self.quiz.status, 'published')
+        self.assertEqual(Notification.objects.filter(type='quiz_assigned').count(), 3)
+        # Trois e-mails tentés, tous après la réponse (jamais pendant le clic).
+        self.assertEqual(during_request, [False, False, False])

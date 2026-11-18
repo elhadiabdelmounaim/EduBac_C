@@ -166,7 +166,9 @@ class Notification(models.Model):
         if preference['in_app']:
             cls._push(recipient.pk, title, message, link, group_key or f'notif-{obj.pk}')
         if email_mode == catalog.EMAIL_INSTANT:
-            try:
+            # Après la réponse : SMTP lent ou en panne ne bloque plus l'enseignant
+            # (et ne peut plus annuler l'envoi d'un quiz à toute une classe).
+            def send_email_now(pk=obj.pk):
                 from .email_utils import send_notification_email
                 if send_notification_email(
                     recipient=recipient,
@@ -175,8 +177,10 @@ class Notification(models.Model):
                     link=link or '',
                     type_code=type,
                 ):
-                    obj.email_status = cls.EMAIL_SENT
-                    obj.save(update_fields=['email_status'])
+                    cls.objects.filter(pk=pk).update(email_status=cls.EMAIL_SENT)
+            try:
+                from .push import after_response
+                after_response(send_email_now)
             except Exception:
                 pass
         return obj
