@@ -70,6 +70,72 @@
     </section>
 
     {% if user.is_superuser %}
+    <section id="password-requests" class="card border-0 shadow-sm mt-4" aria-labelledby="password-requests-title">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <h2 id="password-requests-title" class="h5 mb-0">Mots de passe oubliés</h2>
+                <span class="badge {% if password_requests %}text-bg-warning{% else %}text-bg-secondary{% endif %}">{{ password_requests|length }} en attente</span>
+            </div>
+            <p class="text-muted small mb-3">
+                Demandes envoyées depuis la page de connexion. Vérifiez l’identité de l’élève
+                (en classe ou par un message) avant de lui créer un mot de passe provisoire.
+            </p>
+            {% if password_requests %}
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">Nom indiqué</th>
+                            <th scope="col">Classe indiquée</th>
+                            <th scope="col">Compte reconnu</th>
+                            <th scope="col">Reçue le</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for help in password_requests %}
+                        <tr>
+                            <td>{{ help.name }}</td>
+                            <td>{{ help.classroom_hint|default:"—" }}</td>
+                            <td>
+                                {% if help.student %}
+                                    {{ help.student.get_full_name|default:help.student.username }}
+                                    <span class="d-block small text-muted">{{ help.student.username }}</span>
+                                {% else %}
+                                    <span class="small text-muted">Non reconnu : recherchez l’élève</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ help.created_at|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                <div class="d-flex flex-wrap gap-2">
+                                    {% if help.student %}
+                                    <a class="btn btn-sm btn-outline-danger"
+                                       href="{% url 'accounts:confirm_student_password_reset' help.student.pk %}?demande={{ help.pk }}">
+                                        Créer un mot de passe
+                                    </a>
+                                    {% else %}
+                                    <a class="btn btn-sm btn-outline-primary"
+                                       href="{% url 'accounts:admin_dashboard' %}?student_q={{ help.name|urlencode }}&amp;demande={{ help.pk }}#student-recovery-title">
+                                        Rechercher l’élève
+                                    </a>
+                                    {% endif %}
+                                    <form method="post" action="{% url 'accounts:dismiss_password_request' help.pk %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">Ignorer</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">Aucune demande de mot de passe en attente.</p>
+            {% endif %}
+        </div>
+    </section>
+
     <section class="card border-0 shadow-sm mt-4" aria-labelledby="student-recovery-title">
         <div class="card-body">
             <div class="mb-3">
@@ -83,6 +149,7 @@
                     <label class="visually-hidden" for="studentSearch">Nom, prénom ou identifiant</label>
                     <input id="studentSearch" class="form-control" type="search" name="student_q"
                            value="{{ student_search }}" placeholder="Nom, prénom ou identifiant">
+                    {% if search_help_request %}<input type="hidden" name="demande" value="{{ search_help_request }}">{% endif %}
                 </div>
                 <div class="col-sm-auto">
                     <button class="btn btn-edubac" type="submit">Rechercher un élève</button>
@@ -115,7 +182,7 @@
                                 <td>
                                     {% if student.can_reset_password %}
                                     <a class="btn btn-sm btn-outline-danger"
-                                       href="{% url 'accounts:confirm_student_password_reset' student.pk %}">
+                                       href="{% url 'accounts:confirm_student_password_reset' student.pk %}{% if search_help_request %}?demande={{ search_help_request }}{% endif %}">
                                         Réinitialiser le mot de passe
                                     </a>
                                     {% else %}

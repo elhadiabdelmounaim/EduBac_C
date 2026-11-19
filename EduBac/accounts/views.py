@@ -609,11 +609,7 @@ def admin_dashboard(request):
                 is_staff=False,
                 is_superuser=False,
             )
-            .filter(
-                Q(username__icontains=student_search)
-                | Q(first_name__icontains=student_search)
-                | Q(last_name__icontains=student_search)
-            )
+            .filter(_name_search(student_search))
             .select_related('student_profile')
             .prefetch_related(
                 Prefetch('classroom_memberships', queryset=memberships)
@@ -645,8 +641,11 @@ def admin_dashboard(request):
                 student.approval_status == 'approved' and student.is_active
             )
 
+    from .password_help import pending_requests
     return render(request, 'accounts/dashboard_admin.html', {
         'page_title': 'Administration EduBac',
+        'password_requests': pending_requests() if current_user.is_superuser else [],
+        'search_help_request': _help_request_id(request.GET.get('demande')),
         'registrations': registrations,
         'pending_count': len(registrations),
         'student_search': student_search,
@@ -656,7 +655,31 @@ def admin_dashboard(request):
     })
 
 
-def _student_reset_context(student, *, nonce='', error=None):
+def _name_search(text):
+    """Chaque mot doit figurer dans l'identifiant, le prénom ou le nom (« Salma Math » trouve Salma Math)."""
+    query = Q()
+    for term in text.split()[:5]:
+        query &= (
+            Q(username__icontains=term)
+            | Q(first_name__icontains=term)
+            | Q(last_name__icontains=term)
+        )
+    return query
+
+
+def _help_request_id(value):
+    value = (value or '').strip()
+    return int(value) if value.isdigit() and len(value) < 12 else None
+
+
+def _temporary_password():
+    """Facile à dicter et à taper sur un téléphone ; l'élève doit le changer à la connexion."""
+    alphabet = 'abcdefghjkmnpqrstuvwxyz23456789'
+    raw = ''.join(secrets.choice(alphabet) for _ in range(10))
+    return f'{raw[:5]}-{raw[5:]}'
+
+
+def _student_reset_context(student, *, nonce='', error=None, help_request_id=None):
     from classrooms.models import ClassroomMember
 
     membership = (
@@ -675,6 +698,7 @@ def _student_reset_context(student, *, nonce='', error=None):
         'level': profile.get_niveau_display() if profile else 'Non renseigné',
         'nonce': nonce,
         'error': error,
+        'help_request_id': help_request_id,
         'account_status': (
             'En attente d’approbation'
             if student.approval_status == 'pending'
@@ -690,7 +714,10 @@ def _student_reset_context(student, *, nonce='', error=None):
 def _no_store(response):
     response['Cache-Control'] = 'no-store, no-cache, max-age=0, must-revalidate'
     response['Pragma'] = 'no-cache'
-    response['Referrer-Policy'] = 'no-referrer'
+    # same-origin : rien ne fuit vers d'autres sites, mais les formulaires de la page
+    # gardent leur en-tête Origin (avec no-referrer, Chrome envoie « null » et la
+    # protection CSRF refuse l'envoi).
+    response['Referrer-Policy'] = 'same-origin'
     return response
 
 
@@ -713,7 +740,10 @@ def confirm_student_password_reset(request, user_id):
     return _no_store(render(
         request,
         'accounts/confirm_student_password_reset.html',
-        _student_reset_context(student, nonce=nonce),
+        _student_reset_context(
+            student, nonce=nonce,
+            help_request_id=_help_request_id(request.GET.get('demande')),
+        ),
     ))
 
 
@@ -749,6 +779,7 @@ def reset_student_password(request, user_id):
                 student,
                 nonce=expected_nonce,
                 error='Confirmez d’abord que vous avez vérifié l’identité de l’élève.',
+                help_request_id=_help_request_id(request.POST.get('help_request')),
             ),
         ))
 
@@ -770,7 +801,7 @@ def reset_student_password(request, user_id):
             )
             return redirect('accounts:admin_dashboard')
 
-        temporary_password = secrets.token_urlsafe(24)
+        temporary_password = _temporary_password()
         student.set_password(temporary_password)
         student.must_change_password = True
         student.password_reset_at = timezone.now()
@@ -789,6 +820,8 @@ def reset_student_password(request, user_id):
             administrator_id_snapshot=administrator.pk,
             administrator_username=administrator.username,
         )
+        from .password_help import close_requests
+        close_requests(student, administrator, _help_request_id(request.POST.get('help_request')))
 
     response = render(
         request,

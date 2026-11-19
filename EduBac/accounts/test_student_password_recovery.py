@@ -97,9 +97,14 @@ class StudentPasswordRecoveryTests(TestCase):
         response = self.client_class().get(reverse('accounts:login'))
 
         self.assertContains(response, 'Mot de passe oublié ?')
-        self.assertContains(response, 'Contactez votre professeur')
-        self.assertContains(response, 'Votre compte et vos résultats seront conservés.')
+        self.assertContains(response, reverse('accounts:forgot_password'))
         self.assertNotContains(response, 'account_reset_password')
+        # La demande passe par le professeur, sans e-mail.
+        help_page = self.client_class().get(reverse('accounts:forgot_password'))
+        self.assertContains(help_page, 'votre professeur')
+        self.assertContains(help_page, 'Aucun e-mail n’est nécessaire')
+        sent = self.client_class().get(reverse('accounts:forgot_password') + '?envoye=1')
+        self.assertContains(sent, 'vos résultats sont conservés')
         self.assertEqual(
             len(mail.outbox),
             0,

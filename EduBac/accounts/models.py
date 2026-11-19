@@ -241,3 +241,49 @@ class WeeklyChallenge(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class PasswordHelpRequest(models.Model):
+    """Demande « mot de passe oublié » envoyée depuis la page de connexion.
+
+    L'élève donne seulement son nom (aucun e-mail) ; le professeur-administrateur
+    vérifie son identité puis lui crée un mot de passe temporaire.
+    """
+
+    STATUS_PENDING = 'pending'
+    STATUS_DONE = 'done'
+    STATUS_DISMISSED = 'dismissed'
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'En attente'),
+        (STATUS_DONE, 'Traitée'),
+        (STATUS_DISMISSED, 'Ignorée'),
+    ]
+
+    name = models.CharField('Nom indiqué', max_length=150)
+    classroom_hint = models.CharField('Classe indiquée', max_length=100, blank=True)
+    student = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='password_help_requests',
+        verbose_name='Élève reconnu',
+    )
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+    handled_at = models.DateTimeField(null=True, blank=True)
+    handled_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+    )
+
+    class Meta:
+        ordering = ('-created_at',)
+        verbose_name = 'Demande de mot de passe oublié'
+        verbose_name_plural = 'Demandes de mot de passe oublié'
+
+    def __str__(self):
+        return f'{self.name} — {self.get_status_display()}'
