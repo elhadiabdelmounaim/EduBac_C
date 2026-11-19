@@ -95,6 +95,7 @@ class ResponsiveLayoutBrowserTests(StaticLiveServerTestCase):
                 "education:about",
                 "accounts:login",
                 "accounts:forgot_password",
+                "accounts:recover_with_code",
                 "education:welcome",
                 "accounts:register_choice",
                 "accounts:register_student",

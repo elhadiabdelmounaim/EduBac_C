@@ -52,6 +52,20 @@ class User(AbstractUser):
         default=0,
         editable=False,
     )
+    # Code de récupération (haché) : permet à l'élève de choisir un nouveau mot de
+    # passe sans e-mail ni professeur. Affiché une seule fois, utilisable une fois.
+    recovery_code_hash = models.CharField(
+        max_length=128,
+        blank=True,
+        default='',
+        editable=False,
+    )
+    recovery_code_created_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        editable=False,
+        verbose_name='Code de récupération créé le',
+    )
 
     class Meta:
         verbose_name = 'Utilisateur'

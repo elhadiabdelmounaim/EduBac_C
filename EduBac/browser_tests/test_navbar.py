@@ -227,6 +227,7 @@ class NavbarBrowserTests(StaticLiveServerTestCase):
             user = User.objects.create_user(
                 username=f"tools_{role}", email=f"tools_{role}@example.test",
                 password="Browser-test-only-123!", role=role,
+                recovery_code_hash="code-deja-note",  # pas d'étape « code de récupération »
             )
             profile.objects.get_or_create(user=user)
             users[role] = user

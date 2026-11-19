@@ -129,6 +129,9 @@ class StudentApprovalBrowserTests(StaticLiveServerTestCase):
             page.locator('input[name="username"]').fill('browser_student')
             page.locator('input[name="password"]').fill('BrowserTest-2026!')
             page.locator('button[type="submit"]').click()
+            # Première connexion : le code de récupération est proposé, l'élève peut le reporter.
+            page.wait_for_url(f'**{reverse("accounts:recovery_code")}?premiere=1')
+            page.get_by_role('link', name='Plus tard').click()
             page.wait_for_url(f'**{reverse("accounts:dashboard")}')
             expect(page).to_have_url(self.live_server_url + reverse('accounts:dashboard'))
         finally:

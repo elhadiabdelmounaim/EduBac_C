@@ -29,7 +29,7 @@ from .decorators import (
     superuser_required,
     teacher_required,
 )
-from .forms import ForcedPasswordChangeForm
+from .forms import ForcedPasswordChangeForm, PasswordChangeForm
 from .email_verification import (
     get_user_from_verification_token,
     send_verification_email,
@@ -284,6 +284,9 @@ def login_view(request, *, teacher_entry=False):
                     request,
                     f'Bienvenue, {user.get_full_name() or user.username} !'
                 )
+                from .recovery import needs_code
+                if not teacher_entry and needs_code(user):
+                    return redirect(reverse('accounts:recovery_code') + '?premiere=1')
                 return redirect(
                     'accounts:teacher_portal'
                     if teacher_entry
@@ -838,22 +841,27 @@ def reset_student_password(request, user_id):
 @login_required_simple
 @require_http_methods(['GET', 'POST'])
 def change_password(request):
+    """Mot de passe à changer après une réinitialisation, ou changement volontaire (profil)."""
     user = request.edubac_user
-    if not user.must_change_password:
-        return redirect('accounts:dashboard')
-
-    form = ForcedPasswordChangeForm(
-        request.POST or None,
-        user=user,
-    )
+    forced = user.must_change_password
+    form_class = ForcedPasswordChangeForm if forced else PasswordChangeForm
+    form = form_class(request.POST or None, user=user)
     if request.method == 'POST' and form.is_valid():
         user.set_password(form.cleaned_data['new_password1'])
         user.must_change_password = False
-        user.save(update_fields=('password', 'must_change_password'))
+        fields = ['password', 'must_change_password']
+        if not forced:
+            # Changement volontaire : les autres appareils sont déconnectés.
+            user.password_session_version += 1
+            fields.append('password_session_version')
+        user.save(update_fields=fields)
         request.session['password_session_version'] = user.password_session_version
         request.session.cycle_key()
         messages.success(request, 'Votre mot de passe a été modifié.')
-        return redirect('accounts:dashboard')
+        from .recovery import needs_code
+        if needs_code(user):
+            return redirect(reverse('accounts:recovery_code') + '?premiere=1')
+        return redirect('accounts:dashboard' if forced else 'accounts:profile')
 
     return _no_store(render(
         request,
@@ -861,6 +869,7 @@ def change_password(request):
         {
             'page_title': 'Changer votre mot de passe',
             'form': form,
+            'forced': forced,
         },
     ))
 

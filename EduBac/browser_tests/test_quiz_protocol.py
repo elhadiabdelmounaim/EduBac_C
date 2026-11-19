@@ -24,10 +24,12 @@ class QuizJsonImportBrowserTests(StaticLiveServerTestCase):
         student = User.objects.create_user(
             username='json-browser-student', email='json-browser-student@example.test',
             password='Browser-test-only-123!', role='student',
+            recovery_code_hash='code-deja-note',  # pas d'étape « code de récupération »
         )
         outsider = User.objects.create_user(
             username='json-browser-outsider', email='json-browser-outsider@example.test',
             password='Browser-test-only-123!', role='student',
+            recovery_code_hash='code-deja-note',
         )
         course = Course.objects.create(name='Mathématiques', niveau='tronc_commun')
         lesson = Lesson.objects.create(course=course, title='Calculs importés', order=1)

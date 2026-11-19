@@ -283,7 +283,9 @@ class StudentPasswordRecoveryTests(TestCase):
                 'new_password2': new_password,
             },
         )
-        self.assertRedirects(changed, reverse('accounts:dashboard'), fetch_redirect_response=False)
+        # Élève sans code de récupération : on le lui propose juste après.
+        self.assertRedirects(changed, reverse('accounts:recovery_code') + '?premiere=1',
+                             fetch_redirect_response=False)
 
         self.student.refresh_from_db()
         self.assertFalse(self.student.must_change_password)
@@ -295,6 +297,7 @@ class StudentPasswordRecoveryTests(TestCase):
 
         profile_response = student_client.get(reverse('accounts:profile'))
         self.assertEqual(profile_response.status_code, 200)
+        student_client.post(reverse('accounts:recovery_code'))  # code noté : connexion directe ensuite
         student_client.get(reverse('accounts:logout'))
         normal_login = student_client.post(
             reverse('accounts:login'),

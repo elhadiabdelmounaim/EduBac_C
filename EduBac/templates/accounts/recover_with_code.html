@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="auth-page">
+    <span class="auth-float f1">∑</span>
+    <span class="auth-float f2">π</span>
+    <div class="auth-card position-relative">
+        <div class="auth-brand">
+            <img src="/static/img/edubac-logo.png" alt="EduBac" class="auth-logo float-soft">
+            <h1 class="h4 fw-bold mb-1" style="color:var(--edubac-navy);">Nouveau mot de passe</h1>
+            <p class="text-muted small mb-0">avec mon code de récupération</p>
+        </div>
+        {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
+        <form method="post" action="{% url 'accounts:recover_with_code' %}" autocomplete="off" novalidate>
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="mb-3">
+                <label class="form-label small fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% for e in field.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                {% if field.name == 'code' %}<div class="form-text">Le code affiché après votre connexion, noté sur papier ou en photo (les tirets sont facultatifs).</div>{% endif %}
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-edubac w-100 py-2 mb-3">Changer mon mot de passe</button>
+        </form>
+        <p class="text-center small mb-0">
+            Code perdu ? <a href="{% url 'accounts:forgot_password' %}">Demandez à votre professeur</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

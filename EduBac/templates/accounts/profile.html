@@ -50,6 +50,7 @@
         <h2 id="profileSettings"><i class="bi bi-gear" aria-hidden="true"></i> Réglages</h2>
         <ul class="profile-links">
             <li><a href="{% url 'accounts:change_password' %}"><i class="bi bi-key" aria-hidden="true"></i> Changer mon mot de passe <i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+            <li><a href="{% url 'accounts:recovery_code' %}?suite={% url 'accounts:profile' %}"><i class="bi bi-life-preserver" aria-hidden="true"></i> Code de récupération{% if not user.recovery_code_hash and user.is_student %} <span class="badge text-bg-warning">à créer</span>{% endif %} <i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
             <li><a href="{% url 'notifications:preferences' %}"><i class="bi bi-bell" aria-hidden="true"></i> Notifications (EduBac, e-mail, téléphone) <i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
             {% if user.is_superuser %}<li><a href="{% url 'accounts:admin_dashboard' %}"><i class="bi bi-shield-lock" aria-hidden="true"></i> Inscriptions et comptes élèves <i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>{% endif %}
             <li><a href="{% url 'education:help' %}"><i class="bi bi-question-circle" aria-hidden="true"></i> Aide <i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>

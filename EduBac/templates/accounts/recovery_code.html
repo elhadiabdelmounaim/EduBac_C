@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+    <div class="card border-0 shadow-sm mx-auto recovery-card" style="max-width: 560px;">
+        <div class="card-body p-4">
+            <p class="text-uppercase small fw-semibold text-muted mb-1">Sécurité du compte</p>
+            <h1 class="h3 mb-3">Code de récupération</h1>
+            {% if code %}
+            <p>Voici votre code. <strong>Notez-le sur papier ou prenez-le en photo</strong> :
+               il ne sera plus jamais affiché.</p>
+            <p class="recovery-code" id="recoveryCode" aria-label="Code de récupération">{{ code }}</p>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <button type="button" class="btn btn-outline-primary btn-sm" id="copyRecoveryCode">
+                    <i class="bi bi-clipboard" aria-hidden="true"></i> Copier
+                </button>
+                <span id="copyRecoveryStatus" class="small text-muted align-self-center" aria-live="polite"></span>
+            </div>
+            <div class="alert alert-info small">
+                Si vous oubliez votre mot de passe : page de connexion → <em>Mot de passe oublié ?</em>
+                → <em>J’ai mon code de récupération</em>. Le code ne sert qu’une fois ; un nouveau vous sera alors donné.
+                Ne le donnez à personne : il permet de changer votre mot de passe.
+            </div>
+            <a href="{{ next_url }}" class="btn btn-edubac w-100">J’ai noté mon code — continuer</a>
+            {% else %}
+            {% if first_time or not has_code %}
+            <p>Si un jour vous oubliez votre mot de passe, ce code vous permettra d’en choisir un
+               nouveau <strong>vous-même</strong>, sans e-mail et sans attendre votre professeur.</p>
+            {% else %}
+            <p>Vous avez déjà un code{% if created_at %}, créé le {{ created_at|date:"d/m/Y" }}{% endif %}.
+               Vous l’avez perdu ? Créez-en un nouveau : l’ancien ne fonctionnera plus.</p>
+            {% endif %}
+            <form method="post" action="{% url 'accounts:recovery_code' %}">
+                {% csrf_token %}
+                <input type="hidden" name="suite" value="{{ next_url }}">
+                {% if first_time %}<input type="hidden" name="premiere" value="1">{% endif %}
+                <button type="submit" class="btn btn-edubac w-100">
+                    {% if has_code %}Créer un nouveau code{% else %}Afficher mon code{% endif %}
+                </button>
+            </form>
+            <a href="{{ next_url }}" class="btn btn-link w-100 mt-2">{% if first_time %}Plus tard{% else %}Retour{% endif %}</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% if code %}
+<script>
+(() => {
+    const button = document.getElementById('copyRecoveryCode');
+    const status = document.getElementById('copyRecoveryStatus');
+    button.addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(document.getElementById('recoveryCode').textContent.trim()); status.textContent = 'Code copié.'; }
+        catch (_) { status.textContent = 'Copie impossible : notez le code à la main.'; }
+    });
+})();
+</script>
+{% endif %}
+{% endblock %}

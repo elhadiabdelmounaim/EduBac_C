@@ -2680,3 +2680,32 @@ html[data-theme="dark"] .qb-detail-explain {
     opacity: 1;
     background: rgba(255,255,255,0.12);
 }
+
+/* Code de récupération (mot de passe oublié sans e-mail) */
+.recovery-code {
+    margin: 0 0 12px;
+    padding: 14px 10px;
+    border: 2px dashed var(--nb-teal);
+    border-radius: var(--radius-sm);
+    background: var(--nb-teal-soft);
+    color: var(--nb-ink);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: clamp(1.3rem, 6.5vw, 1.9rem);
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-align: center;
+    user-select: all;
+}
+.recovery-choice {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--nb-line);
+    border-radius: var(--radius-sm);
+    background: var(--nb-teal-soft);
+    color: var(--nb-ink);
+    text-decoration: none;
+}
+.recovery-choice:hover, .recovery-choice:focus-visible { border-color: var(--nb-teal); color: var(--nb-ink); }
+.recovery-choice > .bi:first-child { color: var(--nb-teal); font-size: 1.3rem; }

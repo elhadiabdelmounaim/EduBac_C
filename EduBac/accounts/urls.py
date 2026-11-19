@@ -1,5 +1,5 @@
 from django.urls import path
-from . import password_help, status_views, views
+from . import password_help, recovery, status_views, views
 
 app_name = 'accounts'
 
@@ -16,6 +16,8 @@ urlpatterns = [
     path('verification-email/confirmer/<str:token>/', views.confirm_email, name='confirm_email'),
     path('mot-de-passe/changer/', views.change_password, name='change_password'),
     path('mot-de-passe/oublie/', password_help.forgot_password, name='forgot_password'),
+    path('mot-de-passe/oublie/code/', recovery.recover_with_code, name='recover_with_code'),
+    path('code-de-recuperation/', recovery.recovery_code, name='recovery_code'),
     path(
         'administration/demandes-mot-de-passe/<int:request_id>/ignorer/',
         password_help.dismiss_password_request,
