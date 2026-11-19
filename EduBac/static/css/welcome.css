@@ -1,0 +1,184 @@
+/* Écran d'accueil mobile EduBac (/bienvenue/). Page autonome, sans base.html. */
+:root {
+    --w-teal: #488189;
+    --w-teal-dark: #008080;
+    --w-purple: #800080;
+    --w-orange: #E1712B;
+    --w-bg: #F7F9FC;
+    --w-ink: #163a5f;
+    --w-muted: #2c4560;
+    --w-card-shadow: 0 8px 22px rgba(22, 58, 95, .10);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { margin: 0; }
+
+.welcome-body {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100svh;
+    overflow-x: hidden;
+    background: var(--w-bg);
+    color: var(--w-ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Vagues décoratives haut et bas */
+.welcome-decor { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.welcome-wave { position: absolute; left: 0; width: 100%; display: block; }
+.welcome-wave--top { top: 0; height: clamp(110px, 20vh, 190px); width: 70%; }
+.welcome-wave--bottom { bottom: 0; height: clamp(70px, 11vh, 120px); }
+
+.welcome {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 480px;
+    min-height: 100vh;
+    min-height: 100svh;
+    margin: 0 auto;
+    box-sizing: border-box;
+    padding:
+        calc(env(safe-area-inset-top, 0px) + clamp(28px, 6vh, 64px))
+        calc(env(safe-area-inset-right, 0px) + 20px)
+        calc(env(safe-area-inset-bottom, 0px) + clamp(76px, 12vh, 124px))
+        calc(env(safe-area-inset-left, 0px) + 20px);
+    text-align: center;
+    animation: welcome-fade .6s ease-out both;
+}
+
+/* Marque */
+.welcome-brand { display: flex; align-items: center; gap: clamp(10px, 3vw, 16px); }
+.welcome-emblem { width: clamp(78px, 24vw, 112px); height: auto; }
+.welcome-brand-sep { align-self: stretch; width: 2px; margin: 4px 0; border-radius: 2px; background: #c9d4e2; }
+.welcome-brand > div { text-align: left; }
+.welcome-name { margin: 0; font-size: clamp(2.4rem, 12vw, 3.4rem); font-weight: 800; line-height: 1; letter-spacing: -.02em; }
+.welcome-name-edu { color: var(--w-teal-dark); }
+.welcome-name-bac { color: var(--w-orange); }
+.welcome-tagline { margin: 6px 0 0; color: var(--w-ink); font-size: clamp(.78rem, 3.4vw, .95rem); font-style: italic; white-space: nowrap; }
+
+/* Message de bienvenue */
+.welcome-intro { margin-top: clamp(18px, 4vh, 40px); }
+.welcome-intro h1 { margin: 0; color: var(--w-ink); font-size: clamp(1.55rem, 7.4vw, 2.1rem); font-weight: 800; line-height: 1.15; }
+.welcome-swoosh { display: block; width: min(62%, 220px); height: 10px; margin: 6px auto 10px; }
+.welcome-intro p { max-width: 24em; margin: 0 auto; color: var(--w-muted); font-size: clamp(.95rem, 4.2vw, 1.08rem); font-weight: 500; line-height: 1.4; }
+
+/* Illustration : se réduit sur les écrans courts, sans déformation */
+.welcome-illustration {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 120px;
+    margin: clamp(8px, 2vh, 20px) 0;
+}
+.welcome-illustration img {
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+    max-height: 34vh;
+    object-fit: contain;
+    animation: welcome-rise .8s .15s cubic-bezier(.2, .8, .2, 1) both;
+}
+
+/* Cartes */
+.welcome-features { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(8px, 2.6vw, 14px); width: 100%; }
+.welcome-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: clamp(10px, 2.6vw, 14px) 4px clamp(8px, 2vw, 12px);
+    border: 1px solid #edf1f6;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: var(--w-card-shadow);
+    color: var(--w-ink);
+    text-decoration: none;
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+.welcome-card:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(22, 58, 95, .14); }
+.welcome-card:active { transform: scale(.97); }
+.welcome-card-icon {
+    display: grid;
+    place-items: center;
+    width: clamp(40px, 11vw, 50px);
+    aspect-ratio: 1;
+    border-radius: 12px;
+    color: #fff;
+    font-size: clamp(1.2rem, 5.4vw, 1.5rem);
+}
+.welcome-card-icon--purple { background: linear-gradient(160deg, #9b3fb5, var(--w-purple)); }
+.welcome-card-icon--teal { background: linear-gradient(160deg, #1a9a9a, var(--w-teal-dark)); }
+.welcome-card-icon--orange { background: linear-gradient(160deg, #f28a4b, var(--w-orange)); }
+.welcome-card-label { max-width: 100%; overflow: hidden; font-size: clamp(.78rem, 3.5vw, .95rem); font-weight: 600; text-overflow: ellipsis; }
+
+/* Bouton principal */
+.welcome-start {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    width: min(100%, 320px);
+    min-height: 56px;
+    margin-top: clamp(16px, 3.4vh, 30px);
+    padding: 12px 28px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #1a9a9a, var(--w-teal-dark) 55%, #006a6e);
+    box-shadow: 0 10px 24px rgba(0, 128, 128, .30);
+    color: #fff;
+    font-size: clamp(1.2rem, 5.6vw, 1.45rem);
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+.welcome-start:hover { filter: brightness(1.06); box-shadow: 0 14px 28px rgba(0, 128, 128, .36); }
+.welcome-start:active { transform: scale(.97); box-shadow: 0 6px 14px rgba(0, 128, 128, .28); }
+.welcome-start .bi { transition: transform .18s ease; }
+.welcome-start:hover .bi { transform: translateX(3px); }
+.welcome-card:focus-visible, .welcome-start:focus-visible { outline: 3px solid var(--w-orange); outline-offset: 3px; }
+
+/* Pied */
+.welcome-footer { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: clamp(12px, 2.6vh, 24px); color: var(--w-teal-dark); font-size: .92rem; font-style: italic; }
+.welcome-footer::before, .welcome-footer::after { content: ""; flex: 1; height: 1px; background: var(--w-teal); opacity: .5; }
+
+/* Écrans courts : on resserre */
+@media (max-height: 640px) {
+    .welcome { padding-top: calc(env(safe-area-inset-top, 0px) + 20px); }
+    .welcome-emblem { width: 72px; }
+    .welcome-name { font-size: 2.3rem; }
+    .welcome-intro { margin-top: 14px; }
+    .welcome-intro h1 { font-size: 1.45rem; }
+    .welcome-intro p { font-size: .9rem; }
+    .welcome-illustration { margin: 4px 0; }
+    .welcome-illustration img { max-height: 26vh; }
+    .welcome-card { gap: 4px; }
+    .welcome-start { min-height: 50px; margin-top: 14px; }
+    .welcome-footer { margin-top: 10px; }
+}
+
+/* Très petits téléphones (320 px) : les libellés tiennent en entier */
+@media (max-width: 359.98px) {
+    .welcome-features { gap: 6px; }
+    .welcome-card { padding-inline: 2px; }
+    .welcome-card-label { font-size: .72rem; letter-spacing: -.01em; }
+}
+
+/* Grand écran : la page reste lisible (le bureau garde sa page d'accueil habituelle). */
+@media (min-width: 768px) {
+    .welcome-wave--top { width: 45%; }
+}
+
+@keyframes welcome-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes welcome-rise { from { opacity: 0; transform: translateY(18px) scale(.97); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+    .welcome, .welcome-illustration img { animation: none; }
+    .welcome-card, .welcome-start, .welcome-start .bi { transition: none; }
+}

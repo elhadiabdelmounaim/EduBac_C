@@ -1,0 +1,75 @@
+{% load static %}<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Bienvenue — EduBac</title>
+    <meta name="description" content="EduBac : votre plateforme éducative intelligente pour réussir votre baccalauréat.">
+    <meta name="robots" content="noindex">
+    {% include "includes/pwa_head.html" %}
+    <link rel="stylesheet" href="{% asset 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
+    <link rel="stylesheet" href="{% asset 'css/welcome.css' %}">
+    <script>try { sessionStorage.setItem('edubac-welcome', '1'); } catch (e) {}</script>
+</head>
+<body class="welcome-body">
+<div class="welcome-decor" aria-hidden="true">
+    <svg class="welcome-wave welcome-wave--top" viewBox="0 0 400 200" preserveAspectRatio="none">
+        <defs>
+            <linearGradient id="wTop" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#008080"/>
+                <stop offset="1" stop-color="#488189"/>
+            </linearGradient>
+        </defs>
+        <path d="M0 0H210C170 26 120 30 80 58C46 82 30 120 0 150Z" fill="url(#wTop)"/>
+        <path d="M0 150C30 120 46 82 80 58C120 30 170 26 210 0H250C196 32 140 40 100 70C64 98 42 140 0 178Z" fill="#488189" opacity=".18"/>
+    </svg>
+    <svg class="welcome-wave welcome-wave--bottom" viewBox="0 0 400 120" preserveAspectRatio="none">
+        <defs>
+            <linearGradient id="wBot" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#800080"/>
+                <stop offset=".55" stop-color="#5a3a9a"/>
+                <stop offset="1" stop-color="#008080"/>
+            </linearGradient>
+        </defs>
+        <path d="M0 18C60 40 120 64 200 62C280 60 340 34 400 30V120H0Z" fill="#008080" opacity=".25"/>
+        <path d="M0 40C80 70 150 84 230 76C300 69 350 50 400 52V120H0Z" fill="url(#wBot)"/>
+        <path d="M150 74C230 82 310 60 400 44V54C320 70 240 92 150 80Z" fill="#E1712B"/>
+    </svg>
+</div>
+
+<main class="welcome" aria-labelledby="welcome-title">
+    <header class="welcome-brand">
+        <img class="welcome-emblem" src="{% asset 'img/edubac-emblem.png' %}" width="320" height="268" alt="">
+        <span class="welcome-brand-sep" aria-hidden="true"></span>
+        <div>
+            <p class="welcome-name" aria-label="EduBac"><span class="welcome-name-edu">Edu</span><span class="welcome-name-bac">Bac</span></p>
+            <p class="welcome-tagline">Apprendre • Réviser • Réussir</p>
+        </div>
+    </header>
+
+    <section class="welcome-intro">
+        <h1 id="welcome-title">Bienvenue sur EduBac&nbsp;!</h1>
+        <svg class="welcome-swoosh" viewBox="0 0 220 10" aria-hidden="true"><path d="M4 8C70 1 150 0 216 4" fill="none" stroke="#E1712B" stroke-width="3" stroke-linecap="round"/></svg>
+        <p>Votre plateforme éducative intelligente pour réussir votre baccalauréat.</p>
+    </section>
+
+    <div class="welcome-illustration">
+        <img src="{% asset 'img/welcome-illustration.svg' %}" width="360" height="250"
+             alt="Pile de livres de Mathématiques, Sciences et Réussite surmontée d’une toque de diplômé">
+    </div>
+
+    <nav class="welcome-features" aria-label="Ce que propose EduBac">
+        {% for f in features %}
+        <a class="welcome-card" href="{{ f.url }}">
+            <span class="welcome-card-icon welcome-card-icon--{{ f.tone }}"><i class="bi {{ f.icon }}" aria-hidden="true"></i></span>
+            <span class="welcome-card-label">{{ f.label }}</span>
+        </a>
+        {% endfor %}
+    </nav>
+
+    <a class="welcome-start" href="{{ start_url }}">Commencer <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+
+    <footer class="welcome-footer"><span>EduBac, ensemble vers la réussite</span></footer>
+</main>
+</body>
+</html>

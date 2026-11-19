@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 250" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="cap" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b3f6e"/><stop offset="1" stop-color="#1a2a4f"/>
+    </linearGradient>
+    <linearGradient id="teal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a9a9a"/><stop offset="1" stop-color="#007070"/>
+    </linearGradient>
+    <linearGradient id="purple" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9a2a9a"/><stop offset="1" stop-color="#6e0a6e"/>
+    </linearGradient>
+    <linearGradient id="orange" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f08a45"/><stop offset="1" stop-color="#d0611f"/>
+    </linearGradient>
+    <linearGradient id="pages" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e9edf3"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Symboles mathématiques -->
+  <g fill="none" stroke="#7aa9d6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M22 98H92M50 120V52M45 58L50 52L55 58M86 93L92 98L86 103"/>
+    <path d="M36 112C52 104 62 92 70 80S82 62 90 56"/>
+    <path d="M84 56L90 56L89 62"/>
+    <path d="M286 60V108H342Z"/>
+    <path d="M286 100H294V108"/>
+  </g>
+  <g fill="#7aa9d6" font-style="italic">
+    <text x="18" y="38" font-size="24">f(x)</text>
+    <text x="300" y="42" font-size="30" font-family="Georgia, serif">π</text>
+    <text x="274" y="88" font-size="11">a</text>
+    <text x="312" y="122" font-size="11">b</text>
+    <text x="318" y="80" font-size="11">c</text>
+  </g>
+
+  <!-- Feuillage -->
+  <g fill="#3aa6a6" opacity=".55">
+    <path d="M118 196C94 186 80 160 88 132C108 146 122 168 118 196Z"/>
+    <path d="M110 200C84 202 64 186 58 166C82 166 102 178 110 200Z"/>
+  </g>
+  <g fill="#2a9696" opacity=".55">
+    <path d="M300 192C326 182 340 156 334 128C312 142 298 164 300 192Z"/>
+    <path d="M306 202C332 206 352 190 358 170C334 168 314 180 306 202Z"/>
+  </g>
+
+  <!-- Ombre -->
+  <ellipse cx="200" cy="236" rx="132" ry="7" fill="#12306b" opacity=".10"/>
+
+  <!-- Livres -->
+  <g>
+    <rect x="94" y="196" width="226" height="36" rx="7" fill="url(#orange)"/>
+    <rect x="100" y="202" width="42" height="24" rx="3" fill="url(#pages)"/>
+    <path d="M104 208H140M104 214H140M104 220H140" stroke="#d5dbe5" stroke-width="1"/>
+    <rect x="146" y="196" width="4" height="36" fill="#000" opacity=".08"/>
+    <text x="168" y="220" font-size="16" font-weight="700" fill="#fff">Réussite</text>
+
+    <rect x="104" y="162" width="206" height="34" rx="7" fill="url(#purple)"/>
+    <rect x="110" y="168" width="40" height="22" rx="3" fill="url(#pages)"/>
+    <path d="M114 174H148M114 180H148M114 186H148" stroke="#d5dbe5" stroke-width="1"/>
+    <rect x="154" y="162" width="4" height="34" fill="#000" opacity=".10"/>
+    <text x="172" y="185" font-size="16" font-weight="700" fill="#fff">Sciences</text>
+
+    <rect x="112" y="128" width="196" height="34" rx="7" fill="url(#teal)"/>
+    <rect x="118" y="134" width="38" height="22" rx="3" fill="url(#pages)"/>
+    <path d="M122 140H154M122 146H154M122 152H154" stroke="#d5dbe5" stroke-width="1"/>
+    <rect x="160" y="128" width="4" height="34" fill="#000" opacity=".10"/>
+    <text x="174" y="151" font-size="15" font-weight="700" fill="#fff">Mathématiques</text>
+  </g>
+
+  <!-- Toque -->
+  <g class="cap">
+    <path d="M170 100V124Q210 140 250 124V100Z" fill="url(#cap)"/>
+    <polygon points="128,96 210,64 292,96 210,124" fill="#24365f"/>
+    <polygon points="128,96 210,64 292,96 210,90" fill="#33497c" opacity=".55"/>
+    <path d="M210 96L297 104V124" fill="none" stroke="#E1712B" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="210" cy="95" r="4" fill="#E1712B"/>
+    <path d="M292 124H302L305 148H289Z" fill="#E1712B"/>
+    <path d="M294 128L293 146M297 128V146M300 128L301 146" stroke="#c45a1a" stroke-width=".8"/>
+    <circle cx="297" cy="123" r="4.5" fill="#f19a55"/>
+  </g>
+
+  <!-- Pot à crayons -->
+  <g>
+    <path d="M44 166L38 140" stroke="#2a5aa8" stroke-width="7" stroke-linecap="round"/>
+    <path d="M38 140L36 132L42 137Z" fill="#f2d3a6"/>
+    <path d="M58 166V134" stroke="#008080" stroke-width="7" stroke-linecap="round"/>
+    <path d="M55 134L58 124L61 134Z" fill="#f2d3a6"/>
+    <path d="M70 168L80 142" stroke="#E1712B" stroke-width="7" stroke-linecap="round"/>
+    <path d="M77 140L83 132L84 144Z" fill="#555"/>
+    <path d="M88 186C102 186 102 210 88 210" fill="none" stroke="#dfe5ee" stroke-width="6"/>
+    <rect x="28" y="164" width="62" height="68" rx="10" fill="#fff" stroke="#dfe5ee" stroke-width="2"/>
+    <path d="M51 193V200Q59 205 67 200V193Z" fill="#1d4fa3"/>
+    <polygon points="44,191 59,185 74,191 59,197" fill="#12306b"/>
+    <path d="M59 191L70 193V199" fill="none" stroke="#f39c12" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M45 210Q59 203 73 210" fill="none" stroke="#f39c12" stroke-width="2.6" stroke-linecap="round"/>
+  </g>
+</svg>

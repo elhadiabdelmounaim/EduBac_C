@@ -359,3 +359,35 @@ def whiteboard(request):
     """Redirige vers le module Whiteboard."""
     from django.shortcuts import redirect
     return redirect('whiteboard:list')
+
+
+def welcome(request):
+    """Écran d'accueil mobile (« Commencer ») affiché avant l'application.
+
+    Aucune redirection côté serveur : la page indique seulement où mener
+    l'utilisateur selon sa session actuelle (aucune nouvelle route d'auth).
+    """
+    from django.urls import reverse
+    user = getattr(request, 'edubac_user', None)
+    teacher = bool(user and user.is_teacher())
+    if not user:
+        start = reverse('accounts:login')
+    elif user.is_staff or user.is_superuser:
+        start = reverse('accounts:admin_dashboard')
+    else:
+        start = reverse('accounts:dashboard')
+    features = [
+        {'label': 'Cours', 'icon': 'bi-play-fill', 'tone': 'purple',
+         'url': reverse('education:niveaux')},
+        {'label': 'Quiz', 'icon': 'bi-clipboard2-check', 'tone': 'teal',
+         'url': reverse('quizzes:teacher_ai' if teacher else 'quizzes:assigned')},
+        {'label': 'Messages', 'icon': 'bi-chat-dots-fill', 'tone': 'orange',
+         'url': reverse('chat:home')},
+        {'label': 'Suivi', 'icon': 'bi-graph-up-arrow', 'tone': 'teal',
+         'url': reverse('quizzes:teacher_stats' if teacher else 'accounts:progress')},
+    ]
+    response = render(request, 'education/welcome.html', {
+        'start_url': start, 'features': features,
+    })
+    response['Cache-Control'] = 'no-cache'
+    return response

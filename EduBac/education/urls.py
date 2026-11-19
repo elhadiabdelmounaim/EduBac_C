@@ -15,6 +15,7 @@ urlpatterns = [
     path('whiteboard/', views.whiteboard, name='whiteboard'),
     path('niveaux/', views.niveaux_list, name='niveaux'),
     path('', views.home, name='home'),
+    path('bienvenue/', views.welcome, name='welcome'),
     path('niveau/<str:niveau>/', views.niveau_detail, name='niveau_detail'),
     path('cours/<int:pk>/', views.course_detail, name='course_detail'),
     path('lecon/<int:pk>/', views.lesson_detail, name='lesson_detail'),
