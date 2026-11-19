@@ -19,10 +19,11 @@ class ProgressiveWebAppTests(TestCase):
         self.assertEqual(data['name'], 'EduBac')
         self.assertEqual(data['short_name'], 'EduBac')
         self.assertEqual(data['display'], 'standalone')
-        self.assertEqual(data['start_url'], '/')
+        # L'application s'ouvre directement sur l'écran de chargement EduBac.
+        self.assertEqual(data['start_url'], '/bienvenue/')
         self.assertEqual(data['scope'], '/')
         self.assertEqual(data['theme_color'], '#12306b')
-        self.assertEqual(data['background_color'], '#f4f6fb')
+        self.assertEqual(data['background_color'], '#f7f9fc')
         purposes = {(icon['sizes'], icon['purpose']) for icon in data['icons']}
         for size in ('192x192', '512x512'):
             self.assertIn((size, 'any'), purposes)

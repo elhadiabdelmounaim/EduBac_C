@@ -115,6 +115,8 @@ class WelcomeScreenBrowserTests(StaticLiveServerTestCase):
             page.goto(self.live_server_url + reverse('education:welcome'))
             splash = page.locator('#appSplash')
             self.assertTrue(splash.is_visible())
+            page.wait_for_timeout(5500)
+            self.assertTrue(splash.is_visible(), "l'écran de chargement reste 6 secondes")
             if SHOTS:
                 page.wait_for_timeout(700)
                 page.screenshot(path=os.path.join(SHOTS, 'splash.png'))

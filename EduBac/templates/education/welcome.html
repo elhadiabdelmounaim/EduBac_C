@@ -160,10 +160,10 @@
 </main>
 {{ splash_assets|json_script:"splashAssets" }}
 <script>
-/* Écran de chargement : télécharge les fichiers communs (gardés par le service
-   worker) puis laisse place à l'accueil. Au moins 1,8 s pour être lisible,
-   au plus 9 s pour les fichiers communs ; la mise en page de l'accueil
-   (welcome.css) est attendue jusqu'à 20 s pour ne jamais montrer une page brute. */
+/* Écran de chargement : reste 6 secondes. Pendant ce temps il télécharge les
+   fichiers communs (gardés par le service worker, pages suivantes plus rapides).
+   La mise en page de l'accueil (welcome.css) est attendue jusqu'à 20 s pour ne
+   jamais montrer une page brute. */
 (function () {
     var root = document.documentElement, splash = document.getElementById('appSplash');
     if (!splash) return;
@@ -171,8 +171,12 @@
     var bar = document.getElementById('appSplashBar'), status = document.getElementById('appSplashStatus');
     var urls = [];
     try { urls = JSON.parse(document.getElementById('splashAssets').textContent) || []; } catch (e) {}
-    var MIN = 1800, MAX = 9000, HARD_MAX = 20000, start = Date.now(), total = urls.length + 1, done = 0, finished = false;
-    function show(p) { bar.style.transform = 'scaleX(' + Math.max(0.06, Math.min(1, p)) + ')'; }
+    var DURATION = 6000, HARD_MAX = 20000, start = Date.now(), total = urls.length + 1, done = 0, finished = false;
+    function show(p) { bar.style.transform = 'scaleX(' + Math.max(0.04, Math.min(1, p)) + ')'; }
+    // La barre avance avec le temps, sans dépasser ce qui est réellement téléchargé.
+    var ticker = setInterval(function () {
+        show(Math.min(done / total, (Date.now() - start) / DURATION));
+    }, 120);
     function finish() {
         if (finished) return;
         if (!root.classList.contains('welcome-css') && Date.now() - start < HARD_MAX) {
@@ -180,6 +184,7 @@
             return;
         }
         finished = true;
+        clearInterval(ticker);
         show(1);
         try { sessionStorage.setItem('edubac-splash', '1'); } catch (e) {}
         setTimeout(function () {
@@ -188,11 +193,7 @@
             setTimeout(function () { splash.remove(); }, 600);
         }, 250);
     }
-    function step() {
-        done += 1;
-        show(done / total);
-        if (done >= total) setTimeout(finish, Math.max(0, MIN - (Date.now() - start)));
-    }
+    function step() { done += 1; }
     urls.forEach(function (url) {
         fetch(url, { credentials: 'same-origin' })
             .then(function (r) { return r.ok ? r.blob() : null; })
@@ -202,9 +203,9 @@
     if (document.readyState === 'complete') step(); else window.addEventListener('load', step);
     if (navigator.onLine === false) status.textContent = 'Hors connexion…';
     setTimeout(function () {
-        if (!finished) status.textContent = 'Connexion lente… nous préparons l’application';
+        if (done < total) status.textContent = 'Connexion lente… nous préparons l’application';
     }, 4000);
-    setTimeout(finish, MAX);
+    setTimeout(finish, DURATION);
 })();
 </script>
 </body>

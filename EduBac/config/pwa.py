@@ -16,6 +16,10 @@ from django.views.decorators.http import require_GET
 
 THEME_COLOR = '#12306b'       # barre EduBac (--nb-teal)
 BACKGROUND_COLOR = '#f4f6fb'  # fond des pages (--nb-paper)
+# Écran de lancement du système (Android) : même fond que l'écran de chargement
+# EduBac (/bienvenue/), qui prend le relais dès que la page s'affiche.
+SPLASH_COLOR = '#f7f9fc'
+START_URL = '/bienvenue/'
 ICON_DIR = '/static/pwa/'
 PRECACHE = [
     '/hors-ligne/',
@@ -52,12 +56,12 @@ def manifest(request):
         'description': 'Cours, quiz, messagerie et tableau blanc de mathématiques pour le Bac.',
         'lang': 'fr',
         'dir': 'ltr',
-        'start_url': '/',
+        'start_url': START_URL,
         'scope': '/',
         'display': 'standalone',
         'orientation': 'any',
         'theme_color': THEME_COLOR,
-        'background_color': BACKGROUND_COLOR,
+        'background_color': SPLASH_COLOR,
         'categories': ['education'],
         'prefer_related_applications': False,
         'icons': icons,
