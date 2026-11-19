@@ -44,6 +44,7 @@ class WelcomeScreenBrowserTests(StaticLiveServerTestCase):
                 context = self.phone(browser, width, height)
                 page = context.new_page()
                 page.goto(self.live_server_url + reverse('education:welcome'))
+                page.wait_for_selector('#appSplash', state='detached', timeout=12000)
                 page.wait_for_function("[...document.images].every(i => i.complete && i.naturalWidth > 0)")
                 page.wait_for_timeout(900)  # fin des animations d'entrée
                 m = page.evaluate("""() => {
@@ -100,5 +101,61 @@ class WelcomeScreenBrowserTests(StaticLiveServerTestCase):
             page.goto(self.live_server_url + reverse('education:welcome'))
             page.get_by_role('link', name='Commencer').click()
             page.wait_for_url('**' + reverse('accounts:dashboard'))
+            context.close()
+            browser.close()
+
+
+    def test_splash_loads_shared_files_then_reveals_welcome_once(self):
+        with sync_playwright() as pw:
+            browser = self.launch(pw)
+            context = self.phone(browser)
+            page = context.new_page()
+            static_requests = []
+            page.on('request', lambda r: static_requests.append(r.url) if '/static/' in r.url else None)
+            page.goto(self.live_server_url + reverse('education:welcome'))
+            splash = page.locator('#appSplash')
+            self.assertTrue(splash.is_visible())
+            if SHOTS:
+                page.wait_for_timeout(700)
+                page.screenshot(path=os.path.join(SHOTS, 'splash.png'))
+            # Le bouton est recouvert tant que le chargement n'est pas fini.
+            self.assertFalse(page.evaluate(
+                "document.elementFromPoint(innerWidth / 2, innerHeight - 140).closest('.welcome-start') !== null"
+                " && !document.getElementById('appSplash')"))
+            page.wait_for_selector('#appSplash', state='detached', timeout=12000)
+            self.assertTrue(any('bootstrap.bundle.min.js' in url for url in static_requests))
+            self.assertTrue(any('bootstrap-icons.woff2' in url for url in static_requests))
+            page.get_by_role('link', name='Commencer').wait_for()
+            # Retour sur l'accueil dans la même session : pas de nouvel écran de chargement.
+            page.reload()
+            self.assertEqual(page.locator('#appSplash').count(), 0)
+            context.close()
+            browser.close()
+
+    def test_splash_never_blocks_on_slow_or_missing_network(self):
+        with sync_playwright() as pw:
+            browser = self.launch(pw)
+            # Réseau très lent : message adapté, puis accueil au plus tard après 9 s.
+            context = self.phone(browser)
+            page = context.new_page()
+            cdp = context.new_cdp_session(page)
+            cdp.send('Network.enable')
+            cdp.send('Network.emulateNetworkConditions', {
+                'offline': False, 'latency': 1500, 'downloadThroughput': 25000, 'uploadThroughput': 25000})
+            page.goto(self.live_server_url + reverse('education:welcome'), wait_until='commit')
+            page.wait_for_selector('#appSplash', state='visible', timeout=25000)
+            page.wait_for_function(
+                "document.getElementById('appSplashStatus')?.textContent.includes('Connexion lente')", timeout=25000)
+            page.wait_for_selector('#appSplash', state='detached', timeout=25000)
+            # Jamais de page brute : la mise en page de l'accueil est appliquée.
+            self.assertEqual(page.evaluate("getComputedStyle(document.querySelector('.welcome')).display"), 'flex')
+            context.close()
+
+            # Fichiers inaccessibles : l'accueil s'affiche quand même.
+            context = self.phone(browser)
+            page = context.new_page()
+            page.route('**/static/vendor/**', lambda route: route.abort())
+            page.goto(self.live_server_url + reverse('education:welcome'))
+            page.wait_for_selector('#appSplash', state='detached', timeout=12000)
             context.close()
             browser.close()

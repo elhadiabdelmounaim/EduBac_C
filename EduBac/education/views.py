@@ -361,6 +361,41 @@ def whiteboard(request):
     return redirect('whiteboard:list')
 
 
+_ICON_FONT = None
+
+
+def _splash_assets():
+    """Fichiers communs à toutes les pages, téléchargés pendant l'écran de chargement.
+
+    Le service worker les garde : la page suivante s'ouvre vite même avec un
+    réseau faible. L'URL de la police d'icônes est celle écrite dans sa feuille
+    de style (même entrée de cache).
+    """
+    import re
+    from education.templatetags.edubac_assets import asset_url
+    global _ICON_FONT
+    if _ICON_FONT is None:
+        css = Path(settings.BASE_DIR) / 'static' / 'vendor' / 'bootstrap-icons' / 'bootstrap-icons.min.css'
+        try:
+            match = re.search(r'url\("?(fonts/bootstrap-icons\.woff2[^")]*)', css.read_text())
+        except OSError:
+            match = None
+        _ICON_FONT = settings.STATIC_URL + 'vendor/bootstrap-icons/' + match.group(1) if match else ''
+    files = [
+        'vendor/bootstrap/bootstrap.min.css', 'vendor/bootstrap-icons/bootstrap-icons.min.css',
+        'css/tokens.css', 'css/edubac.css', 'css/edubac-motion.css', 'css/notebook.css',
+        'css/responsive.css', 'css/ui-refresh.css', 'css/pwa.css',
+        'vendor/jquery/jquery-3.7.1.min.js', 'vendor/bootstrap/bootstrap.bundle.min.js',
+        'js/edubac-ui.js', 'js/edubac-motion.js', 'js/sidebar.js', 'js/notifications.js', 'js/pwa.js',
+        'img/welcome-illustration.svg',
+    ]
+    urls = [asset_url(path) for path in files]
+    urls.append(settings.STATIC_URL + 'img/edubac-logo.png')  # utilisé sans version dans la barre
+    if _ICON_FONT:
+        urls.append(_ICON_FONT)
+    return urls
+
+
 def welcome(request):
     """Écran d'accueil mobile (« Commencer ») affiché avant l'application.
 
@@ -388,6 +423,7 @@ def welcome(request):
     ]
     response = render(request, 'education/welcome.html', {
         'start_url': start, 'features': features,
+        'splash_assets': _splash_assets(),
     })
     response['Cache-Control'] = 'no-cache'
     return response

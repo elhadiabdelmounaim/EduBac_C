@@ -1,5 +1,5 @@
 {% load static %}<!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="splash-on">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -7,11 +7,98 @@
     <meta name="description" content="EduBac : votre plateforme éducative intelligente pour réussir votre baccalauréat.">
     <meta name="robots" content="noindex">
     {% include "includes/pwa_head.html" %}
-    <link rel="stylesheet" href="{% asset 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
-    <link rel="stylesheet" href="{% asset 'css/welcome.css' %}">
+    <script>
+    /* Écran de chargement : une seule fois par session (pas au retour arrière). */
+    try { if (sessionStorage.getItem('edubac-splash') === '1') document.documentElement.classList.remove('splash-on'); } catch (e) {}
+    </script>
+    <style>
+    /* Styles en ligne : l'écran s'affiche avant tout autre téléchargement. */
+    .app-splash { display: none; }
+    html.splash-on, html.splash-on body { overflow: hidden; }
+    html.splash-on .app-splash {
+        position: fixed; inset: 0; z-index: 1000; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 0;
+        padding: env(safe-area-inset-top, 0px) 24px env(safe-area-inset-bottom, 0px);
+        background: radial-gradient(120% 70% at 50% 38%, #ffffff 0%, #F7F9FC 55%, #eaf1f5 100%);
+        color: #163a5f; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+        text-align: center; transition: opacity .55s ease, visibility .55s ease;
+    }
+    .app-splash.is-leaving { opacity: 0; visibility: hidden; pointer-events: none; }
+    .app-splash-wave { position: absolute; left: 0; width: 100%; pointer-events: none; }
+    .app-splash-wave--top { top: 0; width: 62%; height: 150px; }
+    .app-splash-wave--bottom { bottom: 0; height: 96px; }
+    .app-splash-logo {
+        position: relative; display: grid; place-items: center;
+        width: 132px; height: 132px; border-radius: 50%;
+        background: #fff; box-shadow: 0 18px 40px rgba(18, 48, 107, .14);
+        animation: splash-pop .7s cubic-bezier(.2, .9, .3, 1.2) both;
+    }
+    .app-splash-logo::before, .app-splash-logo::after {
+        content: ""; position: absolute; inset: -10px; border-radius: 50%;
+        border: 2px solid rgba(0, 128, 128, .28); animation: splash-ring 2.4s ease-out infinite;
+    }
+    .app-splash-logo::after { animation-delay: 1.2s; border-color: rgba(225, 113, 43, .25); }
+    .app-splash-logo img { width: 92px; height: auto; }
+    .app-splash-name { margin: 22px 0 0; font-size: 2.6rem; font-weight: 800; line-height: 1; letter-spacing: -.02em;
+        animation: splash-up .6s .15s ease-out both; }
+    .app-splash-name span:first-child { color: #008080; }
+    .app-splash-name span:last-child { color: #E1712B; }
+    .app-splash-tagline { margin: 8px 0 0; font-size: .95rem; font-style: italic; color: #2c4560;
+        animation: splash-up .6s .25s ease-out both; }
+    .app-splash-progress { width: min(220px, 60vw); margin-top: 44px; animation: splash-up .6s .35s ease-out both; }
+    .app-splash-track { height: 6px; overflow: hidden; border-radius: 999px; background: #e1e9f0; }
+    .app-splash-track span { display: block; height: 100%; border-radius: inherit;
+        background: linear-gradient(90deg, #008080, #488189 45%, #E1712B);
+        transform: scaleX(.06); transform-origin: left; transition: transform .45s ease; }
+    .app-splash-status { min-height: 1.3em; margin: 12px 0 0; font-size: .82rem; color: #56627a; }
+    .app-splash-symbols span { position: absolute; color: #7aa9d6; opacity: .35; font-style: italic;
+        animation: splash-float 6s ease-in-out infinite; }
+    @keyframes splash-pop { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: none; } }
+    @keyframes splash-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+    @keyframes splash-ring { from { opacity: 1; transform: scale(.92); } to { opacity: 0; transform: scale(1.35); } }
+    @keyframes splash-float { 50% { transform: translateY(-10px); } }
+    html.splash-on .welcome, html.splash-on .welcome-illustration img { animation-play-state: paused; }
+    @media (prefers-reduced-motion: reduce) {
+        .app-splash-logo, .app-splash-name, .app-splash-tagline, .app-splash-progress, .app-splash-symbols span { animation: none; }
+        .app-splash-logo::before, .app-splash-logo::after { display: none; }
+    }
+    </style>
+    <link rel="preload" as="image" href="{% asset 'img/edubac-emblem.png' %}">
+    {# Chargées sans bloquer l'affichage : l'écran de chargement apparaît tout de suite. #}
+    <link rel="stylesheet" href="{% asset 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="{% asset 'css/welcome.css' %}" media="print" onload="this.media='all';document.documentElement.classList.add('welcome-css')">
+    <noscript>
+        <style>.app-splash { display: none !important; }</style>
+        <link rel="stylesheet" href="{% asset 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
+        <link rel="stylesheet" href="{% asset 'css/welcome.css' %}">
+    </noscript>
     <script>try { sessionStorage.setItem('edubac-welcome', '1'); } catch (e) {}</script>
 </head>
 <body class="welcome-body">
+<div class="app-splash" id="appSplash" role="status" aria-live="polite" aria-label="Chargement d’EduBac">
+    <svg class="app-splash-wave app-splash-wave--top" viewBox="0 0 400 200" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 0H210C170 26 120 30 80 58C46 82 30 120 0 150Z" fill="#008080" opacity=".9"/>
+        <path d="M0 150C30 120 46 82 80 58C120 30 170 26 210 0H250C196 32 140 40 100 70C64 98 42 140 0 178Z" fill="#488189" opacity=".18"/>
+    </svg>
+    <div class="app-splash-symbols" aria-hidden="true">
+        <span style="top:22%;right:14%;font-size:2rem;">π</span>
+        <span style="top:30%;left:10%;font-size:1.4rem;animation-delay:1.5s;">f(x)</span>
+        <span style="bottom:24%;left:16%;font-size:1.7rem;animation-delay:3s;">∑</span>
+        <span style="bottom:30%;right:12%;font-size:1.5rem;animation-delay:2.2s;">√x</span>
+    </div>
+    <div class="app-splash-logo"><img src="{% asset 'img/edubac-emblem.png' %}" width="320" height="268" alt=""></div>
+    <p class="app-splash-name"><span>Edu</span><span>Bac</span></p>
+    <p class="app-splash-tagline">Apprendre • Réviser • Réussir</p>
+    <div class="app-splash-progress">
+        <div class="app-splash-track"><span id="appSplashBar"></span></div>
+        <p class="app-splash-status" id="appSplashStatus">Chargement…</p>
+    </div>
+    <svg class="app-splash-wave app-splash-wave--bottom" viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 18C60 40 120 64 200 62C280 60 340 34 400 30V120H0Z" fill="#008080" opacity=".22"/>
+        <path d="M0 40C80 70 150 84 230 76C300 69 350 50 400 52V120H0Z" fill="#800080" opacity=".85"/>
+        <path d="M150 74C230 82 310 60 400 44V54C320 70 240 92 150 80Z" fill="#E1712B"/>
+    </svg>
+</div>
 <div class="welcome-decor" aria-hidden="true">
     <svg class="welcome-wave welcome-wave--top" viewBox="0 0 400 200" preserveAspectRatio="none">
         <defs>
@@ -71,5 +158,54 @@
 
     <footer class="welcome-footer"><span>EduBac, ensemble vers la réussite</span></footer>
 </main>
+{{ splash_assets|json_script:"splashAssets" }}
+<script>
+/* Écran de chargement : télécharge les fichiers communs (gardés par le service
+   worker) puis laisse place à l'accueil. Au moins 1,8 s pour être lisible,
+   au plus 9 s pour les fichiers communs ; la mise en page de l'accueil
+   (welcome.css) est attendue jusqu'à 20 s pour ne jamais montrer une page brute. */
+(function () {
+    var root = document.documentElement, splash = document.getElementById('appSplash');
+    if (!splash) return;
+    if (!root.classList.contains('splash-on')) { splash.remove(); return; }
+    var bar = document.getElementById('appSplashBar'), status = document.getElementById('appSplashStatus');
+    var urls = [];
+    try { urls = JSON.parse(document.getElementById('splashAssets').textContent) || []; } catch (e) {}
+    var MIN = 1800, MAX = 9000, HARD_MAX = 20000, start = Date.now(), total = urls.length + 1, done = 0, finished = false;
+    function show(p) { bar.style.transform = 'scaleX(' + Math.max(0.06, Math.min(1, p)) + ')'; }
+    function finish() {
+        if (finished) return;
+        if (!root.classList.contains('welcome-css') && Date.now() - start < HARD_MAX) {
+            setTimeout(finish, 300);
+            return;
+        }
+        finished = true;
+        show(1);
+        try { sessionStorage.setItem('edubac-splash', '1'); } catch (e) {}
+        setTimeout(function () {
+            splash.classList.add('is-leaving');
+            root.classList.remove('splash-on');
+            setTimeout(function () { splash.remove(); }, 600);
+        }, 250);
+    }
+    function step() {
+        done += 1;
+        show(done / total);
+        if (done >= total) setTimeout(finish, Math.max(0, MIN - (Date.now() - start)));
+    }
+    urls.forEach(function (url) {
+        fetch(url, { credentials: 'same-origin' })
+            .then(function (r) { return r.ok ? r.blob() : null; })
+            .catch(function () { return null; })
+            .then(step);
+    });
+    if (document.readyState === 'complete') step(); else window.addEventListener('load', step);
+    if (navigator.onLine === false) status.textContent = 'Hors connexion…';
+    setTimeout(function () {
+        if (!finished) status.textContent = 'Connexion lente… nous préparons l’application';
+    }, 4000);
+    setTimeout(finish, MAX);
+})();
+</script>
 </body>
 </html>
