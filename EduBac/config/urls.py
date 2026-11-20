@@ -6,7 +6,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from accounts.views import admin_teacher_dashboard
-from config import pwa, seo
+from config import client_errors, pwa, seo
 
 urlpatterns = [
     path(
@@ -19,6 +19,7 @@ urlpatterns = [
     path('manifest.webmanifest', pwa.manifest, name='pwa_manifest'),
     path('service-worker.js', pwa.service_worker, name='pwa_service_worker'),
     path('hors-ligne/', pwa.offline, name='pwa_offline'),
+    path('erreurs-client/', client_errors.client_error, name='client_error'),
     path('robots.txt', seo.robots_txt, name='robots_txt'),
     path('sitemap.xml', seo.sitemap_xml, name='sitemap'),
     path('compte/', include('accounts.urls')),

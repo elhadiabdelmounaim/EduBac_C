@@ -1,0 +1,3 @@
+# Facultatif : reconnaissance de l'écriture manuscrite (MATHBOARD_HANDWRITING_ENABLED=1).
+-r requirements.txt
+anthropic>=1.0

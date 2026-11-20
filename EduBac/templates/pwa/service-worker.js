@@ -3,8 +3,11 @@
  * Règles de sécurité :
  * - seules les ressources publiques sont mises en cache (fichiers /static/ et
  *   la page hors connexion) ;
- * - les pages HTML, l'API, les fichiers privés, les sessions et toutes les
- *   requêtes autres que GET passent toujours par le réseau, sans cache ;
+ * - exception : la page d'un tableau mathématique déjà ouvert
+ *   (/tableau-maths/<n>/) est gardée pour s'ouvrir sans réseau ; ce cache est
+ *   vidé à la déconnexion et à chaque connexion ;
+ * - les autres pages HTML, l'API, les fichiers privés, les sessions et toutes
+ *   les requêtes autres que GET passent toujours par le réseau, sans cache ;
  * - sans réseau, une navigation affiche la page « hors connexion ».
  */
 'use strict';
@@ -12,6 +15,9 @@
 const VERSION = '{{ version }}';
 const STATIC_CACHE = 'edubac-static-' + VERSION;
 const OFFLINE_URL = '{{ offline_url }}';
+const BOARDS_CACHE = 'edubac-boards';
+const BOARD_PAGE = /^\/tableau-maths\/\d+\/$/;
+const SESSION_PAGE = /^\/compte\/(de)?connexion\//;
 const PRECACHE = [{% for url in precache %}'{{ url }}'{% if not forloop.last %}, {% endif %}{% endfor %}];
 
 self.addEventListener('install', (event) => {
@@ -26,7 +32,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const names = await caches.keys();
     await Promise.all(names
-      .filter((name) => name.startsWith('edubac-') && name !== STATIC_CACHE)
+      .filter((name) => name.startsWith('edubac-') && name !== STATIC_CACHE && name !== BOARDS_CACHE)
       .map((name) => caches.delete(name)));
     if (self.registration.navigationPreload) await self.registration.navigationPreload.enable();
     await self.clients.claim();
@@ -41,6 +47,24 @@ async function navigate(event) {
   } catch (error) {
     const cache = await caches.open(STATIC_CACHE);
     return (await cache.match(OFFLINE_URL)) || Response.error();
+  }
+}
+
+async function boardPage(event) {
+  // Réseau d'abord (page à jour) ; copie gardée pour l'ouvrir hors connexion.
+  const cache = await caches.open(BOARDS_CACHE);
+  try {
+    const preloaded = await event.preloadResponse;
+    const response = preloaded || await fetch(event.request);
+    if (response.ok && response.type === 'basic' && !response.redirected) {
+      await cache.put(event.request.url, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const copy = await cache.match(event.request.url);
+    if (copy) return copy;
+    const statics = await caches.open(STATIC_CACHE);
+    return (await statics.match(OFFLINE_URL)) || Response.error();
   }
 }
 
@@ -61,11 +85,15 @@ async function staticAsset(event) {
 
 self.addEventListener('fetch', (event) => {
   const request = event.request;
-  if (request.method !== 'GET') return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+  if (request.mode === 'navigate' && SESSION_PAGE.test(url.pathname)) {
+    // Déconnexion ou changement de compte : les pages de tableaux gardées sont effacées.
+    event.waitUntil(caches.delete(BOARDS_CACHE));
+  }
+  if (request.method !== 'GET') return;
   if (request.mode === 'navigate') {
-    event.respondWith(navigate(event));
+    event.respondWith(BOARD_PAGE.test(url.pathname) ? boardPage(event) : navigate(event));
     return;
   }
   if (url.pathname.startsWith('/static/')) {

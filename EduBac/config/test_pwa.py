@@ -54,9 +54,16 @@ class ProgressiveWebAppTests(TestCase):
         self.assertIn("url.pathname.startsWith('/static/')", script)
         self.assertIn('if (url.origin !== self.location.origin) return;', script)
         # Les navigations passent par le réseau ; seul le repli hors ligne vient du cache.
-        navigate = script.split('async function navigate', 1)[1].split('async function staticAsset', 1)[0]
+        navigate = script.split('async function navigate', 1)[1].split('async function boardPage', 1)[0]
         self.assertNotIn('cache.put', navigate)
-        self.assertEqual(script.count('cache.put('), 1)
+        # Seule exception : la page d'un tableau mathématique (ouverture hors connexion),
+        # dans un cache à part effacé à la déconnexion et à la connexion.
+        self.assertEqual(script.count('cache.put('), 2)
+        self.assertIn(r"const BOARD_PAGE = /^\/tableau-maths\/\d+\/$/;", script)
+        self.assertIn("BOARD_PAGE.test(url.pathname) ? boardPage(event) : navigate(event)", script)
+        self.assertIn(r"const SESSION_PAGE = /^\/compte\/(de)?connexion\//;", script)
+        self.assertIn("if (request.mode === 'navigate' && SESSION_PAGE.test(url.pathname)) {", script)
+        self.assertIn('event.waitUntil(caches.delete(BOARDS_CACHE));', script)
 
     def test_offline_page_is_public_and_contains_no_personal_data(self):
         student = User.objects.create_user(username='eleve-pwa', email='pwa@example.test',

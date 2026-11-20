@@ -29,11 +29,39 @@ cd ~/EduBac_C/EduBac
 git pull
 pip install -r requirements.txt          # ajoute djangorestframework et sympy
 python manage.py backup_db
-python manage.py migrate                 # tables du tableau mathématique
+python manage.py migrate                 # tables du tableau mathématique (mathboard 0001 à 0003)
 python manage.py collectstatic --noinput
 ```
-Puis « Reload ». L’assistant IA affiche « pas encore configuré » tant que
-`MATHBOARD_AI_URL` n’est pas défini.
+Puis « Reload ».
+
+**Tâche planifiée quotidienne** (onglet « Tasks » de PythonAnywhere) :
+```bash
+cd ~/EduBac_C/EduBac && python manage.py mathboard_cleanup
+```
+Elle allège le journal d’opérations, déplace en fichiers les images envoyées
+hors ligne, supprime les fichiers d’images inutilisés et les présences
+périmées (`--dry-run` pour voir sans rien changer).
+
+**Assistant IA** : désactivé (aucun bouton). Pour le réactiver plus tard :
+`MATHBOARD_AI_ENABLED=1` dans le `.env`, plus `MATHBOARD_AI_URL` et
+`MATHBOARD_AI_TOKEN` (voir « Service IA seul » ci-dessous).
+
+**Écriture → texte et formules** (bouton « Convertir », enseignants) :
+désactivé par défaut. Pour l’activer :
+
+```bash
+pip install -r requirements-ecriture.txt      # paquet anthropic
+```
+
+puis dans le `.env` : `MATHBOARD_HANDWRITING_ENABLED=1` et
+`ANTHROPIC_API_KEY=<clé>` (facultatif : `MATHBOARD_HANDWRITING_MODEL`, par
+défaut `claude-opus-5-5`), et Reload. Chaque conversion est facturée par
+Anthropic au compte de la clé. Compte gratuit PythonAnywhere : vérifier que
+`api.anthropic.com` est accessible (liste des sites autorisés).
+
+**Anciens tableaux** : chaque professeur peut convertir les siens (bouton dans
+la liste de l’ancien tableau), ou tous d’un coup :
+`python manage.py mathboard_convert_legacy --all`.
 
 Note : les calculs SymPy s’exécutent dans un processus séparé limité à 8 s et
 512 Mo ; le serveur reste disponible même sur une expression piège.
@@ -90,4 +118,9 @@ Puis, dans le `.env` du site : `MATHBOARD_AI_URL=https://hote-ia` et
   en mode B le statut indique « en direct » et les curseurs s’affichent.
 * Couper le réseau, dessiner, rétablir : statut « Hors ligne — n en attente » puis « Enregistré ».
 * Versions : créer, modifier, restaurer.
-* Assistant IA : « Vérifier » avec une réponse juste puis fausse.
+* Préparer sans partager : créer pour une classe avec « Préparer sans partager »,
+  vérifier qu’un élève ne le voit pas, puis « Partager maintenant ».
+* Travail à rendre : cocher « Travail à rendre » dans « Partager », l’élève
+  fait sa copie et la rend, le professeur la corrige, l’élève voit la note.
+* « Présenter » : l’élève suit la page et la zone du professeur.
+* Notifications : l’élève est prévenu du partage et de la correction.

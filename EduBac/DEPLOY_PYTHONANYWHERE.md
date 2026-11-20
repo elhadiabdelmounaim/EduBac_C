@@ -28,7 +28,25 @@ Le chat dispose déjà d’une interrogation HTTP périodique, ce qui lui permet
 
 Le serveur WSGI classique de PythonAnywhere ne prend pas en charge les WebSockets. PythonAnywhere publie une option ASGI expérimentale accessible via son API/outil `pa`; il faut demander l’accès au programme bêta depuis le compte. La documentation signale notamment l’absence de correspondances statiques dans cette option et recommande Uvicorn plutôt que Daphne. Les conditions et tarifs de l’ASGI bêta peuvent évoluer.
 
-Même avec l’accès bêta, EduBac n’est pas prêt à y basculer sans définir et tester séparément l’hébergement des fichiers statiques. Ne remplacez pas le mode WSGI par l’ASGI bêta avant d’avoir validé les statiques, les connexions WebSocket, les sessions et les téléchargements.
+Point d’entrée prévu pour ce mode : `config/asgi_production.py` (réglages de production, et Django sert lui-même `/static/`, puisque l’option ASGI n’a pas de correspondance statique ; `/media/` n’est jamais exposé). Vérifié localement : page du tableau, fichiers statiques et poignée de main WebSocket (`101`) avec ces réglages.
+
+Procédure (compte ayant l’accès ASGI ; voir la page d’aide PythonAnywhere citée plus bas, qui fait foi) :
+
+```bash
+workon edubac-venv
+cd ~/EduBac/EduBac
+pip install -r requirements-pythonanywhere-asgi.txt     # uvicorn[standard]
+pip install --upgrade pythonanywhere                    # outil « pa »
+# .env : MATHBOARD_WEBSOCKET=1 (le tableau mathématique tente alors le WebSocket)
+python manage.py collectstatic --noinput
+# Un domaine ne peut pas être servi à la fois en WSGI et en ASGI : supprimer
+# d'abord le site WSGI de ce domaine dans l'onglet Web (le code et la base restent).
+pa website create --domain <identifiant>.pythonanywhere.com --command \
+  '/home/<identifiant>/.virtualenvs/edubac-venv/bin/uvicorn --app-dir /home/<identifiant>/EduBac/EduBac --uds ${DOMAIN_SOCKET} config.asgi_production:application'
+pa website reload --domain <identifiant>.pythonanywhere.com   # après chaque mise à jour
+```
+
+Un seul processus Uvicorn : ne pas ajouter `--workers` sans `REDIS_URL`. Si le WebSocket échoue, chat et tableaux continuent par interrogation HTTP. Retour arrière : `pa website delete --domain …`, puis recréer le site WSGI (section 7).
 
 L’application utilise actuellement une couche Channels en mémoire : elle convient à un seul processus ASGI, mais ne synchronise pas plusieurs processus. Un déploiement multi-processus nécessiterait un backend de canaux partagé, par exemple Redis, si le service choisi le permet.
 

@@ -139,7 +139,7 @@ class PresenceExportImportTests(TestCase):
         self.assertEqual(WhiteboardDocument.objects.count(), 1)
 
 
-@override_settings(MATHBOARD_AI_URL='http://ai.internal', MATHBOARD_AI_TOKEN='jeton')
+@override_settings(MATHBOARD_AI_ENABLED=True, MATHBOARD_AI_URL='http://ai.internal', MATHBOARD_AI_TOKEN='jeton')
 class AssistantProxyTests(TestCase):
     def setUp(self):
         self.teacher = User.objects.create_user(username='p', email='p@ex.test', password='x', role='teacher')
@@ -198,6 +198,7 @@ except ImportError:  # service IA non installé sur cette machine (ai_service/re
 
 
 @__import__('unittest').skipUnless(HAS_AI_STACK, 'FastAPI/uvicorn non installés (ai_service/requirements.txt).')
+@override_settings(MATHBOARD_AI_ENABLED=True)
 class AssistantEndToEndTests(TestCase):
     """Django → service FastAPI réel (uvicorn), fournisseur « mock » : aucun appel externe."""
 

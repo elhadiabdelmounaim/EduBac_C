@@ -13,7 +13,10 @@
     <span id="mbStatus" class="mb-status" role="status" aria-live="polite">Chargement…</span>
     <div id="mbPresence" class="mb-presence" aria-label="Participants connectés"></div>
     <div class="mb-top-actions">
-      <button type="button" class="mb-btn" id="mbAiBtn"><i class="bi bi-stars" aria-hidden="true"></i><span>Assistant IA</span></button>
+      <button type="button" class="mb-btn" id="mbWorkBtn" hidden><i class="bi bi-journal-check" aria-hidden="true"></i><span id="mbWorkBtnText">Travail</span></button>
+      <button type="button" class="mb-btn" id="mbPresentBtn" data-needs="manage" aria-pressed="false" title="Les participants voient la même page et la même zone que vous"><i class="bi bi-cast" aria-hidden="true"></i><span>Présenter</span></button>
+      <button type="button" class="mb-btn" id="mbPeopleBtn" data-needs="manage" title="Qui a écrit quoi"><i class="bi bi-people" aria-hidden="true"></i><span>Participation</span></button>
+      {% if config.aiEnabled %}<button type="button" class="mb-btn" id="mbAiBtn"><i class="bi bi-stars" aria-hidden="true"></i><span>Assistant IA</span></button>{% endif %}
       <button type="button" class="mb-btn" id="mbVersionsBtn"><i class="bi bi-clock-history" aria-hidden="true"></i><span>Versions</span></button>
       <button type="button" class="mb-btn" id="mbShareBtn" data-needs="manage"><i class="bi bi-share" aria-hidden="true"></i><span>Partager</span></button>
       <div class="dropdown">
@@ -29,6 +32,13 @@
       </div>
     </div>
   </header>
+
+  <div id="mbBanner" class="mb-banner" role="status" aria-live="polite" hidden>
+    <span id="mbBannerText"></span>
+    <span class="mb-banner-actions" id="mbBannerActions"></span>
+  </div>
+
+  <div id="mbWorkBanner" class="mb-banner mb-banner-work" role="status" hidden></div>
 
   <div class="mb-body">
     <nav class="mb-tools" aria-label="Outils">
@@ -62,6 +72,7 @@
       </div>
       <div id="mbSelectionBar" class="mb-selection" hidden>
         <button type="button" data-act="edit" hidden><i class="bi bi-pencil-square"></i> Modifier</button>
+        {% if config.handwriting %}<button type="button" data-act="convert" hidden title="Transformer l’écriture en texte et formules"><i class="bi bi-magic"></i> Convertir</button>{% endif %}
         <button type="button" data-act="front" title="Premier plan"><i class="bi bi-front"></i></button>
         <button type="button" data-act="forward" title="Avancer d’un plan"><i class="bi bi-chevron-up"></i></button>
         <button type="button" data-act="backward" title="Reculer d’un plan"><i class="bi bi-chevron-down"></i></button>
@@ -72,6 +83,7 @@
       </div>
     </div>
 
+    {% if config.aiEnabled %}
     <aside id="mbAiPanel" class="mb-side" hidden aria-labelledby="mbAiTitle">
       <div class="mb-side-head">
         <h2 id="mbAiTitle">Assistant IA</h2>
@@ -97,6 +109,7 @@
       <div id="mbAiResult" class="mb-ai-result" aria-live="polite"></div>
       <button type="button" class="mb-btn mb-btn-primary" id="mbAiInsert" data-needs="edit" hidden>Insérer dans le tableau</button>
     </aside>
+    {% endif %}
   </div>
 
   <footer class="mb-bottom">
@@ -221,9 +234,13 @@
         <select id="mbShareClass" class="form-select form-select-sm"><option value="">Aucune (document personnel)</option></select></label>
       <label class="small">Niveau
         <select id="mbShareLevel" class="form-select form-select-sm"><option value="">—</option></select></label>
-      <label class="small mb-span2">Chapitre (contexte de l’assistant IA)
+      <label class="small mb-span2">Chapitre
         <input id="mbShareChapter" class="form-control form-control-sm" maxlength="200" placeholder="Ex. : Limites et continuité"></label>
+      <label class="small mb-span2" id="mbShareVisibleRow"><input type="checkbox" id="mbShareVisible"> Visible par les élèves de la classe (décoché : document préparé, pas encore partagé)</label>
       <label class="small mb-span2"><input type="checkbox" id="mbShareEdit"> Les élèves de la classe peuvent écrire (chacun modifie ses propres éléments)</label>
+      <label class="small mb-span2"><input type="checkbox" id="mbShareTask"> Travail à rendre : chaque élève fait sa propre copie et la rend pour correction</label>
+      <label class="small" id="mbShareDueRow">À rendre avant
+        <input type="datetime-local" id="mbShareDue" class="form-control form-control-sm"></label>
     </div>
     <div class="mb-row"><button type="button" class="mb-btn mb-btn-primary" id="mbShareSave">Enregistrer les réglages</button></div>
     <h3 class="h6 mt-3">Membres invités</h3>
@@ -235,6 +252,71 @@
     </div>
     <ul id="mbMembersList" class="mb-list"></ul>
     <p class="mb-error" id="mbShareError"></p>
+    <div class="mb-dialog-foot"><button class="mb-btn" value="close">Fermer</button></div>
+  </form>
+</dialog>
+
+{# ---------- Travail à rendre (copie d'élève) ---------- #}
+{% if config.handwriting %}
+<dialog id="mbInkDialog" class="mb-dialog mb-dialog-wide" aria-labelledby="mbInkTitle">
+  <form method="dialog" class="mb-dialog-body">
+    <h2 id="mbInkTitle">Convertir l’écriture</h2>
+    <p id="mbInkStatus" class="mb-muted" role="status">Lecture de l’écriture…</p>
+    <label class="small fw-semibold" for="mbInkSource">Texte reconnu — corrigez si besoin (une ligne par ligne, formules entre \( et \))</label>
+    <textarea id="mbInkSource" class="form-control mb-ink-source" rows="5" dir="auto" spellcheck="false"></textarea>
+    <p class="small fw-semibold mt-2 mb-1">Aperçu</p>
+    <div id="mbInkPreview" class="mb-ink-preview" aria-live="polite"></div>
+    <label class="small mt-2"><input type="checkbox" id="mbInkReplace" checked> Remplacer l’écriture manuscrite (sinon : ajouter en dessous)</label>
+    <p class="mb-error" id="mbInkError" role="alert"></p>
+    <div class="mb-dialog-foot">
+      <button type="button" class="mb-btn" id="mbInkCancel">Annuler</button>
+      <button type="button" class="mb-btn mb-btn-primary" id="mbInkInsert" disabled>Insérer</button>
+    </div>
+  </form>
+</dialog>
+{% endif %}
+
+<dialog id="mbWorkDialog" class="mb-dialog" aria-labelledby="mbWorkTitle">
+  <form method="dialog" class="mb-dialog-body">
+    <h2 id="mbWorkTitle">Travail</h2>
+    <p id="mbWorkState" class="mb-work-state"></p>
+    <div id="mbWorkFeedback" class="mb-work-feedback" hidden>
+      <p class="small fw-semibold mb-1">Appréciation du professeur</p>
+      <p id="mbWorkFeedbackText" class="mb-0"></p>
+    </div>
+    <div id="mbWorkCorrect" hidden>
+      <label class="small fw-semibold" for="mbWorkGrade">Note</label>
+      <input id="mbWorkGrade" class="form-control form-control-sm mb-short" maxlength="20" placeholder="Ex. : 16/20">
+      <label class="small fw-semibold mt-2" for="mbWorkComment">Appréciation</label>
+      <textarea id="mbWorkComment" class="form-control" rows="4" maxlength="4000" placeholder="Points forts, erreurs à revoir…"></textarea>
+      <p class="mb-muted small mt-1">Vos annotations sur le tableau font partie de la correction : écrivez directement sur la copie.</p>
+    </div>
+    <p class="mb-error" id="mbWorkError"></p>
+    <div class="mb-dialog-foot">
+      <button type="button" class="mb-btn" id="mbWorkClose">Fermer</button>
+      <button type="button" class="mb-btn" id="mbWorkRedo" hidden>Demander une reprise</button>
+      <button type="button" class="mb-btn mb-btn-primary" id="mbWorkReturn" hidden>Rendre la correction</button>
+      <button type="button" class="mb-btn mb-btn-primary" id="mbWorkSubmit" hidden>Rendre mon travail</button>
+    </div>
+  </form>
+</dialog>
+
+{# ---------- Suivi des copies d'un sujet ---------- #}
+<dialog id="mbCopiesDialog" class="mb-dialog" aria-labelledby="mbCopiesTitle">
+  <form method="dialog" class="mb-dialog-body">
+    <h2 id="mbCopiesTitle">Copies des élèves</h2>
+    <p class="mb-muted small" id="mbCopiesInfo"></p>
+    <ul id="mbCopiesList" class="mb-list"></ul>
+    <div class="mb-dialog-foot"><button class="mb-btn" value="close">Fermer</button></div>
+  </form>
+</dialog>
+
+{# ---------- Participation ---------- #}
+<dialog id="mbPeopleDialog" class="mb-dialog" aria-labelledby="mbPeopleTitle">
+  <form method="dialog" class="mb-dialog-body">
+    <h2 id="mbPeopleTitle">Participation</h2>
+    <p class="mb-muted small">Éléments présents sur le tableau, par auteur. « Montrer » sélectionne ses éléments de la page affichée ; « Supprimer » retire tous ses éléments (une version est créée avant, pour pouvoir revenir en arrière).</p>
+    <ul id="mbPeopleList" class="mb-list"></ul>
     <div class="mb-dialog-foot"><button class="mb-btn" value="close">Fermer</button></div>
   </form>
 </dialog>
@@ -258,4 +340,6 @@
 <script src="{% asset 'mathboard/mb-render.js' %}"></script>
 <script src="{% asset 'mathboard/mb-board.js' %}"></script>
 <script src="{% asset 'mathboard/mb-panels.js' %}"></script>
+<script src="{% asset 'mathboard/mb-class.js' %}"></script>
+{% if config.handwriting %}<script src="{% asset 'mathboard/mb-ink.js' %}"></script>{% endif %}
 {% endblock %}

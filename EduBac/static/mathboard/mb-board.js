@@ -76,10 +76,48 @@
   };
 
   /* =================== État complet =================== */
+  /* Copie locale de l'état (par utilisateur) : le tableau s'ouvre même sans réseau. */
+  Board.prototype._cacheKey = function () { return 'mathboard:state:' + this.config.id + ':' + this.me; };
+  Board.prototype.saveLocal = function () {
+    var self = this;
+    clearTimeout(this._saveLocalTimer);
+    this._saveLocalTimer = setTimeout(function () {
+      try {
+        var text = JSON.stringify({ revision: self.sync.revision, access: self.access, document: self.documentInfo,
+          pages: self.pages, saved: Date.now() });
+        if (text.length > 4000000) { localStorage.removeItem(self._cacheKey()); return; }
+        localStorage.setItem(self._cacheKey(), text);
+      } catch (e) { /* stockage plein ou interdit : pas de copie locale */ }
+    }, 1500);
+  };
+  Board.prototype._fetchState = function () {
+    var self = this;
+    // Copies laissées par un autre compte sur cet appareil : effacées.
+    try {
+      Object.keys(localStorage).forEach(function (key) {
+        if (key.indexOf('mathboard:state:') === 0 && key.split(':')[3] !== String(self.me)) localStorage.removeItem(key);
+      });
+    } catch (e) { /* stockage indisponible */ }
+    return fetch(this.config.urls.state, { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+      .then(function (r) {
+        if (!r.ok) { var err = new Error('Chargement impossible'); err.status = r.status; throw err; }
+        return r.json();
+      })
+      .catch(function (error) {
+        var cached = null;
+        if (!error.status) {  // réseau coupé (pas une réponse du serveur)
+          try { cached = JSON.parse(localStorage.getItem(self._cacheKey()) || 'null'); } catch (e) { cached = null; }
+        }
+        if (!cached) throw error;
+        self.offlineCopy = true;
+        self.ui.toast('Hors ligne : dernière version enregistrée sur cet appareil. Vos modifications seront envoyées au retour du réseau.');
+        return cached;
+      });
+  };
+
   Board.prototype.reload = function () {
     var self = this;
-    return fetch(this.config.urls.state, { credentials: 'same-origin', headers: { Accept: 'application/json' } })
-      .then(function (r) { if (!r.ok) throw new Error('Chargement impossible'); return r.json(); })
+    return this._fetchState()
       .then(function (state) {
         self.access = state.access;
         self.documentInfo = state.document;
@@ -89,6 +127,7 @@
         self.sync.pending().forEach(function (op) { self._applyToMirror(op); });
         var keep = self.pages.some(function (p) { return p.uid === self.pageUid; });
         self.ui.document(state.document, state.access);
+        self.saveLocal();
         return self.showPage(keep ? self.pageUid : self.pages[0].uid);
       })
       .catch(function (error) { self.ui.toast(error.message, 'error'); });
@@ -230,6 +269,7 @@
   Board.prototype.applyRemote = function (op) {
     this._applyToMirror(op);
     this._applyToCanvas(op);
+    this.saveLocal();
   };
 
   /* =================== Actions locales =================== */
@@ -244,6 +284,7 @@
       if (op.kind === 'object.add') delete op.object._by;
     });
     this.sync.submit(ops.map(function (op) { return Object.assign({}, op, { op_id: uid('o') }); }));
+    this.saveLocal();
     if (inverse) {
       this.undoStack.push({ undo: inverse, redo: ops.map(clone), page: this.pageUid });
       if (this.undoStack.length > 100) this.undoStack.shift();
@@ -490,12 +531,79 @@
       ' L ' + x2 + ' ' + y2 + ' L ' + (x2 + head * Math.cos(a2)) + ' ' + (y2 + head * Math.sin(a2));
   }
 
+  /* Contour d'un trait de stylet dont l'épaisseur suit la pression (null si
+   * la pression ne varie pas : souris, doigt, stylet sans capteur). */
+  function pressureShape(points, color, width) {
+    if (!points || points.length < 3) return null;
+    var pressures = points.map(function (p) { return p.p; });
+    var min = Math.min.apply(null, pressures), max = Math.max.apply(null, pressures);
+    if (!(max > 0) || max - min < 0.05) return null;
+    var pts = [points[0]];
+    points.forEach(function (p) {
+      var last = pts[pts.length - 1];
+      if (Math.hypot(p.x - last.x, p.y - last.y) >= 1.5) pts.push(p);
+    });
+    if (pts.length < 3) return null;
+    var half = pts.map(function (p, i) {
+      var a = pts[Math.max(0, i - 1)].p, b = p.p, c = pts[Math.min(pts.length - 1, i + 1)].p;
+      return width * (0.2 + 1.1 * (a + 2 * b + c) / 4) / 2;  // pression lissée
+    });
+    var left = [], right = [];
+    pts.forEach(function (p, i) {
+      var prev = pts[Math.max(0, i - 1)], next = pts[Math.min(pts.length - 1, i + 1)];
+      var dx = next.x - prev.x, dy = next.y - prev.y, len = Math.hypot(dx, dy) || 1;
+      var nx = -dy / len * half[i], ny = dx / len * half[i];
+      left.push([p.x + nx, p.y + ny]);
+      right.push([p.x - nx, p.y - ny]);
+    });
+    function f(v) { return Math.round(v * 100) / 100; }
+    var d = 'M ' + f(left[0][0]) + ' ' + f(left[0][1]);
+    left.slice(1).forEach(function (q) { d += ' L ' + f(q[0]) + ' ' + f(q[1]); });
+    // Extrémités arrondies : point de contrôle placé dans le prolongement du trait.
+    function cap(tip, from, r) {
+      var dx = tip.x - from.x, dy = tip.y - from.y, len = Math.hypot(dx, dy) || 1;
+      return f(tip.x + dx / len * r * 1.3) + ' ' + f(tip.y + dy / len * r * 1.3);
+    }
+    var n = pts.length - 1;
+    d += ' Q ' + cap(pts[n], pts[n - 1], half[n]) + ' ' + f(right[n][0]) + ' ' + f(right[n][1]);
+    right.reverse().slice(1).forEach(function (q) { d += ' L ' + f(q[0]) + ' ' + f(q[1]); });
+    d += ' Q ' + cap(pts[0], pts[1], half[0]) + ' ' + f(left[0][0]) + ' ' + f(left[0][1]) + ' Z';
+    return d;
+  }
+  MB.pressureShape = pressureShape;
+
+  /* Texte arabe : écrit de droite à gauche (première lettre forte arabe). */
+  var ARABIC_FIRST = /^[^A-Za-z\u00C0-\u024F\u0590-\u08FF]*[\u0590-\u08FF]/;
+  function textDirection(text) {
+    if (!text || typeof text.text !== 'string') return;
+    var rtl = ARABIC_FIRST.test(text.text);
+    if (rtl && text.direction !== 'rtl') text.set({ direction: 'rtl', textAlign: 'right' });
+    else if (!rtl && text.direction === 'rtl') text.set({ direction: 'ltr', textAlign: 'left' });
+    if (text.canvas) text.canvas.requestRenderAll();
+  }
+  MB.textDirection = textDirection;
+
+  // Coordonnées écran d'un événement souris ou tactile (un TouchEvent n'a pas de clientX).
+  function clientPoint(e) {
+    var t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || e;
+    return { x: t.clientX, y: t.clientY };
+  }
+
   Board.prototype._bindCanvas = function () {
     var self = this, canvas = this.canvas;
     var drawing = null, panning = null, erasing = null;
 
     canvas.on('path:created', function (e) {
       var path = e.path;
+      if (self._discardStroke) { self._discardStroke = false; self._penStroke = null; canvas.remove(path); return; }
+      // Stylet sensible à la pression : le trait devient une forme d'épaisseur variable.
+      var shaped = pressureShape(self._penStroke, path.stroke, path.strokeWidth);
+      self._penStroke = null;
+      if (shaped) {
+        canvas.remove(path);
+        path = new fabric.Path(shaped, { fill: path.stroke, stroke: null, strokeWidth: 0, opacity: path.opacity });
+        canvas.add(path);
+      }
       path.set({ id: uid('m'), z: self.nextZ() });
       self.byId[path.id] = path;
       self._permissions(path);
@@ -504,8 +612,9 @@
 
     canvas.on('mouse:down', function (opt) {
       var e = opt.e, point = canvas.getScenePoint(e);
+      self._discardStroke = false;
       if (self.tool === 'hand' || e.button === 1 || self.spaceDown) {
-        panning = { x: e.clientX, y: e.clientY };
+        panning = clientPoint(e);
         canvas.defaultCursor = 'grabbing';
         canvas.selection = false;
         return;
@@ -547,8 +656,9 @@
         }, 60);
       }
       if (panning) {
-        canvas.relativePan(new fabric.Point(e.clientX - panning.x, e.clientY - panning.y));
-        panning = { x: e.clientX, y: e.clientY };
+        var now = clientPoint(e);
+        canvas.relativePan(new fabric.Point(now.x - panning.x, now.y - panning.y));
+        panning = now;
         self.ui.cursorsMoved(self);
         return;
       }
@@ -587,8 +697,10 @@
       else self._modified([target]);
     });
 
+    canvas.on('text:changed', function (e) { textDirection(e.target); });
     canvas.on('text:editing:exited', function (e) {
       var text = e.target;
+      textDirection(text);
       if (text.mbNew) {
         text.mbNew = false;
         if (!text.text.trim()) { canvas.remove(text); delete self.byId[text.id]; return; }
@@ -621,6 +733,95 @@
       }
       self.ui.cursorsMoved(self);
     });
+
+    // Pincement à deux doigts (téléphone, tablette) : zoom + déplacement de la vue.
+    // Fabric ne gère qu'un seul doigt ; les événements du pincement sont interceptés
+    // en phase de capture, et le geste commencé par le premier doigt est annulé.
+    var pinch = null;
+    function touchInfo(touches) {
+      var r = canvas.upperCanvasEl.getBoundingClientRect(), a = touches[0], b = touches[1];
+      return { x: (a.clientX + b.clientX) / 2 - r.left, y: (a.clientY + b.clientY) / 2 - r.top,
+        d: Math.max(1, Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)) };
+    }
+    function cancelSingleTouch() {
+      if (canvas.isDrawingMode) { self._discardStroke = true; canvas.clearContext(canvas.contextTop); }
+      if (drawing) { canvas.remove(drawing.shape); drawing = null; }
+      canvas._groupSelector = null;
+      var active = canvas.getActiveObject();
+      if (active && active.mbNew && active.isEditing) active.exitEditing();
+      canvas.requestRenderAll();
+    }
+    canvas.wrapperEl.addEventListener('touchstart', function (e) {
+      if (e.touches.length < 2) return;
+      e.preventDefault(); e.stopPropagation();
+      if (!pinch) cancelSingleTouch();
+      var info = touchInfo(e.touches), v = canvas.viewportTransform;
+      pinch = { start: info, zoom: canvas.getZoom(), tx: v[4], ty: v[5] };
+    }, { capture: true, passive: false });
+    window.addEventListener('touchmove', function (e) {
+      if (!pinch) return;
+      e.preventDefault(); e.stopImmediatePropagation();
+      if (e.touches.length < 2) return;
+      var info = touchInfo(e.touches), s = pinch.start;
+      var zoom = Math.min(8, Math.max(0.1, pinch.zoom * info.d / s.d));
+      var px = (s.x - pinch.tx) / pinch.zoom, py = (s.y - pinch.ty) / pinch.zoom;
+      canvas.setViewportTransform([zoom, 0, 0, zoom, info.x - px * zoom, info.y - py * zoom]);
+      self.ui.zoom(zoom);
+      self.ui.cursorsMoved(self);
+    }, { capture: true, passive: false });
+    function endPinch(e) {
+      if (!pinch) return;
+      if (e.touches.length >= 2) {
+        var info = touchInfo(e.touches), v = canvas.viewportTransform;
+        pinch = { start: info, zoom: canvas.getZoom(), tx: v[4], ty: v[5] };
+      }
+      // Seul le dernier relâchement atteint Fabric, qui termine proprement son geste.
+      if (e.touches.length) { e.stopImmediatePropagation(); return; }
+      pinch = null;
+    }
+    window.addEventListener('touchend', endPinch, { capture: true });
+    window.addEventListener('touchcancel', endPinch, { capture: true });
+
+    // Stylet : pression enregistrée point par point ; dès qu'un stylet a servi,
+    // le doigt et la paume ne dessinent plus (ils déplacent la vue).
+    var wrapper = canvas.wrapperEl;
+    function penPoint(e) {
+      if (e.pointerType !== 'pen' || !self._penStroke) return;
+      var p = canvas.getScenePoint(e);
+      self._penStroke.push({ x: p.x, y: p.y, p: e.pressure || 0 });
+    }
+    wrapper.addEventListener('pointerdown', function (e) {
+      if (e.pointerType !== 'pen') return;
+      if (!self.penSeen) {
+        self.penSeen = true;
+        self.ui.toast('Stylet détecté : le stylet écrit, le doigt déplace la vue.');
+      }
+      self._penStroke = canvas.isDrawingMode ? [] : null;
+      penPoint(e);
+    }, true);
+    wrapper.addEventListener('pointermove', function (e) {
+      if (e.getCoalescedEvents) e.getCoalescedEvents().forEach(penPoint); else penPoint(e);
+    }, true);
+    var fingerPan = null;
+    wrapper.addEventListener('touchstart', function (e) {
+      var touch = e.touches[0];
+      if (!self.penSeen || e.touches.length !== 1 || touch.touchType === 'stylus' || self.tool === 'select' || self.tool === 'hand') return;
+      e.preventDefault(); e.stopPropagation();
+      fingerPan = { x: touch.clientX, y: touch.clientY };
+    }, { capture: true, passive: false });
+    window.addEventListener('touchmove', function (e) {
+      if (!fingerPan || pinch || e.touches.length !== 1) return;
+      e.preventDefault(); e.stopImmediatePropagation();
+      var t = e.touches[0];
+      canvas.relativePan(new fabric.Point(t.clientX - fingerPan.x, t.clientY - fingerPan.y));
+      fingerPan = { x: t.clientX, y: t.clientY };
+      self.ui.cursorsMoved(self);
+    }, { capture: true, passive: false });
+    window.addEventListener('touchend', function (e) {
+      if (!fingerPan || e.touches.length) return;
+      fingerPan = null;
+      e.stopImmediatePropagation();
+    }, { capture: true });
 
     ['selection:created', 'selection:updated', 'selection:cleared'].forEach(function (name) {
       canvas.on(name, function () { self.ui.selection(self.selected(), self); });

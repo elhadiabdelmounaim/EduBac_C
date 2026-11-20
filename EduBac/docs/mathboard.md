@@ -16,7 +16,7 @@ existants.
 | API | Django REST Framework | documents, état, opérations, membres, versions, calcul, présence, export/import, IA |
 | Temps réel | Django Channels + Redis | diffusion des opérations, présence, curseurs |
 | Stockage | PostgreSQL (SQLite accepté) | source de vérité : opérations, état des pages, versions |
-| IA | service FastAPI indépendant (`ai_service/`) | analyser, résoudre, expliquer, vérifier, indice, exercices |
+| IA | service FastAPI indépendant (`ai_service/`) | **désactivé** (`MATHBOARD_AI_ENABLED=0` par défaut : ni bouton ni API) ; code conservé |
 
 Bibliothèques JavaScript servies par le site (`static/vendor/`) : aucune dépendance à un CDN.
 
@@ -84,22 +84,84 @@ l’édition à plusieurs d’un même long texte devient nécessaire, un objet
 * Versions : automatiques toutes les 300 opérations et toutes les 10 minutes
   d’activité (50 conservées), manuelles, et avant chaque restauration.
 
-## 5. Utilisation
+## 5. Fonctions de classe (`mathboard/api_class.py`, `static/mathboard/mb-class.js`)
+
+* **Écriture → texte et formules** (`mathboard/handwriting.py`, `static/mathboard/mb-ink.js`) :
+  le professeur sélectionne ses traits au stylet, « Convertir » dans la barre de
+  sélection. Seule une image PNG des traits sélectionnés (noir sur blanc) est
+  envoyée à Claude, qui renvoie des lignes de segments texte / LaTeX (sans rien
+  résoudre ni corriger). Le résultat s'affiche dans un champ modifiable (formules
+  entre `\(` et `\)`) avec aperçu ; « Insérer » remplace les traits (ou ajoute en
+  dessous) : ligne de texte → texte, ligne avec formule → formule (`\text{…}` pour
+  les mots ; arabe aligné à droite, segments de droite à gauche). Une seule action
+  à annuler. Envoi aux élèves : « Partager » ou « Présenter » comme d'habitude.
+  Enseignants et administrateurs seulement ; 60 conversions par heure et par
+  compte. Désactivé par défaut (voir le guide de déploiement).
+* **Préparer sans partager** : à la création, choisir une classe puis
+  « Préparer sans partager » (choix par défaut). Le document est rattaché à la
+  classe (`class_visible` faux) mais les élèves ne le voient pas, n'y accèdent
+  pas et ne reçoivent rien. Le professeur le prépare ; la liste l'indique
+  « Préparé · non partagé ». Le bandeau « Partager maintenant » de l'éditeur
+  (ou la case « Visible par les élèves » dans « Partager ») le rend visible et
+  prévient la classe une seule fois. Sans le champ, l'API partage tout de suite
+  comme avant.
+* **Travail à rendre** : dans « Partager », cocher « Travail à rendre » (date
+  limite facultative). Chaque élève clique sur « Faire ce travail » et obtient
+  sa **copie** (même contenu que le sujet). Droits : l'élève gère sa copie tant
+  qu'elle est « en cours », puis la lit seulement une fois rendue ; le
+  professeur du sujet ne la voit qu'une fois rendue, l'annote directement,
+  met une note et une appréciation, puis « Rendre la correction » ou
+  « Demander une reprise » (la copie redevient modifiable). Une version est
+  créée à chaque étape. Liste « Travaux à corriger » et « Mes travaux » sur la
+  page d'accueil du tableau ; « Copies des élèves » montre l'état de chaque élève.
+* **Notifications** (dans EduBac et sur le téléphone, jamais par e-mail) :
+  partage avec une classe, travail à rendre, invitation, copie rendue, copie
+  corrigée ou à reprendre.
+* **Présenter (« suivez-moi »)** : les participants voient la page et la zone du
+  professeur, adaptées à leur écran ; chacun peut « Ne plus suivre ». Sans
+  signal du présentateur pendant 90 s (onglet fermé), la présentation s'arrête.
+  Sur PythonAnywhere, la vue suit toutes les 2 s environ.
+* **Participation** : éléments par auteur, « Montrer » (sélection et zoom),
+  « Supprimer » tous ses éléments (version créée avant).
+* **Téléphone et stylet** : deux doigts zooment ; avec un stylet, l'épaisseur
+  suit la pression et, dès qu'un stylet a servi, le doigt ou la paume déplacent
+  la vue au lieu d'écrire.
+* **Texte arabe** : écrit automatiquement de droite à gauche.
+* **Images** : envoyées comme fichiers (`media/mathboard/<document>/`, nom
+  aléatoire, métadonnées supprimées, 1600 px au plus) ; seule l'adresse est
+  dans la base. Hors ligne, l'image voyage dans l'opération (2 Mo au plus) puis
+  `mathboard_cleanup` la déplace en fichier. Les fichiers de `/media/` sont
+  publics pour qui connaît leur adresse (aléatoire), comme les autres médias.
+* **Hors connexion** : la page d'un tableau déjà ouvert et la dernière copie de
+  son contenu sont gardées sur l'appareil ; le tableau s'ouvre sans réseau et
+  les modifications partent au retour du réseau. Cette copie est effacée à la
+  déconnexion (page) et quand un autre compte ouvre un tableau (contenu).
+* **Anciens tableaux** : bouton « Convertir vers le tableau mathématique » dans
+  la liste de l'ancien tableau (ou `python manage.py mathboard_convert_legacy --all`).
+  L'ancien tableau reste intact. Non repris : coups de gomme, réponses aux
+  repères ; les curseurs d'un repère deviennent des commentaires (`#`).
+* **Alertes d'erreurs** (tout le site) : une erreur serveur (500) ou une erreur
+  JavaScript chez un utilisateur crée une notification pour les administrateurs
+  (une fois par heure par erreur, avec le nombre d'occurrences).
+
+## 6. Utilisation
 
 **Enseignant** : créer un document (niveau, chapitre, classe) ; écrire,
 dessiner, insérer formules et figures ; calcul exact (menu « Formule ») ;
 asymptotes et tableau de variations d’une fonction (menu « Figure ») ;
-« Partager » : classe, écriture des élèves, membres invités ; « Versions » ;
+« Partager » : classe, écriture des élèves, travail à rendre, membres invités ;
+« Présenter » ; « Participation » ; « Versions » ;
 « Exporter » : PNG, SVG, PDF, fichier EduBac (réimportable).
 
 **Élève** : brouillons personnels (et invitation de camarades), exercices
-partagés par le professeur, calculs, graphiques, assistant IA (indice,
-explication, vérification de sa réponse — vérifiée par SymPy quand c’est
-possible).
+partagés par le professeur, travaux à rendre (copie, rendu, correction),
+calculs exacts, graphiques.
 
 Raccourcis : V sélection, H vue, P crayon, E gomme, T texte, R rectangle,
 O ellipse, L ligne, A flèche, Ctrl+Z / Ctrl+Y, Ctrl+C / X / V, Ctrl+D,
 Ctrl+A, Suppr, Espace + glisser (vue), molette (zoom).
+Sur téléphone et tablette : un doigt dessine (ou déplace la vue avec l’outil main),
+deux doigts écartés ou rapprochés zooment et déplacent la vue.
 
 Langage des figures : `A = (x, y)`, `Segment(A, B)`, `Droite(A, B)`,
 `DemiDroite(A, B)`, `Cercle(A, B)` ou `Cercle(A, r)`, `Triangle(A, B, C)`,
@@ -108,11 +170,11 @@ Langage des figures : `A = (x, y)`, `Segment(A, B)`, `Droite(A, B)`,
 `f(x) = …`, `Tangente(f, a)`, `Verticale(a)`, `Texte((x, y), "…")` ;
 options en fin de ligne : `[rouge pointillé épais]`.
 
-## 6. Tests
+## 7. Tests
 
 ```bash
 python manage.py test mathboard edubac_math ai_service      # serveur + SymPy + service IA
-python manage.py test browser_tests.test_mathboard --settings=browser_tests.settings
+python manage.py test browser_tests.test_mathboard browser_tests.test_mathboard_class --settings=browser_tests.settings
 # Production (ASGI + WebSocket + Redis + PostgreSQL), voir docs/mathboard-deploiement.md :
 BROWSER_TEST_POSTGRES=1 REDIS_URL=redis://… DATABASE_URL=postgresql://… \
   python manage.py test browser_tests.test_mathboard_realtime --settings=browser_tests.settings

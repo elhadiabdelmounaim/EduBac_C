@@ -11,19 +11,19 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
-from . import realtime
+from . import notify, realtime
 from .access import access_level, can, can_invite, can_share_with_classroom, visible_documents
 from .models import WhiteboardDocument, WhiteboardMember, WhiteboardPage, WhiteboardSnapshot
 from .operations import (
     OpError, apply_operations, create_snapshot, document_state, operations_since, restore_snapshot,
 )
-from .serializers import DocumentSerializer, MemberSerializer, SnapshotSerializer
+from .serializers import DocumentSerializer, MemberSerializer, SnapshotSerializer, presentation_data
 
 User = get_user_model()
 
 
 def _document(request, pk, needed='view'):
-    document = get_object_or_404(WhiteboardDocument.objects.select_related('classroom', 'owner'), pk=pk)
+    document = get_object_or_404(WhiteboardDocument.objects.select_related('classroom', 'owner', 'source__classroom'), pk=pk)
     level = access_level(request.user, document)
     if level is None:
         raise NotFound('Document introuvable.')  # ne pas révéler son existence
@@ -54,6 +54,8 @@ class DocumentListView(APIView):
         with transaction.atomic():
             document = serializer.save(owner=request.user)
             WhiteboardPage.objects.create(document=document, uid='page-1', position=0)
+        if document.classroom_id and document.class_visible:
+            notify.classroom_shared(document, request.user)
         return Response(DocumentSerializer(document, context={'levels': {document.pk: 'manage'}}).data,
                         status=status.HTTP_201_CREATED)
 
@@ -69,7 +71,15 @@ class DocumentDetailView(APIView):
         serializer.is_valid(raise_exception=True)
         if 'classroom' in serializer.validated_data:
             _check_classroom(request.user, serializer.validated_data)
+        before = (document.classroom_id, document.accepts_submissions, document.class_visible)
         document = serializer.save()
+        newly_assigned = document.accepts_submissions and not before[1]
+        newly_visible = document.class_visible and not before[2]
+        if document.classroom_id and document.class_visible and (
+                document.classroom_id != before[0] or newly_assigned or newly_visible):
+            # Nouvelle classe, document enfin partagé ou devenu un travail à rendre :
+            # les élèves sont prévenus. Tant qu'il est « préparé », rien n'est envoyé.
+            notify.classroom_shared(document, request.user)
         realtime.publish(document.pk, {'type': 'document', 'document': DocumentSerializer(document).data})
         return Response(DocumentSerializer(document, context={'levels': {document.pk: level}}).data)
 
@@ -95,12 +105,18 @@ class OperationsView(APIView):
     throttle_scope = 'mathboard_ops'
 
     def get(self, request, pk):
-        document, _ = _document(request, pk)
+        document, level = _document(request, pk)
         try:
             since = int(request.query_params.get('since', ''))
         except ValueError:
             raise ValidationError({'since': 'Révision attendue.'})
-        return Response(operations_since(document, since))
+        # La présentation en cours et l'empreinte des réglages accompagnent le
+        # rattrapage : sans WebSocket, le client voit ainsi un changement de droits.
+        settings_key = '|'.join(str(v) for v in (
+            level, document.submission_status, document.classroom_id, document.students_can_edit, document.class_visible,
+            document.accepts_submissions, document.grade, document.returned_at))
+        return Response({**operations_since(document, since), 'presentation': presentation_data(document),
+                         'settings': settings_key})
 
     def post(self, request, pk):
         document, _ = _document(request, pk, 'edit')
@@ -125,6 +141,8 @@ class MemberListView(APIView):
 
     def post(self, request, pk):
         document, _ = _document(request, pk, 'manage')
+        if document.submission_status:
+            raise ValidationError({'user': 'Une copie d’élève ne se partage pas.'})
         role = request.data.get('role', WhiteboardMember.ROLE_VIEWER)
         if role not in dict(WhiteboardMember.ROLES):
             raise ValidationError({'role': 'Rôle invalide.'})
@@ -137,6 +155,8 @@ class MemberListView(APIView):
             raise ValidationError({'user': 'Le propriétaire a déjà tous les droits.'})
         member, created = WhiteboardMember.objects.update_or_create(
             document=document, user=target, defaults={'role': role, 'added_by': request.user})
+        if created:
+            notify.member_invited(member, request.user)
         return Response(MemberSerializer(member).data,
                         status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
@@ -334,7 +354,10 @@ class AssistantView(APIView):
     throttle_scope = 'mathboard_ai'
 
     def post(self, request, pk, action):
+        from django.conf import settings
         from .ai_client import AIServiceError, call_ai_service
+        if not settings.MATHBOARD_AI_ENABLED:
+            raise NotFound('Assistant désactivé.')
         document, _ = _document(request, pk)
         try:
             result = call_ai_service(action, document, request.user, request.data)

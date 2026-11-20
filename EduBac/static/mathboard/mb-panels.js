@@ -11,7 +11,9 @@
 
   function api(method, url, body) {
     var headers = { Accept: 'application/json' };
-    if (body !== undefined) { headers['Content-Type'] = 'application/json'; headers['X-CSRFToken'] = csrf(); }
+    // Jeton CSRF pour toute écriture, avec ou sans corps (POST vide, DELETE).
+    if (method !== 'GET') headers['X-CSRFToken'] = csrf();
+    if (body !== undefined) headers['Content-Type'] = 'application/json';
     return fetch(url, { method: method, credentials: 'same-origin', headers: headers,
       body: body === undefined ? undefined : JSON.stringify(body) }).then(function (r) {
       if (r.status === 204) return null;
@@ -148,6 +150,8 @@
       bar.hidden = !objects.length || !b.canEdit();
       var special = objects.length === 1 && objects[0].mb;
       bar.querySelector('[data-act="edit"]').hidden = !special;
+      var convert = bar.querySelector('[data-act="convert"]');
+      if (convert) convert.hidden = !(MB.Ink && MB.Ink.available(objects));
     },
   };
   MB.UI = UI;
@@ -416,9 +420,18 @@
       return '<option value="' + esc(l.code) + '">' + esc(l.label) + '</option>'; }).join('');
     cls.value = doc.classroom || ''; lvl.value = doc.level || '';
     $('mbShareChapter').value = doc.chapter || ''; $('mbShareEdit').checked = !!doc.students_can_edit;
+    $('mbShareTask').checked = !!doc.accepts_submissions;
+    $('mbShareDue').value = doc.due_at ? localInput(new Date(doc.due_at)) : '';
+    $('mbShareDueRow').hidden = !doc.accepts_submissions;
+    $('mbShareVisible').checked = doc.class_visible !== false;
+    $('mbShareVisibleRow').hidden = !doc.classroom;
     $('mbShareError').textContent = '';
     loadMembers();
     $('mbShareDialog').showModal();
+  }
+  function localInput(date) {
+    function two(n) { return (n < 10 ? '0' : '') + n; }
+    return date.getFullYear() + '-' + two(date.getMonth() + 1) + '-' + two(date.getDate()) + 'T' + two(date.getHours()) + ':' + two(date.getMinutes());
   }
   function loadMembers() {
     var list = $('mbMembersList');
@@ -479,11 +492,26 @@
         c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
         c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
         var type = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
-        var src = c.toDataURL(type, 0.85);
-        if (src.length > 1900000) src = c.toDataURL('image/jpeg', 0.7);
-        if (src.length > 1900000) { UI.toast('Image trop lourde, même compressée.', 'error'); return; }
         var fit = Math.min(1, 600 / Math.max(c.width, c.height)), spot = board.freeSpot(c.width * fit, c.height * fit);
-        board.addModel({ type: 'image', src: src, left: spot.left, top: spot.top, scaleX: fit, scaleY: fit }, true);
+        function place(src) { board.addModel({ type: 'image', src: src, left: spot.left, top: spot.top, scaleX: fit, scaleY: fit }, true); }
+        function embedded() {
+          // Hors ligne : l'image voyage dans l'opération (2 Mo au plus).
+          var src = c.toDataURL(type, 0.85);
+          if (src.length > 1900000) src = c.toDataURL('image/jpeg', 0.7);
+          if (src.length > 1900000) { UI.toast('Image trop lourde, même compressée.', 'error'); return; }
+          place(src);
+        }
+        if (!navigator.onLine) { embedded(); return; }
+        // En ligne : fichier enregistré sur le serveur, l'objet ne garde que son adresse.
+        c.toBlob(function (blob) {
+          var form = new FormData();
+          form.append('image', blob, 'image.' + (type === 'image/png' ? 'png' : 'jpg'));
+          fetch(config.urls.images, { method: 'POST', credentials: 'same-origin', body: form,
+            headers: { 'X-CSRFToken': csrf(), Accept: 'application/json' } })
+            .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.detail || 'Envoi impossible'); return d; }); })
+            .then(function (data) { place(data.src); })
+            .catch(function (error) { if (!navigator.onLine) embedded(); else UI.toast(error.message, 'error'); });
+        }, type, 0.9);
       };
       img.src = reader.result;
     };
@@ -520,7 +548,8 @@
       var btn = e.target.closest('button[data-act]');
       if (!btn) return;
       var act = btn.dataset.act;
-      if (act === 'delete') board.deleteSelected();
+      if (act === 'convert') { if (MB.Ink) MB.Ink.open(); }
+      else if (act === 'delete') board.deleteSelected();
       else if (act === 'copy') board.copy(false);
       else if (act === 'duplicate') board.duplicate();
       else if (act === 'edit') {
@@ -564,11 +593,13 @@
     $('mbGeoSave').addEventListener('click', saveGeometry);
     $('mbGeoCancel').addEventListener('click', function () { $('mbGeoDialog').close(); });
 
-    // IA
-    $('mbAiBtn').addEventListener('click', openAi);
-    $('mbAiClose').addEventListener('click', function () { $('mbAiPanel').hidden = true; });
-    document.querySelectorAll('[data-ai]').forEach(function (btn) { btn.addEventListener('click', function () { askAi(btn.dataset.ai); }); });
-    $('mbAiInsert').addEventListener('click', insertAi);
+    // IA (désactivée par réglage : ni bouton ni panneau)
+    if (config.aiEnabled && $('mbAiBtn')) {
+      $('mbAiBtn').addEventListener('click', openAi);
+      $('mbAiClose').addEventListener('click', function () { $('mbAiPanel').hidden = true; });
+      document.querySelectorAll('[data-ai]').forEach(function (btn) { btn.addEventListener('click', function () { askAi(btn.dataset.ai); }); });
+      $('mbAiInsert').addEventListener('click', insertAi);
+    }
 
     // Versions
     $('mbVersionsBtn').addEventListener('click', function () { loadVersions(); $('mbVersionsDialog').showModal(); });
@@ -582,10 +613,15 @@
     $('mbShareBtn').addEventListener('click', openShare);
     $('mbShareSave').addEventListener('click', function () {
       api('PATCH', config.urls.document, { classroom: $('mbShareClass').value ? Number($('mbShareClass').value) : null,
-        level: $('mbShareLevel').value, chapter: $('mbShareChapter').value, students_can_edit: $('mbShareEdit').checked })
+        level: $('mbShareLevel').value, chapter: $('mbShareChapter').value, students_can_edit: $('mbShareEdit').checked,
+        class_visible: $('mbShareVisible').checked,
+        accepts_submissions: $('mbShareTask').checked,
+        due_at: $('mbShareTask').checked && $('mbShareDue').value ? new Date($('mbShareDue').value).toISOString() : null })
         .then(function (doc) { board.documentInfo = doc; UI.document(doc, board.access); UI.toast('Réglages enregistrés.'); $('mbShareError').textContent = ''; })
         .catch(function (e) { $('mbShareError').textContent = e.message; });
     });
+    $('mbShareTask').addEventListener('change', function () { $('mbShareDueRow').hidden = !this.checked; });
+    $('mbShareClass').addEventListener('change', function () { $('mbShareVisibleRow').hidden = !this.value; });
     $('mbMemberAdd').addEventListener('click', function () {
       var name = $('mbMemberName').value.trim();
       if (!name) return;

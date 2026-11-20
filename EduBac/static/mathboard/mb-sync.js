@@ -175,6 +175,13 @@
     this.pulling = this._request('GET', this.urls.ops + '?since=' + this.revision)
       .then(function (data) {
         self.pulling = null;
+        if ('presentation' in data) self.emit('presentation', data.presentation);
+        if (data.settings && data.settings !== self.settingsKey) {
+          // Droits ou état du travail changés (copie rendue, corrigée, partage modifié) : rechargement.
+          var first = self.settingsKey === undefined;
+          self.settingsKey = data.settings;
+          if (!first) { self.emit('reset', { revision: data.revision }); return; }
+        }
         if (data.reset) { self.emit('reset', { revision: data.revision }); return; }
         self._applyRemote(data.ops || []);
         self.revision = Math.max(self.revision, data.revision || 0);
@@ -228,6 +235,7 @@
       else if (message.type === 'cursor') { if (message.client_id !== self.clientId) self.emit('cursor', message); }
       else if (message.type === 'document') self.emit('document', message);
       else if (message.type === 'revoked') self.emit('revoked', message);
+      else if (message.type === 'presentation') self.emit('presentation', message.presentation);
     };
     socket.onclose = function (event) {
       var wasOpen = self.socketOpen;

@@ -68,10 +68,19 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
     'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],
     'DEFAULT_PARSER_CLASSES': ['rest_framework.parsers.JSONParser'],
-    'DEFAULT_THROTTLE_RATES': {'mathboard_ops': '600/min', 'mathboard_calc': '40/min', 'mathboard_ai': '30/hour'},
+    'DEFAULT_THROTTLE_RATES': {'mathboard_ops': '600/min', 'mathboard_calc': '40/min', 'mathboard_ai': '30/hour',
+                               'mathboard_upload': '30/min', 'mathboard_handwriting': '60/hour', 'client_errors': '20/min'},
     'UNAUTHENTICATED_USER': None,
 }
 
+# Assistant IA du tableau : désactivé (aucun bouton, API fermée) tant que
+# MATHBOARD_AI_ENABLED n'est pas mis à 1. Le code reste prêt pour plus tard.
+MATHBOARD_AI_ENABLED = os.getenv('MATHBOARD_AI_ENABLED', '0').lower() in ('1', 'true', 'yes')
+# Écriture manuscrite → texte et formules (bouton « Convertir », enseignants).
+# Désactivé par défaut ; exige ANTHROPIC_API_KEY et `pip install -r requirements-ecriture.txt`.
+MATHBOARD_HANDWRITING_ENABLED = os.getenv('MATHBOARD_HANDWRITING_ENABLED', '0').lower() in ('1', 'true', 'yes')
+MATHBOARD_HANDWRITING_MODEL = os.getenv('MATHBOARD_HANDWRITING_MODEL', 'claude-opus-5-5')
+ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY', '')
 # Service IA indépendant (FastAPI, dossier ai_service/) : URL interne + jeton partagé.
 # Les clés des fournisseurs d'IA restent dans ce service, jamais dans le navigateur.
 MATHBOARD_AI_URL = os.getenv('MATHBOARD_AI_URL', '').rstrip('/')
@@ -331,12 +340,16 @@ LOGGING = {
     },
     'handlers': {
         'quiz_console': {'class': 'logging.StreamHandler'},
+        # Erreurs serveur (500) et erreurs des navigateurs : notification aux administrateurs.
+        'admin_alerts': {'class': 'config.error_alerts.AdminAlertHandler', 'level': 'ERROR'},
         'email_console': {
             'class': 'logging.StreamHandler',
             'formatter': 'email_trace',
         },
     },
     'loggers': {
+        'django.request': {'handlers': ['admin_alerts'], 'level': 'ERROR', 'propagate': True},
+        'edubac.client': {'handlers': ['admin_alerts', 'quiz_console'], 'level': 'ERROR', 'propagate': False},
         'ai.services': {'handlers': ['quiz_console'], 'level': 'INFO', 'propagate': False},
         'quizzes.generation': {'handlers': ['quiz_console'], 'level': 'INFO', 'propagate': False},
         'accounts.views': {

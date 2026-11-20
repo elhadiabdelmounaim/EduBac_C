@@ -6,7 +6,7 @@ main:has(.mb-app) { padding: 0 !important; }
   --mb-accent: var(--nb-teal, #1d4fa3); --mb-surface: var(--nb-surface, #fff); --mb-paper: var(--nb-paper, #f4f6fb);
 }
 .mb-app {
-  position: relative; display: grid; grid-template-rows: auto 1fr auto;
+  position: relative; display: flex; flex-direction: column;
   height: calc(100dvh - var(--navbar-height, 64px)); min-height: 420px; background: var(--mb-paper); color: var(--mb-ink);
 }
 .mb-top { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-bottom: 1px solid var(--mb-line); background: var(--mb-surface); flex-wrap: wrap; }
@@ -27,7 +27,7 @@ main:has(.mb-app) { padding: 0 !important; }
 .mb-icon-btn { display: inline-grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 1px solid transparent; border-radius: 8px; background: none; color: var(--mb-ink); }
 .mb-icon-btn:hover { border-color: var(--mb-line); background: var(--mb-paper); }
 .mb-icon-btn.is-danger, .mb-selection .is-danger { color: #c92a2a; }
-.mb-body { position: relative; display: grid; grid-template-columns: auto 1fr auto; min-height: 0; }
+.mb-body { position: relative; display: grid; grid-template-columns: auto 1fr auto; flex: 1 1 auto; min-height: 0; }
 .mb-tools { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 6px; border-right: 1px solid var(--mb-line); background: var(--mb-surface); overflow-y: auto; }
 .mb-tool { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 1px solid transparent; border-radius: 10px; background: none; color: var(--mb-ink); font-size: 1.1rem; }
 .mb-tool small { display: block; font-size: .55rem; font-weight: 600; line-height: 1; }
@@ -109,6 +109,7 @@ main:has(.mb-app) { padding: 0 !important; }
 @media (max-width: 991.98px) {
   .mb-geo { grid-template-columns: 1fr; }
   .mb-top-actions .mb-btn span { display: none; }
+  .mb-top-actions #mbWorkBtn span { display: inline; }  /* action principale de l'élève : libellé gardé */
   .mb-side { position: absolute; right: 0; top: 0; bottom: 0; z-index: 10; box-shadow: -8px 0 24px rgba(0, 0, 0, .12); }
 }
 @media (max-width: 575.98px) {
@@ -118,3 +119,27 @@ main:has(.mb-app) { padding: 0 !important; }
   .mb-span2 { grid-column: auto; }
   .mb-pages { max-width: 45vw; }
 }
+
+/* Bandeaux : présentation en cours, état du travail à rendre. */
+.mb-banner { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 6px 12px; border-bottom: 1px solid var(--mb-line); background: #e7f5ff; color: #1864ab; font-size: .86rem; }
+.mb-banner[hidden] { display: none; }
+.mb-banner-work { background: #fff9db; color: #5c4400; }
+.mb-banner a { color: inherit; font-weight: 700; }
+.mb-banner-actions { display: flex; gap: 6px; }
+.mb-btn.is-active { border-color: #1864ab; background: #1864ab; color: #fff; }
+.mb-badge-task { background: #fff3bf; color: #7a5b00; }
+.mb-badge-hidden { background: #f1f3f5; color: #495057; }
+.mb-banner-prepared { background: #f1f3f5; color: #343a40; }
+.mb-badge-draft { background: #e7f5ff; color: #1864ab; }
+.mb-badge-submitted { background: #fff3bf; color: #7a5b00; }
+.mb-badge-returned { background: #d3f9d8; color: #2b8a3e; }
+.mb-badge-none { background: #f1f3f5; color: #495057; }
+.mb-work-state { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.mb-work-feedback { padding: 10px 12px; border-left: 4px solid #2b8a3e; border-radius: 8px; background: #ebfbee; white-space: pre-line; }
+
+/* Conversion de l'écriture manuscrite */
+.mb-ink-source { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; }
+.mb-ink-preview { min-height: 48px; max-height: 40vh; overflow: auto; padding: 10px 12px; border: 1px solid #dee2e6; border-radius: 8px; background: #fff; color: #1f2937; }
+.mb-ink-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 32px; }
+.mb-ink-math img { max-height: 48px; vertical-align: middle; }
+.mb-ink-math.is-invalid { color: #c92a2a; text-decoration: wavy underline; }

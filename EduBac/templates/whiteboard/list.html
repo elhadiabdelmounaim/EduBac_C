@@ -13,7 +13,7 @@
     </button>{% endif %}
 </div>
 <div class="alert alert-info d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4" role="note">
-    <span><strong>Nouveau :</strong> le tableau mathématique collaboratif — formules (MathLive), calcul exact, figures et courbes (JSXGraph), versions et assistant IA.</span>
+    <span><strong>Nouveau :</strong> le tableau mathématique collaboratif — formules (MathLive), calcul exact, figures et courbes (JSXGraph), travaux à rendre et versions.{% if is_teacher %} « Convertir » copie un ancien tableau dans le nouveau.{% endif %}</span>
     <a class="btn btn-sm btn-edubac" href="{% url 'mathboard:list' %}">Ouvrir le tableau mathématique</a>
 </div>
 
@@ -57,6 +57,9 @@
                 {% if is_teacher and b.created_by_id == user.id %}
                 <form method="post" action="{% url 'whiteboard:duplicate' b.pk %}" class="d-inline">{% csrf_token %}
                     <button class="btn btn-sm btn-outline-secondary">Dupliquer</button>
+                </form>
+                <form method="post" action="{% url 'mathboard:convert_legacy' b.pk %}" class="d-inline">{% csrf_token %}
+                    <button class="btn btn-sm btn-outline-primary" title="Crée une copie dans le tableau mathématique ; ce tableau reste intact">Convertir vers le tableau mathématique</button>
                 </form>
                 <form method="post" action="{% url 'whiteboard:delete' b.pk %}" class="d-inline"
                       onsubmit="return confirm('Archiver ce tableau ?');">{% csrf_token %}

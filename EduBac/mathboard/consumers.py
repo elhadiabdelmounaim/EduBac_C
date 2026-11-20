@@ -96,7 +96,7 @@ class MathboardConsumer(AsyncJsonWebsocketConsumer):
     def _level(self):
         from .access import access_level
         from .models import WhiteboardDocument
-        document = WhiteboardDocument.objects.select_related('classroom').filter(pk=self.document_id).first()
+        document = WhiteboardDocument.objects.select_related('classroom', 'source__classroom').filter(pk=self.document_id).first()
         return access_level(self.user, document) if document else None
 
     @database_sync_to_async

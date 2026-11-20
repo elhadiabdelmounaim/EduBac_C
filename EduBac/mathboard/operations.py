@@ -46,7 +46,7 @@ MAX_PAGES = 200
 MAX_DEPTH = 12
 AUTO_SNAPSHOT_EVERY = 300           # opérations
 AUTO_SNAPSHOT_KEEP = 50
-IMAGE_SRC_RE = re.compile(r'^(data:image/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+|/media/mathboard/[\w\-./]+)$')
+IMAGE_SRC_RE = re.compile(r'^(data:image/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+|/tableau-maths/\d+/images/[0-9a-f]{32}\.(png|jpg|webp)|/media/mathboard/[\w\-./]+)$')
 FORBIDDEN_LATEX = re.compile(r'\\(href|url|html\w*|class|cssId|style|data|require)\b')
 
 
@@ -354,10 +354,33 @@ def _maybe_auto_snapshot(document):
     if done < AUTO_SNAPSHOT_EVERY and not (old and done >= AUTO_SNAPSHOT_MIN_OPS):
         return
     create_snapshot(document, WhiteboardSnapshot.KIND_AUTO)
+    prune_operations(document)
     stale = list(document.snapshots.filter(kind=WhiteboardSnapshot.KIND_AUTO)
                  .order_by('-revision').values_list('pk', flat=True)[AUTO_SNAPSHOT_KEEP:])
     if stale:
         WhiteboardSnapshot.objects.filter(pk__in=stale).delete()
+
+
+KEEP_OPERATIONS = 2000              # opérations gardées par document au minimum
+KEEP_OPERATIONS_DAYS = 7            # et toutes celles des 7 derniers jours
+
+
+def prune_operations(document):
+    """Supprime le vieux journal : l'état des pages et les versions suffisent.
+
+    On garde les 2000 dernières opérations et celles de la dernière semaine (un
+    client plus en retard recharge l'état complet, voir operations_since). Les
+    renvois d'opérations très anciennes restent sûrs : un ajout déjà présent est
+    refusé, une modification ou une suppression se rejoue sans dommage.
+    """
+    from datetime import timedelta
+    limit = document.revision - KEEP_OPERATIONS
+    if limit <= 0:
+        return 0
+    deleted, _ = WhiteboardOperation.objects.filter(
+        document=document, revision__lte=limit,
+        created_at__lt=timezone.now() - timedelta(days=KEEP_OPERATIONS_DAYS)).delete()
+    return deleted
 
 
 def restore_snapshot(document, snapshot, user):

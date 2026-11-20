@@ -4,7 +4,7 @@
 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
   <div>
     <h1 class="h3 mb-1">Tableau mathématique</h1>
-    <p class="text-muted mb-0">Formules, calcul exact, figures et courbes, en direct avec la classe. Enregistrement automatique.</p>
+    <p class="text-muted mb-0">Formules, calcul exact, figures et courbes, en direct avec la classe. Travaux à rendre et corrigés. Enregistrement automatique.</p>
   </div>
   <div class="d-flex gap-2">
     <label class="btn btn-outline-secondary mb-0" for="mbImportFile"><i class="bi bi-upload" aria-hidden="true"></i> Importer un fichier</label>
@@ -16,7 +16,7 @@
   <div class="card-body">
     <h2 id="mbNewTitle" class="h6 fw-bold">Nouveau document</h2>
     <form id="mbNewForm" class="row g-2 align-items-end" novalidate>
-      <div class="col-12 col-md-4"><label class="form-label small" for="mbNewName">Titre</label>
+      <div class="col-12 col-md-5"><label class="form-label small" for="mbNewName">Titre</label>
         <input id="mbNewName" class="form-control" required maxlength="200" placeholder="Ex. : Étude de fonctions — séance 3"></div>
       <div class="col-6 col-md-2"><label class="form-label small" for="mbNewLevel">Niveau</label>
         <select id="mbNewLevel" class="form-select"><option value="">—</option>
@@ -24,21 +24,66 @@
       <div class="col-6 col-md-3"><label class="form-label small" for="mbNewChapter">Chapitre</label>
         <input id="mbNewChapter" class="form-control" maxlength="200" placeholder="Ex. : Limites"></div>
       {% if classrooms %}
-      <div class="col-12 col-md-2"><label class="form-label small" for="mbNewClass">Partager avec</label>
-        <select id="mbNewClass" class="form-select"><option value="">Personne</option>
+      <div class="col-12 col-md-2"><label class="form-label small" for="mbNewClass">Classe</label>
+        <select id="mbNewClass" class="form-select"><option value="">Aucune (personnel)</option>
           {% for c in classrooms %}<option value="{{ c.pk }}">{{ c.name }}</option>{% endfor %}</select></div>
+      <fieldset class="col-12 col-md" id="mbNewVisibility" disabled>
+        <legend class="visually-hidden">Partage avec la classe</legend>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" name="mbNewVisible" id="mbNewLater" value="0" checked>
+          <label class="form-check-label small" for="mbNewLater">Préparer sans partager <span class="text-muted">(les élèves ne le voient pas encore)</span></label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" name="mbNewVisible" id="mbNewNow" value="1">
+          <label class="form-check-label small" for="mbNewNow">Partager tout de suite <span class="text-muted">(les élèves sont prévenus)</span></label>
+        </div>
+      </fieldset>
       {% endif %}
-      <div class="col-12 col-md-1 d-grid"><button class="btn btn-edubac" type="submit">Créer</button></div>
+      <div class="col-12 col-md-auto d-grid ms-md-auto"><button class="btn btn-edubac" type="submit">Créer</button></div>
       <p class="text-danger small mb-0" id="mbNewError" role="alert"></p>
     </form>
   </div>
 </section>
 
+{% if to_grade %}
+<section class="mb-4" aria-labelledby="mbToGradeTitle">
+  <h2 id="mbToGradeTitle" class="h5 fw-bold">Travaux à corriger <span class="badge text-bg-warning">{{ to_grade|length }}</span></h2>
+  <div class="mb-docs">
+    {% for doc in to_grade %}
+    <a class="mb-doc" href="{% url 'mathboard:editor' doc.pk %}">
+      <span class="mb-badge mb-badge-submitted">Rendu</span>
+      <strong>{{ doc.owner.get_full_name|default:doc.owner.username }}</strong>
+      <span class="mb-doc-meta">{{ doc.source.title|default:doc.title }}</span>
+      <span class="mb-doc-meta">rendu le {{ doc.submitted_at|date:"d/m/Y H:i" }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if my_work %}
+<section class="mb-4" aria-labelledby="mbMyWorkTitle">
+  <h2 id="mbMyWorkTitle" class="h5 fw-bold">Mes travaux</h2>
+  <div class="mb-docs">
+    {% for doc in my_work %}
+    <a class="mb-doc" href="{% url 'mathboard:editor' doc.pk %}">
+      <span class="mb-badge mb-badge-{{ doc.submission_status }}">{{ doc.get_submission_status_display }}</span>
+      <strong>{{ doc.title }}</strong>
+      <span class="mb-doc-meta">{% if doc.submission_status == 'returned' and doc.grade %}Note : {{ doc.grade }} · {% endif %}modifié le {{ doc.updated_at|date:"d/m/Y H:i" }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
 {% if documents %}
+<h2 class="h5 fw-bold">Documents</h2>
 <div class="mb-docs">
   {% for doc in documents %}
   <a class="mb-doc" href="{% url 'mathboard:editor' doc.pk %}">
     <span class="mb-badge">{% if doc.my_access == 'manage' %}Gestion{% elif doc.my_access == 'edit' %}Modification{% else %}Lecture{% endif %}</span>
+    {% if doc.classroom and not doc.class_visible %}<span class="mb-badge mb-badge-hidden">Préparé · non partagé</span>{% endif %}
+    {% if doc.accepts_submissions %}<span class="mb-badge mb-badge-task">Travail à rendre{% if doc.due_at %} · {{ doc.due_at|date:"d/m H:i" }}{% endif %}</span>{% endif %}
     <strong>{{ doc.title }}</strong>
     <span class="mb-doc-meta">{% if doc.chapter %}{{ doc.chapter }} · {% endif %}{{ doc.owner.get_full_name|default:doc.owner.username }}</span>
     <span class="mb-doc-meta">{% if doc.classroom %}Classe {{ doc.classroom.name }} · {% endif %}modifié le {{ doc.updated_at|date:"d/m/Y H:i" }}</span>
@@ -61,13 +106,19 @@
   var editor = '{% url "mathboard:editor" 0 %}';
   function open(doc) { location.href = editor.replace('/0/', '/' + doc.id + '/'); }
   var error = document.getElementById('mbNewError');
+  var newClass = document.getElementById('mbNewClass');
+  if (newClass) newClass.addEventListener('change', function () {
+    // Sans classe, le document est personnel : le choix de partage n'a pas d'objet.
+    document.getElementById('mbNewVisibility').disabled = !this.value;
+  });
   document.getElementById('mbNewForm').addEventListener('submit', function (e) {
     e.preventDefault();
     var title = document.getElementById('mbNewName').value.trim();
     if (!title) { error.textContent = 'Donnez un titre au document.'; return; }
-    var cls = document.getElementById('mbNewClass');
+    var cls = document.getElementById('mbNewClass'), now = document.getElementById('mbNewNow');
     post('{% url "mathboard:api_documents" %}', { title: title, level: document.getElementById('mbNewLevel').value,
-      chapter: document.getElementById('mbNewChapter').value, classroom: cls && cls.value ? Number(cls.value) : null })
+      chapter: document.getElementById('mbNewChapter').value, classroom: cls && cls.value ? Number(cls.value) : null,
+      class_visible: !!(now && now.checked) })
       .then(open).catch(function (err) { error.textContent = err.message; });
   });
   document.getElementById('mbImportFile').addEventListener('change', function () {

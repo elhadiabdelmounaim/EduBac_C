@@ -25,6 +25,7 @@ services:
       DATABASE_URL: "postgresql://${POSTGRES_USER:?Set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:?Set POSTGRES_DB in .env}"
       REDIS_URL: redis://redis:6379/0
       MATHBOARD_WEBSOCKET: "1"
+      MATHBOARD_AI_ENABLED: "${MATHBOARD_AI_ENABLED:-0}"   # assistant IA désactivé par défaut
       MATHBOARD_AI_URL: http://ai:8100
       MATHBOARD_AI_TOKEN: "${AI_SERVICE_TOKEN:?Set AI_SERVICE_TOKEN in .env}"
     depends_on:

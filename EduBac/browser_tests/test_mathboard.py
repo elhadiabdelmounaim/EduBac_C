@@ -351,7 +351,7 @@ class MathboardBrowserTests(StaticLiveServerTestCase):
         self.assertEqual([e for e in errors if 'net::ERR' not in e and 'Failed to fetch' not in e], [])
 
     # ---------- Phase 8 : export / import ; Phase 7 : assistant non configuré ----------
-    def test_export_import_and_assistant_message(self):
+    def test_export_import_and_assistant_hidden(self):
         errors = []
         with sync_playwright() as pw:
             browser = self.launch(pw)
@@ -373,11 +373,9 @@ class MathboardBrowserTests(StaticLiveServerTestCase):
             path = os.path.join(os.environ.get('TMPDIR', '/tmp'), 'mb-export-test.json')
             with open(path, 'w', encoding='utf-8') as handle:
                 json.dump(exported, handle)
-            # Assistant IA : message clair quand le service n'est pas configuré.
-            page.click('#mbAiBtn')
-            page.fill('#mbAiQuestion', 'Comment factoriser ?')
-            page.click('[data-ai="hint"]')
-            expect(page.locator('#mbAiResult')).to_contain_text('pas encore configuré')
+            # Assistant IA désactivé (réglage par défaut) : ni bouton ni panneau.
+            self.assertEqual(page.locator('#mbAiBtn').count(), 0)
+            self.assertEqual(page.locator('#mbAiPanel').count(), 0)
             # Import depuis la liste : nouveau document identique.
             page.goto(self.live_server_url + reverse('mathboard:list'))
             page.set_input_files('#mbImportFile', path)
@@ -385,4 +383,78 @@ class MathboardBrowserTests(StaticLiveServerTestCase):
             page.wait_for_function('window.MB && MB.board && Object.keys(MB.board.byId).length === 1')
             browser.close()
         os.remove(path)
-        self.assertEqual([e for e in errors if '503' not in e], [])
+        self.assertEqual(errors, [])
+
+    # ---------- Tactile : un doigt dessine, deux doigts zooment ----------
+    def test_touch_draw_pan_and_pinch_zoom(self):
+        errors = []
+        with sync_playwright() as pw:
+            browser = self.launch(pw)
+            self.errors = errors
+            context = browser.new_context(viewport={'width': 390, 'height': 780}, has_touch=True, is_mobile=True,
+                                          device_scale_factor=2)
+            page = context.new_page()
+            page.on('pageerror', lambda e: errors.append(str(e)))
+            page.on('console', lambda m: errors.append(m.text) if m.type == 'error' else None)
+            page.goto(self.live_server_url + reverse('accounts:login'))
+            page.locator('input[name="username"]').fill(self.teacher.username)
+            page.locator('input[name="password"]').fill(PASSWORD)
+            page.locator('form button[type="submit"]').first.click()
+            page.wait_for_url(lambda url: '/connexion/' not in url)
+            page.goto(self.live_server_url + reverse('mathboard:editor', args=[self.document.pk]))
+            page.wait_for_function('window.MB && MB.board && MB.board.pages.length > 0')
+            self.page = page
+            cdp = context.new_cdp_session(page)
+            box = page.locator('#mbCanvasHost').bounding_box()
+            ox, oy = box['x'], box['y']
+
+            def touch(kind, points):
+                cdp.send('Input.dispatchTouchEvent', {'type': kind, 'touchPoints': [
+                    {'x': ox + x, 'y': oy + y, 'id': i} for i, (x, y) in points]})
+
+            def viewport():
+                return page.evaluate('MB.board.canvas.viewportTransform.slice()')
+
+            # Un doigt avec le crayon : un trait est créé et enregistré.
+            page.evaluate("MB.board.setTool('pen')")
+            touch('touchStart', [(0, (60, 80))])
+            for k in range(1, 9):
+                touch('touchMove', [(0, (60 + 15 * k, 80 + 8 * k))])
+            touch('touchEnd', [])
+            self.wait_saved(page)
+            self.assertEqual(len(self.by_type('path')), 1, self.objects())
+
+            # Deux doigts : zoom ×2 autour du milieu, et aucun trait parasite.
+            before = viewport()
+            touch('touchStart', [(0, (150, 300))])
+            touch('touchMove', [(0, (152, 302))])
+            touch('touchStart', [(0, (152, 302)), (1, (232, 302))])
+            mid0 = (192, 302)
+            scene = ((mid0[0] - before[4]) / before[0], (mid0[1] - before[5]) / before[3])
+            for k in range(1, 9):
+                touch('touchMove', [(0, (152 - 5 * k, 302)), (1, (232 + 5 * k, 302))])
+            touch('touchEnd', [(0, (112, 302))])
+            touch('touchEnd', [])
+            after = viewport()
+            self.assertAlmostEqual(after[0] / before[0], 2.0, places=2)
+            # Le point de la page sous les doigts reste sous les doigts.
+            self.assertAlmostEqual(scene[0] * after[0] + after[4], mid0[0], delta=1)
+            self.assertAlmostEqual(scene[1] * after[3] + after[5], mid0[1], delta=1)
+            self.assertEqual(page.locator('#mbZoomValue').text_content().strip(), '200 %')
+            page.wait_for_timeout(600)
+            self.wait_saved(page)
+            self.assertEqual(len(self.by_type('path')), 1, self.objects())
+            self.assertEqual(page.evaluate('MB.board.canvas.getObjects().length'), 1)
+
+            # Main : un doigt déplace la vue.
+            page.evaluate("MB.board.setTool('hand')")
+            before = viewport()
+            touch('touchStart', [(0, (200, 400))])
+            for k in range(1, 6):
+                touch('touchMove', [(0, (200 - 10 * k, 400 + 6 * k))])
+            touch('touchEnd', [])
+            after = viewport()
+            self.assertAlmostEqual(after[4] - before[4], -50, delta=1)
+            self.assertAlmostEqual(after[5] - before[5], 30, delta=1)
+            browser.close()
+        self.assertEqual(errors, [])

@@ -29,8 +29,39 @@ class WhiteboardDocument(models.Model):
     level = models.CharField('Niveau', max_length=50, blank=True)
     chapter = models.CharField('Chapitre', max_length=200, blank=True)
     students_can_edit = models.BooleanField('Les élèves de la classe peuvent modifier', default=False)
+    # Faux : document préparé pour la classe, que les élèves ne voient pas encore.
+    class_visible = models.BooleanField('Visible par les élèves de la classe', default=True)
     revision = models.PositiveBigIntegerField(default=0, editable=False)
     is_archived = models.BooleanField('Archivé', default=False)
+
+    # --- Travail à rendre -------------------------------------------------
+    # Document du professeur : les élèves de la classe peuvent en faire leur copie.
+    accepts_submissions = models.BooleanField('Travail à rendre', default=False)
+    due_at = models.DateTimeField('À rendre avant', null=True, blank=True)
+    # Copie d'un élève : `source` est le sujet du professeur.
+    STATUS_DRAFT, STATUS_SUBMITTED, STATUS_RETURNED = 'draft', 'submitted', 'returned'
+    STATUSES = [(STATUS_DRAFT, 'En cours'), (STATUS_SUBMITTED, 'Rendu'), (STATUS_RETURNED, 'Corrigé')]
+    source = models.ForeignKey(
+        'self', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='copies', verbose_name='Sujet')
+    submission_status = models.CharField('État du travail', max_length=10, choices=STATUSES, blank=True)
+    submitted_at = models.DateTimeField('Rendu le', null=True, blank=True)
+    returned_at = models.DateTimeField('Corrigé le', null=True, blank=True)
+    grade = models.CharField('Note', max_length=20, blank=True)
+    feedback = models.TextField('Appréciation', blank=True)
+
+    # --- Mode présentation (« suivez-moi ») --------------------------------
+    presenter = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='+', verbose_name='Présentateur')
+    # {"page": uid, "cx": x, "cy": y, "w": largeur visible, "h": hauteur visible} (coordonnées de scène)
+    presentation = models.JSONField(default=dict, blank=True)
+
+    # Tableau de l'ancien module converti en ce document.
+    legacy_board = models.ForeignKey(
+        'whiteboard.WhiteboardBoard', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='math_documents', verbose_name='Ancien tableau converti')
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -38,6 +69,13 @@ class WhiteboardDocument(models.Model):
         ordering = ('-updated_at',)
         verbose_name = 'Document de tableau'
         verbose_name_plural = 'Documents de tableau'
+        constraints = [
+            models.UniqueConstraint(fields=('source', 'owner'), name='mathboard_one_copy_per_student'),
+        ]
+
+    @property
+    def is_copy(self):
+        return bool(self.source_id and self.submission_status)
 
     def __str__(self):
         return self.title
