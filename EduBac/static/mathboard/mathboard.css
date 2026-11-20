@@ -137,9 +137,12 @@ main:has(.mb-app) { padding: 0 !important; }
 .mb-work-state { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .mb-work-feedback { padding: 10px 12px; border-left: 4px solid #2b8a3e; border-radius: 8px; background: #ebfbee; white-space: pre-line; }
 
-/* Conversion de l'écriture manuscrite */
-.mb-ink-source { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; }
-.mb-ink-preview { min-height: 48px; max-height: 40vh; overflow: auto; padding: 10px 12px; border: 1px solid #dee2e6; border-radius: 8px; background: #fff; color: #1f2937; }
-.mb-ink-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 32px; }
-.mb-ink-math img { max-height: 48px; vertical-align: middle; }
-.mb-ink-math.is-invalid { color: #c92a2a; text-decoration: wavy underline; }
+/* Options de l'outil actif (gomme, crayon) */
+.mb-tool-options { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); z-index: 5; display: flex; gap: 10px;
+  max-width: calc(100% - 16px); padding: 6px 10px; border: 1px solid var(--mb-line); border-radius: 10px; background: var(--mb-surface);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .08); font-size: 13px; }
+.mb-tool-options[hidden], .mb-tool-options [hidden] { display: none; }
+.mb-tool-options > div { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.mb-tool-options label { display: inline-flex; align-items: center; gap: 4px; margin: 0; white-space: nowrap; cursor: pointer; }
+.mb-tool-options-label { font-weight: 600; }
+.mb-selection { flex-wrap: wrap; justify-content: center; max-width: calc(100% - 16px); }

@@ -86,17 +86,6 @@ l’édition à plusieurs d’un même long texte devient nécessaire, un objet
 
 ## 5. Fonctions de classe (`mathboard/api_class.py`, `static/mathboard/mb-class.js`)
 
-* **Écriture → texte et formules** (`mathboard/handwriting.py`, `static/mathboard/mb-ink.js`) :
-  le professeur sélectionne ses traits au stylet, « Convertir » dans la barre de
-  sélection. Seule une image PNG des traits sélectionnés (noir sur blanc) est
-  envoyée à Claude, qui renvoie des lignes de segments texte / LaTeX (sans rien
-  résoudre ni corriger). Le résultat s'affiche dans un champ modifiable (formules
-  entre `\(` et `\)`) avec aperçu ; « Insérer » remplace les traits (ou ajoute en
-  dessous) : ligne de texte → texte, ligne avec formule → formule (`\text{…}` pour
-  les mots ; arabe aligné à droite, segments de droite à gauche). Une seule action
-  à annuler. Envoi aux élèves : « Partager » ou « Présenter » comme d'habitude.
-  Enseignants et administrateurs seulement ; 60 conversions par heure et par
-  compte. Désactivé par défaut (voir le guide de déploiement).
 * **Préparer sans partager** : à la création, choisir une classe puis
   « Préparer sans partager » (choix par défaut). Le document est rattaché à la
   classe (`class_visible` faux) mais les élèves ne le voient pas, n'y accèdent
@@ -143,6 +132,39 @@ l’édition à plusieurs d’un même long texte devient nécessaire, un objet
 * **Alertes d'erreurs** (tout le site) : une erreur serveur (500) ou une erreur
   JavaScript chez un utilisateur crée une notification pour les administrateurs
   (une fois par heure par erreur, avec le nombre d'occurrences).
+
+## 5 bis. Écriture manuscrite, sans IA générative (`static/mathboard/mb-ink.js`, `mathboard/recognition.py`)
+
+Deux systèmes indépendants : la reconnaissance de l'écriture (ci-dessous) ne
+dépend d'aucune IA générative ; l'assistant pédagogique IA reste à part et
+désactivé (`MATHBOARD_AI_ENABLED`). Tout ce qui suit fonctionne sans lui.
+
+* **Tracés bruts** : chaque trait (souris, doigt, stylet) enregistre sa ligne
+  centrale `ink = {x, y, t, width}` (repère du chemin : elle suit déplacements et
+  agrandissements). Base de la reconnaissance, des formes et de la gomme partielle.
+  Les traits plus anciens sont lus depuis leur chemin.
+* **Lasso** (outil `Q`) : entourer à main levée ; seuls les éléments dont au
+  moins 60 % du tracé (ou le centre et 3 coins) sont dans la boucle sont
+  sélectionnés. Barre de sélection : En texte, En formule, Forme, Écriture
+  originale, Réduire / Agrandir, copier, supprimer… ; la palette change la couleur.
+* **Formes** (bouton « Forme », ou « Formes automatiques » dans les options du
+  crayon) : analyse géométrique locale — segment (redressé à l'horizontale /
+  verticale à 6° près), cercle, ellipse, triangle, rectangle, carré, polygone
+  (5 à 8 côtés), flèche (un trait, ou un segment + une pointe en « V »), angle.
+  Écriture comparée à l'ellipse et au polygone ajustés ; un tracé de moins de
+  40 px n'est jamais transformé automatiquement (lettres, chiffres). Le tracé
+  d'origine est gardé dans `ink_source` : « Écriture originale » le rétablit.
+* **Gomme** (options de la gomme) : objet entier (par défaut, comme avant),
+  partie d'un trait (le trait est coupé sous la gomme), formules seulement,
+  textes seulement. Une passe de gomme = une action annulable.
+* **Conversion en texte / en formule** : les tracés bruts sélectionnés (x, y, t,
+  sans image) partent au serveur, qui interroge **MyScript** (API REST « batch »,
+  requête signée HMAC-SHA512 ; les clés restent sur le serveur). Fenêtre de
+  relecture : texte modifiable (langue français / arabe, taille, police) ou
+  formule dans MathLive ; Accepter / Refuser / Relancer. L'écriture d'origine
+  est conservée par défaut ; « Remplacer » la range dans `ink_source`.
+  Désactivé sans configuration (boutons masqués). Pas de conversion automatique
+  pendant l'écriture : chaque pause coûterait une requête au quota MyScript.
 
 ## 6. Utilisation
 

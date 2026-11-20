@@ -259,27 +259,20 @@ class ImageUploadView(APIView):
                         status=status.HTTP_201_CREATED)
 
 
-def handwriting_allowed(user):
-    from . import handwriting
-    return bool(handwriting.enabled() and user and (user.is_staff or user.is_superuser or user.is_teacher()))
-
-
-class HandwritingView(APIView):
-    """Traits manuscrits (image PNG) → lignes de texte et de formules à relire."""
+class RecognitionView(APIView):
+    """Tracés manuscrits → texte ou formule LaTeX (moteur spécialisé, sans IA générative)."""
     throttle_classes = (ScopedRateThrottle,)
-    throttle_scope = 'mathboard_handwriting'
+    throttle_scope = 'mathboard_recognition'
 
     def post(self, request, pk):
         from django.http import Http404
-        from . import handwriting
-        if not handwriting.enabled():
-            raise Http404('Fonction désactivée.')
+        from . import recognition
+        if not recognition.enabled():
+            raise Http404('Reconnaissance de l’écriture non configurée.')
         _document(request, pk, 'edit')
-        if not handwriting_allowed(request.user):
-            raise PermissionDenied('La conversion de l’écriture est réservée aux enseignants.')
         try:
-            png = handwriting.prepare_image(request.data.get('image') if isinstance(request.data, dict) else None)
-            lines = handwriting.recognize(png)
-        except handwriting.HandwritingError as exc:
+            kind, lang, strokes, width, height = recognition.clean_request(request.data)
+            result = recognition.recognize(kind, lang, strokes, width, height)
+        except recognition.RecognitionError as exc:
             raise ValidationError({'detail': str(exc)})
-        return Response({'lines': lines})
+        return Response({'latex': result} if kind == 'math' else {'text': result})

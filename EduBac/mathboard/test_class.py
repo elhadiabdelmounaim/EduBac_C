@@ -2,6 +2,9 @@
 présentation, participation, images en fichiers, conversion des anciens
 tableaux, entretien, assistant IA désactivé, alertes d'erreurs."""
 import base64
+import contextlib
+import hashlib
+import hmac
 import io
 import json
 import logging
@@ -290,152 +293,103 @@ class ContributionsTests(Base):
         self.assertEqual(login(self.student).get(reverse('mathboard:api_contributions', args=[self.subject.pk])).status_code, 403)
 
 
-class HandwritingTests(Base):
-    """Écriture manuscrite → texte et formules (service externe simulé)."""
+RECOGNITION = dict(MATHBOARD_RECOGNITION='myscript', MYSCRIPT_APPLICATION_KEY='app-key',
+                   MYSCRIPT_HMAC_KEY='hmac-key', MYSCRIPT_HOST='cloud.myscript.com')
 
-    LINES = {'unreadable': False, 'lines': [
-        {'segments': [{'kind': 'text', 'content': '  Soit  '}, {'kind': 'math', 'content': 'f(x)=x^2'}]},
-        {'segments': [{'kind': 'text', 'content': 'الدالة'}, {'kind': 'math', 'content': 'f'}, {'kind': 'text', 'content': 'متزايدة'}]},
-        {'segments': [{'kind': 'math', 'content': ''}, {'kind': 'bad', 'content': 'x'}]},
-    ]}
+
+class RecognitionTests(Base):
+    """Reconnaissance de l'écriture par moteur spécialisé (MyScript simulé), sans IA générative."""
+
+    STROKES = [{'x': [0, 10, 20.04], 'y': [0, 5, 10], 't': [0, 16, 32]}, {'x': [30, 40], 'y': [0, 10]}]
 
     def url(self, document=None):
-        return reverse('mathboard:api_handwriting', args=[(document or self.subject).pk])
-
-    def image(self):
-        return 'data:image/png;base64,' + base64.b64encode(png_bytes(size=(300, 120), color=(255, 255, 255))).decode()
-
-    def test_disabled_by_default(self):
-        self.assertEqual(post(login(self.teacher), self.url(), {'image': self.image()}).status_code, 404)
-        response = login(self.teacher).get(reverse('mathboard:editor', args=[self.subject.pk]))
-        self.assertNotContains(response, 'data-act="convert"')
-        self.assertNotContains(response, 'mb-ink.js')
-
-    @override_settings(MATHBOARD_HANDWRITING_ENABLED=True, ANTHROPIC_API_KEY='test')
-    def test_teacher_gets_clean_lines(self):
-        with mock.patch('mathboard.handwriting._ask_claude', return_value=self.LINES) as ask:
-            response = post(login(self.teacher), self.url(), {'image': self.image()})
-        self.assertEqual(response.status_code, 200, response.content)
-        self.assertEqual(response.json()['lines'], [
-            {'segments': [{'kind': 'text', 'content': 'Soit'}, {'kind': 'math', 'content': 'f(x)=x^2'}]},
-            {'segments': [{'kind': 'text', 'content': 'الدالة'}, {'kind': 'math', 'content': 'f'},
-                          {'kind': 'text', 'content': 'متزايدة'}]},
-        ])
-        self.assertEqual(ask.call_args[0][0][:8], b'\x89PNG\r\n\x1a\n')    # seule l'image est transmise
-        page = login(self.teacher).get(reverse('mathboard:editor', args=[self.subject.pk]))
-        self.assertContains(page, 'data-act="convert"')
-        self.assertContains(page, 'mb-ink.js')
-
-    @override_settings(MATHBOARD_HANDWRITING_ENABLED=True, ANTHROPIC_API_KEY='test')
-    def test_reserved_to_teachers_with_edit_access(self):
-        document = WhiteboardDocument.objects.create(title='Libre', owner=self.student)
-        with mock.patch('mathboard.handwriting._ask_claude', return_value=self.LINES) as ask:
-            self.assertEqual(post(login(self.student), self.url(document), {'image': self.image()}).status_code, 403)
-            self.assertEqual(post(login(self.other_teacher), self.url(), {'image': self.image()}).status_code, 404)
-        ask.assert_not_called()
-        page = login(self.student).get(reverse('mathboard:editor', args=[document.pk]))
-        self.assertNotContains(page, 'data-act="convert"')
-
-    @override_settings(MATHBOARD_HANDWRITING_ENABLED=True, ANTHROPIC_API_KEY='test')
-    def test_bad_images_and_illegible_writing(self):
-        teacher = login(self.teacher)
-        jpeg = io.BytesIO()
-        Image.new('RGB', (20, 20)).save(jpeg, 'JPEG')
-        with mock.patch('mathboard.handwriting._ask_claude', return_value={'lines': [], 'unreadable': True}):
-            for image in (None, 'data:image/png;base64,@@@', 'data:image/png;base64,' + base64.b64encode(jpeg.getvalue()).decode()):
-                self.assertEqual(post(teacher, self.url(), {'image': image}).status_code, 400)
-            response = post(teacher, self.url(), {'image': self.image()})
-        self.assertEqual(response.status_code, 400)
-        self.assertIn('illisible', response.json()['detail'])
-
-    @override_settings(MATHBOARD_HANDWRITING_ENABLED=True, ANTHROPIC_API_KEY='test')
-    def test_large_selection_is_reduced_before_sending(self):
-        big = 'data:image/png;base64,' + base64.b64encode(png_bytes(size=(3200, 800))).decode()
-        with mock.patch('mathboard.handwriting._ask_claude', return_value=self.LINES) as ask:
-            post(login(self.teacher), self.url(), {'image': big})
-        self.assertEqual(max(Image.open(io.BytesIO(ask.call_args[0][0])).size), 1568)
-
-    @override_settings(MATHBOARD_HANDWRITING_ENABLED=True, ANTHROPIC_API_KEY='test')
-    def test_missing_package_gives_a_clear_message(self):
-        import builtins
-        real_import = builtins.__import__
-
-        def no_anthropic(name, *args, **kwargs):
-            if name == 'anthropic':
-                raise ImportError(name)
-            return real_import(name, *args, **kwargs)
-        with mock.patch('builtins.__import__', side_effect=no_anthropic), self.assertLogs('mathboard.handwriting', 'ERROR'):
-            response = post(login(self.teacher), self.url(), {'image': self.image()})
-        self.assertEqual(response.status_code, 400)
-        self.assertIn('pas installée', response.json()['detail'])
-
-
-class HandwritingRequestTests(TestCase):
-    """Requête envoyée au SDK Anthropic (module simulé : le paquet est facultatif)."""
-
-    def fake_sdk(self, response=None, error=None):
-        import sys
-        import types
-        sdk = types.ModuleType('anthropic')
-
-        class APIStatusError(Exception):
-            status_code, message = 500, 'boom'
-
-        class RateLimitError(APIStatusError):
-            pass
-
-        class APIConnectionError(Exception):
-            pass
-        sdk.APIStatusError, sdk.RateLimitError, sdk.APIConnectionError = APIStatusError, RateLimitError, APIConnectionError
-        calls = []
-
-        class Messages:
-            def create(self, **kwargs):
-                calls.append(kwargs)
-                if error:
-                    raise getattr(sdk, error)()
-                return response
-
-        class Client:
-            def __init__(self, **kwargs):
-                calls.append(kwargs)
-                self.beta = types.SimpleNamespace(messages=Messages())
-        sdk.Anthropic = Client
-        return mock.patch.dict(sys.modules, {'anthropic': sdk}), calls
+        return reverse('mathboard:api_recognition', args=[(document or self.subject).pk])
 
     @staticmethod
-    def reply(text, stop='end_turn'):
-        from types import SimpleNamespace as NS
-        return NS(stop_reason=stop, content=[NS(type='thinking'), NS(type='text', text=text)])
+    def reply(status=200, text='', content_type='text/plain'):
+        response = mock.Mock(status_code=status, text=text, headers={'Content-Type': content_type})
+        response.json.side_effect = lambda: json.loads(text)
+        return response
 
-    @override_settings(ANTHROPIC_API_KEY='cle-test', MATHBOARD_HANDWRITING_MODEL='claude-opus-5-5')
-    def test_request_shape_and_answer(self):
-        from .handwriting import OUTPUT_SCHEMA, _ask_claude
-        patch, calls = self.fake_sdk(self.reply('{"lines": [], "unreadable": true}'))
-        with patch:
-            self.assertEqual(_ask_claude(b'PNG'), {'lines': [], 'unreadable': True})
-        client, request = calls
-        self.assertEqual(client['api_key'], 'cle-test')
-        self.assertEqual(request['model'], 'claude-opus-5-5')
-        self.assertEqual(request['betas'], ['server-side-fallback-2026-07-01'])
-        self.assertEqual(request['fallbacks'], 'default')
-        self.assertEqual(request['output_config'], {'effort': 'low', 'format': {'type': 'json_schema', 'schema': OUTPUT_SCHEMA}})
-        image = request['messages'][0]['content'][0]
-        self.assertEqual((image['type'], image['source']['media_type'], image['source']['data']), ('image', 'image/png', 'UE5H'))
+    def test_disabled_without_configuration(self):
+        response = post(login(self.teacher), self.url(), {'kind': 'math', 'strokes': self.STROKES})
+        self.assertEqual(response.status_code, 404)
+        page = login(self.teacher).get(reverse('mathboard:editor', args=[self.subject.pk]))
+        self.assertContains(page, '"recognition": false')
 
-    @override_settings(ANTHROPIC_API_KEY='cle-test')
-    def test_refusals_and_errors_become_french_messages(self):
-        from .handwriting import HandwritingError, _ask_claude
-        cases = [(self.reply('', 'refusal'), None, 'refusé'), (self.reply('{', 'max_tokens'), None, 'trop longue'),
-                 (self.reply('pas du json'), None, 'inattendue'), (None, 'RateLimitError', 'saturé'),
-                 (None, 'APIConnectionError', 'injoignable')]
-        for response, error, expected in cases:
-            patch, _ = self.fake_sdk(response, error)
-            with patch, self.assertRaisesMessage(HandwritingError, expected):
-                _ask_claude(b'PNG')
-        patch, _ = self.fake_sdk(None, 'APIStatusError')
-        with patch, self.assertLogs('mathboard.handwriting', 'ERROR'), self.assertRaisesMessage(HandwritingError, 'erreur'):
-            _ask_claude(b'PNG')
+    @override_settings(**RECOGNITION)
+    def test_math_request_is_signed_and_sends_only_strokes(self):
+        from . import recognition
+        with mock.patch('mathboard.recognition.requests.post', return_value=self.reply(text=' \\frac{1}{2} ')) as call:
+            response = post(login(self.teacher), self.url(), {'kind': 'math', 'lang': 'fr_FR', 'strokes': self.STROKES,
+                                                              'width': 40, 'height': 10})
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json(), {'latex': '\\frac{1}{2}'})
+        (url,), kwargs = call.call_args
+        self.assertEqual(url, 'https://cloud.myscript.com/api/v4.0/iink/batch')
+        body = json.loads(kwargs['data'])
+        self.assertEqual(body['contentType'], 'Math')
+        self.assertEqual((body['xDPI'], body['width'], body['height']), (96, 40, 10))
+        strokes = body['strokeGroups'][0]['strokes']
+        self.assertEqual(strokes[0], {'x': [0.0, 10.0, 20.0], 'y': [0.0, 5.0, 10.0], 'pointerType': 'PEN', 't': [0, 16, 32]})
+        self.assertNotIn('t', strokes[1])
+        headers = kwargs['headers']
+        self.assertEqual(headers['Accept'], 'application/x-latex')
+        self.assertEqual(headers['applicationKey'], 'app-key')
+        expected = hmac.new(b'app-keyhmac-key', kwargs['data'], hashlib.sha512).hexdigest()
+        self.assertEqual(headers['hmac'], expected)
+        self.assertEqual(recognition.signature(kwargs['data']), expected)
+
+    @override_settings(**RECOGNITION)
+    def test_text_in_arabic_and_json_answers(self):
+        answer = self.reply(text=json.dumps({'exports': {'text/plain': 'الدالة متزايدة'}}), content_type='application/json')
+        with mock.patch('mathboard.recognition.requests.post', return_value=answer) as call:
+            response = post(login(self.teacher), self.url(), {'kind': 'text', 'lang': 'ar', 'strokes': self.STROKES})
+        self.assertEqual(response.json(), {'text': 'الدالة متزايدة'})
+        body = json.loads(call.call_args.kwargs['data'])
+        self.assertEqual((body['contentType'], body['configuration']['lang']), ('Text', 'ar'))
+        self.assertEqual(call.call_args.kwargs['headers']['Accept'], 'text/plain')
+
+    @override_settings(**RECOGNITION)
+    def test_invalid_requests_never_reach_the_engine(self):
+        bad = [
+            {'kind': 'image', 'strokes': self.STROKES},
+            {'kind': 'math', 'strokes': []},
+            {'kind': 'math', 'strokes': [{'x': [1, 2], 'y': [1]}]},
+            {'kind': 'math', 'strokes': [{'x': [1, 'a'], 'y': [1, 2]}]},
+            {'kind': 'math', 'strokes': [{'x': [1, True], 'y': [1, 2]}]},
+            {'kind': 'math', 'strokes': [{'x': list(range(3001)), 'y': list(range(3001))}]},
+            {'kind': 'math', 'strokes': [{'x': [1], 'y': [1]}] * 401},
+        ]
+        teacher = login(self.teacher)
+        with mock.patch('mathboard.recognition.requests.post') as call:
+            for data in bad:
+                self.assertEqual(post(teacher, self.url(), data).status_code, 400, data if len(str(data)) < 200 else data['kind'])
+        call.assert_not_called()
+
+    @override_settings(**RECOGNITION)
+    def test_engine_errors_become_french_messages(self):
+        import requests as http
+        teacher = login(self.teacher)
+        cases = [(self.reply(401, 'unauthorized'), 'Clés MyScript refusées'), (self.reply(429, ''), 'Quota'),
+                 (self.reply(500, 'boom'), 'erreur'), (self.reply(200, '   '), 'non reconnue'),
+                 (http.Timeout(), 'ne répond pas'), (http.ConnectionError(), 'injoignable')]
+        for answer, message in cases:
+            effect = {'side_effect': answer} if isinstance(answer, Exception) else {'return_value': answer}
+            with mock.patch('mathboard.recognition.requests.post', **effect), self.assertLogs('mathboard.recognition', 'ERROR') \
+                    if getattr(answer, 'status_code', 0) in (401, 500) else contextlib.nullcontext():
+                response = post(teacher, self.url(), {'kind': 'text', 'strokes': self.STROKES})
+            self.assertEqual(response.status_code, 400)
+            self.assertIn(message, response.json()['detail'])
+
+    @override_settings(**RECOGNITION)
+    def test_needs_edit_access(self):
+        with mock.patch('mathboard.recognition.requests.post', return_value=self.reply(text='x')):
+            # Élève de la classe : lecture seule sur le sujet → refusé ; sur son propre tableau → permis.
+            self.assertEqual(post(login(self.student), self.url(), {'kind': 'text', 'strokes': self.STROKES}).status_code, 403)
+            own = WhiteboardDocument.objects.create(title='Brouillon', owner=self.student)
+            self.assertEqual(post(login(self.student), self.url(own), {'kind': 'text', 'strokes': self.STROKES}).status_code, 200)
+            self.assertEqual(post(login(self.outsider), self.url(), {'kind': 'text', 'strokes': self.STROKES}).status_code, 404)
 
 
 class ImageUploadTests(Base):

@@ -44,6 +44,7 @@
     <nav class="mb-tools" aria-label="Outils">
       <button type="button" class="mb-tool" data-tool="select" title="Sélection (V)" aria-label="Sélection"><i class="bi bi-cursor"></i></button>
       <button type="button" class="mb-tool" data-tool="hand" title="Déplacer la vue (H ou Espace)" aria-label="Déplacer la vue"><i class="bi bi-hand-index"></i></button>
+      <button type="button" class="mb-tool" data-tool="lasso" data-needs="edit" title="Lasso : entourer pour sélectionner (Q)" aria-label="Lasso"><i class="bi bi-bullseye"></i></button>
       <span class="mb-sep" data-needs="edit"></span>
       <button type="button" class="mb-tool" data-tool="pen" data-needs="edit" title="Crayon (P)" aria-label="Crayon"><i class="bi bi-pencil"></i></button>
       <button type="button" class="mb-tool" data-tool="eraser" data-needs="edit" title="Gomme (E)" aria-label="Gomme"><i class="bi bi-eraser"></i></button>
@@ -70,9 +71,26 @@
         <canvas id="mbCanvas"></canvas>
         <div id="mbCursors" class="mb-cursors" aria-hidden="true"></div>
       </div>
+      <div id="mbToolOptions" class="mb-tool-options" hidden>
+        <div data-for="eraser" role="radiogroup" aria-label="Mode de la gomme">
+          <span class="mb-tool-options-label">Gomme :</span>
+          <label><input type="radio" name="mbEraserMode" value="object" checked> Objet entier</label>
+          <label><input type="radio" name="mbEraserMode" value="stroke"> Partie d’un trait</label>
+          <label><input type="radio" name="mbEraserMode" value="math"> Formules</label>
+          <label><input type="radio" name="mbEraserMode" value="text"> Textes</label>
+        </div>
+        <div data-for="pen">
+          <label title="Un trait reconnu comme segment, cercle, rectangle… devient une forme propre (Ctrl+Z rend le trait)"><input type="checkbox" id="mbAutoShapes"> Formes automatiques</label>
+        </div>
+      </div>
       <div id="mbSelectionBar" class="mb-selection" hidden>
         <button type="button" data-act="edit" hidden><i class="bi bi-pencil-square"></i> Modifier</button>
-        {% if config.handwriting %}<button type="button" data-act="convert" hidden title="Transformer l’écriture en texte et formules"><i class="bi bi-magic"></i> Convertir</button>{% endif %}
+        <button type="button" data-act="to-text" hidden title="Reconnaître l’écriture et la convertir en texte"><i class="bi bi-fonts"></i> En texte</button>
+        <button type="button" data-act="to-math" hidden title="Reconnaître l’écriture et la convertir en formule (LaTeX)">∑ En formule</button>
+        <button type="button" data-act="shape" hidden title="Transformer le tracé en forme géométrique propre"><i class="bi bi-bounding-box-circles"></i> Forme</button>
+        <button type="button" data-act="restore" hidden title="Revenir à l’écriture manuscrite d’origine"><i class="bi bi-arrow-return-left"></i> Écriture originale</button>
+        <button type="button" data-act="smaller" title="Réduire"><i class="bi bi-zoom-out"></i></button>
+        <button type="button" data-act="bigger" title="Agrandir"><i class="bi bi-zoom-in"></i></button>
         <button type="button" data-act="front" title="Premier plan"><i class="bi bi-front"></i></button>
         <button type="button" data-act="forward" title="Avancer d’un plan"><i class="bi bi-chevron-up"></i></button>
         <button type="button" data-act="backward" title="Reculer d’un plan"><i class="bi bi-chevron-down"></i></button>
@@ -257,24 +275,41 @@
 </dialog>
 
 {# ---------- Travail à rendre (copie d'élève) ---------- #}
-{% if config.handwriting %}
-<dialog id="mbInkDialog" class="mb-dialog mb-dialog-wide" aria-labelledby="mbInkTitle">
+<dialog id="mbConvDialog" class="mb-dialog" aria-labelledby="mbConvTitle">
   <form method="dialog" class="mb-dialog-body">
-    <h2 id="mbInkTitle">Convertir l’écriture</h2>
-    <p id="mbInkStatus" class="mb-muted" role="status">Lecture de l’écriture…</p>
-    <label class="small fw-semibold" for="mbInkSource">Texte reconnu — corrigez si besoin (une ligne par ligne, formules entre \( et \))</label>
-    <textarea id="mbInkSource" class="form-control mb-ink-source" rows="5" dir="auto" spellcheck="false"></textarea>
-    <p class="small fw-semibold mt-2 mb-1">Aperçu</p>
-    <div id="mbInkPreview" class="mb-ink-preview" aria-live="polite"></div>
-    <label class="small mt-2"><input type="checkbox" id="mbInkReplace" checked> Remplacer l’écriture manuscrite (sinon : ajouter en dessous)</label>
-    <p class="mb-error" id="mbInkError" role="alert"></p>
+    <h2 id="mbConvTitle">Convertir</h2>
+    <p id="mbConvStatus" class="mb-muted" role="status">Reconnaissance de l’écriture…</p>
+    <label class="small" id="mbConvLangRow">Langue de l’écriture
+      <select id="mbConvLang" class="form-select form-select-sm mb-short">
+        <option value="fr_FR">Français</option>
+        <option value="ar">العربية</option>
+      </select></label>
+    <div id="mbConvTextRow">
+      <label class="small fw-semibold" for="mbConvText">Texte reconnu — corrigez si besoin</label>
+      <textarea id="mbConvText" class="form-control" rows="4" dir="auto"></textarea>
+      <div class="mb-row mt-2">
+        <label class="small">Taille <input type="number" id="mbConvSize" class="form-control form-control-sm mb-short" min="8" max="120" placeholder="auto"></label>
+        <label class="small">Police
+          <select id="mbConvFont" class="form-select form-select-sm">
+            <option value="system-ui, sans-serif">Sans empattement</option>
+            <option value="Georgia, serif">Avec empattement</option>
+            <option value="'Comic Sans MS', 'Segoe Print', cursive">Manuscrite</option>
+          </select></label>
+      </div>
+    </div>
+    <div id="mbConvMathRow">
+      <label class="small fw-semibold" for="mbConvMath">Formule reconnue — corrigez si besoin</label>
+      <math-field id="mbConvMath" class="mb-mathfield" aria-label="Formule reconnue"></math-field>
+    </div>
+    <label class="small mt-2"><input type="checkbox" id="mbConvReplace"> Remplacer l’écriture manuscrite (elle reste récupérable avec « Écriture originale »)</label>
+    <p class="mb-error" id="mbConvError" role="alert"></p>
     <div class="mb-dialog-foot">
-      <button type="button" class="mb-btn" id="mbInkCancel">Annuler</button>
-      <button type="button" class="mb-btn mb-btn-primary" id="mbInkInsert" disabled>Insérer</button>
+      <button type="button" class="mb-btn" id="mbConvReject">Refuser</button>
+      <button type="button" class="mb-btn" id="mbConvRetry">Relancer</button>
+      <button type="button" class="mb-btn mb-btn-primary" id="mbConvAccept" disabled>Accepter</button>
     </div>
   </form>
 </dialog>
-{% endif %}
 
 <dialog id="mbWorkDialog" class="mb-dialog" aria-labelledby="mbWorkTitle">
   <form method="dialog" class="mb-dialog-body">
@@ -341,5 +376,5 @@
 <script src="{% asset 'mathboard/mb-board.js' %}"></script>
 <script src="{% asset 'mathboard/mb-panels.js' %}"></script>
 <script src="{% asset 'mathboard/mb-class.js' %}"></script>
-{% if config.handwriting %}<script src="{% asset 'mathboard/mb-ink.js' %}"></script>{% endif %}
+<script src="{% asset 'mathboard/mb-ink.js' %}"></script>
 {% endblock %}

@@ -11,7 +11,7 @@ from accounts.decorators import login_required_simple
 from accounts.models import StudentProfile
 
 from .access import access_level, is_corrector, visible_documents
-from .api_class import handwriting_allowed
+from .recognition import enabled as recognition_enabled
 from .models import WhiteboardDocument
 
 
@@ -60,8 +60,8 @@ def document_editor(request, pk):
         'access': level,
         'isTeacher': user.is_teacher(),
         'aiEnabled': settings.MATHBOARD_AI_ENABLED,
-        # Conversion de l'écriture : enseignants et administrateurs (service payant).
-        'handwriting': handwriting_allowed(user),
+        # Conversion de l'écriture en texte / formule (moteur spécialisé, sans IA générative).
+        'recognition': recognition_enabled(),
         # Travail à rendre : copie de l'élève, ou sujet dont l'élève peut faire une copie.
         'isCopy': bool(document.submission_status),
         'isCorrector': bool(document.submission_status) and is_corrector(user, document.source),
@@ -92,7 +92,7 @@ def document_editor(request, pk):
             'presentation': reverse('mathboard:api_presentation', args=[document.pk]),
             'contributions': reverse('mathboard:api_contributions', args=[document.pk]),
             'images': reverse('mathboard:api_images', args=[document.pk]),
-            'handwriting': reverse('mathboard:api_handwriting', args=[document.pk]),
+            'recognition': reverse('mathboard:api_recognition', args=[document.pk]),
             'editor': reverse('mathboard:editor', args=[0]),
         },
     }

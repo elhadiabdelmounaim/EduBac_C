@@ -227,7 +227,8 @@
       var obj = self.byId[id];
       var page = self.page();
       if (op.kind === 'object.add') {
-        if (!obj) return self._create(page.objects[id]).then(function () { self._sortZ(); });
+        // Absent du miroir : ajouté puis retiré dans le même lot (gomme partielle annulée…).
+        if (!obj && page.objects[id]) return self._create(page.objects[id]).then(function () { self._sortZ(); });
       } else if (op.kind === 'object.delete') {
         if (obj) { self.canvas.remove(obj); delete self.byId[id]; }
       } else if (op.kind === 'object.update' && obj) {
@@ -513,6 +514,7 @@
       if (o.mb && o.mb.type === 'math') { self.updateModel(o.id, { color: color }); return; }
       if (o.mb) return;
       if (o.type === 'i-text' || o.type === 'IText' || o.type === 'textbox' || o.type === 'Textbox') o.set('fill', color);
+      else if (!o.stroke && o.fill && o.fill !== 'transparent') o.set('fill', color);   // trait à pression : forme pleine
       else o.set('stroke', color);
     });
     var plain = objects.filter(function (o) { return !o.mb; });
@@ -583,6 +585,22 @@
   }
   MB.textDirection = textDirection;
 
+  /* Tracé brut compact : points espacés d'au moins 1 px, coordonnées au dixième,
+   * temps en ms depuis le début du trait. Coordonnées de la scène à la création
+   * (repère du chemin : elles suivent ensuite ses déplacements et agrandissements). */
+  function inkData(points) {
+    if (!points || points.length < 2) return null;
+    var x = [], y = [], t = [], last = null, t0 = points[0].t || 0;
+    points.forEach(function (p) {
+      if (last && Math.hypot(p.x - last.x, p.y - last.y) < 1) return;
+      x.push(Math.round(p.x * 10) / 10); y.push(Math.round(p.y * 10) / 10); t.push(Math.round((p.t || 0) - t0));
+      last = p;
+    });
+    if (x.length > 3000) return null;   // trait anormalement long : non enregistré
+    return x.length >= 2 ? { x: x, y: y, t: t } : null;
+  }
+  MB.inkData = inkData;
+
   // Coordonnées écran d'un événement souris ou tactile (un TouchEvent n'a pas de clientX).
   function clientPoint(e) {
     var t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || e;
@@ -591,14 +609,18 @@
 
   Board.prototype._bindCanvas = function () {
     var self = this, canvas = this.canvas;
-    var drawing = null, panning = null, erasing = null;
+    var drawing = null, panning = null, erasing = null, handling = null;
+    // Outils ajoutés par d'autres modules (lasso…) : { down(point, opt), move(point, opt), up(opt), cancel() }.
+    this.toolHandlers = this.toolHandlers || {};
 
     canvas.on('path:created', function (e) {
       var path = e.path;
       if (self._discardStroke) { self._discardStroke = false; self._penStroke = null; canvas.remove(path); return; }
       // Stylet sensible à la pression : le trait devient une forme d'épaisseur variable.
-      var shaped = pressureShape(self._penStroke, path.stroke, path.strokeWidth);
+      var shaped = pressureShape(self._penStroke, path.stroke, path.strokeWidth), width = path.strokeWidth;
+      var ink = inkData(self._inkStroke);
       self._penStroke = null;
+      self._inkStroke = null;
       if (shaped) {
         canvas.remove(path);
         path = new fabric.Path(shaped, { fill: path.stroke, stroke: null, strokeWidth: 0, opacity: path.opacity });
@@ -607,7 +629,11 @@
       path.set({ id: uid('m'), z: self.nextZ() });
       self.byId[path.id] = path;
       self._permissions(path);
-      self.commit([{ kind: 'object.add', object: R.fromFabric(path) }], [{ kind: 'object.delete', id: path.id }]);
+      var model = R.fromFabric(path);
+      // Tracé brut (ligne centrale, temps) : reconnaissance de l'écriture et des formes, gomme partielle.
+      if (ink) { ink.width = width; model.ink = ink; }
+      self.commit([{ kind: 'object.add', object: model }], [{ kind: 'object.delete', id: path.id }]);
+      if (self.onStroke) self.onStroke(path, model);
     });
 
     canvas.on('mouse:down', function (opt) {
@@ -620,6 +646,7 @@
         return;
       }
       if (!self.canEdit()) return;
+      if (self.toolHandlers[self.tool]) { handling = self.toolHandlers[self.tool]; handling.down(point, opt); return; }
       if (self.tool === 'eraser') { erasing = { ops: [], inverse: [] }; self._erase(opt, erasing); return; }
       if (self.tool === 'text') {
         if (opt.target && (opt.target.type === 'i-text' || opt.target.type === 'IText')) return;
@@ -662,6 +689,7 @@
         self.ui.cursorsMoved(self);
         return;
       }
+      if (handling) { handling.move(point, opt); return; }
       if (erasing) { self._erase(opt, erasing); return; }
       if (!drawing) return;
       var s = drawing.shape, x0 = drawing.x, y0 = drawing.y;
@@ -674,6 +702,7 @@
 
     canvas.on('mouse:up', function () {
       if (panning) { panning = null; self.setTool(self.tool); return; }
+      if (handling) { var h = handling; handling = null; h.up(); return; }
       if (erasing) { self.commit(erasing.ops, erasing.inverse); erasing = null; return; }
       if (!drawing) return;
       var s = drawing.shape, tiny = (s.width * s.scaleX < 3 && s.height * s.scaleY < 3);
@@ -746,6 +775,7 @@
     function cancelSingleTouch() {
       if (canvas.isDrawingMode) { self._discardStroke = true; canvas.clearContext(canvas.contextTop); }
       if (drawing) { canvas.remove(drawing.shape); drawing = null; }
+      if (handling) { if (handling.cancel) handling.cancel(); handling = null; }
       canvas._groupSelector = null;
       var active = canvas.getActiveObject();
       if (active && active.mbNew && active.isEditing) active.exitEditing();
@@ -786,12 +816,18 @@
     // le doigt et la paume ne dessinent plus (ils déplacent la vue).
     var wrapper = canvas.wrapperEl;
     function penPoint(e) {
+      if (self._inkStroke) {
+        var q = canvas.getScenePoint(e);
+        self._inkStroke.push({ x: q.x, y: q.y, t: e.timeStamp });
+      }
       if (e.pointerType !== 'pen' || !self._penStroke) return;
       var p = canvas.getScenePoint(e);
       self._penStroke.push({ x: p.x, y: p.y, p: e.pressure || 0 });
     }
     wrapper.addEventListener('pointerdown', function (e) {
-      if (e.pointerType !== 'pen') return;
+      // Tracé brut de tout trait (souris, doigt, stylet) en mode dessin.
+      self._inkStroke = canvas.isDrawingMode && e.isPrimary ? [] : null;
+      if (e.pointerType !== 'pen') { penPoint(e); return; }
       if (!self.penSeen) {
         self.penSeen = true;
         self.ui.toast('Stylet détecté : le stylet écrit, le doigt déplace la vue.');
@@ -828,10 +864,17 @@
     });
   };
 
+  /* Gomme : « object » (objet entier, par défaut), « stroke » (partie d'un trait,
+   * voir mb-ink.js), « math » (formules seulement), « text » (textes seulement). */
+  var TEXT_TYPES = ['i-text', 'textbox', 'text'];
   Board.prototype._erase = function (opt, state) {
+    var mode = this.eraserMode || 'object';
+    if (mode === 'stroke' && MB.Ink) { MB.Ink.erasePartial(this.canvas.getScenePoint(opt.e), state); return; }
     var target = this.canvas.findTarget(opt.e);
     var page = this.page();
     if (!target || !target.id || !page.objects[target.id] || !this.owns(page.objects[target.id])) return;
+    var type = page.objects[target.id].type;
+    if (mode === 'math' && type !== 'math' || mode === 'text' && TEXT_TYPES.indexOf(type) < 0) return;
     state.inverse.push({ kind: 'object.add', object: clone(page.objects[target.id]) });
     state.ops.push({ kind: 'object.delete', id: target.id });
     // Retiré du canevas tout de suite ; le miroir et l'envoi sont faits par commit() au relâchement.
@@ -998,7 +1041,7 @@
     }, Promise.resolve()).then(function () { return self.showPage(current); }).then(function () { return images; });
   };
 
-  MB.SHORTCUTS = { v: 'select', h: 'hand', p: 'pen', e: 'eraser', t: 'text', r: 'rect', o: 'ellipse', l: 'line', a: 'arrow' };
+  MB.SHORTCUTS = { q: 'lasso', v: 'select', h: 'hand', p: 'pen', e: 'eraser', t: 'text', r: 'rect', o: 'ellipse', l: 'line', a: 'arrow' };
   MB.COLORS = COLORS;
   MB.Board = Board;
 })(window);

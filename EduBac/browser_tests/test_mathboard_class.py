@@ -19,7 +19,8 @@ from whiteboard.models import WhiteboardBoard
 from .test_chat_moderation import PASSWORD, SingleThreadLiveServer
 
 
-class MathboardClassBrowserTests(StaticLiveServerTestCase):
+class MathboardBrowserBase(StaticLiveServerTestCase):
+    """Outils communs (aucun test ici)."""
     server_thread_class = SingleThreadLiveServer
 
     def setUp(self):
@@ -73,6 +74,8 @@ class MathboardClassBrowserTests(StaticLiveServerTestCase):
         page.mouse.move(box['x'] + x2, box['y'] + y2, steps=4)
         page.mouse.up()
 
+
+class MathboardClassBrowserTests(MathboardBrowserBase):
     # ---------- Préparer sans partager ----------
     def test_prepare_for_class_then_share(self):
         with sync_playwright() as pw:
@@ -274,65 +277,6 @@ class MathboardClassBrowserTests(StaticLiveServerTestCase):
             self.assertAlmostEqual(after[5] - before[5], -20, delta=1)
             self.assertEqual(page.evaluate('MB.board.canvas.getObjects().length'), 1)
             browser.close()
-        self.assertEqual(self.errors, [])
-
-    # ---------- Écriture → texte et formules ----------
-    def test_handwriting_is_converted_to_text_and_formulas(self):
-        import base64
-        import io
-        import json
-        from PIL import Image
-        sent = []
-        reply = {'lines': [
-            {'segments': [{'kind': 'text', 'content': 'Soit'}, {'kind': 'math', 'content': 'f(x)=x^2+1'}]},
-            {'segments': [{'kind': 'text', 'content': 'الدالة'}, {'kind': 'math', 'content': 'f'},
-                          {'kind': 'text', 'content': 'متزايدة'}]},
-            {'segments': [{'kind': 'text', 'content': 'Conclusion'}]},
-        ]}
-
-        def recognize(route):
-            sent.append(json.loads(route.request.post_data)['image'])
-            route.fulfill(status=200, content_type='application/json', body=json.dumps(reply))
-
-        with override_settings(MATHBOARD_HANDWRITING_ENABLED=True, ANTHROPIC_API_KEY='test'), sync_playwright() as pw:
-            browser = self.launch(pw)
-            _, page = self.context(browser, self.teacher)
-            page.route('**/api/documents/*/ecriture/', recognize)   # service externe simulé
-            self.open(page, self.document.pk)
-            page.click('[data-tool="pen"]')
-            self.drag(page, 100, 100, 260, 140)
-            self.drag(page, 120, 180, 300, 220)
-            page.wait_for_function('MB.board.canvas.getObjects().length === 2')
-            page.click('[data-tool="select"]')
-            page.evaluate('MB.board.selectAll()')
-            convert = page.locator('#mbSelectionBar [data-act="convert"]')
-            expect(convert).to_be_visible()
-            convert.click()
-            expect(page.locator('#mbInkSource')).to_have_value(
-                'Soit \\(f(x)=x^2+1\\)\nالدالة \\(f\\) متزايدة\nConclusion')
-            expect(page.locator('#mbInkPreview .mb-ink-line')).to_have_count(3)
-            expect(page.locator('#mbInkPreview .mb-ink-line').nth(1)).to_have_attribute('dir', 'rtl')
-            expect(page.locator('#mbInkPreview .mb-ink-math img').first).to_be_visible()
-            # Le professeur corrige le résultat avant l'insertion.
-            page.locator('#mbInkSource').fill('Soit \\(f(x)=x^2-1\\)\nالدالة \\(f\\) متزايدة\nConclusion')
-            page.locator('#mbInkInsert').click()
-            expect(page.locator('#mbInkDialog')).not_to_be_visible()
-            page.wait_for_function('MB.board.canvas.getObjects().length === 3')
-            self.wait_saved(page)
-            objects = sorted(self.state(page, self.document.pk)['pages'][0]['objects'].values(), key=lambda o: o['top'])
-            # Annuler rend l'écriture manuscrite d'un seul coup.
-            page.keyboard.press('Control+z')
-            page.wait_for_function("MB.board.canvas.getObjects().every(o => o.type.toLowerCase() === 'path')")
-            browser.close()
-        self.assertEqual([o['type'] for o in objects], ['math', 'math', 'i-text'])
-        self.assertEqual(objects[0]['latex'], '\\text{ Soit } f(x)=x^2-1')
-        self.assertEqual(objects[1]['latex'], '\\text{ متزايدة } f \\text{ الدالة }')    # arabe : ordre de droite à gauche
-        self.assertEqual(objects[2]['text'], 'Conclusion')
-        # Image envoyée : uniquement les traits, en noir sur blanc.
-        self.assertEqual(len(sent), 1)
-        image = Image.open(io.BytesIO(base64.b64decode(sent[0].split(',', 1)[1]))).convert('L')
-        self.assertLess(image.getextrema()[0], 80)
-        self.assertEqual(image.getpixel((0, 0)), 255)
         self.assertEqual(self.errors, [])
 
     # ---------- Images en fichiers ----------

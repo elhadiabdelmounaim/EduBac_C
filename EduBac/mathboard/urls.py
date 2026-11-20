@@ -36,6 +36,6 @@ urlpatterns += [
     path('api/documents/<int:pk>/presentation/', api_class.PresentationView.as_view(), name='api_presentation'),
     path('api/documents/<int:pk>/participation/', api_class.ContributionsView.as_view(), name='api_contributions'),
     path('api/documents/<int:pk>/images/', api_class.ImageUploadView.as_view(), name='api_images'),
-    path('api/documents/<int:pk>/ecriture/', api_class.HandwritingView.as_view(), name='api_handwriting'),
+    path('api/documents/<int:pk>/reconnaissance/', api_class.RecognitionView.as_view(), name='api_recognition'),
     path('convertir/<int:board_id>/', views.convert_legacy, name='convert_legacy'),
 ]

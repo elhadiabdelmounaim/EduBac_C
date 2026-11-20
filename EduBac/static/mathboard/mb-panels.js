@@ -150,8 +150,12 @@
       bar.hidden = !objects.length || !b.canEdit();
       var special = objects.length === 1 && objects[0].mb;
       bar.querySelector('[data-act="edit"]').hidden = !special;
-      var convert = bar.querySelector('[data-act="convert"]');
-      if (convert) convert.hidden = !(MB.Ink && MB.Ink.available(objects));
+      // Écriture manuscrite (mb-ink.js) : conversion, forme, écriture originale.
+      var ink = MB.Ink ? MB.Ink.selectionState(objects) : {};
+      bar.querySelector('[data-act="to-text"]').hidden = !(ink.strokes && ink.recognition);
+      bar.querySelector('[data-act="to-math"]').hidden = !(ink.strokes && ink.recognition);
+      bar.querySelector('[data-act="shape"]').hidden = !ink.strokes;
+      bar.querySelector('[data-act="restore"]').hidden = !ink.restore;
     },
   };
   MB.UI = UI;
@@ -548,8 +552,8 @@
       var btn = e.target.closest('button[data-act]');
       if (!btn) return;
       var act = btn.dataset.act;
-      if (act === 'convert') { if (MB.Ink) MB.Ink.open(); }
-      else if (act === 'delete') board.deleteSelected();
+      if (MB.Ink && MB.Ink.action(act)) return;
+      if (act === 'delete') board.deleteSelected();
       else if (act === 'copy') board.copy(false);
       else if (act === 'duplicate') board.duplicate();
       else if (act === 'edit') {

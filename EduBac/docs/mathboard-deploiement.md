@@ -46,18 +46,14 @@ périmées (`--dry-run` pour voir sans rien changer).
 `MATHBOARD_AI_ENABLED=1` dans le `.env`, plus `MATHBOARD_AI_URL` et
 `MATHBOARD_AI_TOKEN` (voir « Service IA seul » ci-dessous).
 
-**Écriture → texte et formules** (bouton « Convertir », enseignants) :
-désactivé par défaut. Pour l’activer :
-
-```bash
-pip install -r requirements-ecriture.txt      # paquet anthropic
-```
-
-puis dans le `.env` : `MATHBOARD_HANDWRITING_ENABLED=1` et
-`ANTHROPIC_API_KEY=<clé>` (facultatif : `MATHBOARD_HANDWRITING_MODEL`, par
-défaut `claude-opus-5-5`), et Reload. Chaque conversion est facturée par
-Anthropic au compte de la clé. Compte gratuit PythonAnywhere : vérifier que
-`api.anthropic.com` est accessible (liste des sites autorisés).
+**Reconnaissance de l’écriture** (boutons « En texte » / « En formule ») :
+moteur spécialisé MyScript, sans IA générative. Désactivée par défaut. Pour
+l’activer : créer un compte sur developer.myscript.com (2 000 requêtes
+gratuites, pour les essais ; la production se fait sur contrat), puis dans le
+`.env` : `MATHBOARD_RECOGNITION=myscript`, `MYSCRIPT_APPLICATION_KEY`,
+`MYSCRIPT_HMAC_KEY`, et Reload. Compte gratuit PythonAnywhere : vérifier que
+`cloud.myscript.com` est autorisé. Le lasso, les formes et la gomme
+intelligente fonctionnent sans cette configuration.
 
 **Anciens tableaux** : chaque professeur peut convertir les siens (bouton dans
 la liste de l’ancien tableau), ou tous d’un coup :
