@@ -1,3 +1,5 @@
 -r requirements.txt
 daphne>=4.0
 playwright>=1.63.0
+# Service IA indépendant (tests de bout en bout Django → FastAPI)
+-r ai_service/requirements.txt

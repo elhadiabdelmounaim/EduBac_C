@@ -29,6 +29,7 @@ urlpatterns = [
     path('notifications/', include('notifications.urls')),
     path('chat/', include('chat.urls')),
     path('tableau/', include('whiteboard.urls')),
+    path('tableau-maths/', include('mathboard.urls')),
 ]
 
 if settings.DEBUG:

@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% asset 'vendor/jsxgraph/jsxgraph.css' %}">
+<link rel="stylesheet" href="{% asset 'mathboard/mathboard.css' %}">
+{% endblock %}
+{% block content %}
+<div class="mb-app" id="mbApp" data-access="{{ config.access }}">
+  <header class="mb-top">
+    <a class="mb-icon-btn" href="{% url 'mathboard:list' %}" aria-label="Retour à mes tableaux"><i class="bi bi-arrow-left" aria-hidden="true"></i></a>
+    <input id="mbTitle" class="mb-title" value="{{ document.title }}" aria-label="Titre du document" maxlength="200">
+    <span id="mbRole" class="mb-role" hidden></span>
+    <span id="mbStatus" class="mb-status" role="status" aria-live="polite">Chargement…</span>
+    <div id="mbPresence" class="mb-presence" aria-label="Participants connectés"></div>
+    <div class="mb-top-actions">
+      <button type="button" class="mb-btn" id="mbAiBtn"><i class="bi bi-stars" aria-hidden="true"></i><span>Assistant IA</span></button>
+      <button type="button" class="mb-btn" id="mbVersionsBtn"><i class="bi bi-clock-history" aria-hidden="true"></i><span>Versions</span></button>
+      <button type="button" class="mb-btn" id="mbShareBtn" data-needs="manage"><i class="bi bi-share" aria-hidden="true"></i><span>Partager</span></button>
+      <div class="dropdown">
+        <button type="button" class="mb-btn" id="mbExportBtn" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-box-arrow-up" aria-hidden="true"></i><span>Exporter</span></button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><button class="dropdown-item" type="button" data-export="png">Image PNG (page)</button></li>
+          <li><button class="dropdown-item" type="button" data-export="svg">Image SVG (page)</button></li>
+          <li><button class="dropdown-item" type="button" data-export="pdf">PDF (toutes les pages)</button></li>
+          <li><a class="dropdown-item" href="{% url 'mathboard:api_export' document.pk %}" download>Fichier EduBac (.json)</a></li>
+          <li data-needs="edit"><hr class="dropdown-divider"></li>
+          <li data-needs="edit"><button class="dropdown-item" type="button" id="mbImportImage">Importer une image…</button></li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <div class="mb-body">
+    <nav class="mb-tools" aria-label="Outils">
+      <button type="button" class="mb-tool" data-tool="select" title="Sélection (V)" aria-label="Sélection"><i class="bi bi-cursor"></i></button>
+      <button type="button" class="mb-tool" data-tool="hand" title="Déplacer la vue (H ou Espace)" aria-label="Déplacer la vue"><i class="bi bi-hand-index"></i></button>
+      <span class="mb-sep" data-needs="edit"></span>
+      <button type="button" class="mb-tool" data-tool="pen" data-needs="edit" title="Crayon (P)" aria-label="Crayon"><i class="bi bi-pencil"></i></button>
+      <button type="button" class="mb-tool" data-tool="eraser" data-needs="edit" title="Gomme (E)" aria-label="Gomme"><i class="bi bi-eraser"></i></button>
+      <button type="button" class="mb-tool" data-tool="text" data-needs="edit" title="Texte (T)" aria-label="Texte"><i class="bi bi-fonts"></i></button>
+      <button type="button" class="mb-tool" data-tool="rect" data-needs="edit" title="Rectangle (R)" aria-label="Rectangle"><i class="bi bi-square"></i></button>
+      <button type="button" class="mb-tool" data-tool="ellipse" data-needs="edit" title="Ellipse (O)" aria-label="Ellipse"><i class="bi bi-circle"></i></button>
+      <button type="button" class="mb-tool" data-tool="triangle" data-needs="edit" title="Triangle" aria-label="Triangle"><i class="bi bi-triangle"></i></button>
+      <button type="button" class="mb-tool" data-tool="line" data-needs="edit" title="Ligne (L)" aria-label="Ligne"><i class="bi bi-slash-lg"></i></button>
+      <button type="button" class="mb-tool" data-tool="arrow" data-needs="edit" title="Flèche (A)" aria-label="Flèche"><i class="bi bi-arrow-up-right"></i></button>
+      <span class="mb-sep" data-needs="edit"></span>
+      <button type="button" class="mb-tool mb-tool-wide" id="mbMathBtn" data-needs="edit" title="Formule et calcul" aria-label="Formule et calcul">∑<small>Formule</small></button>
+      <button type="button" class="mb-tool mb-tool-wide" id="mbGeoBtn" data-needs="edit" title="Figure et courbe (JSXGraph)" aria-label="Figure et courbe"><i class="bi bi-graph-up"></i><small>Figure</small></button>
+      <span class="mb-sep" data-needs="edit"></span>
+      <div class="mb-colors" data-needs="edit" role="group" aria-label="Couleur"></div>
+      <label class="mb-width" data-needs="edit" title="Épaisseur"><span class="visually-hidden">Épaisseur</span>
+        <input type="range" id="mbWidth" min="1" max="16" value="3"></label>
+      <span class="mb-sep" data-needs="edit"></span>
+      <button type="button" class="mb-tool" id="mbUndo" data-needs="edit" title="Annuler (Ctrl+Z)" aria-label="Annuler" disabled><i class="bi bi-arrow-counterclockwise"></i></button>
+      <button type="button" class="mb-tool" id="mbRedo" data-needs="edit" title="Rétablir (Ctrl+Y)" aria-label="Rétablir" disabled><i class="bi bi-arrow-clockwise"></i></button>
+    </nav>
+
+    <div class="mb-stage">
+      <div id="mbCanvasHost" class="mb-canvas-host">
+        <canvas id="mbCanvas"></canvas>
+        <div id="mbCursors" class="mb-cursors" aria-hidden="true"></div>
+      </div>
+      <div id="mbSelectionBar" class="mb-selection" hidden>
+        <button type="button" data-act="edit" hidden><i class="bi bi-pencil-square"></i> Modifier</button>
+        <button type="button" data-act="front" title="Premier plan"><i class="bi bi-front"></i></button>
+        <button type="button" data-act="forward" title="Avancer d’un plan"><i class="bi bi-chevron-up"></i></button>
+        <button type="button" data-act="backward" title="Reculer d’un plan"><i class="bi bi-chevron-down"></i></button>
+        <button type="button" data-act="back" title="Arrière-plan"><i class="bi bi-back"></i></button>
+        <button type="button" data-act="copy" title="Copier (Ctrl+C)"><i class="bi bi-clipboard"></i></button>
+        <button type="button" data-act="duplicate" title="Dupliquer (Ctrl+D)"><i class="bi bi-copy"></i></button>
+        <button type="button" data-act="delete" class="is-danger" title="Supprimer (Suppr)"><i class="bi bi-trash"></i></button>
+      </div>
+    </div>
+
+    <aside id="mbAiPanel" class="mb-side" hidden aria-labelledby="mbAiTitle">
+      <div class="mb-side-head">
+        <h2 id="mbAiTitle">Assistant IA</h2>
+        <button type="button" class="mb-icon-btn" id="mbAiClose" aria-label="Fermer"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <p class="mb-muted" id="mbAiContext"></p>
+      <label for="mbAiQuestion" class="form-label small fw-semibold">Votre question</label>
+      <textarea id="mbAiQuestion" class="form-control" rows="3" placeholder="Ex. : Comment étudier les variations de f ?"></textarea>
+      <div id="mbAiVerify" class="mb-ai-verify" hidden>
+        <label class="small fw-semibold" for="mbAiAnswer">Ma réponse</label>
+        <input id="mbAiAnswer" class="form-control form-control-sm" placeholder="Ex. : (x+1)^2">
+        <label class="small fw-semibold" for="mbAiExpected">Réponse attendue (facultatif)</label>
+        <input id="mbAiExpected" class="form-control form-control-sm" placeholder="Ex. : x^2+2x+1">
+      </div>
+      <div class="mb-ai-actions" role="group" aria-label="Type d’aide">
+        <button type="button" data-ai="hint">Indice</button>
+        <button type="button" data-ai="explain">Expliquer</button>
+        <button type="button" data-ai="solve">Résoudre</button>
+        <button type="button" data-ai="verify">Vérifier</button>
+        <button type="button" data-ai="analyze">Analyser</button>
+        <button type="button" data-ai="exercises">Exercices</button>
+      </div>
+      <div id="mbAiResult" class="mb-ai-result" aria-live="polite"></div>
+      <button type="button" class="mb-btn mb-btn-primary" id="mbAiInsert" data-needs="edit" hidden>Insérer dans le tableau</button>
+    </aside>
+  </div>
+
+  <footer class="mb-bottom">
+    <div id="mbPages" class="mb-pages" role="tablist" aria-label="Pages"></div>
+    <button type="button" class="mb-btn" id="mbAddPage" data-needs="edit"><i class="bi bi-plus-lg"></i><span>Page</span></button>
+    <label class="mb-bg" data-needs="manage"><span class="visually-hidden">Fond de page</span>
+      <select id="mbBackground" class="form-select form-select-sm">
+        <option value="blank">Uni</option><option value="grid">Quadrillage</option><option value="dots">Pointillés</option>
+        <option value="lines">Lignes</option><option value="axes">Repère</option>
+      </select></label>
+    <div class="mb-zoom">
+      <button type="button" class="mb-icon-btn" id="mbZoomOut" aria-label="Dézoomer"><i class="bi bi-dash-lg"></i></button>
+      <button type="button" class="mb-zoom-value" id="mbZoomValue" title="Tout afficher">100 %</button>
+      <button type="button" class="mb-icon-btn" id="mbZoomIn" aria-label="Zoomer"><i class="bi bi-plus-lg"></i></button>
+    </div>
+  </footer>
+  <div id="mbToast" class="mb-toast" role="status" aria-live="polite" hidden></div>
+  <input type="file" id="mbImageFile" accept="image/png,image/jpeg,image/webp" hidden>
+</div>
+
+{# ---------- Formule (MathLive) et calcul (SymPy) ---------- #}
+<dialog id="mbMathDialog" class="mb-dialog" aria-labelledby="mbMathTitle">
+  <form method="dialog" class="mb-dialog-body">
+    <h2 id="mbMathTitle">Formule</h2>
+    <math-field id="mbMathField" class="mb-mathfield" aria-label="Saisie mathématique"></math-field>
+    <div class="mb-row">
+      <label class="small">Taille <select id="mbMathSize" class="form-select form-select-sm">
+        <option value="20">Petite</option><option value="28" selected>Normale</option><option value="40">Grande</option></select></label>
+      <span class="mb-muted small">Clavier mathématique : touche ⌨ du champ. Les fractions, racines, puissances, matrices et systèmes sont pris en charge.</span>
+    </div>
+    <fieldset class="mb-calc">
+      <legend>Calcul exact (SymPy)</legend>
+      <div class="mb-row">
+        <select id="mbCalcAction" class="form-select form-select-sm" aria-label="Opération">
+          <option value="simplify">Simplifier</option><option value="expand">Développer</option><option value="factor">Factoriser</option>
+          <option value="evaluate">Valeur approchée</option><option value="derivative">Dériver</option><option value="integral">Intégrer</option>
+          <option value="limit">Limite</option><option value="solve">Résoudre (équation, inéquation, système)</option>
+          <option value="variations">Tableau de variations</option><option value="asymptotes">Asymptotes</option>
+          <option value="determinant">Déterminant</option><option value="inverse">Matrice inverse</option><option value="transpose">Transposée</option>
+          <option value="equal">Comparer avec une autre expression</option>
+        </select>
+        <label class="small">Variable <input id="mbCalcVar" class="form-control form-control-sm mb-short" value="x" maxlength="8"></label>
+      </div>
+      <div class="mb-row" data-calc="derivative"><label class="small">Ordre <input id="mbCalcOrder" type="number" min="1" max="5" value="1" class="form-control form-control-sm mb-short"></label></div>
+      <div class="mb-row" data-calc="integral"><label class="small">De <input id="mbCalcLower" class="form-control form-control-sm mb-short" placeholder="a"></label>
+        <label class="small">à <input id="mbCalcUpper" class="form-control form-control-sm mb-short" placeholder="b"></label><span class="mb-muted small">vide : primitive</span></div>
+      <div class="mb-row" data-calc="limit"><label class="small">En <input id="mbCalcPoint" class="form-control form-control-sm mb-short" value="+oo"></label>
+        <select id="mbCalcDir" class="form-select form-select-sm mb-short" aria-label="Côté"><option value="+-">deux côtés</option><option value="+">à droite</option><option value="-">à gauche</option></select></div>
+      <div class="mb-row" data-calc="equal"><math-field id="mbMathOther" class="mb-mathfield mb-mathfield-small" aria-label="Autre expression"></math-field></div>
+      <div class="mb-row"><button type="button" class="mb-btn" id="mbCalcRun"><i class="bi bi-calculator"></i> Calculer</button></div>
+      <div id="mbCalcResult" class="mb-calc-result" aria-live="polite"></div>
+      <div class="mb-row" id="mbCalcInsertRow" hidden>
+        <button type="button" class="mb-btn" id="mbCalcInsert">Insérer le résultat</button>
+        <button type="button" class="mb-btn" id="mbCalcUse">Utiliser comme saisie</button>
+      </div>
+    </fieldset>
+    <p class="mb-error" id="mbMathError"></p>
+    <div class="mb-dialog-foot">
+      <button type="button" class="mb-btn" value="cancel" id="mbMathCancel">Annuler</button>
+      <button type="button" class="mb-btn mb-btn-primary" id="mbMathSave">Insérer</button>
+    </div>
+  </form>
+</dialog>
+
+{# ---------- Figure et courbe (JSXGraph) ---------- #}
+<dialog id="mbGeoDialog" class="mb-dialog mb-dialog-wide" aria-labelledby="mbGeoTitle">
+  <form method="dialog" class="mb-dialog-body">
+    <h2 id="mbGeoTitle">Figure et courbe</h2>
+    <div class="mb-geo">
+      <div id="mbGeoBoard" class="jxgbox mb-geo-board"></div>
+      <div class="mb-geo-side">
+        <label for="mbGeoScript" class="small fw-semibold">Construction (une commande par ligne)</label>
+        <textarea id="mbGeoScript" class="form-control font-monospace" rows="10" spellcheck="false"></textarea>
+        <div id="mbGeoSnippets" class="mb-snippets" aria-label="Commandes"></div>
+        <ul id="mbGeoErrors" class="mb-error-list"></ul>
+        <div class="mb-row">
+          <label class="small">x min <input id="mbGeoXmin" type="number" step="any" class="form-control form-control-sm mb-short" value="-5"></label>
+          <label class="small">x max <input id="mbGeoXmax" type="number" step="any" class="form-control form-control-sm mb-short" value="5"></label>
+          <label class="small">y min <input id="mbGeoYmin" type="number" step="any" class="form-control form-control-sm mb-short" value="-4"></label>
+          <label class="small">y max <input id="mbGeoYmax" type="number" step="any" class="form-control form-control-sm mb-short" value="4"></label>
+        </div>
+        <div class="mb-row">
+          <label class="small"><input type="checkbox" id="mbGeoAxes" checked> Axes</label>
+          <label class="small"><input type="checkbox" id="mbGeoGrid" checked> Grille</label>
+        </div>
+        <div class="mb-row">
+          <label class="small">Fonction <input id="mbGeoFn" class="form-control form-control-sm mb-short" value="f" maxlength="3"></label>
+          <button type="button" class="mb-btn" id="mbGeoAsym">Asymptotes (SymPy)</button>
+          <button type="button" class="mb-btn" id="mbGeoVar">Tableau de variations</button>
+        </div>
+        <p class="mb-muted small">Les points se déplacent à la souris ; la construction suit.</p>
+      </div>
+    </div>
+    <p class="mb-error" id="mbGeoError"></p>
+    <div class="mb-dialog-foot">
+      <button type="button" class="mb-btn" id="mbGeoCancel">Annuler</button>
+      <button type="button" class="mb-btn mb-btn-primary" id="mbGeoSave">Insérer</button>
+    </div>
+  </form>
+</dialog>
+
+{# ---------- Versions ---------- #}
+<dialog id="mbVersionsDialog" class="mb-dialog" aria-labelledby="mbVersionsTitle">
+  <form method="dialog" class="mb-dialog-body">
+    <h2 id="mbVersionsTitle">Versions enregistrées</h2>
+    <p class="mb-muted small">Une version est créée automatiquement toutes les 300 modifications et toutes les 10 minutes d’activité, et avant chaque restauration.</p>
+    <div class="mb-row" data-needs="edit">
+      <input id="mbVersionLabel" class="form-control form-control-sm" placeholder="Nom de la version (facultatif)" maxlength="200">
+      <button type="button" class="mb-btn" id="mbVersionCreate">Créer une version</button>
+    </div>
+    <ul id="mbVersionsList" class="mb-list"></ul>
+    <div class="mb-dialog-foot"><button class="mb-btn" value="close">Fermer</button></div>
+  </form>
+</dialog>
+
+{# ---------- Partage ---------- #}
+<dialog id="mbShareDialog" class="mb-dialog" aria-labelledby="mbShareTitle">
+  <form method="dialog" class="mb-dialog-body">
+    <h2 id="mbShareTitle">Partager et réglages</h2>
+    <div class="mb-grid2">
+      <label class="small">Classe
+        <select id="mbShareClass" class="form-select form-select-sm"><option value="">Aucune (document personnel)</option></select></label>
+      <label class="small">Niveau
+        <select id="mbShareLevel" class="form-select form-select-sm"><option value="">—</option></select></label>
+      <label class="small mb-span2">Chapitre (contexte de l’assistant IA)
+        <input id="mbShareChapter" class="form-control form-control-sm" maxlength="200" placeholder="Ex. : Limites et continuité"></label>
+      <label class="small mb-span2"><input type="checkbox" id="mbShareEdit"> Les élèves de la classe peuvent écrire (chacun modifie ses propres éléments)</label>
+    </div>
+    <div class="mb-row"><button type="button" class="mb-btn mb-btn-primary" id="mbShareSave">Enregistrer les réglages</button></div>
+    <h3 class="h6 mt-3">Membres invités</h3>
+    <div class="mb-row">
+      <input id="mbMemberName" class="form-control form-control-sm" placeholder="Nom d’utilisateur">
+      <select id="mbMemberRole" class="form-select form-select-sm mb-short-select">
+        <option value="viewer">Lecture</option><option value="editor">Modification</option><option value="manager">Gestion</option></select>
+      <button type="button" class="mb-btn" id="mbMemberAdd">Inviter</button>
+    </div>
+    <ul id="mbMembersList" class="mb-list"></ul>
+    <p class="mb-error" id="mbShareError"></p>
+    <div class="mb-dialog-foot"><button class="mb-btn" value="close">Fermer</button></div>
+  </form>
+</dialog>
+
+{{ config|json_script:"mbConfig" }}
+{% endblock %}
+{% block extra_js %}
+<script>window.MathJax = { svg: { fontCache: 'local' }, startup: { typeset: false }, options: { enableMenu: false } };</script>
+<script src="{% asset 'vendor/mathjax/tex-svg-3.2.2.js' %}" defer></script>
+<script src="{% asset 'vendor/fabric/fabric-6.9.1.min.js' %}"></script>
+<script src="{% asset 'vendor/jsxgraph/jsxgraphcore-1.14.3.js' %}"></script>
+<script src="{% asset 'vendor/mathlive/mathlive-0.111.4.min.js' %}"></script>
+<script>
+  if (window.MathfieldElement) {
+    MathfieldElement.fontsDirectory = '{% static "vendor/mathlive/fonts" %}';
+    MathfieldElement.soundsDirectory = null;
+  }
+</script>
+<script src="{% asset 'js/whiteboard-math.js' %}"></script>
+<script src="{% asset 'mathboard/mb-sync.js' %}"></script>
+<script src="{% asset 'mathboard/mb-render.js' %}"></script>
+<script src="{% asset 'mathboard/mb-board.js' %}"></script>
+<script src="{% asset 'mathboard/mb-panels.js' %}"></script>
+{% endblock %}

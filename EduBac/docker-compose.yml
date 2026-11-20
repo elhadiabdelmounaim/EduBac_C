@@ -1,18 +1,55 @@
+# Déploiement complet EduBac (serveur VPS) : Django en ASGI (Daphne) + Redis
+# (temps réel du tableau mathématique) + PostgreSQL + service IA (FastAPI) +
+# Caddy (HTTPS automatique, fichiers statiques, WebSocket).
+#
+#   cp .env.example .env    # puis renseigner les variables listées dans docs/mathboard-deploiement.md
+#   docker compose up -d --build
+#
+# PythonAnywhere (WSGI) reste possible sans ce fichier : le tableau fonctionne
+# alors par synchronisation HTTP, sans WebSocket.
 services:
   web:
     build: .
-    ports:
-      - "8000:8000"
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             daphne -b 0.0.0.0 -p 8000 config.asgi:application"
     env_file:
       - .env
     environment:
+      # Réglages de production existants : proxy HTTPS (X-Forwarded-Proto), cookies sécurisés,
+      # CSRF_TRUSTED_ORIGINS, ALLOWED_HOSTS stricts.
+      DJANGO_SETTINGS_MODULE: config.settings_production
       DJANGO_PRODUCTION: "1"
       DATABASE_ENGINE: postgresql
       DATABASE_URL: "postgresql://${POSTGRES_USER:?Set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:?Set POSTGRES_DB in .env}"
+      REDIS_URL: redis://redis:6379/0
+      MATHBOARD_WEBSOCKET: "1"
+      MATHBOARD_AI_URL: http://ai:8100
+      MATHBOARD_AI_TOKEN: "${AI_SERVICE_TOKEN:?Set AI_SERVICE_TOKEN in .env}"
     depends_on:
       - db
+      - redis
     volumes:
       - media_data:/app/media
+      - static_data:/app/staticfiles
+    restart: unless-stopped
+
+  ai:
+    build:
+      context: .
+      dockerfile: ai_service/Dockerfile
+    env_file:
+      - .env
+    environment:
+      AI_SERVICE_TOKEN: "${AI_SERVICE_TOKEN:?Set AI_SERVICE_TOKEN in .env}"
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --save "" --appendonly no
+    restart: unless-stopped
+
   db:
     image: postgres:16-alpine
     environment:
@@ -21,6 +58,26 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     volumes:
       - pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_DOMAIN: "${SITE_DOMAIN:-localhost}"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - static_data:/srv/static:ro
+      - media_data:/srv/media:ro
+      - caddy_data:/data
+    depends_on:
+      - web
+    restart: unless-stopped
+
 volumes:
   pg_data:
   media_data:
+  static_data:
+  caddy_data:

@@ -12,6 +12,10 @@ pylatexenc>=2.10,<3
 pypdf>=6.21.4
 channels>=4.0
 requests>=2.34.2
+# API du tableau mathématique collaboratif (application mathboard)
+djangorestframework>=3.16
+# Calcul symbolique (module edubac_math, tableau mathématique)
+sympy>=1.13
 # Temps réel en production (facultatif, activé par REDIS_URL)
 channels-redis>=4.2
 redis>=5.0

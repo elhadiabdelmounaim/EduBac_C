@@ -25,14 +25,20 @@ def get_user(user_id, session_version):
     return user
 
 
+@database_sync_to_async
+def _session_values(session):
+    """La session se charge depuis la base : interdit dans le code asynchrone (ASGI)."""
+    return session.get('user_id'), session.get('password_session_version', 0)
+
+
 class EduBacAuthMiddleware(BaseMiddleware):
     async def __call__(self, scope, receive, send):
         session = scope.get('session')
         user = None
         if session:
-            uid = session.get('user_id')
+            uid, version = await _session_values(session)
             if uid:
-                user = await get_user(uid, session.get('password_session_version', 0))
+                user = await get_user(uid, version)
         scope['user'] = user
         return await super().__call__(scope, receive, send)
 

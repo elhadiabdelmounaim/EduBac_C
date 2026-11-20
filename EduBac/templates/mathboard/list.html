@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block extra_css %}<link rel="stylesheet" href="{% asset 'mathboard/mathboard.css' %}">{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+  <div>
+    <h1 class="h3 mb-1">Tableau mathématique</h1>
+    <p class="text-muted mb-0">Formules, calcul exact, figures et courbes, en direct avec la classe. Enregistrement automatique.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <label class="btn btn-outline-secondary mb-0" for="mbImportFile"><i class="bi bi-upload" aria-hidden="true"></i> Importer un fichier</label>
+    <input type="file" id="mbImportFile" accept=".json,application/json" hidden>
+  </div>
+</div>
+
+<section class="card border-0 shadow-sm mb-4" aria-labelledby="mbNewTitle">
+  <div class="card-body">
+    <h2 id="mbNewTitle" class="h6 fw-bold">Nouveau document</h2>
+    <form id="mbNewForm" class="row g-2 align-items-end" novalidate>
+      <div class="col-12 col-md-4"><label class="form-label small" for="mbNewName">Titre</label>
+        <input id="mbNewName" class="form-control" required maxlength="200" placeholder="Ex. : Étude de fonctions — séance 3"></div>
+      <div class="col-6 col-md-2"><label class="form-label small" for="mbNewLevel">Niveau</label>
+        <select id="mbNewLevel" class="form-select"><option value="">—</option>
+          {% for code, label in levels %}<option value="{{ code }}">{{ label }}</option>{% endfor %}</select></div>
+      <div class="col-6 col-md-3"><label class="form-label small" for="mbNewChapter">Chapitre</label>
+        <input id="mbNewChapter" class="form-control" maxlength="200" placeholder="Ex. : Limites"></div>
+      {% if classrooms %}
+      <div class="col-12 col-md-2"><label class="form-label small" for="mbNewClass">Partager avec</label>
+        <select id="mbNewClass" class="form-select"><option value="">Personne</option>
+          {% for c in classrooms %}<option value="{{ c.pk }}">{{ c.name }}</option>{% endfor %}</select></div>
+      {% endif %}
+      <div class="col-12 col-md-1 d-grid"><button class="btn btn-edubac" type="submit">Créer</button></div>
+      <p class="text-danger small mb-0" id="mbNewError" role="alert"></p>
+    </form>
+  </div>
+</section>
+
+{% if documents %}
+<div class="mb-docs">
+  {% for doc in documents %}
+  <a class="mb-doc" href="{% url 'mathboard:editor' doc.pk %}">
+    <span class="mb-badge">{% if doc.my_access == 'manage' %}Gestion{% elif doc.my_access == 'edit' %}Modification{% else %}Lecture{% endif %}</span>
+    <strong>{{ doc.title }}</strong>
+    <span class="mb-doc-meta">{% if doc.chapter %}{{ doc.chapter }} · {% endif %}{{ doc.owner.get_full_name|default:doc.owner.username }}</span>
+    <span class="mb-doc-meta">{% if doc.classroom %}Classe {{ doc.classroom.name }} · {% endif %}modifié le {{ doc.updated_at|date:"d/m/Y H:i" }}</span>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<p class="text-muted">Aucun document pour le moment. Créez le premier ci-dessus.</p>
+{% endif %}
+{% endblock %}
+{% block extra_js %}
+<script>
+(function () {
+  function csrf() { var m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/); return m ? decodeURIComponent(m[1]) : ''; }
+  function post(url, body) {
+    return fetch(url, { method: 'POST', credentials: 'same-origin', body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRFToken': csrf() } })
+      .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.detail || Object.values(d).flat().join(' ') || 'Erreur'); return d; }); });
+  }
+  var editor = '{% url "mathboard:editor" 0 %}';
+  function open(doc) { location.href = editor.replace('/0/', '/' + doc.id + '/'); }
+  var error = document.getElementById('mbNewError');
+  document.getElementById('mbNewForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var title = document.getElementById('mbNewName').value.trim();
+    if (!title) { error.textContent = 'Donnez un titre au document.'; return; }
+    var cls = document.getElementById('mbNewClass');
+    post('{% url "mathboard:api_documents" %}', { title: title, level: document.getElementById('mbNewLevel').value,
+      chapter: document.getElementById('mbNewChapter').value, classroom: cls && cls.value ? Number(cls.value) : null })
+      .then(open).catch(function (err) { error.textContent = err.message; });
+  });
+  document.getElementById('mbImportFile').addEventListener('change', function () {
+    var file = this.files[0];
+    if (!file) return;
+    file.text().then(function (text) {
+      var data;
+      try { data = JSON.parse(text); } catch (e) { throw new Error('Fichier illisible.'); }
+      return post('{% url "mathboard:api_import" %}', { data: data });
+    }).then(open).catch(function (err) { error.textContent = err.message; });
+  });
+})();
+</script>
+{% endblock %}

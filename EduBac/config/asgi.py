@@ -13,12 +13,13 @@ from channels.sessions import SessionMiddlewareStack
 from chat.middleware import EduBacAuthMiddlewareStack
 from chat.routing import websocket_urlpatterns as chat_ws
 from whiteboard.routing import websocket_urlpatterns as whiteboard_ws
+from mathboard.routing import websocket_urlpatterns as mathboard_ws
 
 application = ProtocolTypeRouter({
     'http': django_asgi_app,
     'websocket': SessionMiddlewareStack(
         EduBacAuthMiddlewareStack(
-            URLRouter(chat_ws + whiteboard_ws)
+            URLRouter(chat_ws + whiteboard_ws + mathboard_ws)
         )
     ),
 })

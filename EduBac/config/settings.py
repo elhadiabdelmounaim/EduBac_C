@@ -57,8 +57,29 @@ INSTALLED_APPS = [
     'notifications',
     'chat',
     'whiteboard',
+    'mathboard',
+    'rest_framework',
     'channels',
 ]
+
+# API du tableau mathématique : session EduBac existante + CSRF, JSON uniquement.
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': ['mathboard.api_auth.EduBacSessionAuthentication'],
+    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
+    'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],
+    'DEFAULT_PARSER_CLASSES': ['rest_framework.parsers.JSONParser'],
+    'DEFAULT_THROTTLE_RATES': {'mathboard_ops': '600/min', 'mathboard_calc': '40/min', 'mathboard_ai': '30/hour'},
+    'UNAUTHENTICATED_USER': None,
+}
+
+# Service IA indépendant (FastAPI, dossier ai_service/) : URL interne + jeton partagé.
+# Les clés des fournisseurs d'IA restent dans ce service, jamais dans le navigateur.
+MATHBOARD_AI_URL = os.getenv('MATHBOARD_AI_URL', '').rstrip('/')
+MATHBOARD_AI_TOKEN = os.getenv('MATHBOARD_AI_TOKEN', '')
+MATHBOARD_AI_TIMEOUT = int(os.getenv('MATHBOARD_AI_TIMEOUT', '45'))
+# Temps réel par WebSocket : à activer seulement sur un serveur ASGI (Daphne/Uvicorn + Redis).
+# Désactivé (WSGI, PythonAnywhere) : la synchronisation passe par l'API HTTP.
+MATHBOARD_WEBSOCKET = os.getenv('MATHBOARD_WEBSOCKET', '0').lower() in ('1', 'true', 'yes')
 
 # Jeton CSRF périmé : formulaire réaffiché au lieu d'une page 403 brute.
 CSRF_FAILURE_VIEW = 'accounts.views.csrf_failure'
