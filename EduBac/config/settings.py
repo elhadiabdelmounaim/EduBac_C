@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'chat',
     'whiteboard',
     'mathboard',
+    'cahier',
     'rest_framework',
     'channels',
 ]

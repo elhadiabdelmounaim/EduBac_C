@@ -18,6 +18,8 @@ d.className+=' pagine';setTimeout(function(){if(!/\bpagine-pret\b/.test(d.classN
 <script defer src="{% asset 'vendor/jquery/jquery-3.7.1.min.js' %}"></script>
 <script defer src="{% asset 'js/cours.js' %}"></script>
 <script defer src="{% asset 'vendor/mathjax/tex-svg-3.2.2.js' %}"></script>
+{% if can_present %}<link rel="stylesheet" href="{% asset 'css/cahier-seance.css' %}">
+<script defer src="{% asset 'js/cahier-seance.js' %}"></script>{% endif %}
 </head>
 <body>
 <div class="progress" id="progress" aria-hidden="true"></div>
@@ -30,8 +32,10 @@ d.className+=' pagine';setTimeout(function(){if(!/\bpagine-pret\b/.test(d.classN
       <a href="{% url 'education:lesson_detail' lesson.pk %}">{{ lesson.title }}</a>
     </nav>
     <div class="topbar-actions">
-      <button type="button" class="topbar-btn topbar-presenter" id="coursPresenter" aria-pressed="false"
-              title="Plein écran pour le vidéoprojecteur (touche P)"><span aria-hidden="true">▶</span> Présenter</button>
+      {% if can_present %}<button type="button" class="topbar-btn topbar-presenter" id="coursPresenter" aria-pressed="false"
+              title="Plein écran pour le vidéoprojecteur (touche P)"><span aria-hidden="true">▶</span> Présenter</button>{% endif %}
+      {% if can_present %}<button type="button" class="topbar-btn topbar-seance" data-seance-ouvrir aria-controls="seancePanneau" aria-expanded="false"
+              title="Cocher ce qui a été traité et l'enregistrer dans le cahier de textes (touche S)"><span aria-hidden="true">📋</span><span class="seance-mot"> Séance</span></button>{% endif %}
       {% if book_url %}<a class="topbar-btn topbar-livre" href="{{ book_url }}">Livre 3D</a>{% endif %}
       <button type="button" class="topbar-btn" id="coursTheme" aria-pressed="false">Mode sombre</button>
       <a class="topbar-btn" href="{% url 'education:lesson_detail' lesson.pk %}">Retour à la leçon</a>
@@ -58,6 +62,9 @@ d.className+=' pagine';setTimeout(function(){if(!/\bpagine-pret\b/.test(d.classN
     <button type="button" class="pager-btn" id="pageNext" aria-label="Page suivante">
       <span class="pager-label">Suivante</span><span aria-hidden="true">›</span>
     </button>
+    {% if can_present %}<button type="button" class="pager-seance" data-seance-ouvrir aria-controls="seancePanneau" aria-expanded="false" title="Séance : cahier de textes (S)">
+      <span aria-hidden="true">📋</span><span class="visually-hidden">Séance : cahier de textes</span>
+    </button>{% endif %}
     <button type="button" class="pager-quitter" id="pageQuitter" title="Quitter la présentation (Échap)">
       <span aria-hidden="true">✕</span><span class="visually-hidden">Quitter la présentation</span>
     </button>
@@ -65,6 +72,30 @@ d.className+=' pagine';setTimeout(function(){if(!/\bpagine-pret\b/.test(d.classN
 </div>
 
 <div class="ecran-noir" id="ecranNoir" aria-hidden="true"></div>
+
+{% if can_present %}
+{# Cahier de textes : ce qui a été traité pendant la séance (enseignants seulement). #}
+<aside class="seance-panneau" id="seancePanneau" hidden aria-labelledby="seanceTitre"
+       data-etat="{% url 'cahier:etat' lesson.pk %}" data-enregistrer="{% url 'cahier:enregistrer' lesson.pk %}"
+       data-lecon="{{ lesson.pk }}" data-csrf="{{ csrf_token }}">
+  <header class="seance-tete">
+    <h2 id="seanceTitre"><span aria-hidden="true">📋</span> Séance</h2>
+    <button type="button" class="seance-fermer" data-seance-fermer aria-label="Fermer le panneau">✕</button>
+  </header>
+  <div class="seance-champs">
+    <label>Date <input type="date" id="seanceDate" required></label>
+    <label>Classe <select id="seanceClasse"></select></label>
+  </div>
+  <p class="seance-aide">Cochez les parties, sous-titres et blocs traités. ✓ = déjà vu lors d'une autre séance.</p>
+  <div class="seance-arbre" id="seanceArbre" aria-live="polite"><p class="seance-info">Chargement…</p></div>
+  <footer class="seance-pied">
+    <span class="seance-compte" id="seanceCompte"></span>
+    <button type="button" class="seance-enregistrer" id="seanceEnregistrer" disabled>Enregistrer</button>
+    <p class="seance-message" id="seanceMessage" role="status"></p>
+    <a class="seance-lien" id="seanceCahier" href="{% url 'cahier:index' %}">Voir le cahier de textes ›</a>
+  </footer>
+</aside>
+{% endif %}
 
 <main class="source" id="source" data-titre="{{ lesson.title }}">
   {% block hero %}{% endblock %}

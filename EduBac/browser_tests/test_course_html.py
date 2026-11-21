@@ -3,6 +3,9 @@ avec les boutons, le clavier ou le doigt ; MathJax local ; rien n'est perdu ni n
 import os
 import shutil
 
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.sessions.backends.db import SessionStore
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.urls import reverse
 from playwright.sync_api import sync_playwright
@@ -18,6 +21,11 @@ class CourseHtmlBrowserTests(StaticLiveServerTestCase):
         course = Course.objects.create(name='Mathématiques', niveau='1ere_bac_sc')
         self.lesson = Lesson.objects.create(
             title='Le produit scalaire dans le plan', content='', course=course, order=4)
+        prof = get_user_model().objects.create_user(username='prof', email='prof@example.test', role='teacher')
+        session = SessionStore()
+        session['user_id'] = prof.pk
+        session.save()
+        self.teacher_session = session.session_key
         self.playwright = sync_playwright().start()
         executable = os.environ.get('CHROMIUM_EXECUTABLE') or shutil.which('chromium')
         self.browser = self.playwright.chromium.launch(
@@ -28,8 +36,12 @@ class CourseHtmlBrowserTests(StaticLiveServerTestCase):
         self.playwright.stop()
         super().tearDown()
 
-    def open(self, width, height, theme=None, hash='', touch=False):
+    def open(self, width, height, theme=None, hash='', touch=False, teacher=False):
         context = self.browser.new_context(viewport={'width': width, 'height': height}, has_touch=touch)
+        if teacher:
+            # Le mode « Présenter » est réservé aux professeurs : session d'un compte professeur.
+            context.add_cookies([{'name': settings.SESSION_COOKIE_NAME, 'value': self.teacher_session,
+                                  'url': self.live_server_url}])
         page = context.new_page()
         # Les polices Google sont facultatives : on ne dépend pas du réseau.
         page.route('https://fonts.googleapis.com/**', lambda route: route.abort())
@@ -83,6 +95,10 @@ class CourseHtmlBrowserTests(StaticLiveServerTestCase):
 
     def test_desktop_spread_buttons_keyboard_and_summary(self):
         page, errors = self.open(1280, 860)
+        # Visiteur : pas de mode « Présenter », ni par le bouton ni par la touche P.
+        self.assertEqual(page.locator('#coursPresenter').count(), 0)
+        page.keyboard.press('p')
+        self.assertFalse(page.evaluate("document.documentElement.classList.contains('presentation')"))
         self.assertEqual(errors, [])
         state = self.assert_pages_sound(page)
         # Une seule page à la fois, même sur grand écran.
@@ -167,7 +183,7 @@ class CourseHtmlBrowserTests(StaticLiveServerTestCase):
         self.assertEqual(errors, [])
 
     def test_projector_presentation_mode(self):
-        page, errors = self.open(1920, 1080)
+        page, errors = self.open(1920, 1080, teacher=True)
         normal = page.evaluate("document.querySelectorAll('.feuille').length")
         page.click('#coursPresenter')
         page.wait_for_function(f"document.documentElement.classList.contains('presentation')"
@@ -208,14 +224,18 @@ class CourseHtmlBrowserTests(StaticLiveServerTestCase):
         self.assertEqual(errors, [])
 
     def test_projector_reveals_step_by_step_and_jumps_pages(self):
-        page, errors = self.open(1920, 1080)
+        page, errors = self.open(1920, 1080, teacher=True)
         page.click('#coursPresenter')
         page.wait_for_function("document.documentElement.classList.contains('presentation')")
         page.wait_for_timeout(400)
         cachés = "document.querySelectorAll('.feuille.visible .etape-cache').length"
-        # Première page avec un exemple et une application ; on y va directement (↓).
+        # Au vidéoprojecteur, chaque application est seule sur sa page, en grand.
+        self.assertEqual(page.evaluate(
+            "[...document.querySelectorAll('.feuille')].filter(f => f.querySelector('.bloc.app')"
+            " && f.querySelectorAll('.feuille-corps > .bloc').length > 1).length"), 0)
+        # Première page avec un exemple ; on y va directement (↓).
         cible = page.evaluate(
-            "[...document.querySelectorAll('.feuille')].findIndex(f => f.querySelector('.bloc.ex') && f.querySelector('.bloc.app'))")
+            "[...document.querySelectorAll('.feuille')].findIndex(f => f.querySelector('.bloc.ex'))")
         self.assertGreater(cible, 1)
         for _ in range(cible):
             page.keyboard.press('ArrowDown')
@@ -236,14 +256,21 @@ class CourseHtmlBrowserTests(StaticLiveServerTestCase):
         # ← le cache de nouveau.
         page.keyboard.press('ArrowLeft')
         self.assertEqual(page.evaluate(cachés), avant)
-        # Jusqu'à l'application : elle est voilée, son bouton l'affiche.
+        taille_ex = exemple.evaluate('e => parseFloat(getComputedStyle(e).fontSize)')
+        # La page de l'application suit : l'application y est voilée, son bouton l'affiche.
+        cible = page.evaluate(
+            f"[...document.querySelectorAll('.feuille')].findIndex((f, k) => k > {cible} && f.querySelector('.bloc.app'))")
+        while self.current(page) != [cible + 1]:
+            page.keyboard.press('ArrowDown')
+        page.wait_for_timeout(1500)
         app = page.locator('.feuille.visible .bloc.app').first
-        for _ in range(40):
-            if 'voilee' in (app.get_attribute('class') or ''):
-                break
-            page.keyboard.press('ArrowRight')
         self.assertIn('voilee', app.get_attribute('class'))
-        self.assertTrue(exemple.is_visible())
+        self.assertGreater(app.evaluate('e => parseFloat(getComputedStyle(e).fontSize)'), taille_ex)
+        # Centrée verticalement dans la page.
+        centre = page.evaluate("""() => { const c = document.querySelector('.feuille.visible .feuille-corps').getBoundingClientRect();
+            const b = document.querySelector('.feuille.visible .bloc.app').getBoundingClientRect();
+            return [(b.top - c.top), (c.bottom - b.bottom)]; }""")
+        self.assertAlmostEqual(centre[0], centre[1], delta=60)
         contenu = app.locator(':scope > ol, :scope > p, :scope > ul').first
         self.assertEqual(contenu.evaluate('e => getComputedStyle(e).visibility'), 'hidden')
         hauteur = app.bounding_box()['height']

@@ -261,6 +261,14 @@ html.pagine-pret .chargement { display: none; }
 .app-voile, .pager-etapes { display: none; }
 html.presentation .feuille-corps .bloc.app { min-height: 5.2em; }
 html.presentation .feuille-corps .etape-cache { visibility: hidden; }
+/* Contenu centré dans la hauteur de la page (le titre de partie reste en haut). */
+html.presentation .feuille-corps { display: flex; flex-direction: column; }
+html.presentation .feuille .feuille-corps > :first-child:not(h2),
+html.presentation .feuille .feuille-corps > h2:first-child + * { margin-top: auto; }
+html.presentation .feuille .feuille-corps > :last-child { margin-bottom: auto; }
+/* Une application seule sur sa page, en grand. */
+html.presentation .feuille.page-app .bloc.app { font-size: 1.25em; padding: 1.1em 1.5em .9em; }
+html.presentation .feuille.page-app .bloc.app > .tag { font-size: .6em; }
 html.presentation .bloc.app.voilee > :not(.tag):not(.app-voile) { visibility: hidden; }
 html.presentation .bloc.app.voilee {
   background: repeating-linear-gradient(-45deg, var(--b-bg) 0 14px, color-mix(in srgb, var(--b) 10%, var(--b-bg)) 14px 28px);
@@ -358,7 +366,7 @@ html.presentation .scene { padding: 2.4vh 0 2.4vh; }
 html.presentation .feuille { border: 0; border-radius: 10px 18px 18px 10px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, .25), 0 30px 70px -20px rgba(0, 0, 0, .7); }
 /* Lisible de loin : texte plus grand et plus épais (les traits fins s'effacent au projecteur). */
-html.presentation .feuille-corps { font-size: clamp(18px, 2.6vh, 44px); font-weight: 400; line-height: 1.6;
+html.presentation .feuille-corps { font-size: clamp(22px, 3.3vh, 60px); font-weight: 400; line-height: 1.6;
   padding: 2.2vh 3.4vw .6vh 5.6vw; }
 html.presentation .feuille-tete, html.presentation .feuille-pied { font-size: clamp(12px, 1.45vh, 22px);
   height: 4.4vh; padding-left: 5.6vw; padding-right: 3.4vw; }

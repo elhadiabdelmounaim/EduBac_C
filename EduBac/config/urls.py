@@ -31,6 +31,7 @@ urlpatterns = [
     path('chat/', include('chat.urls')),
     path('tableau/', include('whiteboard.urls')),
     path('tableau-maths/', include('mathboard.urls')),
+    path('cahier-de-textes/', include('cahier.urls')),
 ]
 
 if settings.DEBUG:

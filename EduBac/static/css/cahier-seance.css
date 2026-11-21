@@ -1,0 +1,74 @@
+/* Cahier de textes — panneau « Séance » dans le cours en ligne (enseignants).
+   Reprend les couleurs du cahier (cours.css) : --surface, --texte, --trait, --petrole, --or. */
+.seance-panneau { position: fixed; top: 0; right: 0; bottom: 0; z-index: 70; width: min(420px, 100vw);
+  display: flex; flex-direction: column; background: var(--surface); color: var(--texte);
+  border-left: 1px solid var(--trait); box-shadow: -18px 0 40px rgba(10, 25, 40, .22);
+  font-family: var(--corps, inherit); font-size: 15px; line-height: 1.45;
+  animation: seance-entree .22s cubic-bezier(.2, .7, .2, 1) both; }
+.seance-panneau[hidden] { display: none; }
+@keyframes seance-entree { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.seance-tete { display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 14px 16px; background: var(--barre, #0E2A3B); color: #fff; }
+.seance-tete h2 { margin: 0; font-size: 17px; font-weight: 600; }
+.seance-fermer { width: 40px; height: 40px; border: 0; border-radius: 10px; background: rgba(255, 255, 255, .12);
+  color: #fff; font-size: 18px; cursor: pointer; }
+.seance-fermer:hover, .seance-fermer:focus-visible { background: rgba(255, 255, 255, .24); outline: none; }
+
+.seance-champs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 10px; padding: 14px 16px 4px; }
+.seance-champs label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; color: var(--doux); }
+.seance-champs input, .seance-champs select { min-height: 42px; padding: 6px 10px; border: 1px solid var(--trait);
+  border-radius: 10px; background: var(--surface); color: var(--texte); font: inherit; font-size: 15px; min-width: 0; }
+.seance-aide { margin: 6px 16px 8px; font-size: 13px; color: var(--doux); }
+
+.seance-arbre { flex: 1; min-height: 0; overflow-y: auto; padding: 0 10px 10px 12px; border-top: 1px solid var(--trait); }
+.seance-info { margin: 16px 6px; color: var(--doux); }
+.seance-info.erreur { color: #B4232C; }
+.seance-racine, .seance-enfants { list-style: none; margin: 0; padding: 0; }
+.seance-enfants { padding-left: 22px; }
+.seance-enfants[hidden] { display: none; }
+.seance-noeud.niveau-1 { border-bottom: 1px solid var(--trait); padding: 4px 0; }
+.seance-ligne { display: flex; align-items: center; gap: 6px; min-height: 40px; }
+.seance-ligne label { flex: 1; display: flex; align-items: flex-start; gap: 9px; padding: 6px 4px; border-radius: 8px;
+  cursor: pointer; min-width: 0; }
+.seance-ligne label:hover { background: color-mix(in srgb, var(--turquoise, #20B5A5) 10%, transparent); }
+.seance-ligne input[type=checkbox] { flex: none; width: 19px; height: 19px; margin-top: 2px; accent-color: var(--turquoise, #20B5A5); cursor: pointer; }
+.niveau-1 > .seance-ligne .seance-libelle { font-weight: 600; color: var(--petrole); }
+.niveau-2 > .seance-ligne .seance-libelle { font-weight: 500; }
+.seance-plier { flex: none; width: 30px; height: 30px; border: 0; border-radius: 8px; background: transparent;
+  color: var(--doux); font-size: 15px; cursor: pointer; }
+.seance-plier:hover, .seance-plier:focus-visible { background: var(--trait); outline: none; color: var(--texte); }
+.seance-puce { flex: none; width: 30px; }
+.seance-deja { flex: none; font-size: 12px; font-weight: 600; color: #1E8E5A; white-space: nowrap; }
+.seance-deja[hidden] { display: none; }
+.seance-part { flex: none; min-width: 2.6em; text-align: right; font-size: 12px; color: var(--doux); font-variant-numeric: tabular-nums; }
+
+.seance-pied { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px 12px; padding: 12px 16px 14px;
+  border-top: 1px solid var(--trait); background: color-mix(in srgb, var(--surface) 92%, var(--trait)); }
+.seance-compte { font-size: 13px; color: var(--doux); }
+.seance-enregistrer { min-height: 44px; padding: 0 20px; border: 0; border-radius: 12px; background: var(--turquoise, #20B5A5);
+  color: #fff; font: inherit; font-weight: 600; cursor: pointer; transition: filter .15s ease, opacity .15s ease; }
+.seance-enregistrer:hover:not(:disabled) { filter: brightness(1.07); }
+.seance-enregistrer:focus-visible { outline: 3px solid var(--or, #E9B949); outline-offset: 2px; }
+.seance-enregistrer:disabled { opacity: .45; cursor: default; }
+.seance-message { grid-column: 1 / -1; margin: 0; font-size: 14px; min-height: 1em; }
+.seance-message:empty { display: none; }
+.seance-message.succes { color: #1E8E5A; font-weight: 600; }
+.seance-message.erreur { color: #B4232C; font-weight: 600; }
+.seance-message.info { color: var(--doux); }
+.seance-lien { grid-column: 1 / -1; font-size: 14px; color: var(--petrole); }
+
+/* Boutons d'ouverture : barre du haut et barre des pages (visible aussi en présentation). */
+.pager-seance { display: none; }
+html.presentation .pager-seance { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 12px;
+  border: 1px solid var(--trait); background: transparent; font-size: 18px; cursor: pointer; }
+.pager-seance[aria-expanded="true"], .topbar-seance[aria-expanded="true"] { box-shadow: inset 0 0 0 2px var(--or, #E9B949); }
+html.presentation .pager-seance { border-color: rgba(255, 255, 255, .2); }
+@media (max-width: 640px) {
+  .seance-champs { grid-template-columns: 1fr; }
+  /* Barre du haut déjà pleine : sur téléphone, le bouton passe dans la barre des pages. */
+  .topbar-seance { display: none; }
+  .pager-seance { display: inline-grid; width: 40px; height: 40px; flex: none; }
+}
+@media (prefers-reduced-motion: reduce) { .seance-panneau { animation: none; } }
+@media print { .seance-panneau, .pager-seance { display: none !important; } }

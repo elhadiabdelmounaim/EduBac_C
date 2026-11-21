@@ -1,0 +1,35 @@
+/* Cahier de textes (page de consultation) — reprend les jetons de tokens.css. */
+.cahier-page { max-width: 920px; margin: 0 auto; }
+.cahier-entete { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+.cahier-entete-icone { flex: none; width: 54px; height: 54px; border-radius: var(--radius-md, 16px); display: grid; place-items: center;
+  background: var(--nb-teal-soft, #e6eefb); color: var(--nb-navy, #12306b); font-size: 26px; }
+.cahier-entete h1 { margin: 0; font-size: 1.6rem; font-weight: 700; color: var(--edubac-navy, #263449); }
+.cahier-entete p { margin: 2px 0 0; color: var(--nb-muted, #56627a); }
+.cahier-filtre { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+.cahier-filtre label { font-weight: 600; color: var(--edubac-navy, #263449); }
+.cahier-filtre select { min-height: 42px; padding: 6px 12px; border-radius: var(--radius-sm, 12px); border: 1px solid var(--nb-line, #d9e0ec);
+  background: var(--nb-surface, #fff); max-width: 100%; }
+.cahier-seance { background: var(--nb-surface, #fff); border: 1px solid var(--nb-line, #d9e0ec); border-radius: var(--radius-lg, 20px);
+  box-shadow: var(--nb-shadow); padding: 18px 22px; margin-bottom: 16px; scroll-margin-top: 90px; transition: box-shadow .2s ease; }
+.cahier-seance:target { box-shadow: 0 0 0 3px var(--nb-orange, #f39c12); }
+.cahier-seance-tete { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap;
+  border-bottom: 1px dashed var(--nb-line, #d9e0ec); padding-bottom: 10px; margin-bottom: 10px; }
+.cahier-date { margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--nb-navy, #12306b); }
+.cahier-meta { margin: 2px 0 0; color: var(--nb-muted, #56627a); }
+.cahier-classe { display: inline-block; padding: 1px 10px; border-radius: var(--radius-pill, 999px); background: color-mix(in srgb, var(--nb-orange, #f39c12) 18%, transparent); color: var(--edubac-orange, #b45309); font-weight: 600; }
+.cahier-actions { display: flex; gap: 6px; align-items: center; }
+.cahier-actions form { margin: 0; }
+.cahier-parties { margin: 0; padding-left: 0; list-style: none; }
+.cahier-parties > li { margin: 8px 0 12px; }
+.cahier-partie { display: block; color: var(--edubac-navy, #263449); }
+.cahier-sous-titre { margin: 4px 0 0 14px; font-weight: 600; color: var(--edubac-blue, #1d4fa3); }
+.cahier-elements { margin: 2px 0 0; padding-left: 32px; color: var(--nb-ink, #263449); }
+.cahier-elements.indente { padding-left: 46px; }
+.cahier-elements li::marker { color: var(--nb-orange, #f39c12); }
+.cahier-vide { text-align: center; padding: 40px 20px; border: 1px dashed var(--nb-line, #d9e0ec); border-radius: var(--radius-lg, 20px); color: var(--nb-muted, #56627a); }
+.cahier-vide i { font-size: 40px; color: var(--nb-teal, #1d4fa3); }
+.cahier-pagination { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 20px 0; }
+@media (max-width: 575px) {
+  .cahier-seance { padding: 14px 14px; }
+  .cahier-entete h1 { font-size: 1.35rem; }
+}

@@ -4,7 +4,7 @@ Chaque leçon peut avoir, en plus de ses PDF, deux présentations interactives :
 
 | Présentation | Adresse | Fichier à fournir |
 |---|---|---|
-| **Cahier** (pages tournées une à une, mode « Présenter » pour le vidéoprojecteur) | `/lecon/<id>/cours/` | `templates/education/cours/<NIVEAU>/<NN_titre>.html` |
+| **Cahier** (pages tournées une à une, mode « Présenter » pour le vidéoprojecteur, réservé aux professeurs et aux administrateurs) | `/lecon/<id>/cours/` | `templates/education/cours/<NIVEAU>/<NN_titre>.html` |
 | **Livre 3D** (Three.js : leçon à gauche, figures en relief à droite) | `/lecon/<id>/livre-3d/` | le même chemin, avec l'extension `.livre.json` |
 
 `<NIVEAU>/<NN_titre>` est le nom du dossier de la leçon dans `media/lessons`
@@ -47,3 +47,16 @@ Le fichier `.livre.json` décrit une « double page » par partie du cours :
 
 Three.js r160 est servi depuis `static/vendor/three` (licence MIT) : aucune installation.
 Les progrès (prédictions, tampons) sont gardés dans le navigateur de l'élève.
+
+## Cahier de textes
+
+Dans un cours en ligne, l'enseignant ouvre le panneau **« 📋 Séance »** (bouton de la barre du
+haut, de la barre des pages en présentation, ou touche **S**). Il y choisit la date et la classe,
+coche les parties, sous-titres et blocs traités, puis clique sur **Enregistrer**. Enregistrer de
+nouveau la même date met la séance à jour. Les séances se consultent dans
+**Cahier de textes** (menu des enseignants, `/cahier-de-textes/`).
+
+Les éléments cochables sont lus dans le gabarit du cours : `section.chap` (parties), `h3`
+(sous-titres) et `div.bloc` (avec leur `.tag` : Définition, Proposition, Exemples…). Leur clé
+dépend de leur position (`s1-b3` = 3e bloc de la partie s1) : réorganiser un cours déjà utilisé
+ne change pas les séances enregistrées (les titres y sont copiés), mais peut décaler les ✓.

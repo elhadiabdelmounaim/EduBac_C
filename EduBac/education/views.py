@@ -327,8 +327,11 @@ def lesson_course_html(request, pk):
     template = course_html_template(lesson)
     if template is None:
         raise Http404
+    # Le mode « Présenter » (vidéoprojecteur) est réservé aux professeurs et aux administrateurs.
+    is_teacher = getattr(request.user, 'is_teacher', None)
+    can_present = bool(request.user.is_authenticated and callable(is_teacher) and is_teacher())
     return render(request, template, {
-        'lesson': lesson, 'course': lesson.course,
+        'lesson': lesson, 'course': lesson.course, 'can_present': can_present,
         'book_url': reverse('education:lesson_book_3d', args=[lesson.pk]) if course_book_data(lesson) else '',
     })
 

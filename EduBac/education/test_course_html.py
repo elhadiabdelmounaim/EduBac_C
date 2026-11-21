@@ -108,3 +108,42 @@ class CourseBook3DTests(TestCase):
         url = reverse('education:lesson_book_3d', args=[self.lesson.pk])
         self.assertContains(self.client.get(reverse('education:lesson_detail', args=[self.lesson.pk])), url)
         self.assertContains(self.client.get(reverse('education:lesson_course_html', args=[self.lesson.pk])), url)
+
+
+class CoursePresentationAccessTests(TestCase):
+    """Le mode « Présenter » n'est proposé qu'aux professeurs et aux administrateurs."""
+
+    def setUp(self):
+        course = Course.objects.create(name='Mathématiques', niveau='1ere_bac_sc')
+        self.lesson = Lesson.objects.create(
+            title='Le produit scalaire dans le plan', content='', course=course, order=4)
+        self.url = reverse('education:lesson_course_html', args=[self.lesson.pk])
+
+    def login_as(self, user):
+        session = self.client.session
+        session['user_id'] = user.pk
+        session.save()
+
+    def has_button(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        return 'id="coursPresenter"' in response.content.decode()
+
+    def test_visitor_and_student_cannot_present(self):
+        from django.contrib.auth import get_user_model
+        self.assertFalse(self.has_button())
+        student = get_user_model().objects.create_user(
+            username='eleve', email='eleve@example.test', role='student')
+        self.login_as(student)
+        self.assertFalse(self.has_button())
+
+    def test_teacher_and_admin_can_present(self):
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        teacher = User.objects.create_user(username='prof', email='prof@example.test', role='teacher')
+        self.login_as(teacher)
+        self.assertTrue(self.has_button())
+        admin = User.objects.create_user(username='admin', email='admin@example.test', role='student',
+                                         is_staff=True, is_superuser=True)
+        self.login_as(admin)
+        self.assertTrue(self.has_button())

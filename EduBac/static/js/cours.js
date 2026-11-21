@@ -227,8 +227,10 @@
 
     function estTitre(el) { return el && /^H[23]$/.test(el.tagName); }
 
+    var pageApp = false;    // pages créées pour une application seule (texte agrandi)
+
     function nouvellePage(partie) {
-      var $p = $('<article>', { 'class': 'feuille', 'aria-roledescription': 'page' });
+      var $p = $('<article>', { 'class': pageApp ? 'feuille page-app' : 'feuille', 'aria-roledescription': 'page' });
       var $tete = $('<header>', { 'class': 'feuille-tete' })
         .append($('<span>', { text: '\u00a0' })).append($('<span>', { text: '\u00a0' }));
       var $corps = $('<div>', { 'class': 'feuille-corps' });
@@ -337,11 +339,31 @@
       defaire();
       taille = mesurer();
       var page = nouvellePage('');
+      var presentation = $root.hasClass('presentation');
+      var seule = false;      // la page porte une application : rien d'autre n'y entre
       for (var i = 0; i < unites.length; i++) {
         var u = unites[i];
-        if (u.rupture && page.$corps.children().length) page = nouvellePage(u.partie);
+        // Au vidéoprojecteur, chaque application a sa propre page (avec son sous-titre éventuel).
+        var app = presentation && $(u.el).is('.bloc.app');
+        if (app && page.$corps.children().length) {
+          var titreAvant = page.$corps.children().last()[0];
+          var lotTitre = estTitre(titreAvant) && !seule && page.$corps.children().length > 1 ? [titreAvant] : [];
+          $(lotTitre).detach();
+          page = nouvellePage(u.partie);
+          page.$corps.append(lotTitre);
+        } else if ((u.rupture || seule) && page.$corps.children().length) {
+          page = nouvellePage(u.partie);
+        }
+        seule = app;
         if (!page.partie) page.partie = u.partie;
         page.$corps.append(u.el);
+        if (app) {
+          page.$p.addClass('page-app');
+          pageApp = true;
+          if (!tient(page)) page = decouper(page, u.el, u.partie);
+          pageApp = false;
+          continue;
+        }
         if (tient(page)) continue;
         // Ne tient pas : on passe à la page suivante (avec le titre qui précède, s'il y en a un).
         var precedent = $(u.el).prev()[0];
@@ -520,6 +542,7 @@
     function plein() { return document.fullscreenElement || document.webkitFullscreenElement; }
 
     function presenter(actif) {
+      if (actif && !$presenter.length) return;   // réservé aux professeurs (bouton absent sinon)
       if (actif === $root.hasClass('presentation')) return;
       $root.toggleClass('presentation', actif);
       $presenter.attr('aria-pressed', actif ? 'true' : 'false');

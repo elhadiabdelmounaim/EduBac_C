@@ -85,6 +85,12 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.app_name == 'cahier' %}active{% endif %}"
+                   href="{% url 'cahier:index' %}">
+                    <i class="bi bi-journal-bookmark"></i><span>Cahier de textes</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'training' %}active{% endif %}"
                    href="{% url 'quizzes:training' %}">
                     <i class="bi bi-bullseye"></i><span>Entraînement</span>
