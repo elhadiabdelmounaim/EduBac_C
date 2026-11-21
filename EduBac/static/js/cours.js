@@ -284,7 +284,7 @@
 
     // Tourner la page : la feuille courante se soulève et tourne autour de sa reliure (à gauche)
     // en découvrant la suivante ; pour revenir, la feuille précédente se rabat par-dessus.
-    var DUREE_TOUR = 750;
+    var DUREE_TOUR = 1300;   // ms, identique à --duree-tour (cours.css)
     var finTour = null;
     var mouvementReduit = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
