@@ -17,6 +17,15 @@ Copier la structure du fichier existant : un bloc `hero`, puis un bloc `cours` c
 `<section class="chap" id="s1" data-toc="Titre court">`. Le contenu est entre `{% verbatim %}`,
 le LaTeX (MathJax) s'écrit avec `\( … \)` et `\[ … \]`.
 
+Types de blocs (`<div class="bloc …">`) : `def` (Définition), `prop` (Propriété / Proposition),
+`ex` (Exemples), `app` (Application), `rem` (Remarque), `act` (Activité), `meth` (Méthode),
+`att` (Attention), `ret` (À retenir). Dans les formules, écrire `&lt;` et `&gt;` au lieu de
+`<` et `>`. Un tableau se met dans `<div class="tableau"><table>…</table></div>` ; un bloc ne se
+coupe pas au milieu d'un tableau : le garder court (au plus 3 ou 4 lignes par bloc).
+
+Cours disponibles : `1BAC_SE/04_le-produit-scalaire-dans-le-plan`,
+`1BAC_SE/05_les-suites-numeriques` (le PDF d'origine est dans le dossier `Cours` de la leçon).
+
 ## Livre 3D
 
 Le fichier `.livre.json` décrit une « double page » par partie du cours :
@@ -69,7 +78,8 @@ Les heures de chaque leçon viennent de la répartition annuelle
 Pour une nouvelle année ou un autre niveau, mettre ce fichier à jour.
 
 Ces heures sont réparties entre les blocs du cours (pas de 5 min), au prorata de leur volume
-et de leur nature : Applications ×2, Exemples ×1,5, Définition / Proposition ×1, Remarque ×0,5
+et de leur nature : Applications ×2, Exemples et Activités ×1,5, Définition / Proposition /
+Méthode ×1, Remarque et Attention ×0,5
 (`cahier/rubriques.py`). Pour imposer une durée : `<div class="bloc app" data-minutes="30">`,
 le reste est réparti entre les autres blocs.
 

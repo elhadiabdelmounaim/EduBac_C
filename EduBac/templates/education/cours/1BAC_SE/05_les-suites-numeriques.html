@@ -1,0 +1,478 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : 1ère Bac Sciences — Suites numériques (leçon 5, 7 heures).
+Source : Suites_numeriques_1Bac_SE.tex (le PDF est dans media/lessons/1BAC_SE/05_les-suites-numeriques/Cours/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < » et « > » sont écrits &lt; et &gt; (sinon le navigateur y voit une balise).
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">1ère année Bac Sciences</span>
+        <span class="chip or">Chapitre 5</span>
+        <span class="chip">Analyse · Semestre 1</span>
+      </div>
+      <h1 id="cours-titre">Suites numériques</h1>
+      <p class="sous-titre">Généralités, suites arithmétiques et géométriques</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectifs">
+    <div>
+      <strong>Contenus</strong>
+      <ul>
+        <li>Généralités : définition, suites explicites et récurrentes.</li>
+        <li>Suites majorées, minorées, bornées.</li>
+        <li>Monotonie d'une suite.</li>
+        <li>Suites arithmétiques, suites géométriques.</li>
+        <li>Somme de termes consécutifs.</li>
+      </ul>
+    </div>
+    <div>
+      <strong>Capacités attendues</strong>
+      <ul>
+        <li>Calculer des termes ; représenter graphiquement une suite.</li>
+        <li>Utiliser la récurrence pour majorer, minorer une suite.</li>
+        <li>Étudier la monotonie d'une suite.</li>
+        <li>Reconnaître une suite arithmétique ou géométrique, exprimer \(u_n\) et calculer une somme.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Généralités sur les suites">
+  <h2><span class="num">I</span><span class="titre">Généralités sur les suites numériques</span></h2>
+  <div class="bloc act"><div class="tag">Activité 1</div>
+    <ol>
+      <li>Compléter par les deux termes qui suivent dans chacune des listes :
+        \[\text{a) } 0,\ 3,\ 6,\ 9,\ \dots \qquad \text{b) } 1,\ 2,\ 4,\ 8,\ \dots \qquad \text{c) } 1,\ \tfrac14,\ \tfrac19,\ \tfrac1{16},\ \dots\]</li>
+      <li>Quelle règle permet, dans chaque liste, de passer d'un terme au suivant ?</li>
+    </ol>
+    <p>Chacune de ces listes est une <span class="mot">suite numérique</span> ; les nombres qui la constituent sont ses <span class="mot">termes</span>.</p>
+  </div>
+
+  <h3><span class="n">I.1</span>Définition et notations</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+    <p>Soient \(p\in\N\) et \(I=\{n\in\N\ /\ n\ge p\}\). Toute fonction \(u : I\to\R\) s'appelle une <span class="mot">suite numérique</span>.</p>
+    <ul>
+      <li>L'image \(u(n)\) d'un entier \(n\in I\) se note \(u_n\) ; on l'appelle le <span class="mot">terme d'indice \(n\)</span> (ou terme général).</li>
+      <li>La suite se note \((u_n)_{n\in I}\) ou \((u_n)_{n\ge p}\) ; le réel \(u_p\) est son <span class="mot">premier terme</span>.</li>
+      <li>Si \(I=\N\), on écrit simplement \((u_n)\) ou \((u_n)_{n\ge0}\) ; si \(I=\N^*\), on écrit \((u_n)_{n\ge1}\).</li>
+    </ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+    <ul>
+      <li>La suite \((u_n)_{n\ge0}\) des multiples de \(4\) : \(u_n=4n\), donc \(u_0=0\), \(u_1=4\) et \(u_3=12\).</li>
+      <li>\(1\), \(10\), \(100\) et \(1000\) sont les premiers termes de la suite \((v_n)_{n\ge0}\) définie par \(v_n=10^n\).</li>
+      <li>La suite de terme général \(w_n=\sqrt{n-3}\) n'est définie que pour \(n\ge3\) : on la note \((w_n)_{n\ge3}\) ; son premier terme est \(w_3=\sqrt{3-3}=0\).</li>
+    </ul>
+  </div>
+  <div class="bloc att"><div class="tag">Attention — erreurs fréquentes</div>
+    <ul>
+      <li>Ne pas confondre \(u_{n+1}\) (le terme qui suit \(u_n\)) et \(u_n+1\) (le terme \(u_n\) augmenté de \(1\)).</li>
+      <li>Ne pas confondre \(u_{2n}\) (le terme d'indice \(2n\)) et \(2u_n\).</li>
+    </ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+    <p>On considère la suite \((u_n)_{n\ge1}\) définie par \(u_n=2+\dfrac3n\).</p>
+    <ol>
+      <li>Calculer les trois premiers termes de \((u_n)\).</li>
+      <li>Exprimer \(u_n+1\), \(u_{n+1}\), \(u_{2n}\) et \(u_{2n+1}\) en fonction de \(n\), pour tout \(n\in\N^*\).</li>
+      <li>Déterminer l'indice \(n\) tel que \(u_n=\dfrac{43}{21}\).</li>
+    </ol>
+  </div>
+
+  <h3><span class="n">I.2</span>Modes de définition d'une suite</h3>
+  <div class="bloc def"><div class="tag">Définitions — Suite explicite, suite récurrente</div>
+    <ul>
+      <li>Une suite est <span class="mot">définie explicitement</span> lorsque son terme général est donné en fonction de \(n\) : \(u_n=f(n)\).<br>On calcule directement n'importe quel terme.</li>
+      <li>Une suite est <span class="mot">définie par récurrence</span> lorsqu'on donne son premier terme (ou ses premiers termes) et une relation qui permet de calculer chaque terme à partir du ou des précédents : par exemple \(u_{n+1}=f(u_n)\).<br>Pour calculer un terme, il faut connaître ceux qui le précèdent.</li>
+    </ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+    <p>On considère les suites \((u_n)\), \((v_n)\) et \((w_n)\) définies par :</p>
+    \[\begin{cases} u_0=2\\ u_{n+1}=3u_n-1\ ;\ n\in\N \end{cases}
+      \qquad
+      \begin{cases} v_0=2,\ v_1=-1\\ v_{n+2}=\dfrac{2v_{n+1}}{v_n}\ ;\ n\in\N \end{cases}
+      \qquad
+      (\forall n\in\N^*) : w_n=2^n-\frac4n .\]
+    <p>\((u_n)\) et \((v_n)\) sont des suites récurrentes ; \((w_n)\) est définie explicitement.</p>
+    <p>Par exemple : \(u_1=3\times2-1=5\), \(u_2=3\times5-1=14\) ; \(v_2=\dfrac{2\times(-1)}{2}=-1\) ; \(w_4=16-1=15\).</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Représenter graphiquement une suite récurrente</div>
+    <div class="avec-fig">
+      <div>
+        <ol>
+          <li>On trace la courbe \((\mathcal C_f)\) et la droite \((\Delta) : y=x\).</li>
+          <li>On place \(u_0\) sur l'axe des abscisses.</li>
+          <li>On monte verticalement jusqu'à \((\mathcal C_f)\) : l'ordonnée du point obtenu est \(u_1=f(u_0)\).</li>
+          <li>On se déplace horizontalement jusqu'à \((\Delta)\), puis verticalement jusqu'à l'axe des abscisses : on y lit \(u_1\).</li>
+          <li>On recommence pour obtenir \(u_2\), \(u_3\), …</li>
+        </ol>
+      </div>
+      <figure class="fig" aria-label="Construction des termes u0, u1, u2, u3 entre la courbe de f et la droite y = x">
+        <svg viewBox="0 0 250 240">
+          <defs>
+            <marker id="sfl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
+          </defs>
+          <line class="g" x1="8" y1="210" x2="244" y2="210"/>
+          <line class="g" x1="30" y1="232" x2="30" y2="6"/>
+          <line class="t" x1="9" y1="231" x2="226" y2="14"/>
+          <line class="c" x1="9" y1="150.5" x2="240" y2="35"/>
+          <g class="coul-a">
+            <polyline class="a" points="30,210 30,140 100,140 100,105 135,105 135,87.5 152.5,87.5" marker-end="url(#sfl)"/>
+          </g>
+          <line class="g d" x1="100" y1="140" x2="100" y2="210"/>
+          <line class="g d" x1="135" y1="105" x2="135" y2="210"/>
+          <line class="g d" x1="152.5" y1="87.5" x2="152.5" y2="210"/>
+          <text x="14" y="228" class="s">u₀</text><text x="94" y="228" class="s">u₁</text>
+          <text x="126" y="228" class="s">u₂</text><text x="150" y="228" class="s">u₃</text>
+          <text x="58" y="120" class="s">(𝒞f)</text><text x="196" y="72" class="s">y = x</text>
+          <text x="236" y="204" class="s">x</text><text x="36" y="14" class="s">y</text>
+        </svg>
+        <figcaption>Exemple : \(u_0=0\) et \(u_{n+1}=\frac12u_n+1\)</figcaption>
+      </figure>
+    </div>
+  </div>
+  <div class="bloc app"><div class="tag">Application 2</div>
+    <p>On considère les suites \((u_n)\) et \((v_n)\) définies par</p>
+    \[\begin{cases} u_0=2\\ u_{n+1}=\dfrac{u_n}{1+u_n}\ ;\ n\in\N \end{cases}
+      \qquad\text{et}\qquad
+      \begin{cases} v_0=2,\ v_1=-1\\ v_{n+2}=2v_{n+1}+v_n\ ;\ n\in\N . \end{cases}\]
+    <ol>
+      <li>Calculer \(u_1\), \(u_2\), \(v_3\) et \(v_4\).</li>
+      <li>Montrer par récurrence que \((\forall n\in\N) : u_n=\dfrac{2}{2n+1}\).</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Suites majorées, minorées, bornées">
+  <h2><span class="num">II</span><span class="titre">Suites majorées, minorées, bornées</span></h2>
+  <div class="bloc act"><div class="tag">Activité 2</div>
+    <p>On considère la suite \((u_n)\) définie par \(u_n=\dfrac{n+4}{n+1}\) pour tout \(n\in\N\).</p>
+    <ol>
+      <li>Montrer que \(u_n\le4\) pour tout \(n\in\N\). — On dit que \((u_n)\) est <span class="mot">majorée</span> par \(4\).</li>
+      <li>Montrer que \(u_n\ge1\) pour tout \(n\in\N\). — On dit que \((u_n)\) est <span class="mot">minorée</span> par \(1\).</li>
+      <li>En déduire que \(1\le u_n\le4\) pour tout \(n\in\N\). — On dit que \((u_n)\) est <span class="mot">bornée</span>.</li>
+    </ol>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+    <p>Soit \((u_n)_{n\in I}\) une suite numérique.</p>
+    <ul>
+      <li>\((u_n)\) est <span class="mot">majorée</span> s'il existe un réel \(M\) tel que \((\forall n\in I) : u_n\le M\).</li>
+      <li>\((u_n)\) est <span class="mot">minorée</span> s'il existe un réel \(m\) tel que \((\forall n\in I) : u_n\ge m\).</li>
+      <li>\((u_n)\) est <span class="mot">bornée</span> si elle est à la fois majorée et minorée.</li>
+    </ul>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+    <p>\((u_n)_{n\in I}\) est bornée si et seulement s'il existe un réel \(M&gt;0\) tel que \((\forall n\in I) : |u_n|\le M\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+    <ul>
+      <li>Soit \(u_n=2\cos(n^2+2)+1\). Comme \(-1\le\cos(n^2+2)\le1\), on a \(-1\le u_n\le3\), donc \(|u_n|\le3\) : \((u_n)\) est bornée.</li>
+      <li>Soit \((u_n)\) définie par \(u_0=2\) et \(u_{n+1}=\dfrac15u_n+\dfrac45\). Montrons par récurrence que \((\forall n\in\N) : u_n\ge1\).
+        <ul>
+          <li><strong>Initialisation :</strong> \(u_0=2\ge1\).</li>
+          <li><strong>Hérédité :</strong> soit \(n\in\N\) tel que \(u_n\ge1\). Alors \(u_{n+1}-1=\dfrac15u_n-\dfrac15=\dfrac{u_n-1}{5}\ge0\), donc \(u_{n+1}\ge1\).</li>
+          <li><strong>Conclusion :</strong> pour tout \(n\in\N\), \(u_n\ge1\) : la suite \((u_n)\) est minorée par \(1\).</li>
+        </ul></li>
+    </ul>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Majorer ou minorer une suite</div>
+    <ul>
+      <li><strong>Suite explicite :</strong> on étudie le signe de \(u_n-M\) (ou de \(u_n-m\)).</li>
+      <li><strong>Suite récurrente :</strong> on raisonne par <span class="mot">récurrence</span>, en écrivant \(u_{n+1}-M\) en fonction de \(u_n-M\).</li>
+    </ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 3</div>
+    <ol>
+      <li>Soit \((u_n)\) définie par \(u_0=4\) et \(u_{n+1}=\dfrac{4u_n-3}{u_n}\) pour tout \(n\in\N\). Montrer que \((\forall n\in\N) : u_n\ge3\).</li>
+      <li>Soit \((u_n)\) définie par \(u_0=0\) et \(u_{n+1}=\dfrac{2u_n+1}{u_n+2}\) pour tout \(n\in\N\). Montrer que \((\forall n\in\N) : 0\le u_n\le1\).</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Monotonie d'une suite">
+  <h2><span class="num">III</span><span class="titre">Monotonie d'une suite</span></h2>
+  <div class="bloc def"><div class="tag">Définition</div>
+    <p>Soit \((u_n)_{n\in I}\) une suite numérique.</p>
+    <ul>
+      <li>\((u_n)\) est <span class="mot">croissante</span> si \((\forall p,q\in I) : p&lt;q\Rightarrow u_p\le u_q\).</li>
+      <li>\((u_n)\) est <span class="mot">décroissante</span> si \((\forall p,q\in I) : p&lt;q\Rightarrow u_p\ge u_q\).</li>
+      <li>\((u_n)\) est <span class="mot">constante</span> si \((\forall p,q\in I) : u_p=u_q\).</li>
+    </ul>
+    <p>Avec des inégalités strictes, on parle de suite <strong>strictement</strong> croissante ou décroissante. Une suite croissante ou décroissante est dite <span class="mot">monotone</span>.</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+    <p>Soit \((u_n)_{n\in I}\) une suite numérique.</p>
+    <ul>
+      <li>\((u_n)\) est croissante si et seulement si \((\forall n\in I) : u_{n+1}\ge u_n\).</li>
+      <li>\((u_n)\) est décroissante si et seulement si \((\forall n\in I) : u_{n+1}\le u_n\).</li>
+      <li>\((u_n)\) est constante si et seulement si \((\forall n\in I) : u_{n+1}=u_n\).</li>
+    </ul>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Étudier la monotonie d'une suite</div>
+    <ol>
+      <li><strong>Méthode générale :</strong> on étudie le signe de \(u_{n+1}-u_n\).</li>
+      <li><strong>Si tous les termes sont strictement positifs :</strong> on peut comparer \(\dfrac{u_{n+1}}{u_n}\) à \(1\) (\(&gt;1\) : croissante ; \(&lt;1\) : décroissante).</li>
+      <li><strong>Si \(u_n=f(n)\) :</strong> si \(f\) est croissante (resp. décroissante) sur \([p;+\infty[\), alors \((u_n)_{n\ge p}\) est croissante (resp. décroissante).</li>
+    </ol>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+    <ul>
+      <li>Soit \(x_n=2n-3\). Pour tout \(n\in\N\) : \(x_{n+1}-x_n=2(n+1)-3-(2n-3)=2&gt;0\). Donc \((x_n)\) est strictement croissante.</li>
+      <li>Soit \(y_n=5\times\left(\tfrac23\right)^n\). Pour tout \(n\in\N\) : \(y_{n+1}-y_n=5\left(\tfrac23\right)^n\left(\tfrac23-1\right)=-\tfrac53\left(\tfrac23\right)^n&lt;0\). Donc \((y_n)\) est strictement décroissante.</li>
+      <li>Soit \(z_n=\dfrac{n}{2^n}\) pour \(n\ge1\). Les termes sont positifs et \(\dfrac{z_{n+1}}{z_n}=\dfrac{n+1}{2n}\le1\) (car \(n+1\le2n\)). Donc \((z_n)_{n\ge1}\) est décroissante.</li>
+      <li>La suite \(\big((-1)^n\big)\) prend les valeurs \(1,-1,1,-1,\dots\) : elle n'est <strong>pas monotone</strong>.</li>
+    </ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 4</div>
+    <p>Étudier la monotonie de la suite \((u_n)_{n\in\N}\) dans chacun des cas suivants :</p>
+    \[\text{1) } u_n=\frac{3}{n+1} \qquad \text{2) } u_n=n^2+2n \qquad \text{3) } u_n=\sqrt{n+1} \qquad \text{4) } u_n=\frac{2^n}{n+1}.\]
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+    <p>Soit \((u_n)_{n\ge p}\) une suite numérique.</p>
+    <ul>
+      <li>Si \((u_n)_{n\ge p}\) est croissante, alors \((\forall n\ge p) : u_n\ge u_p\) : elle est <span class="mot">minorée par son premier terme</span>.</li>
+      <li>Si \((u_n)_{n\ge p}\) est décroissante, alors \((\forall n\ge p) : u_n\le u_p\) : elle est <span class="mot">majorée par son premier terme</span>.</li>
+    </ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 5</div>
+    <p>Soit \((u_n)\) la suite définie par \(u_0=6\) et \(u_{n+1}=4-\dfrac{3}{u_n}\) pour tout \(n\in\N\).</p>
+    <ol>
+      <li>Calculer \(u_1\) et \(u_2\).</li>
+      <li>Montrer que \((\forall n\in\N) : u_n&gt;3\).</li>
+      <li>
+        <ol class="alpha">
+          <li>Montrer que \((\forall n\in\N) : u_{n+1}-u_n=\dfrac{(1-u_n)(u_n-3)}{u_n}\).</li>
+          <li>Étudier la monotonie de la suite \((u_n)\).</li>
+          <li>En déduire que \((\forall n\in\N) : u_n\le6\).</li>
+        </ol></li>
+    </ol>
+  </div>
+  <div class="bloc app"><div class="tag">Application 6</div>
+    <p>Soit \((v_n)\) la suite définie par \(v_0=3\) et \(v_{n+1}=\dfrac12\left(v_n+\dfrac{4}{v_n}\right)\) pour tout \(n\in\N\).</p>
+    <ol>
+      <li>Calculer \(v_1\) et \(v_2\).</li>
+      <li>Montrer que la suite \((v_n)\) est minorée par \(2\). <em>Indication :</em> \(v_{n+1}-2=\dfrac{(v_n-2)^2}{2v_n}\).</li>
+      <li>Étudier la monotonie de la suite \((v_n)\).</li>
+      <li>En déduire que la suite \((v_n)\) est majorée par \(3\).</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Suites arithmétiques">
+  <h2><span class="num">IV</span><span class="titre">Suites arithmétiques</span></h2>
+  <div class="bloc act"><div class="tag">Activité 3</div>
+    <p>On considère la suite \((u_n)\) définie par \(u_n=3n+2\) pour tout \(n\in\N\).</p>
+    <ol>
+      <li>Vérifier que \(u_1=u_0+3\), \(u_2=u_1+3\) et \(u_3=u_2+3\).</li>
+      <li>Montrer que \((\forall n\in\N) : u_{n+1}=u_n+3\).</li>
+    </ol>
+    <p>Pour obtenir un terme, on <strong>ajoute \(3\)</strong> au terme précédent : on dit que \((u_n)\) est <span class="mot">arithmétique de raison \(3\)</span>.</p>
+  </div>
+
+  <h3><span class="n">IV.1</span>Définition</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+    <p>Une suite \((u_n)_{n\in I}\) est <span class="mot">arithmétique</span> s'il existe un réel \(r\) tel que \((\forall n\in I) : u_{n+1}=u_n+r\).</p>
+    <p>Le réel \(r\) s'appelle la <span class="mot">raison</span> de la suite.</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Montrer qu'une suite est arithmétique</div>
+    <p>On calcule \(u_{n+1}-u_n\) : si le résultat est une <strong>constante \(r\) indépendante de \(n\)</strong>, la suite est arithmétique de raison \(r\) ; sinon, elle ne l'est pas.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+    <ul>
+      <li>\(u_n=-\dfrac32n+5\) : \(u_{n+1}-u_n=-\dfrac32\) ; \((u_n)\) est arithmétique de raison \(-\dfrac32\) et de premier terme \(u_0=5\).</li>
+      <li>\(v_n=n^2+5\) : \(v_{n+1}-v_n=2n+1\) dépend de \(n\) ; \((v_n)\) n'est pas arithmétique.<br>(Il suffit aussi de remarquer que \(v_1-v_0=1\) et \(v_2-v_1=3\).)</li>
+    </ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 7</div>
+    <p>Soit \((u_n)\) la suite définie par \(u_0=5\) et \(u_{n+1}=\dfrac{2u_n-1}{u_n}\) pour tout \(n\in\N\) (on admet que \(u_n&gt;1\) pour tout \(n\)).</p>
+    <p>On pose, pour tout \(n\in\N\), \(v_n=\dfrac{1}{u_n-1}\). Montrer que \((v_n)\) est une suite arithmétique ; préciser sa raison et son premier terme.</p>
+  </div>
+
+  <h3><span class="n">IV.2</span>Terme général — Monotonie</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+    <p>Soit \((u_n)_{n\ge p}\) une suite arithmétique de raison \(r\).</p>
+    <ul>
+      <li>Pour tout \(n\ge p\) : \(u_n=u_p+(n-p)\,r\). En particulier : \(u_n=u_0+nr\) et \(u_n=u_1+(n-1)r\).</li>
+      <li>Plus généralement, pour tous indices \(n\) et \(m\) : \(u_n=u_m+(n-m)\,r\).</li>
+      <li>Si \(r&gt;0\), la suite est strictement croissante ; si \(r&lt;0\), strictement décroissante ; si \(r=0\), constante.</li>
+    </ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+    <ul>
+      <li>Soit \((u_n)\) arithmétique de raison \(r=\frac12\) telle que \(u_6=3\). Alors \(u_{30}=u_6+(30-6)\times\frac12=3+12=15\).</li>
+      <li>Soit \((u_n)\) arithmétique telle que \(u_0=5\) et \(u_{100}=-45\). On a \(u_{100}=u_0+100r\), donc \(100r=-50\) et \(r=-\frac12\).<br>Par suite, pour tout \(n\in\N\) : \(u_n=u_0+nr=5-\dfrac12n\).</li>
+    </ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 8</div>
+    <p>Soit \((u_n)_{n\ge1}\) une suite arithmétique telle que \(u_1=5\) et de raison \(r=2\).</p>
+    <ol>
+      <li>Calculer \(u_5\), \(u_{10}\) et \(u_{100}\).</li>
+      <li>Déterminer le terme général de la suite \((u_n)\).</li>
+      <li>Le nombre \(203\) est-il un terme de la suite \((u_n)\) ? Si oui, préciser son indice.</li>
+    </ol>
+  </div>
+
+  <h3><span class="n">IV.3</span>Somme de termes consécutifs</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+    <p>Soit \((u_n)\) une suite arithmétique. Pour tous entiers \(p\le n\) :</p>
+    \[S=u_p+u_{p+1}+\dots+u_n=(n-p+1)\times\frac{u_p+u_n}{2},\]
+    <p>soit : \(S=\text{(nombre de termes)}\times\dfrac{\text{premier terme}+\text{dernier terme}}{2}\).</p>
+    <p>En particulier : \(1+2+3+\dots+n=\dfrac{n(n+1)}{2}\).</p>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+    <ul>
+      <li>La somme \(u_p+\dots+u_n\) contient \(n-p+1\) termes : \(u_0+\dots+u_n\) en contient \(n+1\) ; \(u_1+\dots+u_n\) en contient \(n\).</li>
+      <li>Si \(a\), \(b\), \(c\) sont trois termes consécutifs d'une suite arithmétique, alors \(a+c=2b\) : \(b\) est la <span class="mot">moyenne arithmétique</span> de \(a\) et \(c\).</li>
+    </ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 9</div>
+    <p>Soit \((v_n)\) une suite arithmétique telle que \(v_3=2\) et \(v_7=14\).</p>
+    <ol>
+      <li>Déterminer la raison \(r\) de cette suite et son premier terme \(v_0\).</li>
+      <li>Exprimer \(v_n\) en fonction de \(n\).</li>
+      <li>Calculer la somme \(S=v_4+v_5+v_6+\dots+v_{25}\).</li>
+    </ol>
+  </div>
+  <div class="bloc app"><div class="tag">Application 10</div>
+    <p>Soit \((u_n)\) la suite définie par \(u_0=2\) et \(u_{n+1}=\dfrac{5u_n-1}{u_n+3}\) pour tout \(n\in\N\). On pose \(v_n=\dfrac{1}{u_n-1}\).</p>
+    <ol>
+      <li>Montrer que \((\forall n\in\N) : u_n&gt;1\).</li>
+      <li>Étudier la monotonie de la suite \((u_n)\).</li>
+      <li>Montrer que \((v_n)\) est une suite arithmétique ; préciser sa raison et son premier terme.</li>
+      <li>Exprimer \(v_n\), puis \(u_n\), en fonction de \(n\).</li>
+      <li>Calculer la somme \(S_n=v_0+v_1+v_2+\dots+v_n\).</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================ V ============================ -->
+<section class="chap" id="s5" data-toc="Suites géométriques">
+  <h2><span class="num">V</span><span class="titre">Suites géométriques</span></h2>
+  <div class="bloc act"><div class="tag">Activité 4</div>
+    <p>On considère la suite \((u_n)\) définie par \(u_n=3\times2^n\) pour tout \(n\in\N\).</p>
+    <ol>
+      <li>Vérifier que \(u_1=2u_0\), \(u_2=2u_1\) et \(u_3=2u_2\).</li>
+      <li>Montrer que \((\forall n\in\N) : u_{n+1}=2u_n\).</li>
+    </ol>
+    <p>Pour obtenir un terme, on <strong>multiplie par \(2\)</strong> le terme précédent : on dit que \((u_n)\) est <span class="mot">géométrique de raison \(2\)</span>.</p>
+  </div>
+
+  <h3><span class="n">V.1</span>Définition</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+    <p>Une suite \((u_n)_{n\in I}\) est <span class="mot">géométrique</span> s'il existe un réel \(q\) tel que \((\forall n\in I) : u_{n+1}=q\,u_n\).</p>
+    <p>Le réel \(q\) s'appelle la <span class="mot">raison</span> de la suite.</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Montrer qu'une suite est géométrique</div>
+    <p>On exprime \(u_{n+1}\) en fonction de \(u_n\) et on cherche à obtenir \(u_{n+1}=q\,u_n\) avec \(q\) <strong>indépendant de \(n\)</strong>.</p>
+    <p>Si les termes ne sont pas nuls, on peut calculer \(\dfrac{u_{n+1}}{u_n}\) et vérifier que c'est une constante.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+    <ul>
+      <li>\(u_n=-7\times5^n\) : \(u_{n+1}=-7\times5^{n+1}=5\times(-7\times5^n)=5u_n\). \((u_n)\) est géométrique de raison \(5\) et de premier terme \(u_0=-7\).</li>
+      <li>\(v_n=n^2+5\) : \(v_0=5\), \(v_1=6\), \(v_2=9\) et \(\dfrac{v_1}{v_0}=\dfrac65\neq\dfrac{v_2}{v_1}=\dfrac32\) ; \((v_n)\) n'est pas géométrique.</li>
+    </ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 11</div>
+    <p>Soit \((u_n)\) la suite définie par \(u_0=-2\) et \(u_{n+1}=\dfrac23u_n-1\) pour tout \(n\in\N\). On pose \(v_n=u_n+3\).</p>
+    <p>Montrer que \((v_n)\) est une suite géométrique ; préciser sa raison et son premier terme. En déduire \(u_n\) en fonction de \(n\).</p>
+  </div>
+
+  <h3><span class="n">V.2</span>Terme général — Monotonie</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+    <p>Soit \((u_n)_{n\ge p}\) une suite géométrique de raison \(q\).</p>
+    <ul>
+      <li>Pour tout \(n\ge p\) : \(u_n=u_p\times q^{\,n-p}\). En particulier : \(u_n=u_0\times q^n\) et \(u_n=u_1\times q^{\,n-1}\).</li>
+      <li>Si \(q&gt;0\) et \(u_0&gt;0\) : la suite est croissante si \(q&gt;1\) et décroissante si \(0&lt;q&lt;1\) (les sens s'inversent si \(u_0&lt;0\)).</li>
+      <li>Si \(q&lt;0\), les termes changent de signe à chaque rang : la suite n'est pas monotone.</li>
+    </ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemple</div>
+    <p>Soit \((u_n)\) une suite géométrique telle que \(u_2=\dfrac{3}{16}\) et \(u_5=\dfrac{3}{1024}\). Soit \(q\) sa raison.</p>
+    <p>On a \(u_5=u_2\times q^{3}\), donc \(q^3=\dfrac{u_5}{u_2}=\dfrac{16}{1024}=\dfrac1{64}=\left(\dfrac14\right)^3\), d'où \(q=\dfrac14\).</p>
+    <p>Par suite : \(u_n=u_2\times q^{\,n-2}=\dfrac{3}{16}\times\left(\dfrac14\right)^{n-2}=3\times\left(\dfrac14\right)^{n}\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 12</div>
+    <p>Soit \((v_n)_{n\ge1}\) une suite géométrique de raison \(q=2\) et de premier terme \(v_1=5\).</p>
+    <ol>
+      <li>Calculer \(v_4\).</li>
+      <li>Exprimer \(v_n\) en fonction de \(n\).</li>
+    </ol>
+  </div>
+
+  <h3><span class="n">V.3</span>Somme de termes consécutifs</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+    <p>Soit \((u_n)\) une suite géométrique de raison \(q\). Pour tous entiers \(p\le n\), on pose \(S=u_p+u_{p+1}+\dots+u_n\).</p>
+    <ul>
+      <li>Si \(q\neq1\) : \(\displaystyle S=u_p\times\frac{1-q^{\,n-p+1}}{1-q}\), soit \(S=\text{(premier terme)}\times\dfrac{1-q^{\text{nombre de termes}}}{1-q}\).</li>
+      <li>Si \(q=1\) : \(S=(n-p+1)\times u_p\).</li>
+    </ul>
+    <p>En particulier, pour \(q\neq1\) : \(1+q+q^2+\dots+q^n=\dfrac{1-q^{n+1}}{1-q}\).</p>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarque</div>
+    <p>Si \(a\), \(b\), \(c\) sont trois termes consécutifs d'une suite géométrique, alors \(b^2=ac\). Si \(a,b,c&gt;0\), \(b\) est la <span class="mot">moyenne géométrique</span> de \(a\) et \(c\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemple</div>
+    \[1+2+2^2+\dots+2^{10}=\frac{1-2^{11}}{1-2}=2^{11}-1=2047.\]
+  </div>
+  <div class="bloc app"><div class="tag">Application 13</div>
+    <p>Soit \((u_n)\) une suite géométrique de raison \(q=3\) telle que \(u_4=12\).</p>
+    <p>Calculer la somme \(S=u_4+u_5+u_6+\dots+u_{2006}\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 14</div>
+    <p>Soit \((u_n)\) la suite définie par \(u_0=0\) et \(u_{n+1}=\dfrac{2u_n+3}{u_n+4}\) pour tout \(n\in\N\). On pose \(v_n=\dfrac{u_n-1}{u_n+3}\).</p>
+    <ol>
+      <li>Montrer que \((\forall n\in\N) : 0\le u_n&lt;1\).</li>
+      <li>Étudier la monotonie de la suite \((u_n)\).</li>
+      <li>Montrer que \((v_n)\) est une suite géométrique ; préciser sa raison et son premier terme.</li>
+      <li>Exprimer \(v_n\), puis \(u_n\), en fonction de \(n\).</li>
+      <li>Calculer la somme \(S_n=v_0+v_1+v_2+\dots+v_n\).</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================ VI ============================ -->
+<section class="chap" id="s6" data-toc="Synthèse">
+  <h2><span class="num">VI</span><span class="titre">Synthèse</span></h2>
+  <div class="bloc ret"><div class="tag">À retenir — Définition et terme général</div>
+    <div class="tableau">
+      <table>
+        <thead>
+          <tr><th scope="col"></th><th scope="col">Suite arithmétique de raison \(r\)</th><th scope="col">Suite géométrique de raison \(q\)</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Définition</th><td>\(u_{n+1}=u_n+r\)</td><td>\(u_{n+1}=q\,u_n\)</td></tr>
+          <tr><th scope="row">On vérifie que</th><td>\(u_{n+1}-u_n\) est constante</td><td>\(u_{n+1}=q\,u_n\) avec \(q\) constante</td></tr>
+          <tr><th scope="row">Terme général</th><td>\(u_n=u_p+(n-p)\,r\)</td><td>\(u_n=u_p\times q^{\,n-p}\)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="bloc ret"><div class="tag">À retenir — Somme, termes consécutifs, monotonie</div>
+    <div class="tableau">
+      <table>
+        <thead>
+          <tr><th scope="col"></th><th scope="col">Suite arithmétique de raison \(r\)</th><th scope="col">Suite géométrique de raison \(q\)</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Somme \(u_p+\dots+u_n\)</th><td>\((n-p+1)\times\dfrac{u_p+u_n}{2}\)</td><td>\(u_p\times\dfrac{1-q^{\,n-p+1}}{1-q}\) \((q\neq1)\)</td></tr>
+          <tr><th scope="row">Trois termes consécutifs \(a,b,c\)</th><td>\(a+c=2b\)</td><td>\(b^2=ac\)</td></tr>
+          <tr><th scope="row">Monotonie</th><td>signe de \(r\)</td><td>selon \(q\) et le signe de \(u_0\)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}

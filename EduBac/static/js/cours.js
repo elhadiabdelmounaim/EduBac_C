@@ -15,7 +15,7 @@
         vect: ['\\overrightarrow{#1}', 1],
         vu: '\\overrightarrow{u}', vv: '\\overrightarrow{v}', vw: '\\overrightarrow{w}',
         vn: '\\overrightarrow{n}', vi: '\\overrightarrow{i}', vj: '\\overrightarrow{j}',
-        R: '\\mathbb{R}', Cc: '(\\mathcal{C})', Dd: '(D)',
+        R: '\\mathbb{R}', N: '\\mathbb{N}', Cc: '(\\mathcal{C})', Dd: '(D)',
         Rep: '\\left(O;\\overrightarrow{i},\\overrightarrow{j}\\right)',
         angv: ['(\\widehat{#1\\,;#2})', 2]
       }
@@ -67,7 +67,10 @@
 
     // ---------- Chiffres de l'en-tête (comptés dans le cours) ----------
     var $stats = $source.find('[data-stats]');
-    $.each([['def', 'définition', 'définitions'], ['prop', 'proposition', 'propositions'],
+    // « Propriété » ou « Proposition » : le libellé suit le vocabulaire du cours.
+    var proprietes = /^propriét/i.test($.trim($sections.find('.bloc.prop > .tag').first().text()));
+    $.each([['def', 'définition', 'définitions'],
+            proprietes ? ['prop', 'propriété', 'propriétés'] : ['prop', 'proposition', 'propositions'],
             ['app', 'application', 'applications']], function (_, item) {
       var count = $sections.find('.bloc.' + item[0]).length;
       if (!count) return;

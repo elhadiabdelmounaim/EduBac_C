@@ -14,6 +14,9 @@
   --ex: #6B5BB5;    --ex-bg: #F1EFFA;
   --app: #C07A12;   --app-bg: #FCF5E6;
   --rem: #B4475A;   --rem-bg: #FBEEF0;
+  --act: #55606E;   --act-bg: #F1F3F5;
+  --meth: #1D5FA8;  --meth-bg: #EAF2FB;
+  --att: #A4161A;   --att-bg: #FDEDED;
   --fig-trait: #123B52;
   --fig-accent: #D9822B;
   --barre: #123B52;
@@ -27,6 +30,7 @@
     --fond: #0E1A22; --surface: #15242E; --texte: #E3EAEF; --doux: #9DB0BE; --trait: #24394A;
     --def: #8FC3DE; --def-bg: #172C39; --prop: #4FD1C1; --prop-bg: #142F2D;
     --ex: #B3A7EE; --ex-bg: #211E36; --app: #F0B356; --app-bg: #2E2414; --rem: #F08A9C; --rem-bg: #33191E;
+    --act: #AEB8C4; --act-bg: #1E262E; --meth: #8DB8EC; --meth-bg: #16263A; --att: #F28B8E; --att-bg: #351718;
     --fig-trait: #A9D0E4; --fig-accent: #F0A35A; --barre: #0B2433;
     color-scheme: dark;
   }
@@ -36,6 +40,7 @@
   --fond: #0E1A22; --surface: #15242E; --texte: #E3EAEF; --doux: #9DB0BE; --trait: #24394A;
   --def: #8FC3DE; --def-bg: #172C39; --prop: #4FD1C1; --prop-bg: #142F2D;
   --ex: #B3A7EE; --ex-bg: #211E36; --app: #F0B356; --app-bg: #2E2414; --rem: #F08A9C; --rem-bg: #33191E;
+    --act: #AEB8C4; --act-bg: #1E262E; --meth: #8DB8EC; --meth-bg: #16263A; --att: #F28B8E; --att-bg: #351718;
   --fig-trait: #A9D0E4; --fig-accent: #F0A35A; --barre: #0B2433;
   color-scheme: dark;
 }
@@ -123,6 +128,23 @@ h3 .n { color: var(--turquoise); margin-right: 6px; font-weight: 700; }
 .ex   { --b: var(--ex);   --b-bg: var(--ex-bg); }
 .app  { --b: var(--app);  --b-bg: var(--app-bg); }
 .rem  { --b: var(--rem);  --b-bg: var(--rem-bg); }
+.act  { --b: var(--act);  --b-bg: var(--act-bg); }
+.meth { --b: var(--meth); --b-bg: var(--meth-bg); }
+.att  { --b: var(--att);  --b-bg: var(--att-bg); }
+.ret  { --b: var(--def);  --b-bg: var(--def-bg); }
+.bloc.ret { border: 2px solid var(--b); border-left-width: 5px; }
+/* Tableau de synthèse */
+.tableau { overflow-x: auto; margin: 6px 0; }
+.tableau table { width: 100%; border-collapse: collapse; background: var(--surface); }
+.tableau th, .tableau td { border: 1px solid var(--trait); padding: 7px 10px; text-align: left; vertical-align: middle; }
+.tableau thead th { background: var(--b); color: var(--b-bg); font-weight: 600; }
+.tableau thead th mjx-container { color: inherit; }
+.tableau tbody th { font-weight: 600; color: var(--b); }
+/* Contenus et capacités attendues (en-tête) */
+.objectifs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 24px; }
+.objectifs strong { color: var(--petrole); }
+.objectifs ul { margin: 6px 0 0; padding-left: 20px; }
+.objectifs li { margin: 3px 0; }
 .app ol.alpha { list-style: lower-alpha; }
 .mot { color: var(--b); font-weight: 600; }
 
@@ -167,6 +189,7 @@ svg text.s { font-size: 12px; font-style: normal; font-family: var(--corps); fil
   .avec-fig figure { max-width: 300px; margin: 0 auto; }
   .trois { grid-template-columns: 1fr; max-width: 280px; margin-left: auto; margin-right: auto; }
   .bloc { padding: 16px 16px 12px; }
+  .objectifs { grid-template-columns: 1fr; }
   .crumb { display: none; }
 }
 

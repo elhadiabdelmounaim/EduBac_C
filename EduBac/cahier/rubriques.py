@@ -133,7 +133,8 @@ def plan_du_fichier(chemin):
 
 
 # Temps relatif selon la nature du bloc : les applications sont faites par les élèves.
-POIDS_GENRE = {'app': 2.0, 'ex': 1.5, 'def': 1.0, 'prop': 1.0, 'rem': 0.5}
+POIDS_GENRE = {'app': 2.0, 'act': 1.5, 'ex': 1.5, 'def': 1.0, 'prop': 1.0, 'meth': 1.0,
+               'rem': 0.5, 'att': 0.5}
 PAS = 5     # minutes
 
 

@@ -21,7 +21,7 @@ class CourseHtmlTests(TestCase):
         self.lesson = Lesson.objects.create(
             title='Le produit scalaire dans le plan', content='', course=self.course, order=4)
         self.other = Lesson.objects.create(
-            title='Les suites numériques', content='', course=self.course, order=5)
+            title='Calcul trigonométrique', content='', course=self.course, order=6)
 
     def add_pdf(self, lesson_folder, name='produit_scalaire.pdf'):
         folder = Path(self.temp_media.name) / 'lessons' / '1BAC_SE' / lesson_folder / 'Cours'
@@ -43,6 +43,17 @@ class CourseHtmlTests(TestCase):
         self.assertEqual(page.count('class="chap"'), 9)
         self.assertContains(response, reverse('education:lesson_detail', args=[self.lesson.pk]))
 
+    def test_suites_course_page(self):
+        suites = Lesson.objects.create(title='Les suites numériques', content='', course=self.course, order=5)
+        response = self.client.get(reverse('education:lesson_course_html', args=[suites.pk]))
+        self.assertEqual(response.status_code, 200)
+        page = response.content.decode()
+        self.assertEqual(page.count('class="chap"'), 6)
+        self.assertEqual(page.count('class="bloc app"'), 14)
+        self.assertIn(r"\(u_n=2+\dfrac3n\)", page)
+        # Les « < » des formules sont échappés : aucun n'ouvre une fausse balise.
+        self.assertNotIn(r"p<q", page)
+
     def test_lesson_without_html_course_returns_404(self):
         response = self.client.get(reverse('education:lesson_course_html', args=[self.other.pk]))
         self.assertEqual(response.status_code, 404)
@@ -57,7 +68,7 @@ class CourseHtmlTests(TestCase):
         self.assertNotIn(f'href="{pdf_url}">Ouvrir</a>', page)
 
     def test_lesson_without_html_course_keeps_pdf_open_button(self):
-        name = self.add_pdf('05_les-suites-numeriques', 'suites.pdf')
+        name = self.add_pdf('06_calcul-trigonometrique', 'trigonometrie.pdf')
         pdf_url = reverse('education:lesson_document', args=[self.other.pk, 'Cours', name])
         page = self.client.get(reverse('education:lesson_detail', args=[self.other.pk])).content.decode()
         self.assertIn(f'href="{pdf_url}">Ouvrir</a>', page)
@@ -77,7 +88,7 @@ class CourseBook3DTests(TestCase):
         course = Course.objects.create(name='Mathématiques', niveau='1ere_bac_sc')
         self.lesson = Lesson.objects.create(
             title='Le produit scalaire dans le plan', content='', course=course, order=4)
-        self.other = Lesson.objects.create(title='Les suites numériques', content='', course=course, order=5)
+        self.other = Lesson.objects.create(title='Calcul trigonométrique', content='', course=course, order=6)
 
     def test_book_page_embeds_lessons_and_local_three_js(self):
         response = self.client.get(reverse('education:lesson_book_3d', args=[self.lesson.pk]))
