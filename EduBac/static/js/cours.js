@@ -122,6 +122,26 @@
     var $fin = $source.children('.fin');
     if ($fin.length) unites.push({ el: $fin[0], partie: parties.length ? parties[parties.length - 1].id : '' });
 
+    // ---------- Applications voilées en présentation ----------
+    // Au vidéoprojecteur, seuls les exemples sont visibles : chaque bloc « Applications » reste
+    // masqué (sa place est gardée) jusqu'au clic sur « Afficher l'application ».
+    var devoilees = {};
+    $source.find('.bloc.app').each(function (k) {
+      $(this).attr('data-app', k).append($('<button>', {
+        type: 'button', 'class': 'app-voile', text: "Afficher l'application"
+      }));
+    });
+    function majVoiles() {
+      $feuilles.find('.bloc.app').each(function () {
+        $(this).toggleClass('devoile', !!devoilees[$(this).attr('data-app')]);
+      });
+    }
+    $feuilles.on('click', '.app-voile', function () {
+      var k = $(this).closest('.bloc.app').attr('data-app');
+      devoilees[k] = true;
+      $feuilles.find('.bloc.app[data-app="' + k + '"]').addClass('devoile anime');
+    });
+
     var pages = [];
     var suites = [];        // blocs « suite » créés lors du découpage
     var courante = 0;
@@ -158,13 +178,13 @@
     }
 
     function premierContenu(el) {
-      return $(el).children().not('.tag').first()[0];
+      return $(el).children().not('.tag, .app-voile').first()[0];
     }
 
     // Déplace le dernier morceau de « src » au début de « dst » (structure identique).
     function retirerDernier(src, dst, miroirs) {
       for (;;) {
-        var enfants = $(src).children().not('.tag').toArray();
+        var enfants = $(src).children().not('.tag, .app-voile').toArray();
         if (enfants.length >= 2) {
           var dernier = enfants[enfants.length - 1];
           var tag = $(dst).children('.tag')[0];
@@ -192,7 +212,8 @@
       var $bloc = $(el);
       if (!$bloc.hasClass('bloc')) { page.$p.addClass('deborde'); return page; }
       var etiquette = $.trim($bloc.children('.tag').first().text().replace(/\s*\(suite\)$/, ''));
-      var $suite = $('<div>', { 'class': $bloc.attr('class').replace(/\s*\bsuite\b/, '') + ' suite' })
+      var $suite = $('<div>', { 'class': $bloc.attr('class').replace(/\s*\b(suite|devoile|anime)\b/g, '') + ' suite' })
+        .attr('data-app', $bloc.attr('data-app'))
         .data('source', $bloc.data('source') || $bloc[0])
         .append($('<div>', { 'class': 'tag', text: etiquette + ' (suite)' }));
       var miroirs = [];
@@ -268,6 +289,13 @@
         p.$p.attr('aria-label', 'Page ' + (k + 1) + ' sur ' + total);
         p.$corps.children().each(function (i) { this.style.setProperty('--i', Math.min(i, 8)); });
       });
+      // Chaque morceau « suite » d'une application a aussi son bouton.
+      $(suites).filter('.app').each(function () {
+        if (!$(this).children('.app-voile').length) {
+          $(this).append($('<button>', { type: 'button', 'class': 'app-voile', text: 'Afficher la suite' }));
+        }
+      });
+      majVoiles();
       var cible = 0;
       if (ancre) {
         $.each(pages, function (k, p) { if ($.contains(p.$p[0], ancre)) { cible = k; return false; } });
@@ -415,6 +443,7 @@
     function presenter(actif) {
       if (actif === $root.hasClass('presentation')) return;
       $root.toggleClass('presentation', actif);
+      if (actif) devoilees = {};   // chaque présentation recommence avec les applications masquées
       $presenter.attr('aria-pressed', actif ? 'true' : 'false');
       if (actif) {
         var el = document.documentElement;

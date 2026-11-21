@@ -201,6 +201,40 @@ class CourseHtmlBrowserTests(StaticLiveServerTestCase):
         page.keyboard.press('Escape')
         page.wait_for_function("!document.documentElement.classList.contains('presentation')")
         self.assertEqual(len(self.current(page)), 1)
+        # Hors présentation, les applications sont lisibles sans bouton.
+        self.assertEqual(page.locator('.feuille .app-voile:visible').count(), 0)
         self.assertIn(anchor, page.evaluate(
             "[...document.querySelectorAll('.feuille.visible .feuille-corps')].map(c => c.textContent).join(' ')"))
+        self.assertEqual(errors, [])
+
+    def test_projector_hides_applications_until_revealed(self):
+        page, errors = self.open(1920, 1080)
+        page.click('#coursPresenter')
+        page.wait_for_function("document.documentElement.classList.contains('presentation')")
+        page.wait_for_timeout(400)
+        # Aller à la première page qui contient une application.
+        cible = page.evaluate(
+            "[...document.querySelectorAll('.feuille')].findIndex(f => f.querySelector('.bloc.app'))")
+        self.assertGreater(cible, 0)
+        for _ in range(cible):
+            page.keyboard.press('ArrowRight')
+        page.wait_for_timeout(1500)
+        bloc = page.locator('.feuille.visible .bloc.app').first
+        contenu = bloc.locator(':scope > ol, :scope > p, :scope > ul').first
+        # L'exemple reste visible ; l'application est masquée derrière son bouton.
+        self.assertTrue(page.locator('.feuille.visible .bloc.ex').first.is_visible())
+        self.assertEqual(contenu.evaluate('e => getComputedStyle(e).visibility'), 'hidden')
+        hauteur = bloc.bounding_box()['height']
+        bloc.locator('.app-voile').click()
+        self.assertEqual(contenu.evaluate('e => getComputedStyle(e).visibility'), 'visible')
+        self.assertFalse(bloc.locator('.app-voile').is_visible())
+        # La page ne bouge pas : la place était réservée.
+        self.assertAlmostEqual(bloc.bounding_box()['height'], hauteur, delta=1)
+        # Chaque nouvelle présentation recommence avec les applications masquées.
+        page.keyboard.press('Escape')
+        page.wait_for_function("!document.documentElement.classList.contains('presentation')")
+        page.click('#coursPresenter')
+        page.wait_for_function("document.documentElement.classList.contains('presentation')")
+        page.wait_for_timeout(400)
+        self.assertEqual(page.locator('.bloc.app.devoile').count(), 0)
         self.assertEqual(errors, [])
