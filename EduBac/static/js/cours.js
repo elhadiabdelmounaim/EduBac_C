@@ -1,6 +1,6 @@
 /* Cours en ligne (HTML), présenté comme un cahier : le contenu est réparti en pages
    à la taille de l'écran, tournées avec les boutons, les flèches du clavier ou un
-   glissement du doigt (deux pages côte à côte sur grand écran).
+   glissement du doigt — une page à la fois, qui se tourne comme une feuille.
    Chargé avec « defer » après jQuery et avant MathJax (l'ordre est conservé). */
 (function ($) {
   'use strict';
@@ -127,7 +127,6 @@
     var courante = 0;
     var parVue = 1;
     var largeur = 0;
-    var ecart = 16;
     var taille = '';
     var titre = $source.data('titre') || document.title;
 
@@ -223,16 +222,17 @@
       pages = [];
     }
 
+    // Une seule page à la fois, centrée (cahier comme en présentation).
     function mesurer() {
       var w = $scene.width();
       var h = $scene.height();
-      parVue = (w >= 1100 && h >= 480) ? 2 : 1;
-      ecart = parVue === 2 ? 30 : 16;
+      var presentation = $root.hasClass('presentation');
       var marge = w < 640 ? 10 : 24;
-      largeur = parVue === 2
-        ? Math.floor((Math.min(w, 1500) - 2 * marge - ecart) / 2)
-        : Math.min(w - 2 * marge, 780);
-      $feuilles.css({ '--page-w': largeur + 'px', '--gap': ecart + 'px' });
+      parVue = 1;
+      largeur = presentation
+        ? Math.min(w - 2 * marge, Math.round(h * 1.6))
+        : Math.min(w - 2 * marge, Math.max(780, Math.round(h * 1.25)), 1000);
+      $feuilles.css({ '--page-w': largeur + 'px', '--page-left': Math.round((w - largeur) / 2) + 'px' });
       return w + 'x' + h;
     }
 
@@ -266,7 +266,7 @@
         p.$tete.children().eq(1).text(titre);
         p.$pied.text((k + 1) + ' / ' + total);
         p.$p.attr('aria-label', 'Page ' + (k + 1) + ' sur ' + total);
-        p.$p.toggleClass('gauche', parVue === 2 && k % 2 === 0);
+        p.$corps.children().each(function (i) { this.style.setProperty('--i', Math.min(i, 8)); });
       });
       var cible = 0;
       if (ancre) {
@@ -282,29 +282,54 @@
       return first.data('source') || first[0] || null;
     }
 
+    // Tourner la page : la feuille courante se soulève et tourne autour de sa reliure (à gauche)
+    // en découvrant la suivante ; pour revenir, la feuille précédente se rabat par-dessus.
+    var DUREE_TOUR = 750;
+    var finTour = null;
+    var mouvementReduit = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function terminerTour() {
+      clearTimeout(finTour);
+      finTour = null;
+      $feuilles.children('.feuille').removeClass('tourne revient dessous');
+    }
+
     function afficher(index, sansAnimation) {
       var total = pages.length;
       index = Math.max(0, Math.min(index, total - 1));
-      index -= index % parVue;
+      var avant = courante;
+      var $ancienne = $feuilles.children('.feuille.visible');
+      terminerTour();
       courante = index;
-      var w = $scene.width();
-      var gauche = (w - (parVue * largeur + (parVue - 1) * ecart)) / 2;
-      if (sansAnimation) $feuilles.css('transition', 'none');
-      $feuilles.css('transform', 'translateX(' + Math.round(gauche - index * (largeur + ecart)) + 'px)');
-      if (sansAnimation) { $feuilles[0].offsetWidth; $feuilles.css('transition', ''); }
+      var $nouvelle = pages[index].$p;
+      var tourner = !sansAnimation && !mouvementReduit && $ancienne.length && $ancienne[0] !== $nouvelle[0];
+      if (tourner) {
+        if (index > avant) {
+          $ancienne.addClass('tourne');      // la page courante part vers la gauche
+          $nouvelle.addClass('dessous');
+        } else {
+          $ancienne.addClass('dessous');
+          $nouvelle.addClass('revient');     // la page précédente revient par-dessus
+        }
+        finTour = setTimeout(terminerTour, DUREE_TOUR + 50);
+      }
       $.each(pages, function (k, p) {
-        var visible = k >= index && k < index + parVue;
+        var visible = k === index;
+        // Les éléments d'une page qui apparaît entrent l'un après l'autre.
+        if (visible && !p.$p.hasClass('visible')) {
+          p.$p.removeClass('entree');
+          p.$p[0].offsetWidth;
+          p.$p.addClass('entree');
+        }
         p.$p.toggleClass('visible', visible).attr('aria-hidden', visible ? null : 'true');
         p.$p[0].inert = !visible;
         if (visible) p.$corps.scrollTop(0);
       });
-      var derniere = Math.min(index + parVue, total);
       $prev.prop('disabled', index === 0);
-      $next.prop('disabled', derniere >= total);
-      $num.text(derniere - index > 1 ? 'Pages ' + (index + 1) + '–' + derniere + ' / ' + total
-                                     : 'Page ' + (index + 1) + ' / ' + total);
+      $next.prop('disabled', index >= total - 1);
+      $num.text('Page ' + (index + 1) + ' / ' + total);
       $select.val(pages[index].partie || '');
-      $bar.css('width', (derniere / total) * 100 + '%');
+      $bar.css('width', ((index + 1) / total) * 100 + '%');
       if (window.history && history.replaceState) {
         history.replaceState(null, '', '#p' + (index + 1));
       }
@@ -346,7 +371,16 @@
       if (event.altKey || event.ctrlKey || event.metaKey) return;
       if ($(event.target).is('input, select, textarea, [contenteditable]')) return;
       var touche = event.key;
-      if (touche === 'ArrowRight' || touche === 'PageDown') { suivante(); event.preventDefault(); }
+      if ($root.hasClass('noir') && touche !== 'Escape') {   // écran noir : une touche le rallume
+        noir(false); event.preventDefault(); return;
+      }
+      if (touche === 'ArrowRight' || touche === 'PageDown' || touche === ' ' || touche === 'Enter') {
+        if ((touche === ' ' || touche === 'Enter') && $(event.target).is('button, a, summary')) return;
+        suivante(); event.preventDefault();
+      }
+      else if (touche === 'p' || touche === 'P' || touche === 'F5') { presenter(!$root.hasClass('presentation')); event.preventDefault(); }
+      else if (touche === 'b' || touche === 'B' || touche === '.') { if ($root.hasClass('presentation')) { noir(true); event.preventDefault(); } }
+      else if (touche === 'Escape') { if ($root.hasClass('noir')) noir(false); else if ($root.hasClass('presentation')) presenter(false); }
       else if (touche === 'ArrowLeft' || touche === 'PageUp') { precedente(); event.preventDefault(); }
       else if (touche === 'Home') { afficher(0); event.preventDefault(); }
       else if (touche === 'End') { afficher(pages.length - 1); event.preventDefault(); }
@@ -371,6 +405,52 @@
       if (dx < 0) suivante(); else precedente();
     });
 
+    // ---------- Mode présentation (vidéoprojecteur) ----------
+    var $presenter = $('#coursPresenter');
+    var $quitter = $('#pageQuitter');
+    var repos = null;
+
+    function plein() { return document.fullscreenElement || document.webkitFullscreenElement; }
+
+    function presenter(actif) {
+      if (actif === $root.hasClass('presentation')) return;
+      $root.toggleClass('presentation', actif);
+      $presenter.attr('aria-pressed', actif ? 'true' : 'false');
+      if (actif) {
+        var el = document.documentElement;
+        var demande = el.requestFullscreen || el.webkitRequestFullscreen;
+        if (demande && !plein()) {
+          try { var r = demande.call(el); if (r && r.catch) r.catch(function () {}); } catch (e) { /* refusé */ }
+        }
+        bouger();
+      } else {
+        noir(false);
+        $root.removeClass('calme');
+        clearTimeout(repos);
+        var sortir = document.exitFullscreen || document.webkitExitFullscreen;
+        if (sortir && plein()) { try { var q = sortir.call(document); if (q && q.catch) q.catch(function () {}); } catch (e) { /* déjà sorti */ } }
+      }
+      taille = '';
+      if (pages.length) afficher(paginer(), true);
+    }
+
+    function noir(actif) { $root.toggleClass('noir', !!actif); }
+
+    // En présentation, la barre et le curseur s'effacent quand la souris ne bouge plus.
+    function bouger() {
+      $root.removeClass('calme');
+      clearTimeout(repos);
+      if ($root.hasClass('presentation')) repos = setTimeout(function () { $root.addClass('calme'); }, 2500);
+    }
+
+    $presenter.on('click', function () { presenter(!$root.hasClass('presentation')); });
+    $quitter.on('click', function () { presenter(false); });
+    $('#ecranNoir').on('click', function () { noir(false); });
+    $(document).on('mousemove pointerdown', bouger);
+    $(document).on('fullscreenchange webkitfullscreenchange', function () {
+      if (!plein() && $root.hasClass('presentation')) presenter(false);   // sortie par Échap
+    });
+
     // ---------- Construction, puis reconstruction si la taille de l'écran change ----------
     var attente = null;
     function reconstruire() {
@@ -381,7 +461,8 @@
         if (nouvelle === taille) return;
         // Barre d'adresse du téléphone : petite variation de hauteur, rien à refaire.
         var ancienne = taille.split('x');
-        if (+ancienne[0] === $scene.width() && Math.abs(+ancienne[1] - h) < 60 && parVue === 1) return;
+        if (+ancienne[0] === $scene.width() && Math.abs(+ancienne[1] - h) < 60 && parVue === 1
+            && !$root.hasClass('presentation')) return;
         afficher(paginer(), true);
       }, 200);
     }

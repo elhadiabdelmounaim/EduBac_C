@@ -85,30 +85,47 @@ class CourseHtmlBrowserTests(StaticLiveServerTestCase):
         page, errors = self.open(1280, 860)
         self.assertEqual(errors, [])
         state = self.assert_pages_sound(page)
-        # Deux pages côte à côte, chaque partie commence sur une nouvelle page.
-        self.assertEqual(self.current(page), [1, 2])
+        # Une seule page à la fois, même sur grand écran.
+        self.assertEqual(self.current(page), [1])
         self.assertTrue(page.is_disabled('#pagePrev'))
-        self.assertEqual(page.inner_text('#pageNum'), f"Pages 1–2 / {state['pages']}")
+        self.assertEqual(page.inner_text('#pageNum'), f"Page 1 / {state['pages']}")
         self.assertEqual(page.locator('[data-stats] .stat').all_inner_texts(),
                          ['3\ndéfinitions', '15\npropositions', '14\napplications'])
+        # La feuille courante se tourne en découvrant la suivante…
         page.click('#pageNext')
-        self.assertEqual(self.current(page), [3, 4])
+        self.assertEqual(self.current(page), [2])
+        self.assertTrue(page.evaluate("document.querySelectorAll('.feuille')[0].classList.contains('tourne')"))
+        self.assertTrue(page.evaluate("document.querySelectorAll('.feuille')[1].classList.contains('dessous')"))
+        page.wait_for_function("!document.querySelector('.feuille.tourne')")
+        self.assertFalse(page.locator('.feuille').nth(0).is_visible())
         page.keyboard.press('ArrowRight')
-        self.assertEqual(self.current(page), [5, 6])
+        self.assertEqual(self.current(page), [3])
+        # … et la précédente se rabat par-dessus pour revenir.
         page.keyboard.press('ArrowLeft')
-        self.assertEqual(self.current(page), [3, 4])
-        self.assertIn('#p3', page.url)
+        self.assertEqual(self.current(page), [2])
+        self.assertTrue(page.evaluate("document.querySelectorAll('.feuille')[1].classList.contains('revient')"))
+        self.assertIn('#p2', page.url)
+        # Clics rapides : chaque clic tourne une page, sans en sauter ni rester bloqué.
+        for _ in range(3):
+            page.click('#pageNext')
+        self.assertEqual(self.current(page), [5])
+        page.wait_for_function("!document.querySelector('.feuille.tourne, .feuille.revient, .feuille.dessous')")
+        self.assertEqual(page.locator('.feuille:visible').count(), 1)
         # « Aller à la partie » et sommaire de la couverture.
         page.select_option('#pageChapitre', 's6')
         first = self.current(page)[0]
         self.assertIn('VI', page.locator('.feuille').nth(first - 1).locator('.feuille-tete').inner_text())
         page.keyboard.press('Home')
-        page.click('.bloc-sommaire a[href="#s4"]')
+        # Le sommaire est sur la couverture ou la page qui la suit.
+        if not page.locator('.feuille.visible .bloc-sommaire').count():
+            page.keyboard.press('ArrowRight')
+        page.wait_for_function("!document.querySelector('.feuille.tourne, .feuille.revient')")
+        page.click('.feuille.visible .bloc-sommaire a[href="#s4"]')
         self.assertEqual(page.input_value('#pageChapitre'), 's4')
         page.keyboard.press('End')
         self.assertTrue(page.is_disabled('#pageNext'))
         page.click('.feuille.visible [data-haut]')
-        self.assertEqual(self.current(page), [1, 2])
+        self.assertEqual(self.current(page), [1])
         # Les pages cachées ne reçoivent pas le focus clavier.
         self.assertTrue(page.evaluate("document.querySelectorAll('.feuille')[4].inert"))
         page.click('#coursTheme')
@@ -143,8 +160,47 @@ class CourseHtmlBrowserTests(StaticLiveServerTestCase):
 
     def test_opening_on_a_page_from_the_address(self):
         page, errors = self.open(1280, 860, hash='#p5')
-        self.assertEqual(self.current(page), [5, 6])
+        self.assertEqual(self.current(page), [5])
         page.close()
         page, errors = self.open(390, 760, hash='#s9')
         self.assertIn('IX', page.locator('.feuille.visible .feuille-tete').inner_text())
+        self.assertEqual(errors, [])
+
+    def test_projector_presentation_mode(self):
+        page, errors = self.open(1920, 1080)
+        normal = page.evaluate("document.querySelectorAll('.feuille').length")
+        page.click('#coursPresenter')
+        page.wait_for_function(f"document.documentElement.classList.contains('presentation')"
+                               f" && document.querySelectorAll('.feuille').length !== {normal}")
+        self.assertFalse(page.locator('.topbar').is_visible())
+        self.assert_pages_sound(page)
+        # Une seule grande page à la fois, texte lisible de loin.
+        self.assertEqual(self.current(page), [1])
+        size = page.evaluate("parseFloat(getComputedStyle(document.querySelector('.feuille-corps')).fontSize)")
+        self.assertGreaterEqual(size, 26)
+        # Télécommande de présentation : Page suivante / Page précédente.
+        page.keyboard.press('PageDown')
+        self.assertEqual(self.current(page), [2])
+        page.keyboard.press('PageUp')
+        self.assertEqual(self.current(page), [1])
+        # Les éléments de la page qui apparaît sont animés.
+        page.keyboard.press('ArrowRight')
+        self.assertTrue(page.evaluate("document.querySelector('.feuille.visible').classList.contains('entree')"))
+        # Écran noir (B), rallumé par n'importe quelle touche, sans changer de page.
+        page.keyboard.press('b')
+        self.assertTrue(page.evaluate("document.documentElement.classList.contains('noir')"))
+        page.keyboard.press('ArrowRight')
+        self.assertFalse(page.evaluate("document.documentElement.classList.contains('noir')"))
+        self.assertEqual(self.current(page), [2])
+        # La barre s'efface quand la souris ne bouge plus, puis revient.
+        page.wait_for_function("document.documentElement.classList.contains('calme')", timeout=5000)
+        page.mouse.move(500, 500)
+        self.assertFalse(page.evaluate("document.documentElement.classList.contains('calme')"))
+        # Quitter : retour au cahier, au même endroit.
+        anchor = page.evaluate("document.querySelector('.feuille.visible .feuille-corps').textContent.trim().slice(0, 40)")
+        page.keyboard.press('Escape')
+        page.wait_for_function("!document.documentElement.classList.contains('presentation')")
+        self.assertEqual(len(self.current(page)), 1)
+        self.assertIn(anchor, page.evaluate(
+            "[...document.querySelectorAll('.feuille.visible .feuille-corps')].map(c => c.textContent).join(' ')"))
         self.assertEqual(errors, [])

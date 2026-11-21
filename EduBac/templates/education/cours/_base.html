@@ -30,6 +30,8 @@ d.className+=' pagine';setTimeout(function(){if(!/\bpagine-pret\b/.test(d.classN
       <a href="{% url 'education:lesson_detail' lesson.pk %}">{{ lesson.title }}</a>
     </nav>
     <div class="topbar-actions">
+      <button type="button" class="topbar-btn topbar-presenter" id="coursPresenter" aria-pressed="false"
+              title="Plein écran pour le vidéoprojecteur (touche P)"><span aria-hidden="true">▶</span> Présenter</button>
       <button type="button" class="topbar-btn" id="coursTheme" aria-pressed="false">Mode sombre</button>
       <a class="topbar-btn" href="{% url 'education:lesson_detail' lesson.pk %}">Retour à la leçon</a>
     </div>
@@ -54,8 +56,13 @@ d.className+=' pagine';setTimeout(function(){if(!/\bpagine-pret\b/.test(d.classN
     <button type="button" class="pager-btn" id="pageNext" aria-label="Page suivante">
       <span class="pager-label">Suivante</span><span aria-hidden="true">›</span>
     </button>
+    <button type="button" class="pager-quitter" id="pageQuitter" title="Quitter la présentation (Échap)">
+      <span aria-hidden="true">✕</span><span class="visually-hidden">Quitter la présentation</span>
+    </button>
   </nav>
 </div>
+
+<div class="ecran-noir" id="ecranNoir" aria-hidden="true"></div>
 
 <main class="source" id="source" data-titre="{{ lesson.title }}">
   {% block hero %}{% endblock %}
