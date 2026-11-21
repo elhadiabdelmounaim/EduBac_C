@@ -20,6 +20,7 @@ urlpatterns = [
     path('cours/<int:pk>/', views.course_detail, name='course_detail'),
     path('lecon/<int:pk>/', views.lesson_detail, name='lesson_detail'),
     path('lecon/<int:pk>/pdf/', views.lesson_pdf, name='lesson_pdf'),
+    path('lecon/<int:pk>/cours/', views.lesson_course_html, name='lesson_course_html'),
     path('lecon/<int:pk>/documents/<str:kind>/<str:filename>/', views.lesson_document, name='lesson_document'),
     path('lecon/<int:pk>/ressources/<int:resource_id>/', views.resource_download, name='resource_download'),
 ]

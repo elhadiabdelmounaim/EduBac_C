@@ -36,6 +36,25 @@ def chapter_relative(lesson, owners=None):
     return Path('lessons') / level / name
 
 
+COURSE_HTML_DIR = Path('education') / 'cours'
+
+
+def course_html_template(lesson, *, relative=None):
+    """Cours en ligne (HTML) d'une leçon, s'il existe ; sinon None.
+
+    Un fichier par chapitre, rangé comme les documents de media/lessons :
+    templates/education/cours/<NIVEAU>/<NN_titre>.html
+    (ex. templates/education/cours/1BAC_SE/04_le-produit-scalaire-dans-le-plan.html).
+    """
+    relative = relative if relative is not None else chapter_relative(lesson)
+    name = (COURSE_HTML_DIR / Path(*relative.parts[1:])).as_posix() + '.html'
+    root = (Path(settings.BASE_DIR) / 'templates').resolve()
+    path = (root / name).resolve()
+    if not path.is_relative_to(root) or not path.is_file():
+        return None
+    return name
+
+
 def documents(lesson, kind, *, relative=None):
     if kind not in ('Cours', 'Exercices', 'Sources_IA'):
         return []

@@ -408,14 +408,26 @@ html[data-theme="dark"] #lessonContent.lesson-md--boxed .course-box--note {
                         {% if file.description %}<small class="d-block text-muted">{{ file.description }}</small>{% endif %}
                     </span>
                     <span class="d-flex gap-2">
+                        {% if group.kind == 'Cours' and course_html_url %}
+                        <a class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener"
+                           href="{{ course_html_url }}">Ouvrir</a>
+                        {% else %}
                         <a class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener"
                            href="{% url 'education:lesson_document' lesson.pk group.kind file.filename %}">Ouvrir</a>
+                        {% endif %}
                         <a class="btn btn-sm btn-outline-secondary"
                            href="{% url 'education:lesson_document' lesson.pk group.kind file.filename %}?download=1">Télécharger</a>
                     </span>
                 </li>
                 {% empty %}
+                {% if group.kind == 'Cours' and course_html_url %}
+                <li class="list-group-item d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <span class="text-break">Cours en ligne</span>
+                    <a class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" href="{{ course_html_url }}">Ouvrir</a>
+                </li>
+                {% else %}
                 <li class="list-group-item text-muted">Aucun PDF disponible pour le moment.</li>
+                {% endif %}
                 {% endfor %}
             </ul>
         </section>

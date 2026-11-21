@@ -1,0 +1,615 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : 1ère Bac Sciences — Produit scalaire dans le plan, étude analytique.
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Le sommaire est construit à partir de data-toc ; les chiffres de l'en-tête sont comptés (cours.js).
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">1ère année Bac Sciences</span>
+        <span class="chip or">Chapitre 4</span>
+        <span class="chip">Géométrie analytique</span>
+      </div>
+      <h1 id="cours-titre">Produit scalaire dans le plan</h1>
+      <p class="sous-titre">Étude analytique</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre"><strong>Cadre :</strong> dans tous les paragraphes de ce chapitre, on considère le plan \(\mathcal P\) rapporté à un repère orthonormé \(\Rep\).</div>
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Étude analytique du produit scalaire">
+  <h2><span class="num">I</span><span class="titre">Étude analytique du produit scalaire</span></h2>
+
+  <h3><span class="n">I.1</span>Expression analytique du produit scalaire</h3>
+  <div class="bloc prop"><div class="tag">Proposition</div>
+    <p>Soit \(\vu=x\vi+y\vj\) et \(\vv=x'\vi+y'\vj\) deux vecteurs du plan. Alors :</p>
+    \[\vu\cdot\vv=xx'+yy' \qquad;\qquad \vi\cdot\vu=x \qquad;\qquad \vj\cdot\vu=y\]
+  </div>
+  <div class="bloc rem"><div class="tag">Remarque</div>
+    \[\vu\perp\vv \iff \vu\cdot\vv=0\]
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+    <ol>
+      <li>Soit \(\vu=3\vi-2\vj\), \(\vv=4\vi+5\vj\) et \(\vw=-3\vj\). Calculons les produits scalaires \(\vu\cdot\vv\) et \(\vu\cdot\vw\).</li>
+      <li>On considère les vecteurs \(\vu=3\vi-2\vj\) et \(\vv=4\vi+6\vj\). Montrons que \(\vu\perp\vv\).</li>
+    </ol>
+  </div>
+  <div class="bloc app"><div class="tag">Applications</div>
+    <ol>
+      <li>Soit les vecteurs \(\vu=\sqrt2\,\vi+3\vj\) et \(\vv=2\vi+\sqrt2\,\vj\). Calculer le produit scalaire \(\vu\cdot\vv\).</li>
+      <li>Soit les vecteurs \(\vu=2\vi+5\vj\) et \(\vv=5\vi-3\vj\). A-t-on \(\vu\perp\vv\) ? Justifier la réponse.</li>
+      <li>Soit les vecteurs \(\vu=5\vi+m\vj\) et \(\vv=2\vi-10\vj\) où \(m\in\R\). Déterminer \(m\) sachant que \(\vu\perp\vv\).</li>
+    </ol>
+  </div>
+
+  <h3><span class="n">I.2</span>Norme d'un vecteur et distance de deux points</h3>
+  <div class="bloc prop"><div class="tag">Proposition</div>
+    <ul>
+      <li>Si \(\vu=x\vi+y\vj\) est un vecteur du plan, alors sa norme est : \(\|\vu\|=\sqrt{x^2+y^2}\).</li>
+      <li>Si \(A(x_A;y_A)\) et \(B(x_B;y_B)\) sont deux points du plan, alors :
+      \[AB=\sqrt{(x_B-x_A)^2+(y_B-y_A)^2}\]</li>
+    </ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+    <ol>
+      <li>On considère les vecteurs \(\vu=\sqrt3\,\vi-\vj\) et \(\vv=-3\vi+6\vj\). Calculons \(\|\vu\|\) et \(\|\vv\|\).</li>
+      <li>On considère les points \(A(2;5)\), \(B(-1;1)\) et \(C(5;1)\). Montrons que le triangle \(ABC\) est isocèle en \(A\).</li>
+      <li>On considère les points \(A(5;5)\), \(B(1;1)\) et \(C(4;-2)\). Montrons que le triangle \(ABC\) est rectangle en \(B\).</li>
+      <li>On considère les points \(A(1;1)\), \(B(3;0)\), \(C(4;2)\) et \(D(2;3)\). Montrons que le quadrilatère \(ABCD\) est un carré.</li>
+    </ol>
+  </div>
+  <div class="bloc app"><div class="tag">Applications</div>
+    <ol>
+      <li>On considère les vecteurs \(\vu=\vi-\sqrt3\,\vj\), \(\vv(4;-3)\) et \(\vw=\vi+m\vj\) \((m\in\R)\).
+        <ol class="alpha">
+          <li>Calculer \(\|\vu\|\), \(\|\vv\|\) et \(\|\vw\|\).</li>
+          <li>Déterminer les valeurs de \(m\) pour lesquelles \(\|\vw\|=\sqrt5\).</li>
+        </ol></li>
+      <li>On considère les points \(A(-1;2)\), \(B(1;1)\), \(C(3;2)\) et \(D(1;3)\). Montrer que le quadrilatère \(ABCD\) est un losange.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Expression de cos et sin">
+  <h2><span class="num">II</span><span class="titre">L'expression de \(\cos\angv{\vu}{\vv}\) et \(\sin\angv{\vu}{\vv}\)</span></h2>
+  <div class="bloc prop"><div class="tag">Proposition</div>
+    <p>Soit \(\vu=x\vi+y\vj\) et \(\vv=x'\vi+y'\vj\) deux vecteurs non nuls et \(\theta\) une mesure de l'angle \(\angv{\vu}{\vv}\). On a alors :</p>
+    \[\cos\theta=\frac{\vu\cdot\vv}{\|\vu\|\,\|\vv\|}=\frac{xx'+yy'}{\sqrt{x^2+y^2}\,\sqrt{x'^2+y'^2}}\]
+    \[\sin\theta=\frac{\det(\vu;\vv)}{\|\vu\|\,\|\vv\|}=\frac{xy'-yx'}{\sqrt{x^2+y^2}\,\sqrt{x'^2+y'^2}}\]
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+    <ol>
+      <li>On considère les vecteurs \(\vu=\vi+2\vj\) et \(\vv=-2\vi+\vj\). Calculons \(\cos\angv{\vu}{\vv}\) et \(\sin\angv{\vu}{\vv}\), puis déterminons une mesure de l'angle \(\angv{\vu}{\vv}\).</li>
+      <li>On considère les vecteurs \(\vu=2\vi+\vj\) et \(\vv=-3\vi+\vj\). Calculons \(\cos\angv{\vu}{\vv}\) et \(\sin\angv{\vu}{\vv}\), puis déterminons une mesure de l'angle \(\angv{\vu}{\vv}\).</li>
+      <li>Déterminons une mesure de l'angle \(\angv{\vect{AB}}{\vect{AC}}\) où \(A(0;1)\), \(B(2;3)\) et \(C(0;5)\).</li>
+    </ol>
+  </div>
+  <div class="bloc app"><div class="tag">Applications</div>
+    <ol>
+      <li>Calculer \(\cos\angv{\vu}{\vv}\) et \(\sin\angv{\vu}{\vv}\) dans les deux cas suivants :
+        <ol class="alpha">
+          <li>\(\vu=3\vi+\vj\) et \(\vv=3\vi+4\vj\) ;</li>
+          <li>\(\vu=\vi-\vj\) et \(\vv=\left(\sqrt3-1\right)\vi+\left(\sqrt3+1\right)\vj\).</li>
+        </ol></li>
+      <li>On considère les points \(A(-3;3)\), \(B(-1;3)\) et \(C(1;7)\).
+        <ol class="alpha">
+          <li>Calculer \(\cos\angv{\vect{BA}}{\vect{BC}}\) et \(\sin\angv{\vect{BA}}{\vect{BC}}\).</li>
+          <li>En déduire une mesure de l'angle \(\angv{\vect{BA}}{\vect{BC}}\).</li>
+          <li>Calculer l'aire du triangle \(ABC\).</li>
+        </ol></li>
+    </ol>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarque</div>
+    <p>L'aire du triangle \(ABC\) est : \(\displaystyle S=\frac12\left|\det\left(\vect{AB};\vect{AC}\right)\right|\)</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemple</div>
+    <p>Calculons l'aire du triangle \(ABC\) où \(A(2;1)\), \(B(1;3)\) et \(C(4;5)\).</p>
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Étude analytique de la droite">
+  <h2><span class="num">III</span><span class="titre">Étude analytique de la droite dans le plan</span></h2>
+
+  <h3><span class="n">III.1</span>Vecteur normal à une droite</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+    <div class="avec-fig">
+      <div>
+        <p>Soit \(\Dd\) une droite du plan.</p>
+        <p>Tout vecteur non nul et orthogonal à un vecteur directeur de la droite \(\Dd\) est appelé <span class="mot">vecteur normal</span> à la droite \(\Dd\).</p>
+      </div>
+      <figure class="fig" aria-label="Vecteur normal n orthogonal au vecteur directeur u de la droite D">
+        <svg viewBox="0 0 260 130">
+          <defs>
+            <marker id="fl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
+            <marker id="fs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
+          </defs>
+          <line class="t" x1="10" y1="95" x2="250" y2="95"/>
+          <g class="coul-c"><line class="c" x1="120" y1="95" x2="205" y2="95" marker-end="url(#fl)"/></g>
+          <g class="coul-a"><line class="a" x1="60" y1="95" x2="60" y2="22" marker-end="url(#fl)"/></g>
+          <polyline class="g" points="60,84 71,84 71,95"/>
+          <text x="40" y="34">n</text><line class="g fleche" x1="39" y1="19" x2="50" y2="19" marker-end="url(#fs)"/><text x="158" y="118">u</text><line class="g fleche" x1="157" y1="103" x2="168" y2="103" marker-end="url(#fs)"/>
+          <text x="214" y="86">(D)</text>
+        </svg>
+        <figcaption>\(\vn\cdot\vu=0\)</figcaption>
+      </figure>
+    </div>
+  </div>
+  <div class="bloc prop"><div class="tag">Proposition</div>
+    <p>Soit \(\Dd\) une droite dans le plan \(\mathcal P\) rapporté à un repère orthonormé \(\Rep\).</p>
+    <ul>
+      <li>Si \(\vn\) et \(\vn\,'\) sont deux vecteurs normaux à \(\Dd\), alors ils sont colinéaires.</li>
+      <li>Si \(\vu(\alpha;\beta)\) est un vecteur directeur de \(\Dd\), alors le vecteur \(\vn(-\beta;\alpha)\) est normal à \(\Dd\).</li>
+      <li>Si une équation cartésienne de \(\Dd\) est \(ax+by+c=0\) avec \((a;b)\neq(0;0)\), alors le vecteur \(\vn(a;b)\) est normal à la droite \(\Dd\).</li>
+    </ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+    <ol>
+      <li>Le vecteur \(\vn(3;-4)\) est normal à la droite \(\Dd\) d'équation \(3x-4y+5=0\).</li>
+      <li>Le vecteur \(\vn(1;0)\) est normal à la droite \((\Delta)\) d'équation \(x+2=0\).</li>
+    </ol>
+  </div>
+  <div class="bloc app"><div class="tag">Applications</div>
+    <p>On considère les droites \(\Dd : 3x+y+5=0\) et \((D') : 3y=x+1\). Les droites \(\Dd\) et \((D')\) sont-elles orthogonales ? Justifier la réponse.</p>
+  </div>
+
+  <h3><span class="n">III.2</span>Équation d'une droite définie par un point et un vecteur normal</h3>
+  <div class="bloc prop"><div class="tag">Proposition</div>
+    <p>Soit \(\vn\) un vecteur non nul et \(A\) un point du plan \(\mathcal P\).</p>
+    <ul>
+      <li>L'ensemble des points \(M\) du plan tels que \(\vect{AM}\cdot\vn=0\) est la droite \(\Dd\) passant par \(A\) et de vecteur normal \(\vn\).</li>
+      <li>Si \(A(x_A;y_A)\) et \(\vn(a;b)\), alors une équation cartésienne de la droite \(\Dd\) est :
+      \[\Dd : a(x-x_A)+b(y-y_A)=0\]</li>
+    </ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+    <ol>
+      <li>Soit \(\Dd\) la droite passant par \(A(1;3)\) et de vecteur normal \(\vn=3\vi+2\vj\). Déterminons une équation cartésienne de la droite \(\Dd\).</li>
+      <li>On considère les points \(A(1;-1)\), \(B(3;3)\) et \(C(-2;0)\).
+        <ul>
+          <li>Déterminons une équation de la droite \(\Dd\), médiatrice du segment \([AB]\).</li>
+          <li>Déterminons une équation de la droite \((\Delta)\), hauteur du triangle \(ABC\) issue de \(C\).</li>
+        </ul></li>
+    </ol>
+  </div>
+  <div class="bloc app"><div class="tag">Applications</div>
+    <ol>
+      <li>Écrire une équation cartésienne de la droite \(\Dd\) passant par le point \(A\) et de vecteur normal \(\vn\) dans chacun des cas suivants :
+        <ol class="alpha">
+          <li>\(A(0;3)\) et \(\vn(1;2)\) ;</li>
+          <li>\(A(-1;2)\) et \(\vn=2\vj\) ;</li>
+          <li>\(A(1;1)\) et \(\vn=\vi-\vj\).</li>
+        </ol></li>
+      <li>On considère le point \(A(3;-1)\) et la droite \(\Dd\) d'équation \(x-y-1=0\). Déterminer une équation cartésienne de la droite \((\Delta)\) passant par \(A\) et orthogonale à \(\Dd\).</li>
+      <li>Déterminer une équation de la droite \(\Dd\), médiatrice du segment \([AB]\) où \(A(1;-2)\) et \(B(3;0)\).</li>
+    </ol>
+  </div>
+
+  <h3><span class="n">III.3</span>Condition de perpendicularité de deux droites</h3>
+  <div class="bloc prop"><div class="tag">Proposition</div>
+    <div class="avec-fig">
+      <div>
+        <p>Soit \(\Dd\) et \((D')\) deux droites du plan \(\mathcal P\).</p>
+        <ul>
+          <li>Si \(\vn\) et \(\vn\,'\) sont deux vecteurs normaux respectivement à \(\Dd\) et \((D')\), alors :
+          \[\Dd\perp(D')\iff\vn\perp\vn\,'\iff\vn\cdot\vn\,'=0\]</li>
+          <li>Si \(\Dd : ax+by+c=0\) et \((D') : a'x+b'y+c'=0\), alors :
+          \[\Dd\perp(D')\iff aa'+bb'=0\]</li>
+        </ul>
+      </div>
+      <figure class="fig" aria-label="Deux droites perpendiculaires et leurs vecteurs normaux">
+        <svg viewBox="0 0 240 190">
+          <line class="t" x1="10" y1="100" x2="230" y2="100"/>
+          <line class="c" x1="80" y1="12" x2="80" y2="180"/>
+          <polyline class="g" points="80,89 91,89 91,100"/>
+          <g class="coul-a"><line class="a" x1="180" y1="100" x2="180" y2="38" marker-end="url(#fl)"/></g>
+          <g class="coul-a"><line class="a" x1="80" y1="148" x2="155" y2="148" marker-end="url(#fl)"/></g>
+          <text x="188" y="52">n</text><line class="g fleche" x1="187" y1="37" x2="198" y2="37" marker-end="url(#fs)"/><text x="160" y="172">n′</text><line class="g fleche" x1="159" y1="157" x2="170" y2="157" marker-end="url(#fs)"/>
+          <text x="196" y="122">(D)</text><text x="88" y="26">(D′)</text>
+        </svg>
+      </figure>
+    </div>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+    <ol>
+      <li>On considère les droites \((D_1) : 2x+5y-1=0\) et \((D_2) : 5x-2y+3=0\). Montrons que \((D_1)\perp(D_2)\).</li>
+      <li>On considère les droites \((\Delta_1) : 2x+y-3=0\) et \((\Delta_2) : x-3y+4=0\). Les droites \((\Delta_1)\) et \((\Delta_2)\) sont-elles perpendiculaires ?</li>
+    </ol>
+  </div>
+  <div class="bloc app"><div class="tag">Applications</div>
+    <ol>
+      <li>On considère les droites \((\Delta_1) : x-my+2=0\) et \((\Delta_2) : 2x+y-1=0\) où \(m\in\R\). Déterminer la valeur de \(m\) pour que \((\Delta_1)\) et \((\Delta_2)\) soient perpendiculaires.</li>
+      <li>On considère les points \(A(5;4)\), \(B(-2;-3)\), \(C(1;5)\) et \(D(4;2)\). Montrer que \((AB)\perp(CD)\).</li>
+    </ol>
+  </div>
+
+  <h3><span class="n">III.4</span>Distance d'un point à une droite</h3>
+  <div class="bloc prop"><div class="tag">Proposition</div>
+    <div class="avec-fig">
+      <div>
+        <p>Soit \(\Dd\) une droite d'équation \(ax+by+c=0\) avec \((a;b)\neq(0;0)\) et \(A(x_A;y_A)\) un point du plan. La distance du point \(A\) à la droite \(\Dd\) est donnée par :</p>
+        \[d\big(A;\Dd\big)=\frac{\left|ax_A+by_A+c\right|}{\sqrt{a^2+b^2}}\]
+      </div>
+      <figure class="fig" aria-label="Distance du point A à la droite D, H projeté orthogonal">
+        <svg viewBox="0 0 270 170">
+          <line class="g" x1="40" y1="10" x2="40" y2="165"/>
+          <line class="g" x1="5" y1="150" x2="265" y2="150"/>
+          <line class="t" x1="20" y1="60" x2="260" y2="140"/>
+          <line class="a d" x1="170" y1="30" x2="146" y2="102"/>
+          <polyline class="g" points="138.4,99.5 140.9,91.9 148.5,94.4"/>
+          <circle class="pt" cx="170" cy="30" r="3.5"/><circle class="pt" cx="146" cy="102" r="3.5"/>
+          <text x="178" y="32">A</text><text x="128" y="122">H</text><text x="18" y="50">(D)</text>
+          <text x="26" y="166" class="s">O</text>
+        </svg>
+      </figure>
+    </div>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemple</div>
+    <p>Calculons la distance du point \(A(2;-1)\) à la droite \(\Dd\) d'équation \(4x-3y+4=0\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Applications</div>
+    <ol>
+      <li>Calculer la distance du point \(A\) à la droite \(\Dd\) dans chacun des cas suivants :
+        <ol class="alpha">
+          <li>\(A(1;2)\) et \(\Dd : x+3y+3=0\) ;</li>
+          <li>\(A(-1;1)\) et \(\Dd : 3x-4y+2=0\).</li>
+        </ol></li>
+      <li>On considère les points \(A(1;2)\), \(B(3;1)\) et \(C(-3;-2)\).
+        <ol class="alpha">
+          <li>Montrer que \(x+2y-5=0\) est une équation cartésienne de la droite \((AB)\).</li>
+          <li>Calculer \(d\big(C;(AB)\big)\) puis en déduire l'aire du triangle \(ABC\).</li>
+          <li>Déterminer le couple de coordonnées du point \(H\), projeté orthogonal du point \(C\) sur la droite \((AB)\).</li>
+        </ol></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Équation cartésienne d'un cercle">
+  <h2><span class="num">IV</span><span class="titre">Équation cartésienne d'un cercle</span></h2>
+
+  <h3><span class="n">IV.1</span>Le cercle</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+    <p>Soit \(\Omega\) un point du plan \(\mathcal P\) et \(R\) un réel positif. Le cercle \(\Cc\) de centre \(\Omega\) et de rayon \(R\) est l'ensemble des points \(M\) du plan tels que \(\Omega M=R\).</p>
+    <p>On le note \(\mathcal{C}(\Omega;R)\). On a alors : \(M\in\mathcal{C}(\Omega;R)\iff\Omega M=R\).</p>
+  </div>
+
+  <h3><span class="n">IV.2</span>Équation cartésienne d'un cercle</h3>
+  <div class="bloc prop"><div class="tag">Proposition</div>
+    <p>Une équation cartésienne du cercle \(\Cc\) de centre \(\Omega(a;b)\) et de rayon \(R\) \((R\geq0)\) est :</p>
+    \[(x-a)^2+(y-b)^2=R^2\]
+    <p>que l'on peut écrire : \(x^2+y^2-2ax-2by+c=0\) où \(c=a^2+b^2-R^2\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+    <ol>
+      <li>Déterminons une équation du cercle \((\mathcal{C}_1)\) de centre \(\Omega_1(-1;4)\) et de rayon \(R_1=3\).</li>
+      <li>Déterminons une équation du cercle \((\mathcal{C}_2)\) de centre \(\Omega_2(2;-3)\) et passant par \(A(-1;1)\).</li>
+    </ol>
+  </div>
+  <div class="bloc app"><div class="tag">Applications</div>
+    <ol>
+      <li>Écrire une équation cartésienne du cercle \(\Cc\) de centre \(\Omega\) et de rayon \(R\) :
+        <ol class="alpha">
+          <li>\(\Omega(2;4)\) et \(R=3\) ;</li>
+          <li>\(\Omega(-3;0)\) et \(R=2\sqrt2\) ;</li>
+          <li>\(\Omega(-2;2)\) et \(R=2\sqrt2\).</li>
+        </ol></li>
+      <li>Écrire une équation du cercle \(\Cc\) de centre \(\Omega\) et passant par le point \(A\) :
+        <ol class="alpha">
+          <li>\(\Omega(1;0)\) et \(A(2;1)\) ;</li>
+          <li>\(\Omega(2;1)\) et \(A(2;-3)\) ;</li>
+          <li>\(\Omega(-1;2)\) et \(A(0;2)\).</li>
+        </ol></li>
+    </ol>
+  </div>
+
+  <h3><span class="n">IV.3</span>Équation d'un cercle défini par l'un de ses diamètres</h3>
+  <div class="bloc prop"><div class="tag">Proposition</div>
+    <div class="avec-fig">
+      <div>
+        <p>Soit \(A\) et \(B\) deux points distincts du plan \(\mathcal P\).</p>
+        <ul>
+          <li>L'ensemble des points \(M\) du plan tels que \(\vect{AM}\cdot\vect{BM}=0\) est le cercle \(\Cc\) de diamètre \([AB]\). Son centre est le milieu \(\Omega\) de \([AB]\) et son rayon est \(R=\dfrac{AB}{2}\).</li>
+          <li>Si \(A(x_A;y_A)\), \(B(x_B;y_B)\) et \(M(x;y)\), alors une équation cartésienne du cercle \(\Cc\) est :
+          \[(x-x_A)(x-x_B)+(y-y_A)(y-y_B)=0\]</li>
+        </ul>
+      </div>
+      <figure class="fig" aria-label="Cercle de diamètre AB et point M avec angle droit en M">
+        <svg viewBox="0 0 260 190">
+          <circle class="c" cx="130" cy="100" r="75"/>
+          <line class="t" x1="55" y1="100" x2="205" y2="100"/>
+          <polyline class="a" points="55,100 173,38.6 205,100"/>
+          <polyline class="g" points="165,42.8 169.2,50.8 177.2,46.6"/>
+          <circle class="pt" cx="55" cy="100" r="3.5"/><circle class="pt" cx="205" cy="100" r="3.5"/>
+          <circle class="pt" cx="173" cy="38.6" r="3.5"/><circle class="pt" cx="130" cy="100" r="3.5"/>
+          <text x="36" y="104">A</text><text x="212" y="104">B</text><text x="178" y="32">M</text>
+          <text x="124" y="122">Ω</text><text x="196" y="170">(𝒞)</text>
+        </svg>
+      </figure>
+    </div>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemple</div>
+    <p>On considère les points \(A(-1;2)\) et \(B(3;4)\). Déterminons l'équation du cercle \(\Cc\) de diamètre \([AB]\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Applications</div>
+    <p>On considère les points \(A(1;3)\), \(B(3;-1)\) et \(C(-3;-2)\).</p>
+    <ol>
+      <li><b>a)</b> Déterminer l'équation cartésienne du cercle \((\mathcal{C}_1)\) de diamètre \([AB]\).<br>
+          <b>b)</b> Calculer le produit scalaire \(\vect{CA}\cdot\vect{CB}\). Que peut-on déduire ?</li>
+      <li><b>a)</b> Déterminer l'équation cartésienne du cercle \((\mathcal{C}_2)\) de diamètre \([AC]\).<br>
+          <b>b)</b> En déduire le centre et le rayon du cercle \((\mathcal{C}_2)\).</li>
+    </ol>
+  </div>
+
+  <h3><span class="n">IV.4</span>Équation d'un cercle défini par trois points non alignés</h3>
+  <div class="bloc prop"><div class="tag">Proposition</div>
+    <div class="avec-fig">
+      <div>
+        <p>Par trois points non alignés \(A\), \(B\) et \(C\) passe un seul cercle \(\Cc\), de centre \(\Omega\), point d'intersection des médiatrices du triangle \(ABC\), et de rayon \(R=\Omega A\).</p>
+        <p>Ce cercle est appelé le <span class="mot">cercle circonscrit</span> au triangle \(ABC\).</p>
+      </div>
+      <figure class="fig" aria-label="Cercle circonscrit au triangle ABC et médiatrices">
+        <svg viewBox="0 0 260 200">
+          <circle class="c" cx="130" cy="105" r="80"/>
+          <polygon class="t" points="167.6,34.4 195.5,150.9 50.05,102.2"/>
+          <line class="a" x1="104.2" y1="111.2" x2="212.6" y2="85.2"/>
+          <line class="a" x1="133.6" y1="94.2" x2="118.5" y2="139.5"/>
+          <line class="a" x1="140.6" y1="123.4" x2="96.1" y2="46.3"/>
+          <circle class="pt" cx="167.6" cy="34.4" r="3.5"/><circle class="pt" cx="195.5" cy="150.9" r="3.5"/>
+          <circle class="pt" cx="50.05" cy="102.2" r="3.5"/><circle class="pt" cx="130" cy="105" r="3.5"/>
+          <text x="170" y="26">A</text><text x="200" y="168">B</text><text x="30" y="100">C</text>
+          <text x="112" y="100">Ω</text><text x="208" y="44">(𝒞)</text>
+        </svg>
+      </figure>
+    </div>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemple</div>
+    <p>Déterminons une équation du cercle circonscrit au triangle \(ABC\) tel que \(A(5;1)\), \(B(1;5)\) et \(C(-1;1)\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Applications</div>
+    <p>Déterminer une équation du cercle circonscrit \(\Cc\) au triangle \(ABC\) dans les deux cas suivants :</p>
+    <ol class="alpha">
+      <li>\(A(2;1)\), \(B(4;-1)\) et \(C(0;3)\) ;</li>
+      <li>\(A(3;-1)\), \(B(5;3)\) et \(C(1;1)\).</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================ V ============================ -->
+<section class="chap" id="s5" data-toc="Représentation paramétrique d'un cercle">
+  <h2><span class="num">V</span><span class="titre">Représentation paramétrique d'un cercle</span></h2>
+  <div class="bloc prop"><div class="tag">Proposition</div>
+    <div class="avec-fig">
+      <div>
+        <p>Le cercle \(\Cc\) de centre \(\Omega(a;b)\) et de rayon \(R\) est l'ensemble des points \(M(x;y)\) du plan qui vérifient le système :</p>
+        \[\left\{\begin{array}{l}x=a+R\cos\theta\\ y=b+R\sin\theta\end{array}\right.\qquad(\theta\in\R)\]
+        <p>Ce système est appelé une <span class="mot">représentation paramétrique</span> du cercle \(\Cc\).</p>
+      </div>
+      <figure class="fig" aria-label="Point M du cercle repéré par l'angle theta">
+        <svg viewBox="0 0 240 190">
+          <line class="g" x1="30" y1="185" x2="30" y2="8"/>
+          <line class="g" x1="20" y1="170" x2="235" y2="170"/>
+          <circle class="c" cx="150" cy="90" r="50"/>
+          <line class="g d" x1="150" y1="90" x2="30" y2="90"/>
+          <line class="g d" x1="150" y1="90" x2="150" y2="170"/>
+          <line class="g d" x1="182.1" y1="51.7" x2="30" y2="51.7"/>
+          <line class="g d" x1="182.1" y1="51.7" x2="182.1" y2="170"/>
+          <line class="a" x1="150" y1="90" x2="182.1" y2="51.7"/>
+          <path class="t" d="M168 90 A18 18 0 0 0 161.6 76.2"/>
+          <circle class="pt" cx="150" cy="90" r="3.5"/><circle class="pt" cx="182.1" cy="51.7" r="3.5"/>
+          <text x="134" y="104">Ω</text><text x="188" y="46">M</text><text x="158" y="64">R</text>
+          <text x="172" y="88" class="s">θ</text>
+          <text x="16" y="94">b</text><text x="16" y="56">y</text>
+          <text x="146" y="186">a</text><text x="178" y="186">x</text>
+          <text x="200" y="140">(𝒞)</text><text x="16" y="184" class="s">O</text>
+        </svg>
+      </figure>
+    </div>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+    <ol>
+      <li>On considère le cercle \(\Cc\) de centre \(\Omega(-1;4)\) et de rayon \(R=3\). Donnons une représentation paramétrique du cercle \(\Cc\).</li>
+      <li>Déterminons l'ensemble \((\Gamma)\) des points \(M(x;y)\) du plan tels que :
+        \[\left\{\begin{array}{l}x=-1+2\cos\theta\\ y=5+2\sin\theta\end{array}\right.\quad(\theta\in\R)\]</li>
+    </ol>
+  </div>
+  <div class="bloc app"><div class="tag">Applications</div>
+    <ol>
+      <li>Donner une représentation paramétrique du cercle \(\Cc\) dans les cas suivants :
+        <ol class="alpha">
+          <li>\(x^2+y^2-2x+6y-6=0\) ;</li>
+          <li>\(x^2+y^2+4x-16=0\) ;</li>
+          <li>\(x^2+y^2+6x-8y+23=0\).</li>
+        </ol></li>
+      <li>Déterminer une équation cartésienne du cercle \(\Cc\) de représentation paramétrique
+        \(\left\{\begin{array}{l}x=1+3\cos t\\ y=-1+3\sin t\end{array}\right.\) \((t\in\R)\).</li>
+      <li>Déterminer l'ensemble \((E)\) des points \(M(x;y)\) du plan tels que
+        \(\left\{\begin{array}{l}x=\sqrt3\cos\theta\\ y=-1+\sqrt3\sin\theta\end{array}\right.\) \((\theta\in\R)\).</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================ VI ============================ -->
+<section class="chap" id="s6" data-toc="Ensemble x² + y² + ax + by + c = 0">
+  <h2><span class="num">VI</span><span class="titre">Ensemble des points \(M(x;y)\) tels que \(x^2+y^2+ax+by+c=0\)</span></h2>
+  <div class="bloc prop"><div class="tag">Proposition</div>
+    <p>Soit \((\Gamma)\) l'ensemble des points \(M(x;y)\) du plan vérifiant \(x^2+y^2+ax+by+c=0\), où \((a;b;c)\in\R^3\), et on pose :</p>
+    \[d=\left(\frac a2\right)^2+\left(\frac b2\right)^2-c\]
+    <ul>
+      <li>Si \(d&lt;0\), alors l'ensemble \((\Gamma)\) est vide : \((\Gamma)=\varnothing\).</li>
+      <li>Si \(d=0\), alors \((\Gamma)\) est un singleton : \((\Gamma)=\left\{\Omega\left(-\frac a2;-\frac b2\right)\right\}\).</li>
+      <li>Si \(d&gt;0\), alors \((\Gamma)\) est le cercle de centre \(\Omega\left(-\frac a2;-\frac b2\right)\) et de rayon \(R=\sqrt d\).</li>
+    </ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+    <p>Déterminons l'ensemble \(\Cc\) des points \(M(x;y)\) du plan dans chacun des cas suivants :</p>
+    <ol>
+      <li>\(x^2+y^2+6x-2y-6=0\) ;</li>
+      <li>\(x^2+y^2-4x+6y+15=0\) ;</li>
+      <li>\(x^2+y^2-2x+6y+10=0\).</li>
+    </ol>
+  </div>
+  <div class="bloc app"><div class="tag">Applications</div>
+    <p>Déterminer l'ensemble \((E)\) des points \(M(x;y)\) du plan dans chacun des cas suivants :</p>
+    <ol class="alpha">
+      <li>\(x^2+y^2+2x-4y+2=0\) ;</li>
+      <li>\(x^2+y^2-4x-6y+10=0\) ;</li>
+      <li>\(x^2+y^2+2x-10y+29=0\).</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================ VII ============================ -->
+<section class="chap" id="s7" data-toc="Intérieur et extérieur d'un cercle">
+  <h2><span class="num">VII</span><span class="titre">Intérieur et extérieur d'un cercle</span></h2>
+  <div class="bloc def"><div class="tag">Définition</div>
+    <p>Soit \(\Cc\) le cercle de centre \(\Omega\) et de rayon \(R\) avec \(R&gt;0\), et \(M\) un point du plan \(\mathcal P\).</p>
+    <ul>
+      <li>\(M\) est <span class="mot">sur</span> le cercle \(\Cc\) si et seulement si \(\Omega M=R\).</li>
+      <li>\(M\) est <span class="mot">à l'intérieur</span> du cercle \(\Cc\) si et seulement si \(\Omega M&lt;R\).</li>
+      <li>\(M\) est <span class="mot">à l'extérieur</span> du cercle \(\Cc\) si et seulement si \(\Omega M&gt;R\).</li>
+    </ul>
+  </div>
+  <div class="bloc prop"><div class="tag">Proposition</div>
+    <p>Soit \(\Cc\) le cercle d'équation \(x^2+y^2+ax+by+c=0\) où \((a;b;c)\in\R^3\). Pour tout point \(M(x_0;y_0)\) du plan :</p>
+    <ul>
+      <li>\(M\in\Cc\) si et seulement si \(x_0^2+y_0^2+ax_0+by_0+c=0\).</li>
+      <li>\(M\) est à l'intérieur de \(\Cc\) si et seulement si \(x_0^2+y_0^2+ax_0+by_0+c&lt;0\).</li>
+      <li>\(M\) est à l'extérieur de \(\Cc\) si et seulement si \(x_0^2+y_0^2+ax_0+by_0+c&gt;0\).</li>
+    </ul>
+    <p>Ainsi, le cercle \(\Cc\) détermine trois parties disjointes dans le plan \(\mathcal P\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+    <ol>
+      <li>Soit \(\Cc\) le cercle de centre \(\Omega(2;-1)\) et de rayon \(R=4\). Déterminons la position des points \(A(5;3)\) et \(B(1;1)\) par rapport au cercle \(\Cc\).</li>
+      <li>Résolvons graphiquement l'inéquation \((E)\) : \((x;y)\in\R^2 : x^2+y^2+2x-4y+1&lt;0\).</li>
+      <li>Résolvons graphiquement le système \((S)\) suivant :
+        \[(x;y)\in\R^2 : \left\{\begin{array}{l}x^2+y^2-2x-2y\leq2\\ x+y\geq1\end{array}\right.\]</li>
+    </ol>
+  </div>
+  <div class="bloc app"><div class="tag">Applications</div>
+    <ol>
+      <li>Déterminer la position du point \(A\) par rapport au cercle \(\Cc\) dans chacun des cas suivants :
+        <ol class="alpha">
+          <li>\(\Cc\) le cercle de centre \(\Omega(2;3)\) et de rayon \(R=1\), et le point \(A(-1;2)\) ;</li>
+          <li>\(\Cc : x^2+y^2-2x+4y=0\) et le point \(A(0;1)\).</li>
+        </ol></li>
+      <li><b>a)</b> Résoudre graphiquement les inéquations suivantes :
+        \[x^2+y^2+4x+2y-4&lt;0 \quad;\quad x^2+y^2-2x-3\geq0 \quad;\quad x^2+y^2&lt;1\]
+        <b>b)</b> Résoudre graphiquement les systèmes suivants :
+        \[\left\{\begin{array}{l}x^2+y^2-4x+3&lt;0\\ x-y-2&gt;0\end{array}\right.
+        \;;\;\left\{\begin{array}{l}x^2+y^2-x-2y-\frac{11}{4}\geq0\\ x+2y-3&lt;0\end{array}\right.\]
+        \[\left\{\begin{array}{l}x^2+y^2+10x-4y+25&lt;0\\ x+2y-3&gt;0\\ 3x+y+11\leq0\end{array}\right.\]</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================ VIII ============================ -->
+<section class="chap" id="s8" data-toc="Positions relatives droite / cercle">
+  <h2><span class="num">VIII</span><span class="titre">Positions relatives d'une droite et d'un cercle</span></h2>
+  <div class="bloc prop"><div class="tag">Proposition</div>
+    <p>Soit \(\Cc\) le cercle de centre \(\Omega\) et de rayon \(R\), et \(\Dd\) une droite du plan \(\mathcal P\).</p>
+    <ul>
+      <li>Si \(d\big(\Omega;\Dd\big)&gt;R\), alors \(\Dd\cap\Cc=\varnothing\).</li>
+      <li>Si \(d\big(\Omega;\Dd\big)=R\), alors \(\Dd\cap\Cc=\{H\}\), où \(H\) est le point de contact (ou de tangence) de la droite \(\Dd\) et du cercle \(\Cc\).</li>
+      <li>Si \(d\big(\Omega;\Dd\big)&lt;R\), alors \(\Dd\cap\Cc=\{A;B\}\) : la droite coupe le cercle en deux points.</li>
+    </ul>
+    <div class="trois">
+      <figure class="fig">
+        <svg viewBox="0 0 120 110" role="img" aria-label="Droite extérieure au cercle">
+          <circle class="c" cx="60" cy="45" r="32"/>
+          <line class="a" x1="8" y1="96" x2="112" y2="96"/>
+          <line class="g d" x1="60" y1="45" x2="60" y2="96"/>
+          <circle class="pt" cx="60" cy="45" r="3"/><circle class="pt" cx="60" cy="96" r="3"/>
+          <text x="54" y="38">Ω</text><text x="65" y="92" class="s">H</text>
+        </svg>
+        <figcaption>\(d\big(\Omega;\Dd\big)&gt;R\)<br>\(\Dd\cap\Cc=\varnothing\)</figcaption>
+      </figure>
+      <figure class="fig">
+        <svg viewBox="0 0 120 110" role="img" aria-label="Droite tangente au cercle">
+          <circle class="c" cx="60" cy="45" r="32"/>
+          <line class="a" x1="8" y1="77" x2="112" y2="77"/>
+          <line class="g d" x1="60" y1="45" x2="60" y2="77"/>
+          <circle class="pt" cx="60" cy="45" r="3"/><circle class="pt" cx="60" cy="77" r="3"/>
+          <text x="54" y="38">Ω</text><text x="56" y="96" class="s">H</text>
+        </svg>
+        <figcaption>\(d\big(\Omega;\Dd\big)=R\)<br>\(\Dd\cap\Cc=\{H\}\)</figcaption>
+      </figure>
+      <figure class="fig">
+        <svg viewBox="0 0 120 110" role="img" aria-label="Droite sécante au cercle">
+          <circle class="c" cx="60" cy="45" r="32"/>
+          <line class="a" x1="8" y1="61" x2="112" y2="61"/>
+          <line class="g d" x1="60" y1="45" x2="60" y2="61"/>
+          <circle class="pt" cx="60" cy="45" r="3"/>
+          <circle class="pt" cx="32.3" cy="61" r="3"/><circle class="pt" cx="87.7" cy="61" r="3"/>
+          <text x="54" y="38">Ω</text><text x="22" y="80" class="s">A</text><text x="90" y="80" class="s">B</text>
+        </svg>
+        <figcaption>\(d\big(\Omega;\Dd\big)&lt;R\)<br>\(\Dd\cap\Cc=\{A;B\}\)</figcaption>
+      </figure>
+    </div>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+    <ol>
+      <li>Étudions la position relative de la droite \(\Dd\) d'équation \(x-2y+3=0\) et du cercle \(\Cc\) de centre \(\Omega(2;-1)\) et de rayon \(R=2\).</li>
+      <li>Étudions et déterminons l'intersection de la droite \(\Dd\) et du cercle \(\Cc\) tels que :
+        \[\Cc : x^2+y^2+2x-4y-4=0 \qquad\text{et}\qquad \Dd : \left\{\begin{array}{l}x=2+t\\ y=2+t\end{array}\right.\;(t\in\R)\]</li>
+    </ol>
+  </div>
+  <div class="bloc app"><div class="tag">Applications</div>
+    <ol>
+      <li>Étudier la position relative de la droite \(\Dd\) et du cercle \(\Cc\) dans chacun des cas suivants :
+        <ol class="alpha">
+          <li>\(\Cc : x^2+y^2-4x+2y=0\) et \(\Dd : 2x-y=0\) ;</li>
+          <li>\(\Cc : (x+2)^2+(y+2)^2=2\) et \(\Dd : x-y-2=0\).</li>
+        </ol></li>
+      <li>Étudier l'intersection de la droite \(\Dd\) et du cercle \(\Cc\) dans chacun des cas suivants :
+        <ol class="alpha">
+          <li>\(\Cc : x^2+y^2+2x-2y+1=0\) et \(\Dd : \left\{\begin{array}{l}x=-1+t\\ y=1+t\end{array}\right.\) \((t\in\R)\) ;</li>
+          <li>\(\Cc : x^2+y^2-4x-4y-1=0\) et \(\Dd : \left\{\begin{array}{l}x=2t\\ y=2+t\end{array}\right.\) \((t\in\R)\) ;</li>
+          <li>\(\Cc : x^2+y^2-2x-3=0\) et \(\Dd : \left\{\begin{array}{l}x=-2+t\\ y=t\end{array}\right.\) \((t\in\R)\).</li>
+        </ol></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================ IX ============================ -->
+<section class="chap" id="s9" data-toc="Tangente à un cercle">
+  <h2><span class="num">IX</span><span class="titre">Équation de la tangente à un cercle en un point de ce cercle</span></h2>
+  <div class="bloc prop"><div class="tag">Proposition</div>
+    <div class="avec-fig">
+      <div>
+        <p>Soit \(\Cc\) le cercle de centre \(\Omega\) et de rayon \(R\), \(A(x_A;y_A)\) un point de \(\Cc\) et \((T)\) la tangente à \(\Cc\) au point \(A\).</p>
+        <ul>
+          <li>La droite \((T)\) est l'ensemble des points \(M(x;y)\) du plan tels que \(\vect{A\Omega}\cdot\vect{AM}=0\).</li>
+          <li>Si \(\Cc : x^2+y^2+ax+by+c=0\), alors une équation de la tangente \((T)\) est :
+          \[(T) : xx_A+yy_A+\frac a2\left(x+x_A\right)+\frac b2\left(y+y_A\right)+c=0\]</li>
+        </ul>
+      </div>
+      <figure class="fig" aria-label="Tangente T au cercle au point A">
+        <svg viewBox="0 0 240 150">
+          <circle class="c" cx="110" cy="68" r="50"/>
+          <line class="a" x1="15" y1="118" x2="230" y2="118"/>
+          <line class="t" x1="110" y1="68" x2="110" y2="118"/>
+          <polyline class="g" points="110,107 121,107 121,118"/>
+          <circle class="pt" cx="110" cy="68" r="3.5"/><circle class="pt" cx="110" cy="118" r="3.5"/><circle class="pt" cx="190" cy="118" r="3.5"/>
+          <text x="104" y="60">Ω</text><text x="104" y="140">A</text><text x="184" y="140">M</text>
+          <text x="200" y="108">(T)</text><text x="160" y="40">(𝒞)</text>
+        </svg>
+      </figure>
+    </div>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemple</div>
+    <p>On considère le cercle \(\Cc\) d'équation \(x^2+y^2-4x+2y-5=0\) et le point \(A(3;2)\). Vérifions que \(A\in\Cc\), puis déterminons une équation de la tangente \((T)\) au cercle \(\Cc\) au point \(A\).</p>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}

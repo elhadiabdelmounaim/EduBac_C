@@ -1,0 +1,72 @@
+{% load edubac_assets %}<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>
+(function(){var d=document.documentElement;try{var t=localStorage.getItem('edubac-theme');if(t==='dark'||t==='light')d.setAttribute('data-theme',t);}catch(e){}
+/* Mode « cahier » (pages). Si le script du cours ne démarre pas, on revient à la lecture continue. */
+d.className+=' pagine';setTimeout(function(){if(!/\bpagine-pret\b/.test(d.className))d.className=d.className.replace(/\bpagine\b/,'');},15000);})();
+</script>
+<title>{{ lesson.title }} — {{ course.get_niveau_display }} — EduBac</title>
+<meta name="description" content="Cours en ligne : {{ lesson.title }} ({{ course.get_niveau_display }}).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,700&family=Lexend:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% asset 'css/cours.css' %}">
+<link rel="icon" href="{% asset 'pwa/favicon-32.png' %}">
+<script defer src="{% asset 'vendor/jquery/jquery-3.7.1.min.js' %}"></script>
+<script defer src="{% asset 'js/cours.js' %}"></script>
+<script defer src="{% asset 'vendor/mathjax/tex-svg-3.2.2.js' %}"></script>
+</head>
+<body>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="{% url 'education:home' %}" aria-label="EduBac — accueil">Edu<span>Bac</span></a>
+    <nav class="crumb" aria-label="Fil d’Ariane">
+      <a href="{% url 'education:niveau_detail' course.niveau %}">{{ course.get_niveau_display }}</a> ›
+      <a href="{% url 'education:lesson_detail' lesson.pk %}">{{ lesson.title }}</a>
+    </nav>
+    <div class="topbar-actions">
+      <button type="button" class="topbar-btn" id="coursTheme" aria-pressed="false">Mode sombre</button>
+      <a class="topbar-btn" href="{% url 'education:lesson_detail' lesson.pk %}">Retour à la leçon</a>
+    </div>
+  </div>
+</header>
+
+{# Cahier : les pages sont construites par cours.js à partir du contenu ci-dessous. #}
+<div class="cahier" id="cahier">
+  <div class="scene" id="scene">
+    <p class="chargement" id="chargement">Préparation des pages…</p>
+    <div class="feuilles" id="feuilles"></div>
+  </div>
+  <nav class="pager" aria-label="Pages du cours">
+    <button type="button" class="pager-btn" id="pagePrev" aria-label="Page précédente">
+      <span aria-hidden="true">‹</span><span class="pager-label">Précédente</span>
+    </button>
+    <label class="pager-aller">
+      <span class="visually-hidden">Aller à la partie</span>
+      <select id="pageChapitre"></select>
+    </label>
+    <span class="pager-num" id="pageNum" aria-live="polite"></span>
+    <button type="button" class="pager-btn" id="pageNext" aria-label="Page suivante">
+      <span class="pager-label">Suivante</span><span aria-hidden="true">›</span>
+    </button>
+  </nav>
+</div>
+
+<main class="source" id="source" data-titre="{{ lesson.title }}">
+  {% block hero %}{% endblock %}
+  {% block cours %}{% endblock %}
+  <div class="fin">
+    <p><strong>Fin du cours.</strong> Entraîne-toi avec les applications, puis passe au quiz du chapitre.</p>
+    <div class="fin-actions">
+      <a href="#cours-titre" data-haut class="secondaire">Revenir au début</a>
+      <a href="{% url 'education:lesson_detail' lesson.pk %}">Quiz et exercices</a>
+    </div>
+  </div>
+</main>
+</body>
+</html>

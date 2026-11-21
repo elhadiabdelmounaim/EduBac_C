@@ -39,7 +39,7 @@
                         {% for document in item.documents %}
                         <div class="w-100 d-flex flex-wrap align-items-center gap-2">
                             <span class="small text-break">{{ document.kind }} — {{ document.name }}</span>
-                            <a href="{{ document.url }}" class="btn btn-edubac btn-sm"
+                            <a href="{{ document.open_url|default:document.url }}" class="btn btn-edubac btn-sm"
                                target="_blank" rel="noopener">
                                 <i class="bi bi-eye"></i> Ouvrir
                             </a>
@@ -64,6 +64,11 @@
                            download>
                             <i class="bi bi-download"></i> Télécharger
                         </a>
+                        {% elif item.course_html_url and not item.documents %}
+                        <a href="{{ item.course_html_url }}" class="btn btn-edubac btn-sm" target="_blank" rel="noopener">
+                            <i class="bi bi-eye"></i> Ouvrir
+                        </a>
+                        <a href="{% url 'education:lesson_detail' item.obj.pk %}" class="btn btn-outline-primary btn-sm">Voir la leçon</a>
                         {% elif not item.documents %}
                         <button type="button" class="btn btn-edubac btn-sm" disabled title="PDF non disponible">
                             <i class="bi bi-eye"></i> Ouvrir

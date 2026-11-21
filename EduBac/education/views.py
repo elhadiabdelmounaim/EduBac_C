@@ -4,6 +4,7 @@ from pathlib import Path
 from django.conf import settings
 from django.http import FileResponse, Http404
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management import call_command
 from django.db.models import Count
@@ -93,7 +94,7 @@ def niveau_detail(request, niveau):
     from django.conf import settings
     from django.contrib import messages
     from django.urls import reverse
-    from .media_library import chapter_relative, documents
+    from .media_library import chapter_relative, course_html_template, documents
     # Sécurité : un élève ne voit que son niveau (sauf lecture libre si non connecté)
     user = getattr(request, 'edubac_user', None) or getattr(request, 'user', None)
     if user and getattr(user, 'is_authenticated', False) and getattr(user, 'role', None) == 'student':
@@ -121,10 +122,14 @@ def niveau_detail(request, niveau):
     lessons = []
     for lesson in lessons_qs:
         relative = chapter_relative(lesson)
+        html_url = (reverse('education:lesson_course_html', args=[lesson.pk])
+                    if course_html_template(lesson, relative=relative) else '')
         lesson_documents = [
             {
                 'name': path.name, 'kind': kind,
                 'url': reverse('education:lesson_document', args=[lesson.pk, kind, path.name]),
+                # « Ouvrir » affiche le cours en ligne quand il existe ; « Télécharger » garde le PDF.
+                'open_url': html_url if kind == 'Cours' and html_url else '',
             }
             for kind in ('Cours', 'Exercices')
             for path in documents(lesson, kind, relative=relative)
@@ -136,6 +141,7 @@ def niveau_detail(request, niveau):
         lessons.append({
             'obj': lesson, 'has_file': has_file,
             'documents': lesson_documents,
+            'course_html_url': html_url,
         })
     return render(request, 'education/niveau_detail.html', {
         'niveau_code': niveau,
@@ -158,7 +164,7 @@ def course_detail(request, pk):
 
 def lesson_detail(request, pk):
     lesson = get_object_or_404(Lesson, pk=pk)
-    from .media_library import chapter_relative, documents
+    from .media_library import chapter_relative, course_html_template, documents
     course_content_error = ''
     try:
         course_content = lesson.get_content()
@@ -242,6 +248,10 @@ def lesson_detail(request, pk):
             resource for resource in resources
             if resource.file and resource.file.name.startswith('resources/')
         ],
+        'course_html_url': (
+            reverse('education:lesson_course_html', args=[lesson.pk])
+            if course_html_template(lesson) else ''
+        ),
         'course_markdown_description': (
             markdown_resource.description if markdown_resource else ''
         ),
@@ -303,6 +313,17 @@ def lesson_document(request, pk, kind, filename):
         raise Http404
     response['X-Content-Type-Options'] = 'nosniff'
     return response
+
+
+def lesson_course_html(request, pk):
+    """Cours en ligne (HTML) de la leçon ; le PDF reste disponible au téléchargement."""
+    from django.http import Http404
+    from .media_library import course_html_template
+    lesson = get_object_or_404(Lesson.objects.select_related('course'), pk=pk)
+    template = course_html_template(lesson)
+    if template is None:
+        raise Http404
+    return render(request, template, {'lesson': lesson, 'course': lesson.course})
 
 
 def lesson_pdf(request, pk):
