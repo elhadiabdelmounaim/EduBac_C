@@ -55,6 +55,23 @@ def course_html_template(lesson, *, relative=None):
     return name
 
 
+def course_book_data(lesson, *, relative=None):
+    """Données du livre 3D (JSON à côté du cours HTML), ou None s'il n'y en a pas."""
+    import json
+    template = course_html_template(lesson, relative=relative)
+    if template is None:
+        return None
+    path = Path(settings.BASE_DIR) / 'templates' / (template[:-len('.html')] + '.livre.json')
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return None
+    spreads = data.get('spreads') if isinstance(data, dict) else None
+    return data if isinstance(spreads, list) and spreads else None
+
+
 def documents(lesson, kind, *, relative=None):
     if kind not in ('Cours', 'Exercices', 'Sources_IA'):
         return []

@@ -164,7 +164,7 @@ def course_detail(request, pk):
 
 def lesson_detail(request, pk):
     lesson = get_object_or_404(Lesson, pk=pk)
-    from .media_library import chapter_relative, course_html_template, documents
+    from .media_library import chapter_relative, course_book_data, course_html_template, documents
     course_content_error = ''
     try:
         course_content = lesson.get_content()
@@ -252,6 +252,10 @@ def lesson_detail(request, pk):
             reverse('education:lesson_course_html', args=[lesson.pk])
             if course_html_template(lesson) else ''
         ),
+        'course_book_url': (
+            reverse('education:lesson_book_3d', args=[lesson.pk])
+            if course_book_data(lesson) else ''
+        ),
         'course_markdown_description': (
             markdown_resource.description if markdown_resource else ''
         ),
@@ -318,12 +322,27 @@ def lesson_document(request, pk, kind, filename):
 def lesson_course_html(request, pk):
     """Cours en ligne (HTML) de la leçon ; le PDF reste disponible au téléchargement."""
     from django.http import Http404
-    from .media_library import course_html_template
+    from .media_library import course_book_data, course_html_template
     lesson = get_object_or_404(Lesson.objects.select_related('course'), pk=pk)
     template = course_html_template(lesson)
     if template is None:
         raise Http404
-    return render(request, template, {'lesson': lesson, 'course': lesson.course})
+    return render(request, template, {
+        'lesson': lesson, 'course': lesson.course,
+        'book_url': reverse('education:lesson_book_3d', args=[lesson.pk]) if course_book_data(lesson) else '',
+    })
+
+
+def lesson_book_3d(request, pk):
+    """Livre 3D (Three.js) du cours : leçons à gauche, figures en relief à droite."""
+    from .media_library import course_book_data
+    lesson = get_object_or_404(Lesson.objects.select_related('course'), pk=pk)
+    data = course_book_data(lesson)
+    if data is None:
+        raise Http404
+    return render(request, 'education/cours/livre3d.html', {
+        'lesson': lesson, 'course': lesson.course, 'livre': data,
+    })
 
 
 def lesson_pdf(request, pk):

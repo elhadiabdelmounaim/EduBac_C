@@ -1,0 +1,302 @@
+{
+  "schema": "edubac-livre-3d/1",
+  "lesson": {
+    "title": "Produit scalaire dans le plan",
+    "subtitle": "Étude analytique",
+    "level": "1ère année Bac Sciences",
+    "author": "Elhadi Abdelmounaim",
+    "frame": "Dans tout le chapitre, le plan \\(\\mathcal P\\) est rapporté à un repère orthonormé \\(\\Rep\\)."
+  },
+  "spreads": [
+    {
+      "id": "s1",
+      "number": "I",
+      "title": "Expression analytique du produit scalaire",
+      "concept": "Dans un repère orthonormé, le produit scalaire se calcule directement avec les coordonnées : on multiplie les abscisses, on multiplie les ordonnées, puis on additionne. Deux vecteurs sont orthogonaux exactement quand ce nombre est nul.",
+      "formula": [
+        "\\vu\\cdot\\vv = xx' + yy'",
+        "\\|\\vu\\| = \\sqrt{x^2+y^2}\\qquad AB=\\sqrt{(x_B-x_A)^2+(y_B-y_A)^2}"
+      ],
+      "vocabulary": [
+        {"term": "Repère orthonormé", "definition": "Deux axes perpendiculaires, de même unité."},
+        {"term": "Produit scalaire", "definition": "Le nombre \\(xx'+yy'\\) associé à deux vecteurs."},
+        {"term": "Orthogonaux", "definition": "Deux vecteurs dont le produit scalaire est nul."},
+        {"term": "Norme", "definition": "La longueur d'un vecteur, \\(\\sqrt{x^2+y^2}\\)."}
+      ],
+      "predict": {
+        "question": "Avec \\(\\vu(3;-2)\\) et \\(\\vv(4;6)\\), que vaut \\(\\vu\\cdot\\vv\\) ?",
+        "choices": ["\\(0\\) : les vecteurs sont orthogonaux", "\\(24\\)", "\\(-12\\)", "\\(10\\)"],
+        "answer": 0
+      },
+      "flap": "\\(\\vu\\cdot\\vv = 3\\times4+(-2)\\times6 = 12-12 = 0\\). Le produit scalaire est nul : \\(\\vu\\perp\\vv\\), sans mesurer aucun angle.",
+      "scene": {
+        "type": "produit",
+        "description": "Les vecteurs u(3;−2) et v(4;6) se dressent sur un quadrillage. Touchez chaque vecteur pour faire apparaître ses composantes, puis le bocal : il additionne xx' = 12 et yy' = −12, qui s'annulent.",
+        "interactions": ["u", "v", "bocal"]
+      },
+      "demo": [
+        {"shot": "overview", "caption": "Deux vecteurs posés dans un repère orthonormé.", "action": null},
+        {"shot": "close", "target": "u", "caption": "u(3;−2) : on lit ses composantes x = 3 et y = −2.", "action": "u"},
+        {"shot": "close", "target": "v", "caption": "v(4;6) : composantes x' = 4 et y' = 6.", "action": "v"},
+        {"shot": "low", "target": "bocal", "caption": "xx' = 12 et yy' = −12 : la somme est nulle, les vecteurs sont orthogonaux.", "action": "bocal"}
+      ]
+    },
+    {
+      "id": "s2",
+      "number": "II",
+      "title": "Expression de cos et sin d'un angle",
+      "concept": "Le produit scalaire donne le cosinus de l'angle de deux vecteurs, et le déterminant en donne le sinus. Ensemble, ils fixent l'angle orienté sans ambiguïté.",
+      "formula": [
+        "\\cos\\theta=\\dfrac{xx'+yy'}{\\|\\vu\\|\\,\\|\\vv\\|}",
+        "\\sin\\theta=\\dfrac{xy'-yx'}{\\|\\vu\\|\\,\\|\\vv\\|}\\qquad S_{ABC}=\\tfrac12\\left|\\det\\left(\\vect{AB};\\vect{AC}\\right)\\right|"
+      ],
+      "vocabulary": [
+        {"term": "Angle orienté", "definition": "L'angle \\(\\angv{\\vu}{\\vv}\\), mesuré de \\(\\vu\\) vers \\(\\vv\\)."},
+        {"term": "Déterminant", "definition": "\\(\\det(\\vu;\\vv)=xy'-yx'\\)."},
+        {"term": "Mesure principale", "definition": "La mesure de l'angle prise dans \\(]-\\pi;\\pi]\\)."}
+      ],
+      "predict": {
+        "question": "Avec \\(\\vu(1;2)\\) et \\(\\vv(-2;1)\\), quelle est une mesure de \\(\\angv{\\vu}{\\vv}\\) ?",
+        "choices": ["\\(\\dfrac{\\pi}{2}\\)", "\\(-\\dfrac{\\pi}{2}\\)", "\\(\\dfrac{\\pi}{4}\\)", "\\(\\pi\\)"],
+        "answer": 0
+      },
+      "flap": "\\(\\cos\\theta=\\dfrac{1\\times(-2)+2\\times1}{5}=0\\) et \\(\\sin\\theta=\\dfrac{1\\times1-2\\times(-2)}{5}=1\\). Seul \\(\\theta=\\dfrac{\\pi}{2}\\) donne à la fois cos 0 et sin 1 : le signe du sinus départage \\(\\dfrac{\\pi}{2}\\) et \\(-\\dfrac{\\pi}{2}\\).",
+      "scene": {
+        "type": "angle",
+        "description": "u reste fixe ; v tourne autour de l'origine. L'arc dessine l'angle orienté et deux jauges suivent cos θ et sin θ.",
+        "interactions": ["v", "arc", "jauges"]
+      },
+      "demo": [
+        {"shot": "overview", "caption": "u est fixe, v peut tourner.", "action": null},
+        {"shot": "close", "target": "v", "caption": "Faisons tourner v : l'angle change.", "action": "v"},
+        {"shot": "low", "target": "jauges", "caption": "cos θ suit le produit scalaire, sin θ suit le déterminant.", "action": "jauges"},
+        {"shot": "top", "target": "arc", "caption": "Le signe du sinus indique le sens de rotation.", "action": "arc"}
+      ]
+    },
+    {
+      "id": "s3",
+      "number": "III",
+      "title": "Étude analytique de la droite",
+      "concept": "Un vecteur normal est perpendiculaire à la droite ; ses coordonnées se lisent dans l'équation \\(ax+by+c=0\\). Il donne aussi la distance d'un point à la droite.",
+      "formula": [
+        "(D):ax+by+c=0\\ \\Rightarrow\\ \\vn(a;b)\\ \\text{normal}",
+        "d\\big(A;(D)\\big)=\\dfrac{|ax_A+by_A+c|}{\\sqrt{a^2+b^2}}"
+      ],
+      "vocabulary": [
+        {"term": "Vecteur normal", "definition": "Non nul et orthogonal à un vecteur directeur de la droite."},
+        {"term": "Vecteur directeur", "definition": "Un vecteur qui donne la direction de la droite."},
+        {"term": "Projeté orthogonal", "definition": "Le pied \\(H\\) de la perpendiculaire menée de \\(A\\)."},
+        {"term": "Perpendiculaires", "definition": "\\((D)\\perp(D')\\iff aa'+bb'=0\\)."}
+      ],
+      "predict": {
+        "question": "Quelle est la distance du point \\(A(2;-1)\\) à la droite \\((D):4x-3y+4=0\\) ?",
+        "choices": ["\\(3\\)", "\\(15\\)", "\\(1\\)", "\\(5\\)"],
+        "answer": 0
+      },
+      "flap": "\\(|4\\times2-3\\times(-1)+4|=|8+3+4|=15\\) et \\(\\sqrt{4^2+3^2}=5\\), donc \\(d=\\dfrac{15}{5}=3\\). Le dénominateur \\(\\|\\vn\\|\\) ramène le vecteur normal à une longueur 1.",
+      "scene": {
+        "type": "droite",
+        "description": "La droite (D) : 4x − 3y + 4 = 0 se dresse comme un mur de papier, avec son vecteur normal n(4;−3). Le point A(2;−1) est piqué au-dessus de la page.",
+        "interactions": ["A", "n", "D"]
+      },
+      "demo": [
+        {"shot": "overview", "caption": "Une droite, son vecteur normal et un point A.", "action": null},
+        {"shot": "close", "target": "n", "caption": "n(4;−3) se lit dans l'équation et forme un angle droit avec (D).", "action": "n"},
+        {"shot": "low", "target": "A", "caption": "De A, on descend perpendiculairement jusqu'au projeté H : AH = 3.", "action": "A"},
+        {"shot": "side", "target": "D", "caption": "Pour tout point M de (D), AM·n reste le même : M glisse sans que rien ne change.", "action": "D"}
+      ]
+    },
+    {
+      "id": "s4",
+      "number": "IV",
+      "title": "Équation cartésienne d'un cercle",
+      "concept": "Un cercle est l'ensemble des points situés à la distance \\(R\\) de son centre. En élevant au carré, on obtient une équation sans racine.",
+      "formula": [
+        "(x-a)^2+(y-b)^2=R^2",
+        "\\((x-x_A)(x-x_B)+(y-y_A)(y-y_B)=0\\) — diamètre \\([AB]\\)"
+      ],
+      "vocabulary": [
+        {"term": "Centre", "definition": "Le point \\(\\Omega(a;b)\\), à égale distance de tous les points du cercle."},
+        {"term": "Rayon", "definition": "La distance \\(R=\\Omega M\\) commune à tous les points."},
+        {"term": "Diamètre", "definition": "Une corde qui passe par le centre ; elle voit tout point du cercle sous un angle droit."},
+        {"term": "Cercle circonscrit", "definition": "Le cercle passant par les trois sommets d'un triangle."}
+      ],
+      "predict": {
+        "question": "Le cercle de centre \\(\\Omega(2;-3)\\) passant par \\(A(-1;1)\\) a pour rayon :",
+        "choices": ["\\(5\\)", "\\(25\\)", "\\(7\\)", "\\(\\sqrt7\\)"],
+        "answer": 0
+      },
+      "flap": "\\(R=\\Omega A=\\sqrt{(-1-2)^2+(1+3)^2}=\\sqrt{9+16}=5\\). Son équation est donc \\((x-2)^2+(y+3)^2=25\\).",
+      "scene": {
+        "type": "cercle",
+        "description": "Le cercle de centre Ω(2;−3) et de rayon 5 forme une couronne de papier. Le point M parcourt le cercle ; le diamètre [AB] le voit toujours sous un angle droit.",
+        "interactions": ["M", "diametre", "omega"]
+      },
+      "demo": [
+        {"shot": "overview", "caption": "Le cercle de centre Ω(2;−3), de rayon 5.", "action": null},
+        {"shot": "close", "target": "omega", "caption": "Tous les points sont à la même distance R de Ω.", "action": "omega"},
+        {"shot": "low", "target": "M", "caption": "M fait le tour du cercle : ΩM reste égal à 5.", "action": "M"},
+        {"shot": "top", "target": "diametre", "caption": "Vu depuis M, le diamètre [AB] forme toujours un angle droit : AM·BM = 0.", "action": "diametre"}
+      ]
+    },
+    {
+      "id": "s5",
+      "number": "V",
+      "title": "Représentation paramétrique d'un cercle",
+      "concept": "Un seul paramètre, l'angle \\(\\theta\\), suffit pour décrire tout le cercle. Quand \\(\\theta\\) varie, le point \\(M\\) en fait le tour.",
+      "formula": [
+        "\\left\\{\\begin{array}{l}x=a+R\\cos\\theta\\\\ y=b+R\\sin\\theta\\end{array}\\right.\\qquad(\\theta\\in\\R)"
+      ],
+      "vocabulary": [
+        {"term": "Paramètre", "definition": "Le réel \\(\\theta\\) qui fixe la position de \\(M\\)."},
+        {"term": "Représentation paramétrique", "definition": "Le système qui donne \\(x\\) et \\(y\\) en fonction de \\(\\theta\\)."},
+        {"term": "Projection", "definition": "\\(R\\cos\\theta\\) et \\(R\\sin\\theta\\) sont les décalages horizontal et vertical depuis \\(\\Omega\\)."}
+      ],
+      "predict": {
+        "question": "Quel ensemble décrit \\(x=-1+2\\cos\\theta,\\ y=5+2\\sin\\theta\\) \\((\\theta\\in\\R)\\) ?",
+        "choices": ["Le cercle de centre \\((-1;5)\\) et de rayon \\(2\\)", "Le cercle de centre \\((1;-5)\\) et de rayon \\(2\\)", "Le cercle de centre \\((-1;5)\\) et de rayon \\(4\\)", "Une droite"],
+        "answer": 0
+      },
+      "flap": "On reconnaît \\(a+R\\cos\\theta\\) et \\(b+R\\sin\\theta\\) avec \\(a=-1\\), \\(b=5\\), \\(R=2\\). Quand \\(\\theta\\) parcourt \\(\\R\\), \\(M\\) fait le tour du cercle de centre \\(\\Omega(-1;5)\\) et de rayon \\(2\\).",
+      "scene": {
+        "type": "parametrique",
+        "description": "M est entraîné par l'angle θ autour de Ω. Ses projections sur les deux axes montrent a + R cos θ et b + R sin θ.",
+        "interactions": ["M", "projx", "projy"]
+      },
+      "demo": [
+        {"shot": "overview", "caption": "Le point M est repéré par l'angle θ.", "action": null},
+        {"shot": "low", "target": "M", "caption": "θ augmente : M fait le tour du cercle.", "action": "M"},
+        {"shot": "close", "target": "projx", "caption": "Sur l'axe des abscisses : x = a + R cos θ.", "action": "projx"},
+        {"shot": "close", "target": "projy", "caption": "Sur l'axe des ordonnées : y = b + R sin θ.", "action": "projy"}
+      ]
+    },
+    {
+      "id": "s6",
+      "number": "VI",
+      "title": "L'ensemble x² + y² + ax + by + c = 0",
+      "concept": "En complétant les carrés, l'équation prend la forme \\((x-x_\\Omega)^2+(y-y_\\Omega)^2=d\\). Le signe de \\(d\\) décide de tout : rien, un point, ou un cercle.",
+      "formula": [
+        "d=\\left(\\dfrac a2\\right)^2+\\left(\\dfrac b2\\right)^2-c",
+        "d<0:\\ \\varnothing\\qquad d=0:\\ \\{\\Omega\\}\\qquad d>0:\\ \\text{cercle},\\ R=\\sqrt d"
+      ],
+      "vocabulary": [
+        {"term": "Forme canonique", "definition": "\\(x^2+ax=\\left(x+\\frac a2\\right)^2-\\frac{a^2}{4}\\)."},
+        {"term": "Singleton", "definition": "Un ensemble réduit à un seul point."},
+        {"term": "Ensemble vide", "definition": "Aucun point ne vérifie l'équation."}
+      ],
+      "predict": {
+        "question": "Que représente l'équation \\(x^2+y^2-4x+6y+15=0\\) ?",
+        "choices": ["L'ensemble vide", "Un cercle de rayon \\(\\sqrt2\\)", "Le point \\((2;-3)\\)", "Un cercle de rayon \\(15\\)"],
+        "answer": 0
+      },
+      "flap": "\\(d=\\left(\\dfrac{-4}{2}\\right)^2+\\left(\\dfrac{6}{2}\\right)^2-15=4+9-15=-2<0\\). Une somme de carrés \\((x-2)^2+(y+3)^2\\) ne peut pas valoir \\(-2\\) : aucun point.",
+      "scene": {
+        "type": "ensemble",
+        "description": "Trois socles de papier montrent les trois cas : d < 0 (rien), d = 0 (un point), d > 0 (un cercle de rayon √d). Une jauge affiche la valeur de d.",
+        "interactions": ["vide", "point", "cercle"]
+      },
+      "demo": [
+        {"shot": "overview", "caption": "Trois cas selon le signe de d.", "action": null},
+        {"shot": "close", "target": "vide", "caption": "d < 0 : aucun point ne convient.", "action": "vide"},
+        {"shot": "close", "target": "point", "caption": "d = 0 : un seul point, Ω.", "action": "point"},
+        {"shot": "low", "target": "cercle", "caption": "d > 0 : un cercle de centre Ω et de rayon √d.", "action": "cercle"}
+      ]
+    },
+    {
+      "id": "s7",
+      "number": "VII",
+      "title": "Intérieur et extérieur d'un cercle",
+      "concept": "Il suffit de remplacer \\(x\\) et \\(y\\) par les coordonnées d'un point dans le premier membre de l'équation du cercle. Le signe obtenu dit si le point est dedans, dessus ou dehors.",
+      "formula": [
+        "f(x;y)=x^2+y^2+ax+by+c",
+        "\\(f(M)<0\\) : intérieur ; \\(f(M)=0\\) : \\(M\\in\\Cc\\) ; \\(f(M)>0\\) : extérieur"
+      ],
+      "vocabulary": [
+        {"term": "Intérieur", "definition": "Les points tels que \\(\\Omega M<R\\)."},
+        {"term": "Extérieur", "definition": "Les points tels que \\(\\Omega M>R\\)."},
+        {"term": "Résolution graphique", "definition": "Hachurer la région du plan qui vérifie l'inéquation."}
+      ],
+      "predict": {
+        "question": "Pour \\((\\mathcal C):x^2+y^2-2x+4y=0\\), où se trouve le point \\(A(0;1)\\) ?",
+        "choices": ["À l'extérieur du cercle", "À l'intérieur du cercle", "Sur le cercle"],
+        "answer": 0
+      },
+      "flap": "\\(f(0;1)=0^2+1^2-2\\times0+4\\times1=5>0\\), donc \\(A\\) est à l'extérieur. En effet \\(\\Omega(1;-2)\\), \\(R=\\sqrt5\\) et \\(\\Omega A=\\sqrt{10}>\\sqrt5\\).",
+      "scene": {
+        "type": "interieur",
+        "description": "Le cercle (𝒞) : x² + y² − 2x + 4y = 0 délimite un disque teinté. Trois épingles sont plantées : dedans, dessus et dehors ; chacune révèle le signe de f.",
+        "interactions": ["dedans", "dessus", "dehors"]
+      },
+      "demo": [
+        {"shot": "overview", "caption": "Le cercle partage le plan en trois parties.", "action": null},
+        {"shot": "close", "target": "dedans", "caption": "Dedans : f(M) < 0.", "action": "dedans"},
+        {"shot": "close", "target": "dessus", "caption": "Sur le cercle : f(M) = 0.", "action": "dessus"},
+        {"shot": "low", "target": "dehors", "caption": "Dehors, comme A(0;1) : f(M) > 0.", "action": "dehors"}
+      ]
+    },
+    {
+      "id": "s8",
+      "number": "VIII",
+      "title": "Positions relatives d'une droite et d'un cercle",
+      "concept": "On compare la distance du centre à la droite avec le rayon. Plus grande : aucun point commun ; égale : la droite est tangente ; plus petite : deux points d'intersection.",
+      "formula": [
+        "d\\big(\\Omega;(D)\\big)>R\\Rightarrow(D)\\cap(\\mathcal C)=\\varnothing",
+        "d=R\\Rightarrow\\{H\\}\\qquad d<R\\Rightarrow\\{A;B\\}"
+      ],
+      "vocabulary": [
+        {"term": "Tangente", "definition": "Une droite qui touche le cercle en un seul point."},
+        {"term": "Sécante", "definition": "Une droite qui coupe le cercle en deux points."},
+        {"term": "Point de contact", "definition": "Le point \\(H\\) commun à la tangente et au cercle."}
+      ],
+      "predict": {
+        "question": "\\((D):x-2y+3=0\\) et le cercle de centre \\(\\Omega(2;-1)\\), de rayon \\(2\\). Que fait la droite ?",
+        "choices": ["Elle ne coupe pas le cercle", "Elle est tangente au cercle", "Elle coupe le cercle en deux points"],
+        "answer": 0
+      },
+      "flap": "\\(d\\big(\\Omega;(D)\\big)=\\dfrac{|2-2\\times(-1)+3|}{\\sqrt{1+4}}=\\dfrac{7}{\\sqrt5}\\approx3{,}13>R=2\\) : la droite passe au large du cercle.",
+      "scene": {
+        "type": "positions",
+        "description": "Une règle de papier glisse vers le cercle. À chaque position, la distance d(Ω;(D)) est comparée au rayon et les points communs apparaissent.",
+        "interactions": ["exterieure", "tangente", "secante"]
+      },
+      "demo": [
+        {"shot": "overview", "caption": "Le cercle et une droite mobile.", "action": null},
+        {"shot": "low", "target": "regle", "caption": "d > R : aucun point commun.", "action": "exterieure"},
+        {"shot": "close", "target": "regle", "caption": "d = R : la droite touche le cercle en H.", "action": "tangente"},
+        {"shot": "top", "target": "regle", "caption": "d < R : deux points d'intersection A et B.", "action": "secante"}
+      ]
+    },
+    {
+      "id": "s9",
+      "number": "IX",
+      "title": "Tangente à un cercle en un point",
+      "concept": "La tangente en \\(A\\) est la droite perpendiculaire au rayon \\([\\Omega A]\\). Le vecteur \\(\\vect{A\\Omega}\\) est donc un vecteur normal de la tangente.",
+      "formula": [
+        "M\\in(T)\\iff\\vect{A\\Omega}\\cdot\\vect{AM}=0",
+        "(T):xx_A+yy_A+\\tfrac a2(x+x_A)+\\tfrac b2(y+y_A)+c=0"
+      ],
+      "vocabulary": [
+        {"term": "Tangente", "definition": "La droite qui touche le cercle en \\(A\\), perpendiculaire au rayon."},
+        {"term": "Rayon", "definition": "Le segment \\([\\Omega A]\\)."},
+        {"term": "Dédoublement", "definition": "La règle qui remplace \\(x^2\\) par \\(xx_A\\) et \\(x\\) par \\(\\frac{x+x_A}{2}\\)."}
+      ],
+      "predict": {
+        "question": "\\((\\mathcal C):x^2+y^2-4x+2y-5=0\\) et \\(A(3;2)\\). Quelle est la tangente en \\(A\\) ?",
+        "choices": ["\\(x+3y-9=0\\)", "\\(3x-y-7=0\\)", "\\(x-3y+3=0\\)", "\\(3x+y-11=0\\)"],
+        "answer": 0
+      },
+      "flap": "\\(\\Omega(2;-1)\\), donc \\(\\vect{\\Omega A}(1;3)\\) est normal à \\((T)\\) : \\(1(x-3)+3(y-2)=0\\), soit \\(x+3y-9=0\\). On vérifie que \\(A\\in(\\mathcal C)\\) : \\(9+4-12+4-5=0\\).",
+      "scene": {
+        "type": "tangente",
+        "description": "Le cercle (𝒞) de centre Ω(2;−1) et le point A(3;2). La tangente (T) reste perpendiculaire au rayon ΩA quand A se déplace.",
+        "interactions": ["A", "rayon", "T"]
+      },
+      "demo": [
+        {"shot": "overview", "caption": "Le cercle, le point A et la tangente (T).", "action": null},
+        {"shot": "close", "target": "rayon", "caption": "Le rayon ΩA et la tangente forment un angle droit.", "action": "rayon"},
+        {"shot": "low", "target": "T", "caption": "Pour tout M de (T), AΩ·AM = 0.", "action": "T"},
+        {"shot": "top", "target": "A", "caption": "Déplaçons A : la tangente suit, toujours perpendiculaire au rayon.", "action": "A"}
+      ]
+    }
+  ]
+}

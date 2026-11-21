@@ -67,3 +67,44 @@ class CourseHtmlTests(TestCase):
         page = self.client.get(reverse('education:lesson_detail', args=[self.lesson.pk])).content.decode()
         self.assertIn('Cours en ligne', page)
         self.assertIn(reverse('education:lesson_course_html', args=[self.lesson.pk]), page)
+
+
+@override_settings(ALLOWED_HOSTS=['testserver'])
+class CourseBook3DTests(TestCase):
+    """Livre 3D : données JSON du cours, Three.js servi localement, liens d'accès."""
+
+    def setUp(self):
+        course = Course.objects.create(name='Mathématiques', niveau='1ere_bac_sc')
+        self.lesson = Lesson.objects.create(
+            title='Le produit scalaire dans le plan', content='', course=course, order=4)
+        self.other = Lesson.objects.create(title='Les suites numériques', content='', course=course, order=5)
+
+    def test_book_page_embeds_lessons_and_local_three_js(self):
+        response = self.client.get(reverse('education:lesson_book_3d', args=[self.lesson.pk]))
+        self.assertEqual(response.status_code, 200)
+        page = response.content.decode()
+        self.assertIn('<script type="importmap">', page)
+        self.assertIn('/static/vendor/three/three.module.min.js', page)
+        self.assertIn('/static/vendor/three/addons/', page)
+        self.assertIn('/static/js/livre3d.js', page)
+        self.assertNotIn('cdnjs', page)
+        data = response.context['livre']
+        self.assertEqual(len(data['spreads']), 9)
+        for spread in data['spreads']:
+            self.assertIn(spread['predict']['answer'], range(len(spread['predict']['choices'])))
+            self.assertGreaterEqual(len(spread['vocabulary']), 3)
+            self.assertTrue(spread['flap'] and spread['concept'] and spread['formula'])
+            self.assertTrue(spread['scene']['interactions'])
+            actions = {step['action'] for step in spread['demo'] if step['action']}
+            self.assertTrue(actions <= set(spread['scene']['interactions']), spread['id'])
+        self.assertIn('id="livre-donnees"', page)
+
+    def test_lesson_without_book_returns_404_and_has_no_link(self):
+        self.assertEqual(self.client.get(reverse('education:lesson_book_3d', args=[self.other.pk])).status_code, 404)
+        page = self.client.get(reverse('education:lesson_detail', args=[self.other.pk])).content.decode()
+        self.assertNotIn('livre-3d', page)
+
+    def test_book_is_linked_from_lesson_and_notebook(self):
+        url = reverse('education:lesson_book_3d', args=[self.lesson.pk])
+        self.assertContains(self.client.get(reverse('education:lesson_detail', args=[self.lesson.pk])), url)
+        self.assertContains(self.client.get(reverse('education:lesson_course_html', args=[self.lesson.pk])), url)

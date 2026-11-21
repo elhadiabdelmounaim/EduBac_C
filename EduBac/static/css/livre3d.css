@@ -1,0 +1,188 @@
+/* Livre 3D : scène Three.js plein écran, page de gauche en HTML projetée dans le livre
+   (CSS3DRenderer), barre de navigation flottante. */
+:root {
+  --encre: #1d1a16;
+  --encre-douce: #5a524a;
+  --papier: #f7f2e7;
+  --papier-ombre: #e9e1cf;
+  --accent: #1f8f84;
+  --accent-clair: #d8efec;
+  --or: #c8922a;
+  --rouge: #b4475a;
+  --hud: rgba(28, 24, 20, .86);
+  --hud-texte: #f6efe2;
+  --titre: "Newsreader", "Iowan Old Style", Georgia, serif;
+  --corps: "Newsreader", Georgia, serif;
+  --ui: "Lexend", "Segoe UI", system-ui, sans-serif;
+}
+html.contraste {
+  --encre: #000;
+  --encre-douce: #111;
+  --papier: #fff;
+  --papier-ombre: #ddd;
+  --accent: #005f56;
+  --accent-clair: #c9f2ec;
+  --hud: #000;
+  --hud-texte: #fff;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #3b3128; }
+body { font-family: var(--ui); color: var(--hud-texte); -webkit-tap-highlight-color: transparent; }
+
+.livre-app { position: fixed; inset: 0; }
+.scene3d { position: absolute; inset: 0; touch-action: none; }
+.scene3d canvas { display: block; outline: none; }
+/* Couche CSS3D au-dessus du canevas : seule la page de gauche capte les clics. */
+.scene3d .couche-css { position: absolute; inset: 0; pointer-events: none; }
+.scene3d .couche-css .page-gauche, .scene3d .couche-css .pg-rabat { pointer-events: auto; }
+
+/* ---------- En-tête discret ---------- */
+.livre-haut { position: absolute; top: 0; left: 0; right: 0; z-index: 5; display: flex; align-items: center; gap: 14px;
+  padding: 12px 18px; pointer-events: none;
+  background: linear-gradient(rgba(20, 16, 12, .55), transparent); }
+.livre-haut > * { pointer-events: auto; }
+.livre-marque { font-family: var(--titre); font-weight: 700; font-size: 21px; color: #fff; text-decoration: none; }
+.livre-marque span { color: #e9b949; }
+.livre-titre-cours { flex: 1; min-width: 0; font-size: 14px; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.livre-lien { font-size: 13.5px; color: #fff; text-decoration: none; padding: 6px 12px; border-radius: 999px;
+  background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .22); white-space: nowrap; }
+.livre-lien:hover { background: rgba(255, 255, 255, .22); }
+
+.livre-chargement { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; z-index: 4;
+  font-family: var(--titre); font-size: 22px; font-style: italic; color: #f3e9d6; }
+.livre-pret .livre-chargement { display: none; }
+.livre-erreur { position: absolute; inset: 0; z-index: 6; display: grid; place-content: center; text-align: center;
+  padding: 24px; background: #3b3128; font-size: 17px; }
+.livre-erreur a { color: #e9b949; }
+
+/* ---------- Barre de navigation flottante ---------- */
+.livre-hud { position: absolute; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  z-index: 8; display: flex; align-items: center; gap: 4px; padding: 6px 8px; max-width: calc(100vw - 20px);
+  background: var(--hud); color: var(--hud-texte); border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .12); box-shadow: 0 14px 36px rgba(0, 0, 0, .4);
+  backdrop-filter: blur(12px); }
+.hud-btn { flex: none; width: 42px; height: 42px; border-radius: 999px; border: 0; background: transparent; color: inherit;
+  font: 500 20px/1 var(--ui); cursor: pointer; display: grid; place-items: center; }
+.hud-btn:hover:not(:disabled) { background: rgba(255, 255, 255, .12); }
+.hud-btn:disabled { opacity: .35; cursor: default; }
+.hud-btn[aria-pressed="true"] { background: rgba(233, 185, 73, .22); color: #f3c75b; }
+.hud-play { background: #e9b949; color: #1d1a16; font-size: 15px; }
+.hud-play:hover:not(:disabled) { background: #f2c862; }
+.hud-play[aria-pressed="true"] { background: #f2c862; color: #1d1a16; }
+.hud-titre { min-width: 0; max-width: 300px; padding: 0 10px; font-size: 14px; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; }
+.hud-titre b { color: #f3c75b; font-family: var(--titre); margin-right: 6px; }
+.hud-sep { width: 1px; height: 24px; background: rgba(255, 255, 255, .18); margin: 0 4px; }
+button:focus-visible, a:focus-visible { outline: 3px solid #f3c75b; outline-offset: 2px; }
+
+.livre-legende { position: absolute; left: 50%; bottom: calc(86px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  z-index: 7; margin: 0; max-width: min(720px, calc(100vw - 32px)); padding: 12px 22px; border-radius: 16px;
+  background: rgba(247, 242, 231, .95); color: #1d1a16; font-family: var(--titre); font-size: 20px; line-height: 1.4;
+  text-align: center; box-shadow: 0 10px 30px rgba(0, 0, 0, .35); animation: legende .45s ease both; }
+@keyframes legende { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+/* ---------- Sommaire ---------- */
+.livre-tiroir { position: absolute; top: 0; bottom: 0; left: 0; z-index: 9; width: min(360px, 88vw); padding: 18px 16px;
+  overflow-y: auto; background: rgba(247, 242, 231, .97); color: #1d1a16; box-shadow: 8px 0 40px rgba(0, 0, 0, .35);
+  animation: tiroir .35s cubic-bezier(.2, .7, .2, 1) both; }
+@keyframes tiroir { from { transform: translateX(-100%); } to { transform: none; } }
+.tiroir-tete { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.tiroir-tete h2 { font-family: var(--titre); font-size: 26px; margin: 0; }
+.livre-tiroir .hud-btn { color: #1d1a16; }
+.livre-tiroir ol { list-style: none; margin: 0; padding: 0; }
+.livre-tiroir li button { width: 100%; display: grid; grid-template-columns: 46px 1fr 26px; gap: 6px; align-items: center;
+  text-align: left; padding: 10px 8px; border: 0; border-radius: 10px; background: transparent; color: inherit;
+  font: 400 15.5px/1.3 var(--ui); cursor: pointer; }
+.livre-tiroir li button:hover, .livre-tiroir li button[aria-current="true"] { background: #ece3cf; }
+.livre-tiroir .n { font-family: var(--titre); font-weight: 700; font-size: 18px; color: var(--accent); }
+.livre-tiroir .fait { color: var(--rouge); font-size: 18px; text-align: center; }
+
+/* ===================== Page de gauche (HTML dans le livre) ===================== */
+/* Dimensionnée en pixels « papier » : 1000 × 1360, réduite par la scène 3D. */
+/* Page « plate » (overflow: hidden) : le rabat 3D est un objet à part dans la scène. */
+.page-gauche { position: relative; width: 1000px; height: 1360px; padding: 70px 78px 60px 92px; overflow: hidden;
+  font-family: var(--corps); color: var(--encre); font-size: 27px; line-height: 1.42;
+  user-select: none; -webkit-user-select: none; backface-visibility: hidden; transform-style: preserve-3d;
+  transition: opacity .25s ease; }
+.page-gauche.change { opacity: 0; }
+.pg-tete { display: flex; justify-content: space-between; font-family: var(--ui); font-size: 17px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--encre-douce); border-bottom: 1.5px solid var(--encre); padding-bottom: 12px; }
+.pg-titre { font-family: var(--titre); font-weight: 700; font-size: 58px; line-height: 1.05; margin: 34px 0 18px;
+  letter-spacing: -.5px; text-wrap: balance; }
+.pg-concept { margin: 0 0 26px; font-size: 27px; color: #2b2620; }
+.pg-formule { border: 2px solid var(--encre); border-radius: 6px; padding: 16px 22px; margin: 0 0 26px; position: relative;
+  background: rgba(255, 255, 255, .35); }
+.pg-formule::before { content: "Formule"; position: absolute; top: -15px; left: 18px; padding: 0 10px; background: var(--papier);
+  font-family: var(--ui); font-size: 15px; letter-spacing: 2px; text-transform: uppercase; }
+.pg-formule .ligne { text-align: center; margin: 6px 0; font-size: 29px; }
+.pg-vocab { display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; margin: 0 0 26px; font-size: 23px; }
+.pg-vocab dt { font-weight: 700; font-style: italic; }
+.pg-vocab dd { margin: 0; color: #3a332b; }
+.pg-predire h2 { font-family: var(--ui); font-size: 16px; letter-spacing: 2.4px; text-transform: uppercase; margin: 0 0 6px;
+  color: var(--accent); }
+.pg-question { margin: 0 0 12px; }
+.pg-choix { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pg-choix button { font: inherit; font-size: 23px; text-align: left; padding: 10px 16px; border-radius: 10px; cursor: pointer;
+  border: 2px solid var(--encre); background: transparent; color: var(--encre); transition: background .2s, color .2s, transform .2s; }
+.pg-choix button:hover:not(:disabled) { background: rgba(29, 26, 22, .06); transform: translateY(-2px); }
+.pg-choix button:disabled { cursor: default; }
+.pg-choix button.choisi { background: var(--encre); color: var(--papier); }
+.pg-choix button.choisi mjx-container { color: var(--papier) !important; }
+.pg-choix button.juste { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-clair) inset; }
+.pg-choix button.choisi.juste { background: var(--accent); border-color: var(--accent); }
+.pg-choix button.faux { border-style: dashed; }
+
+/* Rabat « Pourquoi ? » : verrouillé jusqu'à la prédiction, puis se soulève vers le lecteur. */
+.pg-rabat-zone { position: absolute; left: 92px; right: 250px; bottom: 60px; height: 250px; transform-style: preserve-3d; }
+.pg-reponse { position: absolute; inset: 0; padding: 18px 22px; border-radius: 6px; background: #fffaf0;
+  border: 2px dashed var(--encre-douce); font-size: 22px; line-height: 1.38; overflow: hidden; }
+.pg-pourquoi { display: block; font-family: var(--ui); font-size: 15px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--rouge); margin-bottom: 4px; }
+.pg-rabat { width: 658px; height: 250px; padding: 0; border: 0; background: none; cursor: pointer; font-family: var(--corps);
+  transition: opacity .25s ease; }
+.pg-rabat.change { opacity: 0; }
+.pg-rabat:disabled { cursor: not-allowed; }
+/* Pas de backface-visibility : dans CSS3DRenderer, le sens des faces des éléments imbriqués est inversé. */
+.rabat-face { position: absolute; inset: 0; border-radius: 6px; }
+.rabat-dos { display: none; }
+.rabat-face { display: grid; place-content: center; text-align: center; gap: 6px; color: var(--encre);
+  background: repeating-linear-gradient(-45deg, #efe4cc 0 14px, #e8dcc0 14px 28px);
+  border: 2px solid var(--encre); box-shadow: 0 10px 14px -8px rgba(0, 0, 0, .35); }
+.rabat-titre { font-family: var(--titre); font-weight: 700; font-size: 44px; }
+.rabat-aide { font-family: var(--ui); font-size: 18px; letter-spacing: 1px; }
+.pg-rabat:not(:disabled) .rabat-aide::before { content: "↑ "; }
+.pg-rabat:disabled .rabat-face { filter: grayscale(.6); }
+.pg-rabat:disabled .rabat-aide::before { content: "🔒 "; }
+.pg-rabat.ouvert .rabat-face { box-shadow: 0 -18px 30px -10px rgba(0, 0, 0, .35); background: repeating-linear-gradient(-45deg, #e6d9bd 0 14px, #ddd0b2 14px 28px); }
+
+/* Tampon de fin de leçon */
+.pg-tampon { position: absolute; right: 70px; bottom: 70px; width: 160px; text-align: center; }
+.pg-tampon svg { width: 160px; height: 160px; display: block; }
+.tampon-vide { fill: none; stroke: var(--encre-douce); stroke-width: 2; stroke-dasharray: 7 7; opacity: .7; }
+.tampon-encre { fill: none; stroke: var(--rouge); stroke-width: 4; opacity: 0; transform-origin: 60px 60px; }
+.tampon-encre text { fill: var(--rouge); stroke: none; font: 700 11.5px var(--ui); letter-spacing: 2px; }
+.tampon-encre .tampon-coche { font-size: 34px; }
+.pg-tampon.encre .tampon-encre { opacity: .88; animation: tampon .55s cubic-bezier(.2, .9, .3, 1.3) both; }
+@keyframes tampon { 0% { transform: scale(1.8) rotate(-24deg); opacity: 0; } 60% { transform: scale(.94) rotate(-12deg); opacity: .95; }
+  100% { transform: scale(1) rotate(-12deg); opacity: .88; } }
+html.mouvement-reduit .pg-tampon.encre .tampon-encre { animation: none; transform: rotate(-12deg); }
+.tampon-etat { display: block; font-family: var(--ui); font-size: 16px; color: var(--encre-douce); margin-top: 4px; }
+.pg-astuce { position: absolute; left: 92px; bottom: 18px; margin: 0; font-family: var(--ui); font-size: 15px;
+  color: var(--encre-douce); letter-spacing: .5px; }
+
+mjx-container { color: var(--encre); }
+mjx-container[display="true"] { margin: 4px 0 !important; }
+
+/* ---------- Téléphone ---------- */
+@media (max-width: 720px) {
+  .livre-titre-cours { display: none; }
+  .livre-haut { padding: 10px 12px; gap: 8px; }
+  .livre-lien { font-size: 12.5px; padding: 6px 10px; }
+  .livre-hud { gap: 0; padding: 4px; }
+  .hud-btn { width: 38px; height: 38px; font-size: 18px; }
+  .hud-titre, .hud-sep { display: none; }
+  .livre-legende { font-size: 17px; bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (max-width: 400px) { .livre-lien:first-of-type { display: none; } }
+.livre-erreur[hidden], .livre-tiroir[hidden], .livre-legende[hidden] { display: none; }

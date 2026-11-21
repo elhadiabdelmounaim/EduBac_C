@@ -1,0 +1,132 @@
+{% load static edubac_assets %}<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>
+(function(){var d=document.documentElement;try{var t=localStorage.getItem('edubac-livre3d-reglages');var r=t?JSON.parse(t):{};
+if(r.contraste)d.classList.add('contraste');if(r.mouvement===false||(r.mouvement==null&&window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))d.classList.add('mouvement-reduit');}catch(e){}})();
+</script>
+<title>{{ lesson.title }} — Livre 3D — EduBac</title>
+<meta name="description" content="Livre 3D interactif : {{ lesson.title }} ({{ course.get_niveau_display }}).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400&family=Lexend:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% asset 'css/livre3d.css' %}">
+<link rel="icon" href="{% asset 'pwa/favicon-32.png' %}">
+<script type="importmap">
+{"imports": {
+  "three": "{% asset 'vendor/three/three.module.min.js' %}",
+  "three/addons/": "{% get_static_prefix %}vendor/three/addons/"
+}}
+</script>
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']],
+    macros: {
+      vect: ['\\overrightarrow{#1}', 1],
+      vu: '\\overrightarrow{u}', vv: '\\overrightarrow{v}', vw: '\\overrightarrow{w}',
+      vn: '\\overrightarrow{n}', vi: '\\overrightarrow{i}', vj: '\\overrightarrow{j}',
+      R: '\\mathbb{R}', Cc: '(\\mathcal{C})', Dd: '(D)',
+      Rep: '\\left(O;\\overrightarrow{i},\\overrightarrow{j}\\right)',
+      angv: ['(\\widehat{#1\\,;#2})', 2]
+    }
+  },
+  svg: { fontCache: 'global' },
+  startup: { typeset: false }
+};
+</script>
+<script defer src="{% asset 'vendor/mathjax/tex-svg-3.2.2.js' %}"></script>
+<script type="module" src="{% asset 'js/livre3d.js' %}"></script>
+</head>
+<body>
+{{ livre|json_script:"livre-donnees" }}
+<div class="livre-app" id="livre"
+     data-cle="{{ lesson.pk }}"
+     data-cahier="{% url 'education:lesson_course_html' lesson.pk %}"
+     data-lecon="{% url 'education:lesson_detail' lesson.pk %}">
+
+  <div class="scene3d" id="scene3d" aria-hidden="true"></div>
+
+  <header class="livre-haut">
+    <a class="livre-marque" href="{% url 'education:home' %}" aria-label="EduBac — accueil">Edu<span>Bac</span></a>
+    <span class="livre-titre-cours">{{ lesson.title }}</span>
+    <a class="livre-lien" href="{% url 'education:lesson_course_html' lesson.pk %}">Version cahier</a>
+    <a class="livre-lien" href="{% url 'education:lesson_detail' lesson.pk %}">Retour à la leçon</a>
+  </header>
+
+  <p class="livre-chargement" id="livreChargement" role="status">Ouverture du livre…</p>
+
+  <div class="livre-erreur" id="livreErreur" hidden>
+    <p><strong>Le livre 3D ne peut pas s'afficher sur cet appareil</strong> (WebGL indisponible).</p>
+    <p><a href="{% url 'education:lesson_course_html' lesson.pk %}">Ouvrir la version cahier du cours</a></p>
+  </div>
+
+  <!-- Sommaire -->
+  <aside class="livre-tiroir" id="livreTiroir" aria-label="Sommaire du livre" hidden>
+    <div class="tiroir-tete">
+      <h2>Sommaire</h2>
+      <button type="button" class="hud-btn" id="tiroirFermer" aria-label="Fermer le sommaire">✕</button>
+    </div>
+    <ol id="tiroirListe"></ol>
+  </aside>
+
+  <!-- Légende de la démonstration -->
+  <p class="livre-legende" id="livreLegende" aria-live="polite" hidden></p>
+
+  <!-- Barre de navigation -->
+  <nav class="livre-hud" id="livreHud" aria-label="Navigation du livre">
+    <button type="button" class="hud-btn" id="hudSommaire" aria-label="Sommaire" aria-expanded="false" title="Sommaire">≡</button>
+    <button type="button" class="hud-btn" id="hudPrec" aria-label="Leçon précédente" title="Leçon précédente (←)">‹</button>
+    <button type="button" class="hud-btn hud-play" id="hudDemo" aria-label="Lancer la démonstration" aria-pressed="false" title="Démonstration guidée">▶</button>
+    <button type="button" class="hud-btn" id="hudSuiv" aria-label="Leçon suivante" title="Leçon suivante (→)">›</button>
+    <span class="hud-titre" id="hudTitre" aria-live="polite"></span>
+    <span class="hud-sep" aria-hidden="true"></span>
+    <button type="button" class="hud-btn" id="hudVue" aria-label="Revenir à la vue d'ensemble" title="Revenir à la vue d'ensemble">⌖</button>
+    <button type="button" class="hud-btn" id="hudSon" aria-label="Son" aria-pressed="false" title="Son">♪</button>
+    <button type="button" class="hud-btn" id="hudContraste" aria-label="Contraste élevé" aria-pressed="false" title="Contraste élevé">◐</button>
+    <button type="button" class="hud-btn" id="hudMouvement" aria-label="Réduire les animations" aria-pressed="false" title="Réduire les animations">≋</button>
+  </nav>
+
+  <!-- Gabarit de la page de gauche (rendu dans le livre) -->
+  <template id="gabaritPage">
+    <article class="page-gauche">
+      <header class="pg-tete"><span class="pg-num"></span><span class="pg-cours"></span></header>
+      <h1 class="pg-titre"></h1>
+      <p class="pg-concept"></p>
+      <div class="pg-formule"></div>
+      <dl class="pg-vocab"></dl>
+      <section class="pg-predire">
+        <h2>Prédis avant de tester</h2>
+        <p class="pg-question"></p>
+        <div class="pg-choix" role="group"></div>
+      </section>
+      <div class="pg-rabat-zone">
+        <div class="pg-reponse"><span class="pg-pourquoi">Pourquoi ?</span><div class="pg-explication"></div></div>
+        <button type="button" class="pg-rabat" disabled>
+          <span class="rabat-face">
+            <span class="rabat-titre">Pourquoi ?</span>
+            <span class="rabat-aide">Fais d'abord ta prédiction</span>
+          </span>
+          <span class="rabat-dos" aria-hidden="true"></span>
+        </button>
+      </div>
+      <div class="pg-tampon" aria-label="Tampon de la leçon">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="tampon-vide" cx="60" cy="60" r="54"/>
+          <g class="tampon-encre">
+            <circle cx="60" cy="60" r="54"/><circle cx="60" cy="60" r="44"/>
+            <path id="tamponArc" d="M 20 60 A 40 40 0 1 1 100 60" fill="none" stroke="none"/>
+            <text><textPath href="#tamponArc" startOffset="50%" text-anchor="middle">LEÇON EXPLORÉE</textPath></text>
+            <text class="tampon-coche" x="60" y="80" text-anchor="middle">✓</text>
+          </g>
+        </svg>
+        <span class="tampon-etat"></span>
+      </div>
+      <p class="pg-astuce">Touchez les figures de la page de droite.</p>
+    </article>
+  </template>
+</div>
+</body>
+</html>
