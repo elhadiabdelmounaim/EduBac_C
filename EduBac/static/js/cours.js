@@ -49,6 +49,7 @@
     var $prev = $('#pagePrev');
     var $next = $('#pageNext');
     var $num = $('#pageNum');
+    var $etapes = $('#pageEtapes');
     var $select = $('#pageChapitre');
     var $bar = $('#progress');
 
@@ -122,24 +123,98 @@
     var $fin = $source.children('.fin');
     if ($fin.length) unites.push({ el: $fin[0], partie: parties.length ? parties[parties.length - 1].id : '' });
 
-    // ---------- Applications voilées en présentation ----------
-    // Au vidéoprojecteur, seuls les exemples sont visibles : chaque bloc « Applications » reste
-    // masqué (sa place est gardée) jusqu'au clic sur « Afficher l'application ».
-    var devoilees = {};
-    $source.find('.bloc.app').each(function (k) {
-      $(this).attr('data-app', k).append($('<button>', {
-        type: 'button', 'class': 'app-voile', text: "Afficher l'application"
-      }));
-    });
-    function majVoiles() {
-      $feuilles.find('.bloc.app').each(function () {
-        $(this).toggleClass('devoile', !!devoilees[$(this).attr('data-app')]);
+    // ---------- Présentation pas à pas ----------
+    // Au vidéoprojecteur, une page apparaît avec son titre, puis chaque bloc (définition,
+    // proposition, exemple…) à chaque appui sur → / Espace / télécommande ; les exemples d'une
+    // liste arrivent un par un. Une application reste voilée (« Afficher l'application »)
+    // jusqu'à ce qu'on la demande. ↓ / ↑ et les boutons du bas changent de page directement.
+    $source.find('.bloc.app').append($('<button>', {
+      type: 'button', 'class': 'app-voile', text: "Afficher l'application"
+    }));
+    var CLASSES_ETAPE = 'etape-cache voilee etape-anime';
+
+    function calculerEtapes(p) {
+      var etapes = [];
+      var attente = [];     // un sous-titre apparaît avec ce qui le suit
+      p.$corps.children().each(function () {
+        var $el = $(this);
+        if (this.tagName === 'H3') { attente.push(this); return; }
+        if (!$el.hasClass('bloc')) { attente = []; return; }
+        var items = $el.hasClass('ex') ? $el.children('ol, ul').first().children('li') : $();
+        if (items.length >= 2) {
+          etapes.push(attente.concat([this, items[0]]));
+          items.slice(1).each(function () { etapes.push([this]); });
+        } else {
+          etapes.push(attente.concat([this]));
+        }
+        attente = [];
       });
+      p.etapes = etapes;
+      p.vu = 0;
     }
+
+    function majEtapes(k, anime) {
+      var p = pages[k];
+      if (!p) return;
+      $.each(p.etapes, function (i, els) {
+        var $els = $(els).removeClass('etape-anime');
+        var prochaineApp = i === p.vu && $els.filter('.bloc.app').length > 0;
+        $.each(els, function (_, el) {
+          var $el = $(el);
+          if (i < p.vu) $el.removeClass('etape-cache voilee');
+          else if (prochaineApp) $el.removeClass('etape-cache').toggleClass('voilee', $el.is('.bloc.app'));
+          else $el.addClass('etape-cache').removeClass('voilee');
+        });
+        if (anime && i === p.vu - 1) {
+          $els[0].offsetWidth;
+          $els.addClass('etape-anime');
+        }
+      });
+      if (k === courante) majCompteur();
+    }
+
+    function majCompteur() {
+      var p = pages[courante];
+      var n = p && $root.hasClass('presentation') ? p.etapes.length : 0;
+      if (!n) { $etapes.prop('hidden', true).text(''); return; }
+      var texte = n <= 12
+        ? new Array(Math.min(p.vu, n) + 1).join('●') + new Array(n - Math.min(p.vu, n) + 1).join('○')
+        : p.vu + ' / ' + n;
+      $etapes.prop('hidden', false).text(texte)
+        .attr('aria-label', 'Élément ' + p.vu + ' sur ' + n + ' de la page');
+    }
+
+    function enPresentation() { return $root.hasClass('presentation'); }
+
+    // Élément suivant de la page, puis la page suivante quand tout est affiché.
+    function avancer() {
+      var p = pages[courante];
+      if (enPresentation() && p && p.vu < p.etapes.length) { p.vu++; majEtapes(courante, true); return; }
+      suivante();
+    }
+
+    function reculer() {
+      var p = pages[courante];
+      if (enPresentation() && p && p.vu > 0) { p.vu--; majEtapes(courante, false); return; }
+      if (courante > 0 && pages[courante - 1]) pages[courante - 1].vu = pages[courante - 1].etapes.length;
+      precedente();
+    }
+
+    function toutAfficher() {
+      var p = pages[courante];
+      if (!p || p.vu >= p.etapes.length) return;
+      p.vu = p.etapes.length;
+      majEtapes(courante, true);
+    }
+
     $feuilles.on('click', '.app-voile', function () {
-      var k = $(this).closest('.bloc.app').attr('data-app');
-      devoilees[k] = true;
-      $feuilles.find('.bloc.app[data-app="' + k + '"]').addClass('devoile anime');
+      var p = pages[courante];
+      var bloc = $(this).closest('.bloc.app')[0];
+      if (!p) return;
+      $.each(p.etapes, function (i, els) {
+        if ($.inArray(bloc, els) >= 0) { p.vu = Math.max(p.vu, i + 1); return false; }
+      });
+      majEtapes(courante, true);
     });
 
     var pages = [];
@@ -212,8 +287,7 @@
       var $bloc = $(el);
       if (!$bloc.hasClass('bloc')) { page.$p.addClass('deborde'); return page; }
       var etiquette = $.trim($bloc.children('.tag').first().text().replace(/\s*\(suite\)$/, ''));
-      var $suite = $('<div>', { 'class': $bloc.attr('class').replace(/\s*\b(suite|devoile|anime)\b/g, '') + ' suite' })
-        .attr('data-app', $bloc.attr('data-app'))
+      var $suite = $('<div>', { 'class': $bloc.attr('class').replace(/\s*\b(suite|etape-cache|voilee|etape-anime)\b/g, '') + ' suite' })
         .data('source', $bloc.data('source') || $bloc[0])
         .append($('<div>', { 'class': 'tag', text: etiquette + ' (suite)' }));
       var miroirs = [];
@@ -234,6 +308,7 @@
     }
 
     function defaire() {
+      $feuilles.find('.etape-cache, .voilee, .etape-anime').removeClass(CLASSES_ETAPE);
       for (var k = mouvements.length - 1; k >= 0; k--) $(mouvements[k].parent).append(mouvements[k].el);
       mouvements = [];
       $(suites).remove();
@@ -295,7 +370,7 @@
           $(this).append($('<button>', { type: 'button', 'class': 'app-voile', text: 'Afficher la suite' }));
         }
       });
-      majVoiles();
+      $.each(pages, function (_, p) { calculerEtapes(p); });
       var cible = 0;
       if (ancre) {
         $.each(pages, function (k, p) { if ($.contains(p.$p[0], ancre)) { cible = k; return false; } });
@@ -353,6 +428,7 @@
         p.$p[0].inert = !visible;
         if (visible) p.$corps.scrollTop(0);
       });
+      majEtapes(index, false);
       $prev.prop('disabled', index === 0);
       $next.prop('disabled', index >= total - 1);
       $num.text('Page ' + (index + 1) + ' / ' + total);
@@ -404,12 +480,15 @@
       }
       if (touche === 'ArrowRight' || touche === 'PageDown' || touche === ' ' || touche === 'Enter') {
         if ((touche === ' ' || touche === 'Enter') && $(event.target).is('button, a, summary')) return;
-        suivante(); event.preventDefault();
+        avancer(); event.preventDefault();
       }
+      else if (touche === 'ArrowDown' && enPresentation()) { suivante(); event.preventDefault(); }
+      else if (touche === 'ArrowUp' && enPresentation()) { precedente(); event.preventDefault(); }
+      else if ((touche === 'a' || touche === 'A') && enPresentation()) { toutAfficher(); event.preventDefault(); }
       else if (touche === 'p' || touche === 'P' || touche === 'F5') { presenter(!$root.hasClass('presentation')); event.preventDefault(); }
       else if (touche === 'b' || touche === 'B' || touche === '.') { if ($root.hasClass('presentation')) { noir(true); event.preventDefault(); } }
       else if (touche === 'Escape') { if ($root.hasClass('noir')) noir(false); else if ($root.hasClass('presentation')) presenter(false); }
-      else if (touche === 'ArrowLeft' || touche === 'PageUp') { precedente(); event.preventDefault(); }
+      else if (touche === 'ArrowLeft' || touche === 'PageUp') { reculer(); event.preventDefault(); }
       else if (touche === 'Home') { afficher(0); event.preventDefault(); }
       else if (touche === 'End') { afficher(pages.length - 1); event.preventDefault(); }
     });
@@ -443,7 +522,6 @@
     function presenter(actif) {
       if (actif === $root.hasClass('presentation')) return;
       $root.toggleClass('presentation', actif);
-      if (actif) devoilees = {};   // chaque présentation recommence avec les applications masquées
       $presenter.attr('aria-pressed', actif ? 'true' : 'false');
       if (actif) {
         var el = document.documentElement;
@@ -492,7 +570,9 @@
         var ancienne = taille.split('x');
         if (+ancienne[0] === $scene.width() && Math.abs(+ancienne[1] - h) < 60 && parVue === 1
             && !$root.hasClass('presentation')) return;
-        afficher(paginer(), true);
+        var cible = paginer();
+        if (enPresentation() && pages[cible]) pages[cible].vu = pages[cible].etapes.length;
+        afficher(cible, true);
       }, 200);
     }
 

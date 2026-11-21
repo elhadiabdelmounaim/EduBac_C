@@ -256,25 +256,30 @@ html.pagine-pret .chargement { display: none; }
 .feuille-corps .fin { margin-top: 18px; }
 .bloc.suite > .tag { opacity: .85; }
 
-/* Applications voilées en présentation : la place est gardée, le contenu apparaît au clic. */
-.app-voile { display: none; }
+/* Présentation pas à pas : la place de chaque élément est gardée ; il apparaît à son tour.
+   Une application voilée attend le clic sur « Afficher l'application ». */
+.app-voile, .pager-etapes { display: none; }
 html.presentation .feuille-corps .bloc.app { min-height: 5.2em; }
-html.presentation .bloc.app:not(.devoile) > :not(.tag):not(.app-voile) { visibility: hidden; }
-html.presentation .bloc.app:not(.devoile) {
-  background: repeating-linear-gradient(-45deg, var(--b-bg) 0 14px, color-mix(in srgb, var(--b) 10%, var(--b-bg)) 14px 28px); }
-html.presentation .bloc.app:not(.devoile) > .app-voile {
+html.presentation .feuille-corps .etape-cache { visibility: hidden; }
+html.presentation .bloc.app.voilee > :not(.tag):not(.app-voile) { visibility: hidden; }
+html.presentation .bloc.app.voilee {
+  background: repeating-linear-gradient(-45deg, var(--b-bg) 0 14px, color-mix(in srgb, var(--b) 10%, var(--b-bg)) 14px 28px);
+  animation: cours-entree .5s cubic-bezier(.2, .7, .2, 1) both; }
+html.presentation .bloc.app.voilee > .app-voile {
   display: inline-flex; align-items: center; gap: .5em; position: absolute; left: 50%; top: calc(50% + .6em);
   transform: translate(-50%, -50%); padding: .5em 1.1em; border: 2px solid var(--b); border-radius: 999px;
   background: var(--surface, #fff); color: var(--b); font: inherit; font-size: .8em; font-weight: 600;
   cursor: pointer; white-space: nowrap; box-shadow: 0 6px 18px rgba(0, 0, 0, .12);
   transition: transform .2s ease, background .2s ease, color .2s ease; }
-html.presentation .bloc.app:not(.devoile) > .app-voile::before { content: "👁"; }
-html.presentation .bloc.app:not(.devoile) > .app-voile:hover,
-html.presentation .bloc.app:not(.devoile) > .app-voile:focus-visible {
+html.presentation .bloc.app.voilee > .app-voile::before { content: "👁"; }
+html.presentation .bloc.app.voilee > .app-voile:hover,
+html.presentation .bloc.app.voilee > .app-voile:focus-visible {
   background: var(--b); color: #fff; transform: translate(-50%, -50%) scale(1.05); outline: none; }
-html.presentation .bloc.app.devoile.anime > :not(.tag) { animation: cours-entree .6s cubic-bezier(.2, .7, .2, 1) both; }
+html.presentation .feuille-corps .etape-anime { animation: cours-entree .6s cubic-bezier(.2, .7, .2, 1) both; }
+html.presentation .pager-etapes:not([hidden]) { display: inline; color: #7FD6C8; letter-spacing: 3px;
+  font-size: 17px; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) {
-  html.presentation .bloc.app.devoile.anime > :not(.tag) { animation: none; }
+  html.presentation .feuille-corps .etape-anime, html.presentation .bloc.app.voilee { animation: none; }
 }
 
 /* Barre de navigation */

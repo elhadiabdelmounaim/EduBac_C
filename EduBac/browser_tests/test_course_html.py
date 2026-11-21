@@ -207,34 +207,68 @@ class CourseHtmlBrowserTests(StaticLiveServerTestCase):
             "[...document.querySelectorAll('.feuille.visible .feuille-corps')].map(c => c.textContent).join(' ')"))
         self.assertEqual(errors, [])
 
-    def test_projector_hides_applications_until_revealed(self):
+    def test_projector_reveals_step_by_step_and_jumps_pages(self):
         page, errors = self.open(1920, 1080)
         page.click('#coursPresenter')
         page.wait_for_function("document.documentElement.classList.contains('presentation')")
         page.wait_for_timeout(400)
-        # Aller à la première page qui contient une application.
+        cachés = "document.querySelectorAll('.feuille.visible .etape-cache').length"
+        # Première page avec un exemple et une application ; on y va directement (↓).
         cible = page.evaluate(
-            "[...document.querySelectorAll('.feuille')].findIndex(f => f.querySelector('.bloc.app'))")
-        self.assertGreater(cible, 0)
+            "[...document.querySelectorAll('.feuille')].findIndex(f => f.querySelector('.bloc.ex') && f.querySelector('.bloc.app'))")
+        self.assertGreater(cible, 1)
         for _ in range(cible):
-            page.keyboard.press('ArrowRight')
+            page.keyboard.press('ArrowDown')
+        self.assertEqual(self.current(page), [cible + 1])
         page.wait_for_timeout(1500)
-        bloc = page.locator('.feuille.visible .bloc.app').first
-        contenu = bloc.locator(':scope > ol, :scope > p, :scope > ul').first
-        # L'exemple reste visible ; l'application est masquée derrière son bouton.
-        self.assertTrue(page.locator('.feuille.visible .bloc.ex').first.is_visible())
+        # La page arrive avec son seul titre : tous les blocs attendent.
+        self.assertGreater(page.evaluate(cachés), 0)
+        self.assertTrue(page.locator('#pageEtapes').is_visible())
+        self.assertNotIn('●', page.inner_text('#pageEtapes'))
+        exemple = page.locator('.feuille.visible .bloc.ex').first
+        self.assertEqual(exemple.evaluate('e => getComputedStyle(e).visibility'), 'hidden')
+        # → fait apparaître les éléments un par un, sans changer de page.
+        avant = page.evaluate(cachés)
+        page.keyboard.press('ArrowRight')
+        self.assertEqual(self.current(page), [cible + 1])
+        self.assertLess(page.evaluate(cachés), avant)
+        self.assertIn('●', page.inner_text('#pageEtapes'))
+        # ← le cache de nouveau.
+        page.keyboard.press('ArrowLeft')
+        self.assertEqual(page.evaluate(cachés), avant)
+        # Jusqu'à l'application : elle est voilée, son bouton l'affiche.
+        app = page.locator('.feuille.visible .bloc.app').first
+        for _ in range(40):
+            if 'voilee' in (app.get_attribute('class') or ''):
+                break
+            page.keyboard.press('ArrowRight')
+        self.assertIn('voilee', app.get_attribute('class'))
+        self.assertTrue(exemple.is_visible())
+        contenu = app.locator(':scope > ol, :scope > p, :scope > ul').first
         self.assertEqual(contenu.evaluate('e => getComputedStyle(e).visibility'), 'hidden')
-        hauteur = bloc.bounding_box()['height']
-        bloc.locator('.app-voile').click()
+        hauteur = app.bounding_box()['height']
+        app.locator('.app-voile').click()
         self.assertEqual(contenu.evaluate('e => getComputedStyle(e).visibility'), 'visible')
-        self.assertFalse(bloc.locator('.app-voile').is_visible())
-        # La page ne bouge pas : la place était réservée.
-        self.assertAlmostEqual(bloc.bounding_box()['height'], hauteur, delta=1)
-        # Chaque nouvelle présentation recommence avec les applications masquées.
+        self.assertAlmostEqual(app.bounding_box()['height'], hauteur, delta=1)
+        # A : tout le reste de la page ; puis → passe à la page suivante.
+        page.keyboard.press('a')
+        self.assertEqual(page.evaluate(cachés), 0)
+        page.wait_for_timeout(300)
+        page.keyboard.press('ArrowRight')
+        self.assertEqual(self.current(page), [cible + 2])
+        # ↑ revient directement ; ← depuis une page vierge rend la précédente entière.
+        page.keyboard.press('ArrowLeft')
+        self.assertEqual(self.current(page), [cible + 1])
+        self.assertEqual(page.evaluate(cachés), 0)
+        # Le bouton « Suivante » change de page sans passer par les éléments.
+        page.mouse.move(600, 600)
+        page.click('#pageNext')
+        self.assertEqual(self.current(page), [cible + 2])
+        # Hors présentation : tout est lisible, sans bouton ni compteur.
         page.keyboard.press('Escape')
         page.wait_for_function("!document.documentElement.classList.contains('presentation')")
-        page.click('#coursPresenter')
-        page.wait_for_function("document.documentElement.classList.contains('presentation')")
-        page.wait_for_timeout(400)
-        self.assertEqual(page.locator('.bloc.app.devoile').count(), 0)
+        self.assertEqual(page.locator('.feuille .app-voile:visible').count(), 0)
+        self.assertFalse(page.locator('#pageEtapes').is_visible())
+        self.assertEqual(page.evaluate("[...document.querySelectorAll('.feuille.visible .bloc')]"
+                                       ".filter(b => getComputedStyle(b).visibility === 'hidden').length"), 0)
         self.assertEqual(errors, [])
