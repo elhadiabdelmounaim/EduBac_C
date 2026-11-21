@@ -1,0 +1,24 @@
+{
+  "annee": "2026-2027",
+  "source": "docs/references/Repartition_horaire_1ere_Bac_Sciences_2026-2027.pdf",
+  "niveaux": {
+    "1BAC_SE": {
+      "libelle": "1ère Bac Sciences expérimentales / Sciences et technologies",
+      "heures_par_semaine": 5,
+      "lecons": {
+        "01": {"titre": "Logique mathématique", "semestre": 1, "semaines": "S2", "heures": 5, "ponderation": "Contrôle 1 · 35 %"},
+        "02": {"titre": "Généralités sur les fonctions", "semestre": 1, "semaines": "S3 – S4", "heures": 10, "ponderation": "Contrôle 1 · 65 %"},
+        "03": {"titre": "Barycentre dans le plan", "semestre": 1, "semaines": "S6 – S7", "heures": 9, "ponderation": "Contrôle 2 · 40 %"},
+        "04": {"titre": "Produit scalaire (y compris l'expression analytique)", "semestre": 1, "semaines": "S8 – S11", "heures": 13, "ponderation": "Contrôle 2 · 60 % · Contrôle 3 · 10 %"},
+        "05": {"titre": "Suites numériques", "semestre": 1, "semaines": "S11 – S12", "heures": 7, "ponderation": "Contrôle 3 · 50 %"},
+        "06": {"titre": "Calcul trigonométrique", "semestre": 1, "semaines": "S13 – S14", "heures": 10, "ponderation": "Contrôle 3 · 40 %"},
+        "07": {"titre": "Rotation dans le plan", "semestre": 2, "semaines": "S20 – S21", "heures": 10, "ponderation": "Contrôle 1 · 50 %"},
+        "08": {"titre": "Limites", "semestre": 2, "semaines": "S18 – S19", "heures": 10, "ponderation": "Contrôle 1 · 50 %"},
+        "09": {"titre": "Dérivation", "semestre": 2, "semaines": "S23 – S25", "heures": 14, "ponderation": "Contrôle 2 · 60 %"},
+        "10": {"titre": "Étude des fonctions", "semestre": 2, "semaines": "S28 – S30", "heures": 14, "ponderation": "Contrôle 3 · 60 %"},
+        "11": {"titre": "Vecteurs de l'espace", "semestre": 2, "semaines": "S26 – S27", "heures": 7, "ponderation": "Contrôle 2 · 40 %"},
+        "12": {"titre": "Géométrie analytique de l'espace", "semestre": 2, "semaines": "S31 – S32", "heures": 7, "ponderation": "Contrôle 3 · 40 %"}
+      }
+    }
+  }
+}

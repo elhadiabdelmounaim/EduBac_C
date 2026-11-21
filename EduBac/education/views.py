@@ -330,8 +330,13 @@ def lesson_course_html(request, pk):
     # Le mode « Présenter » (vidéoprojecteur) est réservé aux professeurs et aux administrateurs.
     is_teacher = getattr(request.user, 'is_teacher', None)
     can_present = bool(request.user.is_authenticated and callable(is_teacher) and is_teacher())
+    # Minuteur de la présentation : minutes prévues de chaque bloc (répartition horaire).
+    minutage = {}
+    if can_present:
+        from cahier.rubriques import elements, plan_de_lecon
+        minutage = {e['key']: e['minutes'] for e in elements(plan_de_lecon(lesson) or []) if e['minutes']}
     return render(request, template, {
-        'lesson': lesson, 'course': lesson.course, 'can_present': can_present,
+        'lesson': lesson, 'course': lesson.course, 'can_present': can_present, 'minutage': minutage,
         'book_url': reverse('education:lesson_book_3d', args=[lesson.pk]) if course_book_data(lesson) else '',
     })
 

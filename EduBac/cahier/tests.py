@@ -15,7 +15,7 @@ from .rubriques import elements, plan_de_lecon
 User = get_user_model()
 
 
-class CahierTests(TestCase):
+class CahierBase(TestCase):
     def setUp(self):
         course = Course.objects.create(name='Mathématiques', niveau='1ere_bac_sc')
         self.lesson = Lesson.objects.create(
@@ -36,6 +36,9 @@ class CahierTests(TestCase):
 
     def post(self, data):
         return self.client.post(self.save_url, json.dumps(data), content_type='application/json')
+
+
+class CahierTests(CahierBase):
 
     # ---------- Plan du cours ----------
     def test_plan_has_parts_subtitles_and_blocks(self):
@@ -159,3 +162,68 @@ class CahierTests(TestCase):
         self.assertEqual(self.client.post(reverse('cahier:supprimer', args=[autre.pk])).status_code, 404)
         self.client.post(reverse('cahier:supprimer', args=[mien.pk]))
         self.assertEqual(list(Seance.objects.all()), [autre])
+
+
+class MinutageTests(CahierBase):
+    """Répartition horaire : 13 h pour le produit scalaire, réparties entre les blocs."""
+
+    def test_lesson_hours_come_from_the_reference_timetable(self):
+        from education.repartition import repartition_de_lecon
+        rep = repartition_de_lecon(self.lesson)
+        self.assertEqual((rep['heures'], rep['semaines'], rep['annee']), (13, 'S8 – S11', '2026-2027'))
+        self.assertEqual(repartition_de_lecon(self.sans_html)['heures'], 7)     # leçon 05 : suites
+
+    def test_minutes_cover_the_lesson_hours(self):
+        plan = plan_de_lecon(self.lesson)
+        feuilles = elements(plan)
+        self.assertEqual(sum(f['minutes'] for f in feuilles), 13 * 60)
+        self.assertEqual(sum(p['minutes'] for p in plan), 13 * 60)
+        self.assertTrue(all(f['minutes'] >= 5 and f['minutes'] % 5 == 0 for f in feuilles))
+        # Une partie vaut la somme de ses sous-titres et blocs.
+        un = plan[0]
+        self.assertEqual(un['minutes'], sum(e['minutes'] for e in un['enfants']))
+        # À volume égal, une application compte plus qu'une proposition.
+        sous = un['enfants'][0]['enfants']
+        self.assertGreater(sous[3]['minutes'], sous[0]['minutes'])
+
+    def test_fixed_minutes_are_kept(self):
+        from .rubriques import minuter
+        plan = [{'key': 's1', 'type': 'partie', 'titre': 'I', 'enfants': [
+            {'key': 's1-b1', 'type': 'bloc', 'titre': 'Définition', 'genre': 'def', 'taille': 300, 'figures': 0, 'fixe': '30'},
+            {'key': 's1-b2', 'type': 'bloc', 'titre': 'Exemples', 'genre': 'ex', 'taille': 300, 'figures': 0},
+            {'key': 's1-b3', 'type': 'bloc', 'titre': 'Applications', 'genre': 'app', 'taille': 300, 'figures': 0},
+        ]}]
+        minuter(plan, 100)
+        b = plan[0]['enfants']
+        self.assertEqual(b[0]['minutes'], 30)
+        self.assertEqual(b[1]['minutes'] + b[2]['minutes'], 70)
+        self.assertEqual(plan[0]['minutes'], 100)
+
+    def test_saved_minutes_duration_and_progress(self):
+        self.login_as(self.prof)
+        data = self.client.get(self.etat_url).json()
+        self.assertEqual(data['repartition']['heures'], 13)
+        minutes = {e['key']: e['minutes'] for e in elements(data['plan'])}
+        self.post({'classe': self.classe.pk, 'date': '2026-11-20', 'cles': ['s1-b1', 's1-b2']})
+        self.post({'classe': self.classe.pk, 'date': '2026-11-21', 'cles': ['s1-b2', 's1-b3']})
+        seance = Seance.objects.get(date='2026-11-21')
+        self.assertEqual([e.minutes for e in seance.elements.all()], [minutes['s1-b2'], minutes['s1-b3']])
+        page = self.client.get(reverse('cahier:index')).content.decode()
+        from .views import duree
+        cumul = minutes['s1-b1'] + minutes['s1-b2'] + minutes['s1-b3']
+        self.assertIn(f'Durée prévue : {duree(minutes["s1-b2"] + minutes["s1-b3"])}', page)
+        self.assertIn(f'Leçon : {duree(cumul)} / 13 h', page)
+        self.assertIn(f'Leçon : {duree(minutes["s1-b1"] + minutes["s1-b2"])} / 13 h', page)   # séance du 20
+
+    def test_duration_format(self):
+        from .views import duree
+        self.assertEqual([duree(40), duree(60), duree(95), duree(780)], ['40 min', '1 h', '1 h 35', '13 h'])
+
+    def test_timer_data_on_course_page_for_teachers_only(self):
+        url = reverse('education:lesson_course_html', args=[self.lesson.pk])
+        self.login_as(self.eleve)
+        self.assertNotIn('cours-minutage', self.client.get(url).content.decode())
+        self.login_as(self.prof)
+        page = self.client.get(url).content.decode()
+        self.assertIn('id="cours-minutage"', page)
+        self.assertIn('id="minuteur"', page)

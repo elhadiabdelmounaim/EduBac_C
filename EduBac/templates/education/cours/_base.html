@@ -73,6 +73,20 @@ d.className+=' pagine';setTimeout(function(){if(!/\bpagine-pret\b/.test(d.classN
 
 <div class="ecran-noir" id="ecranNoir" aria-hidden="true"></div>
 
+{% if minutage %}
+{# Présentation : temps prévu du paragraphe en cours, décompté jusqu'à zéro (répartition horaire). #}
+{{ minutage|json_script:"cours-minutage" }}
+<button type="button" class="minuteur" id="minuteur" hidden
+        title="Temps prévu pour ce paragraphe — clic : pause / reprise · double-clic : recommencer">
+  <svg viewBox="0 0 100 100" aria-hidden="true">
+    <circle class="minuteur-fond" cx="50" cy="50" r="44"></circle>
+    <circle class="minuteur-arc" cx="50" cy="50" r="44"></circle>
+  </svg>
+  <span class="minuteur-temps" id="minuteurTemps" role="timer">0:00</span>
+  <span class="minuteur-nom" id="minuteurNom"></span>
+</button>
+{% endif %}
+
 {% if can_present %}
 {# Cahier de textes : ce qui a été traité pendant la séance (enseignants seulement). #}
 <aside class="seance-panneau" id="seancePanneau" hidden aria-labelledby="seanceTitre"
@@ -86,6 +100,7 @@ d.className+=' pagine';setTimeout(function(){if(!/\bpagine-pret\b/.test(d.classN
     <label>Date <input type="date" id="seanceDate" required></label>
     <label>Classe <select id="seanceClasse"></select></label>
   </div>
+  <p class="seance-lecon" id="seanceLecon" hidden></p>
   <p class="seance-aide">Cochez les parties, sous-titres et blocs traités. ✓ = déjà vu lors d'une autre séance.</p>
   <div class="seance-arbre" id="seanceArbre" aria-live="polite"><p class="seance-info">Chargement…</p></div>
   <footer class="seance-pied">

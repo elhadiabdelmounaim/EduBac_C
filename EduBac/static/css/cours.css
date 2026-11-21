@@ -407,3 +407,38 @@ html.presentation .feuille-corps .bloc-sommaire h2 { font-size: .6em; }
 html.presentation .feuille-corps .bloc-sommaire a { grid-template-columns: 2.4em 1fr; }
 html.presentation .feuille-corps .trois { max-width: 30em; margin-left: auto; margin-right: auto; }
 @media (max-width: 820px) { .topbar-livre { display: none; } }
+
+/* ===================== Minuteur du paragraphe (présentation) =====================
+   Cercle en haut à droite : temps prévu du paragraphe en cours, décompté jusqu'à zéro. */
+.minuteur { display: none; }
+html.presentation .minuteur:not([hidden]) {
+  position: fixed; top: 1.6vh; right: 1.2vw; z-index: 60; display: grid; place-items: center;
+  width: clamp(76px, 11vh, 150px); aspect-ratio: 1; padding: 0; border: 0; border-radius: 50%;
+  background: rgba(8, 24, 34, .82); color: #fff; cursor: pointer; font-family: var(--corps, inherit);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, .35); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  transition: transform .2s ease; }
+html.presentation .minuteur:hover { transform: scale(1.04); }
+html.presentation .minuteur:focus-visible { outline: 3px solid var(--or); outline-offset: 3px; }
+.minuteur svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.minuteur-fond { fill: none; stroke: rgba(255, 255, 255, .14); stroke-width: 7; }
+.minuteur-arc { fill: none; stroke: var(--turquoise); stroke-width: 7; stroke-linecap: round;
+  transition: stroke-dashoffset .25s linear, stroke .4s ease; }
+.minuteur-temps { position: relative; margin-top: -.35em; font-size: clamp(20px, 3.1vh, 42px); font-weight: 600;
+  font-variant-numeric: tabular-nums; letter-spacing: .5px; line-height: 1; }
+.minuteur-nom { position: absolute; bottom: 21%; left: 12%; right: 12%; text-align: center; font-size: clamp(9px, 1.15vh, 15px);
+  color: #C9D8E2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.minuteur.bientot .minuteur-arc { stroke: var(--or); }
+.minuteur.bientot .minuteur-temps { color: var(--or); }
+.minuteur.fini .minuteur-fond { stroke: rgba(229, 72, 77, .5); }
+.minuteur.fini .minuteur-temps { color: #FF8A8E; }
+html.presentation .minuteur.fini:not([hidden]) { animation: minuteur-fini 1.6s ease-in-out infinite; }
+.minuteur.en-pause .minuteur-temps { opacity: .55; }
+.minuteur.en-pause .minuteur-nom::before { content: "⏸ "; }
+html.presentation .minuteur.change:not([hidden]) { animation: minuteur-change .5s cubic-bezier(.3, .8, .3, 1.2); }
+@keyframes minuteur-change { from { transform: scale(.7); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes minuteur-fini { 50% { box-shadow: 0 0 0 10px rgba(229, 72, 77, .25), 0 8px 26px rgba(0, 0, 0, .35); } }
+@media (prefers-reduced-motion: reduce) {
+  html.presentation .minuteur.fini:not([hidden]), html.presentation .minuteur.change:not([hidden]) { animation: none; }
+  .minuteur-arc { transition: none; }
+}
+@media print { .minuteur { display: none !important; } }

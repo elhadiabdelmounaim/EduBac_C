@@ -28,6 +28,13 @@
       <div>
         <h2 class="cahier-date">{{ s.date|date:"l j F Y"|capfirst }}</h2>
         <p class="cahier-meta"><span class="cahier-classe">{{ s.classroom.name }}</span> · {{ s.lesson.title }}</p>
+        <p class="cahier-duree">
+          {% if s.minutes %}<span><i class="bi bi-clock" aria-hidden="true"></i> Durée prévue : {{ s.minutes_texte }}</span>{% endif %}
+          {% if s.progression %}<span class="cahier-progression" title="Temps prévu de tout ce qui a été traité dans cette leçon avec cette classe">
+            Leçon : {{ s.progression.fait }} / {{ s.progression.prevu }}
+            <span class="cahier-barre" aria-hidden="true"><span style="width: {{ s.progression.pourcent }}%"></span></span>
+            {{ s.progression.pourcent }} %</span>{% endif %}
+        </p>
       </div>
       <div class="cahier-actions">
         <a class="btn btn-sm btn-outline-primary" href="{% url 'education:lesson_course_html' s.lesson.pk %}" title="Ouvrir le cours pour compléter cette séance"><i class="bi bi-pencil"></i> Compléter</a>

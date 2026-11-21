@@ -6,7 +6,7 @@ from .models import Seance, SeanceElement
 class SeanceElementInline(admin.TabularInline):
     model = SeanceElement
     extra = 0
-    fields = ('order', 'partie', 'sous_titre', 'title', 'key')
+    fields = ('order', 'partie', 'sous_titre', 'title', 'minutes', 'key')
 
 
 @admin.register(Seance)

@@ -44,7 +44,11 @@ class _Lecteur(HTMLParser):
                 role = 'bloc'
                 partie['blocs'] += 1
                 partie['bloc_courant'] = {'key': f"{partie['key']}-b{partie['blocs']}", 'type': 'bloc',
-                                          'titre': '', 'genre': next((c for c in classes if c != 'bloc'), '')}
+                                          'titre': '', 'genre': next((c for c in classes if c != 'bloc'), ''),
+                                          'taille': 0, 'figures': 0, 'fixe': a.get('data-minutes')}
+            elif tag in ('svg', 'figure') and self.dans('bloc') and 'bloc_courant' in partie \
+                    and not self.dans('figure'):
+                partie['bloc_courant']['figures'] += 1
             elif tag == 'div' and 'tag' in classes and self.dernier_role() == 'bloc':
                 role = 'tag'
                 self.capture = ['tag', '']
@@ -84,6 +88,8 @@ class _Lecteur(HTMLParser):
     def handle_data(self, data):
         if self.capture is not None:
             self.capture[1] += data
+        elif self.parties and 'bloc_courant' in self.parties[-1] and self.dans('bloc'):
+            self.parties[-1]['bloc_courant']['taille'] += len(re.sub(r'\s+', '', data))
 
     def dans(self, role):
         return any(r == role for _, r in self.pile)
@@ -126,12 +132,96 @@ def plan_du_fichier(chemin):
     return _cache[cle]
 
 
+# Temps relatif selon la nature du bloc : les applications sont faites par les élèves.
+POIDS_GENRE = {'app': 2.0, 'ex': 1.5, 'def': 1.0, 'prop': 1.0, 'rem': 0.5}
+PAS = 5     # minutes
+
+
+def _poids(feuille):
+    if feuille['type'] != 'bloc':
+        return 1.0
+    volume = 1 + feuille.get('taille', 0) / 300 + 0.5 * feuille.get('figures', 0)
+    return volume * POIDS_GENRE.get(feuille.get('genre'), 1.0)
+
+
+def _feuilles(noeuds):
+    for n in noeuds:
+        if n['type'] == 'bloc' or not n.get('enfants'):
+            yield n
+        else:
+            yield from _feuilles(n['enfants'])
+
+
+def minuter(plan, total):
+    """Répartit « total » minutes entre les éléments (par pas de 5 min, au prorata de leur
+    poids). Un bloc portant data-minutes="30" garde sa durée ; les autres se partagent le
+    reste. Chaque nœud reçoit « minutes » (somme de ses enfants pour un titre)."""
+    feuilles = list(_feuilles(plan))
+    fixes = {}
+    for f in feuilles:
+        try:
+            fixes[f['key']] = max(0, int(f.get('fixe') or ''))
+        except ValueError:
+            pass
+    libres = [f for f in feuilles if f['key'] not in fixes]
+    reste = max(0, total - sum(fixes.values()))
+    pas_dispo = reste // PAS
+    poids = [_poids(f) for f in libres]
+    somme = sum(poids) or 1
+    parts = [p * pas_dispo / somme for p in poids]
+    entiers = [max(1, int(x)) if pas_dispo >= len(libres) else int(x) for x in parts]
+    # Plus forts restes, pour que la somme tombe juste.
+    ordre = sorted(range(len(libres)), key=lambda i: parts[i] - int(parts[i]), reverse=True)
+    k = 0
+    while sum(entiers) < pas_dispo and ordre:
+        entiers[ordre[k % len(ordre)]] += 1
+        k += 1
+    while sum(entiers) > pas_dispo:
+        i = max(range(len(entiers)), key=lambda j: entiers[j])
+        entiers[i] -= 1
+    minutes = {f['key']: n * PAS for f, n in zip(libres, entiers)}
+    if libres and reste % PAS:
+        plus_long = max(libres, key=lambda f: minutes[f['key']])
+        minutes[plus_long['key']] += reste % PAS
+    minutes.update(fixes)
+
+    def poser(n):
+        if n['type'] == 'bloc' or not n.get('enfants'):
+            n['minutes'] = minutes.get(n['key'], 0)
+        else:
+            n['minutes'] = sum(poser(e) for e in n['enfants'])
+        return n['minutes']
+
+    for p in plan:
+        poser(p)
+    return plan
+
+
+def _nettoyer(noeuds):
+    """Copie du plan sans les mesures internes (taille, figures…)."""
+    return [{k: (_nettoyer(v) if k == 'enfants' else v) for k, v in n.items()
+             if k not in ('taille', 'figures', 'fixe')} | ({'fixe': n['fixe']} if n.get('fixe') else {})
+            for n in noeuds]
+
+
 def plan_de_lecon(lesson):
-    """Plan du cours HTML de la leçon, ou None si la leçon n'a pas de cours HTML."""
+    """Plan du cours HTML de la leçon (avec les minutes prévues si la répartition horaire
+    connaît la leçon), ou None si la leçon n'a pas de cours HTML."""
+    from education.repartition import repartition_de_lecon
+
     template = course_html_template(lesson)
     if template is None:
         return None
-    return plan_du_fichier(Path(settings.BASE_DIR) / 'templates' / template)
+    brut = plan_du_fichier(Path(settings.BASE_DIR) / 'templates' / template)
+    repartition = repartition_de_lecon(lesson)
+    if repartition:
+        plan = minuter(_copie(brut), int(round(repartition['heures'] * 60)))
+        return _nettoyer(plan)
+    return _nettoyer(brut)
+
+
+def _copie(noeuds):
+    return [{k: (_copie(v) if k == 'enfants' else v) for k, v in n.items()} for n in noeuds]
 
 
 def elements(plan):
@@ -143,7 +233,8 @@ def elements(plan):
         enfants = noeud.get('enfants') or []
         if noeud['type'] == 'bloc' or not enfants:
             liste.append({'key': noeud['key'], 'titre': noeud['titre'], 'partie': partie['titre'],
-                          'sous_titre': sous_titre['titre'] if sous_titre else '', 'ordre': len(liste)})
+                          'sous_titre': sous_titre['titre'] if sous_titre else '', 'ordre': len(liste),
+                          'minutes': noeud.get('minutes', 0)})
             return
         for e in enfants:
             visiter(e, partie, noeud if noeud['type'] == 'titre' else sous_titre)

@@ -33,3 +33,7 @@
   .cahier-seance { padding: 14px 14px; }
   .cahier-entete h1 { font-size: 1.35rem; }
 }
+.cahier-duree { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; margin: 6px 0 0; font-size: .92rem; color: var(--nb-muted, #56627a); }
+.cahier-progression { display: inline-flex; align-items: center; gap: 8px; }
+.cahier-barre { display: inline-block; width: 110px; height: 8px; border-radius: 999px; background: var(--nb-line, #d9e0ec); overflow: hidden; }
+.cahier-barre > span { display: block; height: 100%; background: var(--nb-orange, #f39c12); border-radius: inherit; }

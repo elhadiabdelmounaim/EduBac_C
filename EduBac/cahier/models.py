@@ -38,6 +38,7 @@ class SeanceElement(models.Model):
     partie = models.CharField(max_length=255, verbose_name='Partie')
     sous_titre = models.CharField(max_length=255, blank=True, verbose_name='Sous-titre')
     order = models.PositiveIntegerField(default=0, verbose_name='Ordre')
+    minutes = models.PositiveIntegerField(default=0, verbose_name='Durée prévue (min)')
 
     class Meta:
         verbose_name = 'Élément traité'

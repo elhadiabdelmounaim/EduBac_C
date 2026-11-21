@@ -18,6 +18,8 @@
   var lienCahier = document.getElementById('seanceCahier');
   var ouvreurs = document.querySelectorAll('[data-seance-ouvrir]');
   var lecon = panneau.getAttribute('data-lecon');
+  var infoLecon = document.getElementById('seanceLecon');
+  var minutesDe = {};      // clé → minutes prévues (répartition horaire)
   var charge = false;
   var plan = [];
   var requete = 0;
@@ -43,6 +45,14 @@
   function dire(texte, genre) {
     message.textContent = texte || '';
     message.className = 'seance-message' + (genre ? ' ' + genre : '');
+  }
+
+  // 95 → « 1 h 35 » ; 40 → « 40 min ».
+  function duree(m) {
+    m = Math.round(m || 0);
+    if (m < 60) return m + ' min';
+    var h = Math.floor(m / 60), r = m % 60;
+    return h + ' h' + (r ? ' ' + (r < 10 ? '0' : '') + r : '');
   }
 
   function cleBrouillon() { return 'edubac-seance:' + lecon + ':' + champClasse.value + ':' + champDate.value; }
@@ -86,6 +96,12 @@
     champDate.value = aujourdhui();
     charger('').then(function (data) {
       plan = data.plan || [];
+      var rep = data.repartition;
+      if (rep) {
+        infoLecon.hidden = false;
+        infoLecon.textContent = 'Leçon : ' + duree(rep.heures * 60) + ' · semaines ' + rep.semaines
+          + ' · répartition ' + rep.annee;
+      }
       if (data.cahier_url) lienCahier.href = data.cahier_url;
       champClasse.innerHTML = '';
       if (!data.classes.length) {
@@ -152,6 +168,10 @@
     label.appendChild(el('span', { 'class': 'seance-libelle' }, n.titre));
     ligne.appendChild(label);
     ligne.appendChild(el('span', { 'class': 'seance-deja', hidden: '' }));
+    if (n.minutes) {
+      ligne.appendChild(el('span', { 'class': 'seance-min', title: 'Durée prévue' }, duree(n.minutes)));
+      if (feuille) minutesDe[n.key] = n.minutes;
+    }
     if (!feuille) ligne.appendChild(el('span', { 'class': 'seance-part' }));
     li.appendChild(ligne);
     if (!feuille) {
@@ -212,8 +232,11 @@
       deja.hidden = !(tout.length && vus === tout.length);
       deja.textContent = '✓';
     }
-    var n = courantes().length;
-    compte.textContent = n ? n + ' élément' + (n > 1 ? 's' : '') + ' coché' + (n > 1 ? 's' : '') : 'Rien de coché';
+    var cles = courantes();
+    var n = cles.length;
+    var temps = cles.reduce(function (t, c) { return t + (minutesDe[c] || 0); }, 0);
+    compte.textContent = n ? n + ' élément' + (n > 1 ? 's' : '') + ' coché' + (n > 1 ? 's' : '')
+      + (temps ? ' · ' + duree(temps) : '') : 'Rien de coché';
     bouton.disabled = !n || !champClasse.value;
   }
 

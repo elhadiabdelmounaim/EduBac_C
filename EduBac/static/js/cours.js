@@ -128,6 +128,12 @@
     // proposition, exemple…) à chaque appui sur → / Espace / télécommande ; les exemples d'une
     // liste arrivent un par un. Une application reste voilée (« Afficher l'application »)
     // jusqu'à ce qu'on la demande. ↓ / ↑ et les boutons du bas changent de page directement.
+    // Clé de chaque bloc, comme dans le cahier de textes : « s1-b3 » = 3e bloc de la partie s1.
+    $sections.each(function () {
+      var id = this.id;
+      $(this).find('.bloc').filter(function () { return !$(this).parent().closest('.bloc').length; })
+        .each(function (i) { $(this).attr('data-cle', id + '-b' + (i + 1)); });
+    });
     $source.find('.bloc.app').append($('<button>', {
       type: 'button', 'class': 'app-voile', text: "Afficher l'application"
     }));
@@ -174,6 +180,7 @@
     }
 
     function majCompteur() {
+      suivreMinuteur();
       var p = pages[courante];
       var n = p && $root.hasClass('presentation') ? p.etapes.length : 0;
       if (!n) { $etapes.prop('hidden', true).text(''); return; }
@@ -185,6 +192,86 @@
     }
 
     function enPresentation() { return $root.hasClass('presentation'); }
+
+    // ---------- Minuteur du paragraphe (présentation) ----------
+    // Le paragraphe en cours est le dernier bloc apparu ; son temps prévu (répartition horaire)
+    // est décompté jusqu'à zéro. Revenir à un paragraphe reprend son temps restant.
+    var minutage = {};
+    try { minutage = JSON.parse($('#cours-minutage').text() || '{}'); } catch (e) { minutage = {}; }
+    var $minuteur = $('#minuteur');
+    var chrono = { cle: null, restant: {}, pause: false, dernier: 0, horloge: null };
+    var TOUR = 2 * Math.PI * 44;
+
+    function blocCourant() {
+      var p = pages[courante];
+      if (!p || !p.vu) return null;
+      var $bloc = $(p.etapes[p.vu - 1]).closest('.bloc[data-cle]').last();
+      var cle = $bloc.attr('data-cle');
+      return cle && minutage[cle] ? { cle: cle, nom: $.trim($bloc.children('.tag').first().text().replace(/\s*\(suite\)$/, '')) } : null;
+    }
+
+    function suivreMinuteur() {
+      if (!$minuteur.length) return;
+      if (!enPresentation()) { arreterHorloge(); $minuteur.prop('hidden', true); return; }
+      var b = blocCourant();
+      if (b && b.cle !== chrono.cle) {
+        chrono.cle = b.cle;
+        chrono.nom = b.nom;
+        if (chrono.restant[b.cle] == null) chrono.restant[b.cle] = minutage[b.cle] * 60000;
+        chrono.pause = false;
+        $minuteur.removeClass('change');
+        $minuteur[0].offsetWidth;
+        $minuteur.addClass('change');
+      }
+      $minuteur.prop('hidden', !chrono.cle);
+      if (chrono.cle) demarrerHorloge();
+      dessinerMinuteur();
+    }
+
+    function demarrerHorloge() {
+      if (chrono.horloge) return;
+      chrono.dernier = Date.now();
+      chrono.horloge = setInterval(function () {
+        var maintenant = Date.now();
+        if (!chrono.pause && chrono.cle) {
+          chrono.restant[chrono.cle] = Math.max(0, chrono.restant[chrono.cle] - (maintenant - chrono.dernier));
+        }
+        chrono.dernier = maintenant;
+        dessinerMinuteur();
+      }, 250);
+    }
+
+    function arreterHorloge() { clearInterval(chrono.horloge); chrono.horloge = null; }
+
+    function dessinerMinuteur() {
+      if (!chrono.cle) return;
+      var total = minutage[chrono.cle] * 60000;
+      var reste = chrono.restant[chrono.cle];
+      var s = Math.ceil(reste / 1000);
+      $('#minuteurTemps').text(Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2));
+      $('#minuteurNom').text(chrono.nom || '');
+      $minuteur.find('.minuteur-arc').css('stroke-dashoffset', (TOUR * (1 - reste / total)).toFixed(2));
+      $minuteur.toggleClass('bientot', reste > 0 && reste <= Math.min(120000, total * 0.2))
+        .toggleClass('fini', reste <= 0).toggleClass('en-pause', chrono.pause)
+        .attr('aria-label', 'Temps restant pour « ' + (chrono.nom || 'ce paragraphe') + ' » : '
+              + Math.floor(s / 60) + ' min ' + (s % 60) + ' s' + (chrono.pause ? ' (en pause)' : ''));
+    }
+
+    $minuteur.find('.minuteur-arc').css('stroke-dasharray', TOUR.toFixed(2));
+    // Le minuteur ne garde pas le focus : Espace / Entrée continuent d'avancer dans le cours.
+    $minuteur.on('mousedown', function (event) { event.preventDefault(); });
+    $minuteur.on('click', function () {
+      if (!chrono.cle) return;
+      chrono.pause = !chrono.pause;
+      dessinerMinuteur();
+      this.blur();
+    });
+    $minuteur.on('dblclick', function () {
+      if (!chrono.cle) return;
+      chrono.restant[chrono.cle] = minutage[chrono.cle] * 60000;
+      chrono.pause = false;
+      dessinerMinuteur();
+    });
 
     // Élément suivant de la page, puis la page suivante quand tout est affiché.
     function avancer() {
@@ -290,6 +377,7 @@
       if (!$bloc.hasClass('bloc')) { page.$p.addClass('deborde'); return page; }
       var etiquette = $.trim($bloc.children('.tag').first().text().replace(/\s*\(suite\)$/, ''));
       var $suite = $('<div>', { 'class': $bloc.attr('class').replace(/\s*\b(suite|etape-cache|voilee|etape-anime)\b/g, '') + ' suite' })
+        .attr('data-cle', $bloc.attr('data-cle'))
         .data('source', $bloc.data('source') || $bloc[0])
         .append($('<div>', { 'class': 'tag', text: etiquette + ' (suite)' }));
       var miroirs = [];

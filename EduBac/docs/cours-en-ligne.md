@@ -60,3 +60,20 @@ Les éléments cochables sont lus dans le gabarit du cours : `section.chap` (par
 (sous-titres) et `div.bloc` (avec leur `.tag` : Définition, Proposition, Exemples…). Leur clé
 dépend de leur position (`s1-b3` = 3e bloc de la partie s1) : réorganiser un cours déjà utilisé
 ne change pas les séances enregistrées (les titres y sont copiés), mais peut décaler les ✓.
+
+## Répartition horaire et minuteur
+
+Les heures de chaque leçon viennent de la répartition annuelle
+(`docs/references/Repartition_horaire_1ere_Bac_Sciences_2026-2027.pdf`), recopiée dans
+`education/data/repartition_horaire.json` (niveau → numéro de leçon → heures, semaines…).
+Pour une nouvelle année ou un autre niveau, mettre ce fichier à jour.
+
+Ces heures sont réparties entre les blocs du cours (pas de 5 min), au prorata de leur volume
+et de leur nature : Applications ×2, Exemples ×1,5, Définition / Proposition ×1, Remarque ×0,5
+(`cahier/rubriques.py`). Pour imposer une durée : `<div class="bloc app" data-minutes="30">`,
+le reste est réparti entre les autres blocs.
+
+Ces minutes apparaissent dans le panneau « Séance », dans le cahier de textes (durée de la
+séance, progression de la leçon) et, en présentation, dans le **minuteur** en haut à droite :
+il décompte le temps du paragraphe en cours jusqu'à zéro (clic : pause / reprise,
+double-clic : recommencer ; revenir à un paragraphe reprend son temps restant).

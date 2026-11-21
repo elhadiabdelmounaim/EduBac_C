@@ -299,3 +299,48 @@ class CourseHtmlBrowserTests(StaticLiveServerTestCase):
         self.assertEqual(page.evaluate("[...document.querySelectorAll('.feuille.visible .bloc')]"
                                        ".filter(b => getComputedStyle(b).visibility === 'hidden').length"), 0)
         self.assertEqual(errors, [])
+
+    def test_projector_paragraph_timer_counts_down(self):
+        # Visiteur : pas de minuteur dans la page.
+        visiteur, _ = self.open(1280, 860)
+        self.assertEqual(visiteur.locator('#minuteur').count(), 0)
+        page, errors = self.open(1920, 1080, teacher=True)
+        minutage = page.evaluate("JSON.parse(document.getElementById('cours-minutage').textContent)")
+        self.assertEqual(sum(minutage.values()), 13 * 60)
+        self.assertTrue(page.is_hidden('#minuteur'))
+        page.click('#coursPresenter')
+        page.wait_for_function("document.documentElement.classList.contains('presentation')")
+        page.wait_for_timeout(400)
+        # Page de la partie I : rien n'est encore apparu, pas de minuteur.
+        cible = page.evaluate("[...document.querySelectorAll('.feuille')].findIndex(f => f.querySelector('.bloc[data-cle=\"s1-b1\"]'))")
+        for _ in range(cible):
+            page.keyboard.press('ArrowDown')
+        page.wait_for_timeout(1400)
+        self.assertTrue(page.is_hidden('#minuteur'))
+        # Le premier bloc apparaît : son temps prévu est affiché, puis décompté.
+        page.keyboard.press('ArrowRight')
+        self.assertTrue(page.is_visible('#minuteur'))
+        debut = f"{minutage['s1-b1']}:00"
+        self.assertEqual(page.inner_text('#minuteurTemps'), debut)
+        self.assertEqual(page.inner_text('#minuteurNom'), 'Proposition')
+        page.wait_for_timeout(1600)
+        self.assertNotEqual(page.inner_text('#minuteurTemps'), debut)
+        # Clic : pause (le temps ne bouge plus) ; Espace continue d'avancer dans le cours.
+        page.click('#minuteur')
+        fige = page.inner_text('#minuteurTemps')
+        page.wait_for_timeout(1300)
+        self.assertEqual(page.inner_text('#minuteurTemps'), fige)
+        self.assertIn('en-pause', page.get_attribute('#minuteur', 'class'))
+        page.keyboard.press(' ')
+        self.assertEqual(page.inner_text('#minuteurTemps'), f"{minutage['s1-b2']}:00")   # bloc suivant
+        self.assertNotIn('en-pause', page.get_attribute('#minuteur', 'class'))
+        # Revenir au bloc précédent reprend son temps restant.
+        page.keyboard.press('ArrowLeft')
+        page.keyboard.press('ArrowLeft')
+        page.keyboard.press('ArrowRight')
+        self.assertEqual(page.inner_text('#minuteurTemps'), fige)
+        # Quitter la présentation masque le minuteur.
+        page.keyboard.press('Escape')
+        page.wait_for_function("!document.documentElement.classList.contains('presentation')")
+        self.assertTrue(page.is_hidden('#minuteur'))
+        self.assertEqual(errors, [])

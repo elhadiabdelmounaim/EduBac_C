@@ -14,6 +14,8 @@ from accounts.decorators import teacher_required
 from classrooms.models import Classroom
 from education.models import Lesson
 
+from education.repartition import repartition_de_lecon
+
 from .models import Seance, SeanceElement
 from .rubriques import elements, plan_de_lecon
 
@@ -56,6 +58,7 @@ def etat(request, pk):
         'classes': [{'id': c.pk, 'nom': c.name, 'niveau': c.get_niveau_display(),
                      'meme_niveau': c.niveau == lesson.course.niveau} for c in classes],
         'selection': [], 'deja': {}, 'existe': False,
+        'repartition': repartition_de_lecon(lesson),
         'cahier_url': reverse('cahier:index'),
         'creer_classe_url': reverse('classrooms:create'),
     }
@@ -111,7 +114,7 @@ def enregistrer(request, pk):
             seance.save(update_fields=['updated_at'])
         SeanceElement.objects.bulk_create([
             SeanceElement(seance=seance, key=e['key'], title=e['titre'][:255], partie=e['partie'][:255],
-                          sous_titre=e['sous_titre'][:255], order=e['ordre'])
+                          sous_titre=e['sous_titre'][:255], order=e['ordre'], minutes=e['minutes'])
             for e in choisis
         ])
     return JsonResponse({
@@ -135,6 +138,42 @@ def _regrouper(seance):
     return parties
 
 
+def duree(minutes):
+    """95 → « 1 h 35 » ; 40 → « 40 min »."""
+    minutes = int(minutes or 0)
+    if minutes < 60:
+        return f'{minutes} min'
+    h, m = divmod(minutes, 60)
+    return f'{h} h {m:02d}' if m else f'{h} h'
+
+
+def _progression(user, seances):
+    """Pour chaque séance : temps prévu de tout ce qui a été traité dans cette leçon avec
+    cette classe jusqu'à cette date (incluse), comparé aux heures de la répartition."""
+    paires = {(s.classroom_id, s.lesson_id) for s in seances}
+    if not paires:
+        return
+    historiques = {}
+    for s in (Seance.objects.filter(teacher=user, classroom_id__in={c for c, _ in paires},
+                                    lesson_id__in={le for _, le in paires})
+              .prefetch_related('elements').order_by('date')):
+        historiques.setdefault((s.classroom_id, s.lesson_id), []).append(s)
+    for s in seances:
+        repartition = repartition_de_lecon(s.lesson)
+        vus = {}
+        for h in historiques.get((s.classroom_id, s.lesson_id), []):
+            if h.date > s.date:
+                break
+            for e in h.elements.all():
+                vus[e.key] = e.minutes
+        fait = sum(vus.values())
+        s.progression = None
+        if repartition:
+            prevu = int(round(repartition['heures'] * 60))
+            s.progression = {'fait': duree(fait), 'prevu': duree(prevu),
+                             'pourcent': min(100, round(100 * fait / prevu)) if prevu else 0}
+
+
 @teacher_required
 def index(request):
     user = request.edubac_user
@@ -146,8 +185,11 @@ def index(request):
     if classe:
         seances = seances.filter(classroom=classe)
     page = Paginator(seances, 20).get_page(request.GET.get('page'))
+    _progression(user, page.object_list)
     for s in page.object_list:
         s.parties = _regrouper(s)
+        s.minutes = sum(e.minutes for e in s.elements.all())
+        s.minutes_texte = duree(s.minutes)
     return render(request, 'cahier/index.html', {
         'page_title': 'Cahier de textes', 'classes': classes, 'classe': classe, 'page': page,
     })
