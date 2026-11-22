@@ -135,3 +135,16 @@ html.presentation .feuille-corps .sp-lab { font-size: max(15px, 1.5vh); }
   .feuille-corps .bloc.situation > .tag { font-size: 14.5px; margin-bottom: 4px; }
   .feuille-corps .bloc.situation { padding-top: 10px; }
 }
+
+/* ---------- Figure agrandie (après « Lancer ») : toute la largeur, même hauteur de bloc ---------- */
+:root .sp.agrandi { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+:root .sp.agrandi .sp-panneau, :root .sp.agrandi .sp-reglages { display: none; }
+:root .sp.agrandi .sp-vue { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+:root .sp.agrandi .sp-scene { flex: 1 1 0; min-height: 0; height: auto; max-height: none; aspect-ratio: auto; }
+:root .sp.agrandi .sp-mesures, :root .sp.agrandi .sp-actions { grid-area: auto; align-self: auto; justify-self: auto; margin: 0; }
+
+/* Vidéoprojecteur de faible hauteur (720p, 768p) : panneau des étapes un peu plus compact. */
+@media (max-height: 820px) {
+  html.presentation .feuille-corps .sp-panneau { font-size: .5em; }
+  html.presentation .feuille-corps .sp-points { margin: 4px 0 6px; }
+}

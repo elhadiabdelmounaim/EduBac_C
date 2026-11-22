@@ -94,6 +94,38 @@ class SituationProduitScalaireBrowserTests(StaticLiveServerTestCase):
             self.assertGreater(page.evaluate("document.querySelector('[data-situation]').etapesInternes.valeurs.x"), 1)
             self.assertIn('Étape 1 / 8', self.compteur(page))
             self.assertTrue(page.locator('.feuille.visible [data-situation]').count())
+            # « Lancer » : la figure prend toute la largeur, la personne marche jusqu'à B.
+            mesure = ("(() => { const r = document.querySelector('[data-situation]'); const e = r.etapesInternes;"
+                      " return { agrandi: e.agrandi, x: e.valeurs.x, jambes: e.jambes,"
+                      " largeur: r.getBoundingClientRect().width,"
+                      " scene: r.querySelector('.sp-scene').getBoundingClientRect().width }; })()")
+            self.assertFalse(page.is_visible('[data-reduire]'))
+            page.click('[data-lancer]')
+            page.wait_for_timeout(700)
+            a = page.evaluate(mesure)
+            page.wait_for_timeout(250)
+            b = page.evaluate(mesure)
+            self.assertTrue(a['agrandi'])
+            self.assertFalse(page.is_visible('.sp-panneau'))
+            self.assertGreater(a['scene'], 0.97 * a['largeur'])
+            self.assertTrue(page.is_visible('[data-reduire]'))
+            self.assertGreater(b['x'], a['x'])
+            self.assertNotEqual(a['jambes'], b['jambes'])          # les pieds bougent : pas de glissement figé
+            page.wait_for_timeout(4200)
+            fin = page.evaluate(mesure)
+            self.assertEqual(fin['x'], 5)
+            self.assertTrue(fin['agrandi'])                        # reste agrandie jusqu'à « Réduire »
+            self.assertEqual(page.evaluate(DEBORDE), 0)
+            # Échap réduit la figure sans changer de page.
+            page.keyboard.press('Escape')
+            self.assertFalse(page.evaluate(mesure)['agrandi'])
+            self.assertTrue(page.is_visible('.sp-panneau'))
+            self.assertFalse(page.is_visible('[data-reduire]'))
+            page.click('[data-lancer]')
+            page.wait_for_timeout(300)
+            page.click('[data-reduire]')
+            self.assertFalse(page.evaluate(mesure)['agrandi'])
+            self.assertIn('Étape 1 / 8', self.compteur(page))
         # → : étape suivante ; sur une question, → montre d'abord la réponse.
         page.keyboard.press('ArrowRight')
         self.assertIn('Étape 2 / 8', self.compteur(page))

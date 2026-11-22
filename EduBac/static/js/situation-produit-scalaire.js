@@ -28,7 +28,8 @@ function demarrer(racine) {
   const etapes = $$('.sp-etape');
   const curseurs = { F: $('[data-r="F"]'), theta: $('[data-r="theta"]'), d: $('[data-r="d"]'), m: $('[data-r="m"]') };
   const sorties = { F: $('[data-o="F"]'), theta: $('[data-o="theta"]'), d: $('[data-o="d"]'), m: $('[data-o="m"]') };
-  const etat = { F: 40, theta: 60, d: 5, m: 20, x: 0, mode: 'physique', montrer: new Set(), etape: 0, revele: new Set() };
+  // echelle : longueur du trajet dans la scène (agrandie au lancement pour éloigner A et B).
+  const etat = { F: 40, theta: 60, d: 5, m: 20, x: 0, echelle: 1, mode: 'physique', montrer: new Set(), etape: 0, revele: new Set() };
   const reduit = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Points de progression
@@ -98,21 +99,51 @@ function demarrer(racine) {
 
   // ---------------------------------------------------------------- Lancer / replacer / vue
   let animation = null;
+  // Figure agrandie : toute la largeur de l'activité, hauteur du bloc inchangée (pagination exacte).
+  const ECHELLE_AGRANDIE = 1.7;
+  function agrandir() {
+    if (racine.classList.contains('agrandi')) return;
+    racine.style.height = `${racine.offsetHeight}px`;
+    racine.classList.add('agrandi');
+    etat.echelle = ECHELLE_AGRANDIE;
+    $('[data-reduire]').hidden = false;
+  }
+  function reduire() {
+    if (!racine.classList.contains('agrandi')) return;
+    cancelAnimationFrame(animation);
+    racine.classList.remove('agrandi');
+    racine.style.height = '';
+    etat.echelle = 1;
+    $('[data-reduire]').hidden = true;
+    if (scene3d) { scene3d.vueDeFace(); scene3d.maj(); }
+  }
   $('[data-lancer]').addEventListener('click', () => {
     cancelAnimationFrame(animation);
-    if (reduit || !scene3d) { etat.x = etat.d; majValeurs(); return; }
-    if (scene3d) scene3d.vueDeFace();
+    if (!scene3d) { etat.x = etat.d; majValeurs(); return; }
+    agrandir();
+    scene3d.vueDeFace();
+    if (reduit) { etat.x = etat.d; majValeurs(); return; }
     const debut = performance.now();
-    const duree = 2200;
+    const duree = 1500 + 450 * etat.d;     // la personne marche : durée liée à la distance
     etat.x = 0;
     const pas = (t) => {
       const u = Math.min(1, (t - debut) / duree);
-      etat.x = etat.d * (u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2);
+      // départ et arrêt en douceur, allure régulière au milieu
+      const v = u < 0.15 ? (u * u) / 0.3 : u > 0.85 ? 1 - ((1 - u) * (1 - u)) / 0.3 : (u - 0.075) / 0.85;
+      etat.x = etat.d * Math.max(0, Math.min(1, v));
       scene3d.maj();
       if (u < 1) animation = requestAnimationFrame(pas);
     };
     animation = requestAnimationFrame(pas);
   });
+  $('[data-reduire]').addEventListener('click', reduire);
+  // Échap réduit la figure (sans quitter le mode présentation).
+  window.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || !racine.classList.contains('agrandi')) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    reduire();
+  }, { capture: true });
   $('[data-replacer]').addEventListener('click', () => { cancelAnimationFrame(animation); etat.x = 0; majValeurs(); });
   $('[data-vue]').addEventListener('click', () => { if (scene3d) scene3d.vueDeFace(); });
 
@@ -156,6 +187,7 @@ function demarrer(racine) {
   }
 
   function afficherEtape(i) {
+    reduire();
     etat.etape = Math.max(0, Math.min(etapes.length - 1, i));
     etapes.forEach((s, k) => {
       s.classList.toggle('active', k === etat.etape);
@@ -204,6 +236,8 @@ function demarrer(racine) {
     },
     get etape() { return etat.etape; },
     get valeurs() { return { F: etat.F, theta: etat.theta, d: etat.d, m: etat.m, x: etat.x, W: travail(etat.F, etat.d, etat.theta) }; },
+    get agrandi() { return racine.classList.contains('agrandi'); },
+    get jambes() { return scene3d ? scene3d.jambes() : null; },
     caisseEcran: () => (scene3d ? scene3d.caisseEcran() : null),
   };
   racine.addEventListener('pointerdown', (e) => e.stopPropagation());
@@ -233,16 +267,25 @@ function creerScene(conteneur, racine, etat) {
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     const physique = etat.mode === 'physique';
-    const xmin = physique ? -0.9 : -2.6;
-    const xmax = physique ? etat.d + 2.5 : 4.2;
+    let xmin = physique ? -1.3 : -2.6;
+    let xmax = physique ? etat.d * etat.echelle + 2.5 : 4.2;
+    if (suivre()) {
+      xmin = etat.x * etat.echelle - 1.3;
+      xmax = devantX + 1.1;
+    }
+    const decale = suivre() ? 0 : 0.5;
     const cx = (xmin + xmax) / 2;
     const fovV = camera.fov * RAD;
     const fovH = 2 * Math.atan(Math.tan(fovV / 2) * camera.aspect);
     const dist = 1.02 * Math.max((xmax - xmin) / 2 / Math.tan(fovH / 2), 1.9 / Math.tan(fovV / 2));
     controles.target.set(cx, physique ? 0.85 : 0.6, 0);
-    camera.position.set(cx - 0.5, (physique ? 0.85 : 0.6) + dist * 0.3, dist);
+    camera.position.set(cx - decale, (physique ? 0.85 : 0.6) + dist * 0.3, dist);
     controles.update();
   }
+  // Scène plus haute que large (téléphone) et figure agrandie : on suit le mouvement plutôt que tout montrer.
+  let devantX = 3;
+  const suivre = () => etat.echelle > 1 && etat.mode === 'physique'
+    && ((conteneur.clientWidth || 999) < 520 || (conteneur.clientWidth || 16) < 1.2 * (conteneur.clientHeight || 11));
   vueDeFace();
 
   scene.add(new THREE.HemisphereLight(0xffffff, 0x8899aa, 1.6));
@@ -258,12 +301,12 @@ function creerScene(conteneur, racine, etat) {
   const devant = (c) => new THREE.MeshBasicMaterial({ color: c, depthTest: false, transparent: true });
 
   // Sol et repères A, B
-  const sol = new THREE.Mesh(new THREE.PlaneGeometry(22, 8), mat(0xcfd8de));
+  const sol = new THREE.Mesh(new THREE.PlaneGeometry(44, 8), mat(0xcfd8de));
   sol.rotation.x = -Math.PI / 2;
-  sol.position.set(3, 0, 0);
+  sol.position.set(10, 0, 0);
   scene.add(sol);
-  const bord = new THREE.Mesh(new THREE.BoxGeometry(22, 0.04, 0.04), plein(0x445566));
-  bord.position.set(3, 0.01, 0.9);
+  const bord = new THREE.Mesh(new THREE.BoxGeometry(44, 0.04, 0.04), plein(0x445566));
+  bord.position.set(10, 0.01, 0.9);
   scene.add(bord);
   const repere = (c) => {
     const m = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.02, 24), plein(c));
@@ -417,9 +460,13 @@ function creerScene(conteneur, racine, etat) {
   const ECHELLE = 1.7 / 40;          // 40 N → 1,7 m de flèche
   const ECHELLE_POIDS = 1.05 / 200;  // 200 N → 1,05 m (poids et réaction)
 
+  const pieds = [v3(0, 0), v3(0, 0)];
   function maj() {
-    const { F, theta, d, x, mode, montrer } = etat;
+    const { F, theta, mode, montrer } = etat;
     const physique = mode === 'physique';
+    // Coordonnées dans la scène : le trajet s'allonge quand la figure est agrandie.
+    const d = etat.d * etat.echelle;
+    const x = etat.x * etat.echelle;
     const c = cosinus(theta);
     const s = Math.sin(theta * RAD);
     pointA.position.set(0, 0.01, 0);
@@ -434,11 +481,18 @@ function creerScene(conteneur, racine, etat) {
     const L = Math.max(1.25, Math.min(3.2, 0.85 / Math.max(s, 0.01)));
     const mains = attache.clone().add(v3(L * c, L * s));
     poser(corde, attache, mains);
-    const hanches = v3(mains.x + 0.62, 0.92);
+    // Marche : les pieds alternent au rythme de l'avancée (une foulée ≈ 0,7 m), le corps oscille.
+    const phase = (x / 0.7) * Math.PI + Math.PI / 2;
+    const sp = Math.sin(phase);
+    const cp = Math.cos(phase);
+    const hanches = v3(mains.x + 0.62, 0.92 + 0.03 * Math.abs(cp));
     const epaules = hanches.clone().add(v3(0.22, 0.56));
     poser(tronc, hanches, epaules);
-    poser(jambe1, hanches, v3(hanches.x - 0.32, 0.02, 0.12));
-    poser(jambe2, hanches, v3(hanches.x + 0.4, 0.02, -0.12));
+    pieds[0] = v3(hanches.x + 0.04 + 0.36 * sp, 0.02 + 0.12 * Math.max(0, cp), 0.12);
+    pieds[1] = v3(hanches.x + 0.04 - 0.36 * sp, 0.02 + 0.12 * Math.max(0, -cp), -0.12);
+    devantX = x + hanches.x + 0.6;            // la personne est dans le groupe mobile (repère local)
+    poser(jambe1, hanches, pieds[0]);
+    poser(jambe2, hanches, pieds[1]);
     poser(bras1, epaules.clone().setZ(0.16), mains.clone().setZ(0.04));
     poser(bras2, epaules.clone().setZ(-0.16), mains.clone().setZ(-0.04));
     tete.position.copy(epaules).add(v3(0.1, 0.27));
@@ -450,7 +504,7 @@ function creerScene(conteneur, racine, etat) {
     fF.poser(O, vF);
     fF.groupe.visible = montrer.has('F');
 
-    const kd = physique ? d : Math.min(d, 6) * 0.7;
+    const kd = physique ? d : Math.min(etat.d, 6) * 0.7;
     const departD = physique ? v3(0, 0.03, 1.15) : O;
     fd.poser(departD, v3(kd, 0, 0));
     fd.groupe.visible = montrer.has('d');
@@ -505,6 +559,7 @@ function creerScene(conteneur, racine, etat) {
       etiquettes.A.pos = null;
       etiquettes.B.pos = null;
     }
+    if (suivre() && !manuel) vueDeFace();
     demander();
   }
 
@@ -559,15 +614,15 @@ function creerScene(conteneur, racine, etat) {
     if (!surCaisse()) return;
     e.stopPropagation();                  // ni rotation de la scène ni changement de page
     e.preventDefault();
-    const x0 = rayon.ray.intersectPlane(planTrajet, point) ? point.x : etat.x;
-    glisse = { id: e.pointerId, decalage: x0 - etat.x };
+    const x0 = rayon.ray.intersectPlane(planTrajet, point) ? point.x : etat.x * etat.echelle;
+    glisse = { id: e.pointerId, decalage: x0 - etat.x * etat.echelle };
     renderer.domElement.style.cursor = 'grabbing';
   }, { capture: true });
   window.addEventListener('pointermove', (e) => {
     if (glisse && e.pointerId === glisse.id) {
       viser(e);
       if (rayon.ray.intersectPlane(planTrajet, point)) {
-        etat.x = Math.max(0, Math.min(etat.d, point.x - glisse.decalage));
+        etat.x = Math.max(0, Math.min(etat.d, (point.x - glisse.decalage) / etat.echelle));
         maj();
       }
       return;
@@ -597,7 +652,8 @@ function creerScene(conteneur, racine, etat) {
     return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height };
   }
 
-  return { maj, caisseEcran, vueDeFace: () => { manuel = false; vueDeFace(); demander(); } };
+  const jambes = () => pieds.map((p) => ({ x: p.x, y: p.y }));
+  return { maj, caisseEcran, jambes, vueDeFace: () => { manuel = false; vueDeFace(); demander(); } };
 }
 
 // Démarrage (après les déclarations ci-dessus).
