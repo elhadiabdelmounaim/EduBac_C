@@ -19,6 +19,28 @@
         "11": {"titre": "Vecteurs de l'espace", "semestre": 2, "semaines": "S26 – S27", "heures": 7, "ponderation": "Contrôle 2 · 40 %"},
         "12": {"titre": "Géométrie analytique de l'espace", "semestre": 2, "semaines": "S31 – S32", "heures": 7, "ponderation": "Contrôle 3 · 40 %"}
       }
+    },
+    "TCS": {
+      "libelle": "Tronc commun scientifique",
+      "heures_par_semaine": 5,
+      "note": "Répartition proposée par EduBac (à valider) : pas de document officiel fourni pour ce niveau.",
+      "lecons": {
+        "01": {"titre": "Arithmétique dans ℕ", "semestre": 1, "heures": 6},
+        "02": {"titre": "Ensembles de nombres", "semestre": 1, "heures": 8},
+        "03": {"titre": "L'ordre dans ℝ", "semestre": 1, "heures": 10},
+        "04": {"titre": "Polynômes", "semestre": 1, "heures": 8},
+        "05": {"titre": "Équations, inéquations et systèmes", "semestre": 1, "heures": 14},
+        "06": {"titre": "Calcul vectoriel", "semestre": 1, "heures": 6},
+        "07": {"titre": "Projection dans le plan", "semestre": 1, "heures": 6},
+        "08": {"titre": "La droite dans le plan", "semestre": 1, "heures": 10},
+        "09": {"titre": "Calcul trigonométrique (1)", "semestre": 2, "heures": 10},
+        "10": {"titre": "Transformations du plan", "semestre": 2, "heures": 8},
+        "11": {"titre": "Calcul trigonométrique (2)", "semestre": 2, "heures": 8},
+        "12": {"titre": "Produit scalaire", "semestre": 2, "heures": 10},
+        "13": {"titre": "Généralités sur les fonctions", "semestre": 2, "heures": 12},
+        "14": {"titre": "Géométrie dans l'espace", "semestre": 2, "heures": 8},
+        "15": {"titre": "Statistique", "semestre": 2, "heures": 6}
+      }
     }
   }
 }

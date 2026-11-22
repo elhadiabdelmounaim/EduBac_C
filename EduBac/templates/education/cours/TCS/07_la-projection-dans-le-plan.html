@@ -1,0 +1,188 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : Tronc commun scientifique — La projection dans le plan (chapitre 7, ).
+Généré depuis TC_Projection.tex (le PDF d'origine est dans le dossier Cours de la leçon, media/lessons/TCS/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < », « > » et « & » sont écrits &lt;, &gt; et &amp;.
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">Tronc commun scientifique</span>
+        <span class="chip or">Chapitre 7</span>
+        <span class="chip">Semestre 1</span>
+      </div>
+      <h1 id="cours-titre">La projection dans le plan</h1>
+      <p class="sous-titre">Volume horaire : 6 heures</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectif"><strong>Contenus</strong>
+<ul>
+  <li>Projection sur une droite parallèlement à une autre.</li>
+  <li>Projection orthogonale.</li>
+  <li>Théorème de Thalès direct et réciproque.</li>
+  <li>Conservation du milieu et du coefficient de colinéarité.</li>
+</ul>
+  </div>
+  <div class="cadre objectif"><strong>Capacités attendues</strong>
+<ul>
+  <li>Construire le projeté d'un point.</li>
+  <li>Calculer des longueurs avec Thalès.</li>
+  <li>Démontrer un parallélisme (réciproque).</li>
+  <li>Transporter une relation vectorielle par projection.</li>
+</ul>
+  </div>
+
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Projection sur une droite">
+  <h2><span class="num">I</span><span class="titre">Projection sur une droite</span></h2>
+  <h3><span class="n">I.1</span>Projection parallèlement à une droite</h3>
+  <div class="bloc act"><div class="tag">Activité 1</div>
+<p>Soient \((D)\) et \((\Delta)\) deux droites sécantes en un point \(O\), et \(ABCD\) un quadrilatère tel que \(C\in(\Delta)\), \(D\in(D)\) et \((BD)\parallel(\Delta)\).</p>
+<ol>
+  <li>Construire la droite \((L)\) passant par \(A\) et parallèle à \((\Delta)\) ; justifier que \((L)\) coupe \((D)\) en un point unique \(A'\).</li>
+  <li>Quel point de \((D)\) obtient-on en faisant la même construction à partir de \(B\) ? à partir de \(C\) ? à partir de \(D\) ?</li>
+</ol>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<div class="avec-fig">
+<div>
+<p>Soient \((D)\) et \((\Delta)\) deux droites <strong>sécantes</strong> et \(M\) un point du plan.<br> La droite passant par \(M\) et parallèle à \((\Delta)\) coupe \((D)\) en un unique point \(M'\).<br> \(M'\) est appelé le <strong>projeté</strong> de \(M\) sur \((D)\) <strong>parallèlement</strong> à \((\Delta)\).<br> On note \(p\) cette projection et on écrit \(p(M)=M'\).</p>
+<p>\((D)\) est la <strong>droite de projection</strong>, \((\Delta)\) la <strong>direction</strong> de projection.</p>
+</div>
+<figure class="fig"><svg viewBox="-23.0 -89.6 199.0 129.6" role="img" aria-label="Figure"><path d="M119.0 -74.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M81.6 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-17.0 -0.0 L170.0 -0.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><text x="166.5" y="14.3" text-anchor="end" style="font-size:13.5px;fill:var(--fig-trait)">(D)</text><path d="M0.0 34.0 L51.0 -68.0" fill="none" stroke="var(--meth)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><text x="46.0" y="-63.3" text-anchor="end" style="font-size:13.5px;fill:var(--meth)">(Δ)</text><path d="M119.0 -74.8 L81.6 -0.0" fill="none" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><circle cx="119.0" cy="-74.8" r="2.2" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="124.0" y="-70.1" text-anchor="start" style="font-size:13.5px">M</text><circle cx="81.6" cy="-0.0" r="2.2" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="81.6" y="15.8" text-anchor="middle" style="font-size:13.5px">M'</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<ul>
+  <li>Si \(M\notin(D)\), alors \((MM')\parallel(\Delta)\).</li>
+  <li>\(M\in(D)\iff p(M)=M\) : tout point de \((D)\) est <strong>invariant</strong> par la projection \(p\).</li>
+  <li>Tous les points d'une droite parallèle à \((\Delta)\) ont le même projeté.</li>
+</ul>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Construire le projeté d'un point \(M\)</div>
+<p>On trace la parallèle à la <strong>direction</strong> \((\Delta)\) passant par \(M\) ; son intersection avec la <strong>droite de projection</strong> \((D)\) est le projeté \(M'\).</p>
+  </div>
+  <h3><span class="n">I.2</span>Projection orthogonale</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+<div class="avec-fig">
+<div>
+<p>Si les droites \((D)\) et \((\Delta)\) sont <strong>perpendiculaires</strong>, le projeté \(M'\) de \(M\) sur \((D)\) parallèlement à \((\Delta)\) est appelé le <strong>projeté orthogonal</strong> de \(M\) sur \((D)\).<br> C'est le pied de la perpendiculaire à \((D)\) passant par \(M\).</p>
+</div>
+<figure class="fig"><svg viewBox="-15.6 -78.8 149.6 104.6" role="img" aria-label="Figure"><path d="M89.6 -57.6" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M89.6 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-9.6 -0.0 L128.0 -0.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><text x="-6.1" y="14.3" text-anchor="start" style="font-size:13.5px;fill:var(--fig-trait)">(D)</text><path d="M19.2 19.2 L19.2 -64.0" fill="none" stroke="var(--meth)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><text x="14.2" y="-59.3" text-anchor="end" style="font-size:13.5px;fill:var(--meth)">(Δ)</text><path d="M89.6 -57.6 L89.6 -0.0" fill="none" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M89.6 -0.0 L96.6 -0.0 L96.6 -7.0 L89.6 -7.0 Z" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="89.6" cy="-57.6" r="2.2" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="94.6" y="-52.9" text-anchor="start" style="font-size:13.5px">M</text><circle cx="89.6" cy="-0.0" r="2.2" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="89.6" y="15.8" text-anchor="middle" style="font-size:13.5px">M'</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+<p>Soit \(ABCD\) un parallélogramme de centre \(O\). On note \(p\) la projection sur \((AB)\) parallèlement à \((BC)\).</p>
+<ol>
+  <li>Déterminer \(p(A)\), \(p(B)\), \(p(C)\) et \(p(D)\).</li>
+  <li>Construire \(p(O)\). Que remarque-t-on ?</li>
+  <li>Construire le projeté orthogonal \(H\) de \(C\) sur \((AB)\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Théorème de Thalès">
+  <h2><span class="num">II</span><span class="titre">Théorème de Thalès</span></h2>
+  <h3><span class="n">II.1</span>Théorème de Thalès direct</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<div class="avec-fig">
+<div>
+<p>Soient \((D_1)\) et \((D_2)\) deux droites sécantes en \(A\).<br> Soient \(B\) et \(M\) deux points de \((D_1)\), \(C\) et \(N\) deux points de \((D_2)\), distincts de \(A\).<br> Si \((MN)\parallel(BC)\), alors :</p>
+\[ \frac{AM}{AB}=\frac{AN}{AC}=\frac{MN}{BC}. \]
+</div>
+<figure class="fig"><svg viewBox="-58.1 -98.9 260.1 113.7" role="img" aria-label="Figure"><path d="M6.0 -85.6 L-43.6 7.4" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M-8.9 -85.6 L65.5 7.4" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M-39.7 -0.0 L59.5 -0.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M-17.9 -40.9 L26.8 -40.9" fill="none" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><text x="0.0" y="-79.4" text-anchor="middle" style="font-size:13.5px">A</text><text x="-44.7" y="4.7" text-anchor="end" style="font-size:13.5px">B</text><text x="64.5" y="4.7" text-anchor="start" style="font-size:13.5px">C</text><text x="-22.9" y="-36.2" text-anchor="end" style="font-size:13.5px">M</text><text x="31.8" y="-36.2" text-anchor="start" style="font-size:13.5px">N</text><path d="M109.4 -15.4 L178.6 -76.9" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M106.6 -54.9 L183.5 -5.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M178.6 -76.9 L183.5 -5.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M109.4 -15.4 L106.6 -54.9" fill="none" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><text x="128.9" y="-32.5" text-anchor="end" style="font-size:13.5px">A</text><text x="183.6" y="-72.2" text-anchor="start" style="font-size:13.5px">B</text><text x="188.5" y="-0.2" text-anchor="start" style="font-size:13.5px">C</text><text x="104.4" y="-10.7" text-anchor="end" style="font-size:13.5px">M</text><text x="101.6" y="-50.2" text-anchor="end" style="font-size:13.5px">N</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<div class="avec-fig">
+<div>
+<p>Sur la figure ci-contre, \((AB)\parallel(ED)\), les points \(B\), \(C\), \(E\) sont alignés ainsi que \(A\), \(C\), \(D\), avec \(AB=6\), \(AC=5\), \(BC=4\) et \(CD=3\). Calculons \(x=CE\) et \(y=ED\).<br> D'après Thalès : \(\dfrac{CD}{CA}=\dfrac{CE}{CB}=\dfrac{ED}{AB}\), soit \(\dfrac35=\dfrac x4=\dfrac y6\).<br> Donc \(x=\dfrac{4\times3}{5}=2{,}4\) et \(y=\dfrac{6\times3}{5}=3{,}6\).</p>
+</div>
+<figure class="fig"><svg viewBox="-106.4 -99.3 177.6 170.0" role="img" aria-label="Figure"><path d="M-35.2 -74.8 L21.1 44.9" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M-88.0 -8.8 L52.8 5.3" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M-35.2 -74.8 L-88.0 -8.8" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M21.1 44.9 L52.8 5.3" fill="none" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><text x="-35.2" y="-79.8" text-anchor="middle" style="font-size:13.5px">A</text><text x="-93.0" y="-4.1" text-anchor="end" style="font-size:13.5px">B</text><text x="0.0" y="15.8" text-anchor="middle" style="font-size:13.5px">C</text><text x="21.1" y="60.7" text-anchor="middle" style="font-size:13.5px">D</text><text x="57.8" y="10.0" text-anchor="start" style="font-size:13.5px">E</text><text x="-14.1" y="-40.9" text-anchor="start" style="font-size:11.5px">5</text><text x="-44.0" y="9.8" text-anchor="middle" style="font-size:11.5px">4</text><text x="-65.1" y="-45.3" text-anchor="end" style="font-size:11.5px">6</text><text x="5.6" y="26.5" text-anchor="end" style="font-size:11.5px">3</text><text x="26.4" y="-2.4" text-anchor="middle" style="font-size:11.5px">x</text><text x="42.0" y="29.1" text-anchor="start" style="font-size:11.5px">y</text></svg></figure>
+</div>
+  </div>
+  <h3><span class="n">II.2</span>Réciproque du théorème de Thalès</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \((D_1)\) et \((D_2)\) deux droites sécantes en \(A\), \(B\) et \(M\) deux points de \((D_1)\), \(C\) et \(N\) deux points de \((D_2)\), distincts de \(A\).<br> Si \(\dfrac{AM}{AB}=\dfrac{AN}{AC}\) <strong>et</strong> si les points \(A\), \(B\), \(M\) et les points \(A\), \(C\), \(N\) sont dans le <strong>même ordre</strong>, alors \((MN)\parallel(BC)\).</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Montrer que deux droites sont (ou ne sont pas) parallèles</div>
+<ul>
+  <li>On calcule séparément les deux rapports \(\dfrac{AM}{AB}\) et \(\dfrac{AN}{AC}\) et on vérifie l'ordre des points.</li>
+  <li>Rapports égaux \(\Rightarrow\) droites parallèles (réciproque) ; rapports différents \(\Rightarrow\) droites <strong>non</strong> parallèles (contraposée du théorème direct).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Avec \(M\in[AB]\), \(N\in[AC]\), \(AM=2\), \(AB=5\), \(AN=3\) et \(AC=7{,}5\) : \(\dfrac{AM}{AB}=\dfrac25=0{,}4\) et \(\dfrac{AN}{AC}=\dfrac3{7{,}5}=0{,}4\), donc \((MN)\parallel(BC)\).<br> Si au contraire \(AN=3\) et \(AC=8\) : \(\dfrac38=0{,}375\neq0{,}4\), donc \((MN)\) et \((BC)\) ne sont pas parallèles.</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 2</div>
+<div class="avec-fig">
+<div>
+<p>Sur la figure ci-contre, les points \(O\), \(A\), \(B\) sont alignés, ainsi que \(O\), \(C\), \(D\) et \(O\), \(E\), \(F\) (dans cet ordre). On suppose que \((AC)\parallel(BD)\) et \((EC)\parallel(FD)\).<br> Montrer que \((AE)\parallel(BF)\).</p>
+</div>
+<figure class="fig"><svg viewBox="-18.4 -84.5 164.9 146.4" role="img" aria-label="Figure"><path d="M0.0 -0.0 L120.0 -60.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L128.0 -16.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L104.0 36.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M72.0 -36.0 L76.8 -9.6 L62.4 21.6" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M120.0 -60.0 L128.0 -16.0 L104.0 36.0" fill="none" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M72.0 -36.0 L62.4 21.6 M120.0 -60.0 L104.0 36.0" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="-5.0" y="4.7" text-anchor="end" style="font-size:13.5px">O</text><text x="72.0" y="-41.0" text-anchor="middle" style="font-size:13.5px">A</text><text x="120.0" y="-65.0" text-anchor="middle" style="font-size:13.5px">B</text><text x="76.8" y="-14.6" text-anchor="middle" style="font-size:13.5px">C</text><text x="133.0" y="-11.3" text-anchor="start" style="font-size:13.5px">D</text><text x="62.4" y="37.4" text-anchor="middle" style="font-size:13.5px">E</text><text x="104.0" y="51.8" text-anchor="middle" style="font-size:13.5px">F</text></svg></figure>
+</div>
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Propriétés de la projection">
+  <h2><span class="num">III</span><span class="titre">Propriétés de la projection</span></h2>
+  <h3><span class="n">III.1</span>Thalès et projection – Conservation du milieu</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<div class="avec-fig">
+<div>
+<p>Soient \((D)\) et \((\Delta)\) deux droites sécantes et \((L)\) une droite non parallèle à \((\Delta)\).<br> Soient \(A\), \(B\), \(C\) trois points de \((L)\) (\(A\neq B\)) de projetés respectifs \(A'\), \(B'\), \(C'\) sur \((D)\) parallèlement à \((\Delta)\). Alors :</p>
+\[ \frac{A'C'}{A'B'}=\frac{AC}{AB}. \]
+<p><strong>Conservation du milieu :</strong> si \(I\) est le milieu de \([AB]\), alors son projeté \(I'\) est le milieu de \([A'B']\).</p>
+</div>
+<figure class="fig"><svg viewBox="-68.3 -112.6 232.8 138.4" role="img" aria-label="Figure"><path d="M12.8 -89.6" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-32.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M51.2 -66.6" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M17.9 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M108.8 -32.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M92.8 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-51.2 -0.0 L118.4 -0.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><text x="-51.2" y="-5.0" text-anchor="middle" style="font-size:13.5px;fill:var(--fig-trait)">(D)</text><path d="M-9.6 -103.0 L128.0 -20.5" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><text x="133.0" y="-15.8" text-anchor="start" style="font-size:13.5px">(L)</text><path d="M99.2 12.8 L131.2 -51.2" fill="none" stroke="var(--meth)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><text x="136.2" y="-46.5" text-anchor="start" style="font-size:13.5px;fill:var(--meth)">(Δ)</text><path d="M12.8 -89.6 L-32.0 -0.0" fill="none" stroke="var(--fig-accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><circle cx="12.8" cy="-89.6" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="16.3" y="-93.1" text-anchor="start" style="font-size:13.5px">A</text><circle cx="-32.0" cy="-0.0" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-32.0" y="15.8" text-anchor="middle" style="font-size:13.5px">A'</text><path d="M51.2 -66.6 L17.9 -0.0" fill="none" stroke="var(--fig-accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><circle cx="51.2" cy="-66.6" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="54.7" y="-70.1" text-anchor="start" style="font-size:13.5px">B</text><circle cx="17.9" cy="-0.0" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="17.9" y="15.8" text-anchor="middle" style="font-size:13.5px">B'</text><path d="M108.8 -32.0 L92.8 -0.0" fill="none" stroke="var(--fig-accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><circle cx="108.8" cy="-32.0" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="112.3" y="-35.5" text-anchor="start" style="font-size:13.5px">C</text><circle cx="92.8" cy="-0.0" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="92.8" y="15.8" text-anchor="middle" style="font-size:13.5px">C'</text></svg></figure>
+</div>
+  </div>
+  <h3><span class="n">III.2</span>Conservation du coefficient de colinéarité</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(A\), \(B\), \(C\), \(D\) quatre points de projetés respectifs \(A'\), \(B'\), \(C'\), \(D'\) sur \((D)\) parallèlement à \((\Delta)\).</p>
+<ul>
+  <li>Si \(\overrightarrow{CD}=k\overrightarrow{AB}\), alors \(\overrightarrow{C'D'}=k\overrightarrow{A'B'}\) : la projection <strong>conserve le coefficient de colinéarité</strong>.</li>
+  <li>Si \(\overrightarrow{AB}+\overrightarrow{CD}=\overrightarrow{EF}\), alors \(\overrightarrow{A'B'}+\overrightarrow{C'D'}=\overrightarrow{E'F'}\) (\(E'\) et \(F'\) projetés de \(E\) et \(F\)).</li>
+</ul>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Transporter une relation par projection</div>
+<ol>
+  <li>On identifie la droite de projection et la direction.</li>
+  <li>On détermine le projeté de chaque point : les points de \((D)\) sont invariants ; un point situé sur une parallèle à \((\Delta)\) se projette au même endroit que les autres points de cette parallèle.</li>
+  <li>On réécrit la relation vectorielle en remplaçant chaque point par son projeté.</li>
+</ol>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soit \(ABC\) un triangle, \(M\) le point tel que \(\overrightarrow{BM}=-\dfrac12\overrightarrow{BC}\) et \(N\) le projeté de \(M\) sur \((AC)\) parallèlement à \((AB)\).<br> Par cette projection : \(B\mapsto A\) (car \(B\in(AB)\), parallèle à la direction), \(C\mapsto C\) (car \(C\in(AC)\)) et \(M\mapsto N\).<br> La relation \(\overrightarrow{BM}=-\dfrac12\overrightarrow{BC}\) devient donc \(\overrightarrow{AN}=-\dfrac12\overrightarrow{AC}\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 3</div>
+<p>Soit \(ABC\) un triangle et \(I\) le milieu de \([BC]\). Soient \(E\) et \(F\) les points tels que \(\overrightarrow{AE}=-\dfrac14\overrightarrow{AB}\) et \(\overrightarrow{AF}=\dfrac34\overrightarrow{AC}\).<br> On note \(J\) le point d'intersection des droites \((AI)\) et \((EF)\), et \(B'\), \(C'\) les projetés respectifs de \(B\) et \(C\) sur \((AI)\) parallèlement à \((EF)\).</p>
+<ol>
+  <li>Construire une figure convenable.</li>
+  <li>Montrer que \(I\) est le milieu de \([B'C']\).</li>
+  <li>Montrer que \(\overrightarrow{AJ}=-\dfrac14\overrightarrow{AB'}\) et \(\overrightarrow{AJ}=\dfrac34\overrightarrow{AC'}\).</li>
+  <li>Montrer que \(2\overrightarrow{AI}=\overrightarrow{AB'}+\overrightarrow{AC'}\), puis en déduire \(\overrightarrow{AI}\) en fonction de \(\overrightarrow{AJ}\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Synthèse">
+  <h2><span class="num">IV</span><span class="titre">Synthèse</span></h2>
+  <div class="bloc ret"><div class="tag">À retenir</div>
+<div class="tableau"><table><thead><tr><th scope="col">Situation</th><th scope="col">Outil</th></tr></thead><tbody><tr><td>Projeter un point \(M\)</td><td>parallèle à la direction \((\Delta)\) par \(M\), intersection avec \((D)\)</td></tr><tr><td>Calculer une longueur</td><td>Thalès : \(\frac{AM}{AB}=\frac{AN}{AC}=\frac{MN}{BC}\) si \((MN)\parallel(BC)\)</td></tr><tr><td>Montrer un parallélisme</td><td>réciproque de Thalès : rapports égaux <strong>et</strong> même ordre</td></tr><tr><td>Montrer un non-parallélisme</td><td>rapports différents (contraposée)</td></tr><tr><td>Milieu</td><td>le projeté du milieu est le milieu des projetés</td></tr><tr><td>Relation vectorielle</td><td>\(\overrightarrow{CD}=k\overrightarrow{AB}\Rightarrow\overrightarrow{C'D'}=k\overrightarrow{A'B'}\)</td></tr></tbody></table></div>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}

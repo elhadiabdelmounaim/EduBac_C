@@ -68,7 +68,9 @@
     // ---------- Chiffres de l'en-tête (comptés dans le cours) ----------
     var $stats = $source.find('[data-stats]');
     // « Propriété » ou « Proposition » : le libellé suit le vocabulaire du cours.
-    var proprietes = /^propriét/i.test($.trim($sections.find('.bloc.prop > .tag').first().text()));
+    var proprietes = !$sections.find('.bloc.prop > .tag').filter(function () {
+      return /^proposition/i.test($.trim($(this).text()));
+    }).length;
     $.each([['def', 'définition', 'définitions'],
             proprietes ? ['prop', 'propriété', 'propriétés'] : ['prop', 'proposition', 'propositions'],
             ['app', 'application', 'applications']], function (_, item) {

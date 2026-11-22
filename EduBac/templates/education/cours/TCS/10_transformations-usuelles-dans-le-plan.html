@@ -1,0 +1,202 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : Tronc commun scientifique — Transformations usuelles du plan (chapitre 10, ).
+Généré depuis TC_Transformations_du_plan.tex (le PDF d'origine est dans le dossier Cours de la leçon, media/lessons/TCS/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < », « > » et « & » sont écrits &lt;, &gt; et &amp;.
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">Tronc commun scientifique</span>
+        <span class="chip or">Chapitre 10</span>
+        <span class="chip">Semestre 2</span>
+      </div>
+      <h1 id="cours-titre">Transformations usuelles du plan</h1>
+      <p class="sous-titre">Volume horaire : 8 heures</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectif"><strong>Contenus</strong>
+<ul>
+  <li>Symétrie axiale, symétrie centrale, translation.</li>
+  <li>Homothétie.</li>
+  <li>Propriétés caractéristiques de la translation et de l'homothétie.</li>
+  <li>Propriétés conservées ; images de figures.</li>
+</ul>
+  </div>
+  <div class="cadre objectif"><strong>Capacités attendues</strong>
+<ul>
+  <li>Construire l'image d'un point, d'une figure.</li>
+  <li>Reconnaître une transformation à partir d'une relation vectorielle.</li>
+  <li>Utiliser les transformations pour démontrer (alignement, parallélisme, milieu…).</li>
+</ul>
+  </div>
+
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Symétries et translation">
+  <h2><span class="num">I</span><span class="titre">Symétries et translation</span></h2>
+  <div class="bloc act"><div class="tag">Activité 1</div>
+<p>Soit \(ABCD\) un losange de centre \(O\), et \(I\), \(J\) les milieux respectifs de \([AB]\) et \([AD]\).</p>
+<ol>
+  <li>Faire une figure.</li>
+  <li>Déterminer les symétriques de \(A\), \(B\) et \(O\) par rapport à \(O\) ; en déduire le symétrique de la droite \((AB)\).</li>
+  <li>Déterminer les symétriques de \(B\), \(O\) et \(I\) par rapport à la droite \((AC)\) ; en déduire le symétrique de \((OI)\).</li>
+  <li>Déterminer l'image de \(A\) par la translation de vecteur \(\overrightarrow{BC}\).</li>
+  <li>Montrer que \(\overrightarrow{IJ}=\dfrac12\overrightarrow{BD}\), puis déterminer l'image de \(B\), puis du segment \([BO]\), par la translation de vecteur \(\overrightarrow{IJ}\).</li>
+</ol>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<div class="tableau"><table><thead><tr><th scope="col">Transformation</th><th scope="col">Elle associe à tout point \(M\) le point \(M'\) tel que…</th><th scope="col">Figure</th></tr></thead><tbody><tr><td><strong>Symétrie axiale</strong> d'axe \((D)\), notée \(S_{(D)}\)</td><td>\((D)\) est la médiatrice de \([MM']\) (si \(M\notin(D)\)) ; \(M'=M\) si \(M\in(D)\).<br> Tous les points de \((D)\) sont <strong>invariants</strong>.</td><td><figure class="fig"><svg viewBox="-40.0 -44.3 83.1 76.7" role="img" aria-label="Figure"><path d="M-30.8 -6.6" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M30.8 -6.6" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 26.4 L0.0 -30.8" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><text x="5.0" y="-26.8" text-anchor="start" style="font-size:11.5px;fill:var(--fig-trait)">(D)</text><path d="M-30.8 -6.6 L30.8 -6.6" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M0.0 -6.6 L4.4 -6.6 L4.4 -11.0 L0.0 -11.0 Z" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="-30.8" cy="-6.6" r="2.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-30.8" y="-11.6" text-anchor="middle" style="font-size:11.5px">M</text><circle cx="30.8" cy="-6.6" r="2.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="30.8" y="-11.6" text-anchor="middle" style="font-size:11.5px">M'</text></svg></figure></td></tr><tr><td><strong>Symétrie centrale</strong> de centre \(O\), notée \(S_O\)</td><td>\(O\) est le milieu de \([MM']\), c'est-à-dire \(\overrightarrow{OM'}=-\overrightarrow{OM}\).<br> Seul \(O\) est invariant.</td><td><figure class="fig"><svg viewBox="-42.2 -35.7 87.5 59.4" role="img" aria-label="Figure"><path d="M0.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-33.0 13.2" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M33.0 -13.2" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-33.0 13.2 L33.0 -13.2" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><circle cx="0.0" cy="-0.0" r="2.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="0.0" y="14.2" text-anchor="middle" style="font-size:11.5px">O</text><circle cx="-33.0" cy="13.2" r="2.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-33.0" y="8.2" text-anchor="middle" style="font-size:11.5px">M</text><circle cx="33.0" cy="-13.2" r="2.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="33.0" y="-18.2" text-anchor="middle" style="font-size:11.5px">M'</text></svg></figure></td></tr><tr><td><strong>Translation</strong> de vecteur \(\vec u\), notée \(t_{\vec u}\)</td><td>\(\overrightarrow{MM'}=\vec u\).<br> Si \(\vec u\neq\vec0\), aucun point n'est invariant ; \(t_{\vec0}\) laisse tous les points invariants.</td><td><figure class="fig"><svg viewBox="-41.2 -47.8 73.7 80.2" role="img" aria-label="Figure"><defs><marker id="mg3-673" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fig-accent)"/></marker><marker id="mg3-696" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fig-trait)"/></marker></defs><path d="M-22.0 8.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.8 -2.2" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-35.2 -19.8 L-4.4 -30.8" fill="none" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg3-673)"/><text x="-19.8" y="-30.3" text-anchor="middle" style="font-size:11.5px;fill:var(--fig-accent)">u⃗</text><path d="M-22.0 8.8 L8.8 -2.2" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg3-696)"/><circle cx="-22.0" cy="8.8" r="2.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-22.0" y="23.0" text-anchor="middle" style="font-size:11.5px">M</text><circle cx="8.8" cy="-2.2" r="2.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="13.8" y="1.8" text-anchor="start" style="font-size:11.5px">M'</text></svg></figure></td></tr></tbody></table></div>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<p>On écrit \(M'=S_{(D)}(M)\), \(M'=S_O(M)\), \(M'=t_{\vec u}(M)\) : \(M'\) est l'<strong>image</strong> de \(M\). Pour une symétrie, si \(M'\) est l'image de \(M\), alors \(M\) est l'image de \(M'\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+<p>Soit \(ABCD\) un quadrilatère et \(\vec u\) un vecteur tels que \(B=t_{\vec u}(A)\) et \(D=t_{2\vec u}(C)\).</p>
+<ol>
+  <li>Montrer que \(\overrightarrow{AB}=\dfrac12\overrightarrow{CD}\).</li>
+  <li>Soit \(I\) le milieu de \([CD]\). Montrer que \(ABIC\) est un parallélogramme.</li>
+</ol>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soit \(ABC\) un triangle. À tout point \(M\), on associe \(M'\) tel que \(\overrightarrow{MM'}-2\overrightarrow{MA}+\overrightarrow{MB}+\overrightarrow{MC}=\vec0\).<br> Alors \(\overrightarrow{MM'}=2\overrightarrow{MA}-\big(\overrightarrow{MA}+\overrightarrow{AB}\big)-\big(\overrightarrow{MA}+\overrightarrow{AC}\big)=-\big(\overrightarrow{AB}+\overrightarrow{AC}\big)\) : ce vecteur ne dépend pas de \(M\), donc \(M'\) est l'image de \(M\) par la translation de vecteur \(-\big(\overrightarrow{AB}+\overrightarrow{AC}\big)\).</p>
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Homothétie">
+  <h2><span class="num">II</span><span class="titre">Homothétie</span></h2>
+  <div class="bloc act"><div class="tag">Activité 2</div>
+<p>Soit \(OAB\) un triangle. Construire les points \(M\), \(N\), \(P\) tels que \(\overrightarrow{OM}=2\overrightarrow{OA}\), \(\overrightarrow{ON}=-2\overrightarrow{OB}\) et \(\overrightarrow{OP}=\dfrac23\overrightarrow{OA}\), puis le point \(Q\) tel que \(\overrightarrow{OQ}=-\overrightarrow{OB}\). Que représente \(Q\) pour \(B\) ?</p>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<div class="avec-fig">
+<div>
+<p>Soient \(O\) un point et \(k\) un réel non nul. L'<strong>homothétie</strong> de centre \(O\) et de rapport \(k\), notée \(h(O,k)\), est la transformation qui associe à tout point \(M\) l'unique point \(M'\) tel que :</p>
+\[ \overrightarrow{OM'}=k\,\overrightarrow{OM}. \]
+</div>
+<figure class="fig"><svg viewBox="-51.5 -44.9 153.5 85.4" role="img" aria-label="Figure"><path d="M0.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M36.0 -11.2" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M72.0 -22.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-36.0 11.2" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-39.0 12.0 L96.0 -30.0" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="0.0" cy="-0.0" r="2.5" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="0.0" y="14.2" text-anchor="middle" style="font-size:11.5px">O</text><circle cx="36.0" cy="-11.2" r="2.5" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="36.0" y="-16.2" text-anchor="middle" style="font-size:11.5px">M</text><circle cx="72.0" cy="-22.4" r="2.5" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="72.0" y="-27.4" text-anchor="middle" style="font-size:11.5px">M'</text><text x="36.0" y="16.0" text-anchor="middle" style="font-size:11.5px;fill:var(--fig-accent)">k=2</text><circle cx="-36.0" cy="11.2" r="2.5" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-36.0" y="6.2" text-anchor="middle" style="font-size:11.5px">M''</text><text x="-27.0" y="31.0" text-anchor="middle" style="font-size:11.5px;fill:var(--fig-accent)">k=−1</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<ul>
+  <li>Si \(k=1\), tous les points sont invariants ; si \(k\neq1\), le centre \(O\) est le <strong>seul</strong> point invariant.</li>
+  <li>Si \(k=-1\), \(h\) est la symétrie centrale de centre \(O\).</li>
+  <li>Si \(|k|&gt;1\), \(h\) est un <strong>agrandissement</strong> ; si \(|k|&lt;1\), \(h\) est une <strong>réduction</strong> ; \(O\), \(M\) et \(M'\) sont toujours alignés.</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>« \(B\) est l'image de \(C\) par l'homothétie de centre \(A\) et de rapport \(-\frac32\) » s'écrit \(\overrightarrow{AB}=-\dfrac32\overrightarrow{AC}\).</li>
+  <li>La relation \(\overrightarrow{JK}=\dfrac54\overrightarrow{JL}\) signifie que \(K\) est l'image de \(L\) par l'homothétie de centre \(J\) et de rapport \(\dfrac54\).</li>
+  <li>Si \(2\overrightarrow{MA}+4\overrightarrow{AB}=\vec0\), alors \(\overrightarrow{AM}=2\overrightarrow{AB}\) : \(M\) est l'image de \(B\) par \(h(A,2)\).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 2</div>
+<p>Soient \(A\) et \(B\) deux points distincts et \(T\) la transformation qui associe à tout point \(M\) le point \(M'\) tel que \(\overrightarrow{MM'}=3\overrightarrow{MA}+3\overrightarrow{MB}\).</p>
+<ol>
+  <li>Montrer que \(T\) admet un unique point invariant \(I\) que l'on précisera.</li>
+  <li>Exprimer \(\overrightarrow{IM'}\) en fonction de \(\overrightarrow{IM}\), puis en déduire la nature de \(T\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Propriétés caractéristiques">
+  <h2><span class="num">III</span><span class="titre">Propriétés caractéristiques</span></h2>
+  <div class="bloc prop"><div class="tag">Propriété caractéristique de la translation</div>
+<p>Une transformation \(T\) est une translation si et seulement si, pour tous points \(M\) et \(N\) d'images \(M'\) et \(N'\) :</p>
+\[ \overrightarrow{M'N'}=\overrightarrow{MN}. \]
+<p>Conséquence : une translation conserve les distances (\(M'N'=MN\)) et \((M'N')\parallel(MN)\).</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété caractéristique de l'homothétie</div>
+<p>Soit \(k\in\mathbb{R}\setminus\{0\,;\,1\}\). Une transformation \(T\) est une homothétie de rapport \(k\) si et seulement si, pour tous points \(M\) et \(N\) d'images \(M'\) et \(N'\) :</p>
+\[ \overrightarrow{M'N'}=k\,\overrightarrow{MN}. \]
+<p>Conséquence : \(M'N'=|k|\,MN\) (l'homothétie ne conserve pas les distances si \(|k|\neq1\)) et \((M'N')\parallel(MN)\).</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Trouver le centre et le rapport d'une homothétie</div>
+<p>Si une homothétie \(h\) transforme \(A\) en \(A'\) et \(B\) en \(B'\) (avec \((AB)\parallel(A'B')\) et \(A'B'\neq AB\)) :</p>
+<ul>
+  <li>le <strong>rapport</strong> \(k\) est donné par \(\overrightarrow{A'B'}=k\overrightarrow{AB}\) ;</li>
+  <li>le <strong>centre</strong> est le point d'intersection des droites \((AA')\) et \((BB')\).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 3</div>
+<p>Soit \(ABCD\) un trapèze tel que \((AB)\parallel(CD)\) et \(\overrightarrow{AB}=\dfrac13\overrightarrow{DC}\).</p>
+<ol>
+  <li>Déterminer le centre et le rapport de l'homothétie \(h\) qui transforme \(A\) en \(D\) et \(B\) en \(C\).</li>
+  <li>Déterminer le centre et le rapport de l'homothétie \(h'\) qui transforme \(A\) en \(C\) et \(B\) en \(D\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Propriétés conservées – Images de figures">
+  <h2><span class="num">IV</span><span class="titre">Propriétés conservées – Images de figures</span></h2>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Les transformations usuelles (symétries, translation, homothétie) conservent :</p>
+<ul>
+  <li>le <strong>coefficient de colinéarité</strong> : si \(\overrightarrow{CD}=\alpha\overrightarrow{AB}\), alors \(\overrightarrow{C'D'}=\alpha\overrightarrow{A'B'}\) ;</li>
+  <li>l'<strong>alignement</strong> des points ;</li>
+  <li>le <strong>milieu</strong> d'un segment ;</li>
+  <li>la mesure des <strong>angles</strong> géométriques ;</li>
+  <li>le <strong>parallélisme</strong> et l'<strong>orthogonalité</strong> ;</li>
+  <li>l'<strong>intersection</strong> de deux droites.</li>
+</ul>
+  </div>
+  <div class="bloc prop"><div class="tag">Images de figures</div>
+<ul>
+  <li>L'image d'une droite est une droite ; l'image d'un segment \([AB]\) est le segment \([A'B']\).</li>
+  <li>Par une symétrie ou une translation, l'image du cercle \(\mathcal C(I,R)\) est le cercle \(\mathcal C(I',R)\), où \(I'\) est l'image de \(I\).</li>
+  <li>Par une homothétie de rapport \(k\), l'image du cercle \(\mathcal C(I,R)\) est le cercle \(\mathcal C(I',|k|R)\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soit \(ABC\) un triangle, \(I\) le milieu de \([BC]\), \(B'\) et \(C'\) tels que \(\overrightarrow{AB'}=\dfrac23\overrightarrow{AB}\) et \(\overrightarrow{AC'}=\dfrac23\overrightarrow{AC}\), et \(J\) le milieu de \([B'C']\).<br> L'homothétie \(h\left(A,\frac23\right)\) transforme \(B\) en \(B'\) et \(C\) en \(C'\) ; elle conserve le milieu, donc \(h(I)=J\), c'est-à-dire \(\overrightarrow{AJ}=\dfrac23\overrightarrow{AI}\) : les points \(A\), \(I\), \(J\) sont <strong>alignés</strong>.</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 4</div>
+<p>Soit \(OABC\) un rectangle et \(t\) la translation de vecteur \(2\overrightarrow{OC}\). On note \(O'\), \(A'\), \(B'\), \(C'\) les images respectives de \(O\), \(A\), \(B\), \(C\) par \(t\).</p>
+<ol>
+  <li>Montrer que \(O'A'B'C'\) est un rectangle.</li>
+  <li>Soient \(M\) et \(N\) tels que \(\overrightarrow{OM}=\dfrac25\overrightarrow{OA}\) et \(\overrightarrow{O'N}=\dfrac25\overrightarrow{O'A'}\). Montrer que \(CM=C'N\).</li>
+</ol>
+  </div>
+  <div class="bloc app"><div class="tag">Application 5</div>
+<p>Soit \(ABCD\) un parallélogramme, \(I\) un point de \([BD]\) distinct de \(B\) et \(D\). La droite \((AI)\) coupe \((BC)\) en \(J\) et \((CD)\) en \(K\). Soit \(h\) l'homothétie de centre \(I\) qui transforme \(B\) en \(D\).</p>
+<ol>
+  <li>Faire une figure.</li>
+  <li>Déterminer \(h(A)\) et \(h(J)\) (on utilisera les images des droites \((AB)\) et \((BC)\)).</li>
+  <li>En déduire que \(IA^2=IJ\times IK\).</li>
+</ol>
+  </div>
+  <div class="bloc app"><div class="tag">Application — Synthèse</div>
+<p>Soit \(ABCD\) un parallélogramme, \(I\) et \(J\) les points tels que \(\overrightarrow{CI}=\dfrac23\overrightarrow{CB}\) et \(\overrightarrow{IJ}=\overrightarrow{DC}\).</p>
+<ol>
+  <li>Construire une figure.</li>
+  <li>Montrer que la droite \((BJ)\) est l'image de la droite \((AI)\) par la translation de vecteur \(\overrightarrow{AB}\).</li>
+  <li>Soit \(h\) l'homothétie de centre \(I\) qui transforme \(B\) en \(C\).
+<ol class="alpha">
+  <li>Montrer que le rapport de \(h\) est \(k=-2\), puis que \(h\big((AB)\big)=(CD)\).</li>
+  <li>Soit \(K=h(J)\). Montrer que \(\overrightarrow{KI}=2\overrightarrow{AB}\) et \(\overrightarrow{AI}=-\dfrac12\overrightarrow{CK}\).</li>
+</ol></li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ V ============================ -->
+<section class="chap" id="s5" data-toc="Synthèse">
+  <h2><span class="num">V</span><span class="titre">Synthèse</span></h2>
+  <div class="bloc ret"><div class="tag">À retenir</div>
+<div class="tableau"><table><thead><tr><th scope="col">Transformation</th><th scope="col">À retenir</th></tr></thead><tbody><tr><td>Symétrie axiale \(S_{(D)}\)</td><td>\((D)\) médiatrice de \([MM']\) ; points de \((D)\) invariants</td></tr><tr><td>Symétrie centrale \(S_O\)</td><td>\(O\) milieu de \([MM']\) ; \(S_O=h(O,-1)\)</td></tr><tr><td>Translation \(t_{\vec u}\)</td><td>\(\overrightarrow{MM'}=\vec u\) \(\iff\) \(\overrightarrow{M'N'}=\overrightarrow{MN}\)</td></tr><tr><td>Homothétie \(h(O,k)\)</td><td>\(\overrightarrow{OM'}=k\overrightarrow{OM}\) ; \(\overrightarrow{M'N'}=k\overrightarrow{MN}\) ; rayon \(\times|k|\)</td></tr><tr><td>Conservation</td><td>colinéarité, alignement, milieu, angles, parallélisme, orthogonalité</td></tr></tbody></table></div>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}

@@ -1,0 +1,267 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : Tronc commun scientifique — Arithmétique dans l'ensemble $\mathbb{N}$ (chapitre 1, ).
+Généré depuis TC_Arithmetique.tex (le PDF d'origine est dans le dossier Cours de la leçon, media/lessons/TCS/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < », « > » et « & » sont écrits &lt;, &gt; et &amp;.
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">Tronc commun scientifique</span>
+        <span class="chip or">Chapitre 1</span>
+        <span class="chip">Semestre 1</span>
+      </div>
+      <h1 id="cours-titre">Arithmétique dans l'ensemble \(\mathbb{N}\)</h1>
+      <p class="sous-titre">Volume horaire : 6 heures</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectif"><strong>Contenus</strong>
+<ul>
+  <li>Nombres pairs, nombres impairs.</li>
+  <li>Multiples, diviseurs ; critères de divisibilité.</li>
+  <li>Nombres premiers ; décomposition en facteurs premiers.</li>
+  <li>PGCD, PPCM ; nombres premiers entre eux.</li>
+  <li>Division euclidienne.</li>
+</ul>
+  </div>
+  <div class="cadre objectif"><strong>Capacités attendues</strong>
+<ul>
+  <li>Reconnaître la parité d'une expression.</li>
+  <li>Déterminer les multiples et les diviseurs d'un entier.</li>
+  <li>Reconnaître un nombre premier ; décomposer un entier.</li>
+  <li>Calculer le PGCD et le PPCM de deux entiers.</li>
+</ul>
+  </div>
+
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="L'ensemble ℕ – Nombres pairs et impairs">
+  <h2><span class="num">I</span><span class="titre">L'ensemble \(\mathbb{N}\) – Nombres pairs et impairs</span></h2>
+  <div class="bloc act"><div class="tag">Activité 1</div>
+<p>On considère les nombres : \(24\) ; \(\sqrt{19}\) ; \(1\) ; \(2017\) ; \(89\) ; \(1970\) ; \(8721\) ; \(-8\) ; \(\sqrt{36}\) ; \(0\) ; \(5{,}4\).<br> Parmi ces nombres, trouver : <strong>1.</strong> les entiers naturels ; <strong>2.</strong> les nombres pairs ; <strong>3.</strong> les nombres impairs.</p>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<ul>
+  <li>L'ensemble des <strong>entiers naturels</strong> est \(\mathbb{N}=\{0;1;2;3;\dots\}\) ; on note \(\mathbb{N}^*=\{1;2;3;\dots\}\).<br> On écrit \(24\in\mathbb{N}\) (« \(24\) appartient à \(\mathbb{N}\) ») et \(-8\notin\mathbb{N}\) (« \(-8\) n'appartient pas à \(\mathbb{N}\) »).</li>
+  <li>Un entier naturel \(a\) est <strong>pair</strong> s'il existe \(k\in\mathbb{N}\) tel que \(a=2k\).</li>
+  <li>Un entier naturel \(a\) est <strong>impair</strong> s'il existe \(k\in\mathbb{N}\) tel que \(a=2k+1\).</li>
+</ul>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<p>\(0\) est pair (\(0=2\times0\)) ; \(1\) est impair (\(1=2\times0+1\)). Deux entiers consécutifs \(n\) et \(n+1\) sont toujours de parités différentes.</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Parité d'une somme et d'un produit</div>
+<p>Soient \(a\) et \(b\) deux entiers naturels (avec \(a\ge b\) pour la différence).</p>
+<div class="tableau"><table><thead><tr><th scope="col">\(a\)</th><th scope="col">\(b\)</th><th scope="col">\(a+b\)</th><th scope="col">\(a-b\)</th><th scope="col">\(a\times b\)</th></tr></thead><tbody><tr><td>pair</td><td>pair</td><td>pair</td><td>pair</td><td>pair</td></tr><tr><td>pair</td><td>impair</td><td>impair</td><td>impair</td><td>pair</td></tr><tr><td>impair</td><td>pair</td><td>impair</td><td>impair</td><td>pair</td></tr><tr><td>impair</td><td>impair</td><td>pair</td><td>pair</td><td>impair</td></tr></tbody></table></div>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemple — Démonstration d'une ligne du tableau</div>
+<p>Si \(a\) et \(b\) sont impairs, il existe \(k,k'\in\mathbb{N}\) tels que \(a=2k+1\) et \(b=2k'+1\). Alors</p>
+\[ a\times b=4kk'+2k+2k'+1=2(2kk'+k+k')+1, \]
+<p>avec \(2kk'+k+k'\in\mathbb{N}\) : le produit de deux impairs est impair.</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Étudier la parité d'une expression en \(n\)</div>
+<ul>
+  <li>On factorise et on reconnaît un produit de deux entiers consécutifs (toujours pair) ; ou</li>
+  <li>on distingue deux cas : \(n=2k\) et \(n=2k+1\).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+<p>Soit \(n\in\mathbb{N}\).</p>
+<ol>
+  <li>Montrer que \(n^2+n\) est pair.</li>
+  <li>Étudier la parité des nombres : \(4n+6\) ; \(2n+7\) ; \(n^2+3n+1\) ; \((n+1)(n+4)\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Multiples et diviseurs">
+  <h2><span class="num">II</span><span class="titre">Multiples et diviseurs</span></h2>
+  <h3><span class="n">II.1</span>Multiples d'un entier – PPCM</h3>
+  <div class="bloc act"><div class="tag">Activité 2</div>
+<ol>
+  <li><p>Cocher les cases convenables :</p>
+<div class="tableau"><table><thead><tr><th scope="col"></th><th scope="col">\(2\)</th><th scope="col">\(6\)</th><th scope="col">\(11\)</th><th scope="col">\(21\)</th><th scope="col">\(0\)</th><th scope="col">\(28\)</th><th scope="col">\(14\)</th><th scope="col">\(120\)</th></tr></thead><tbody><tr><td>Multiple de \(2\)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Multiple de \(3\)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Multiple de \(5\)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Multiple de \(9\)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr></tbody></table></div></li>
+  <li><ol class="alpha">
+  <li>Déterminer \(M_4\), l'ensemble des multiples de \(4\), et \(M_6\), l'ensemble des multiples de \(6\).</li>
+  <li>En déduire le plus petit multiple commun non nul de \(4\) et \(6\).</li>
+</ol></li>
+</ol>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soient \(a\) et \(b\) deux entiers naturels.</p>
+<ul>
+  <li>On dit que \(b\) est un <strong>multiple</strong> de \(a\) s'il existe \(k\in\mathbb{N}\) tel que \(b=k\,a\).</li>
+  <li>Le <strong>plus petit commun multiple</strong> non nul de deux entiers non nuls \(a\) et \(b\) se note \(\operatorname{ppcm}(a;b)\) ou \(a\vee b\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(M_4=\{0;4;8;12;16;20;24;\dots\}\) et \(M_6=\{0;6;12;18;24;\dots\}\). Les multiples communs non nuls sont \(12;24;\dots\), donc \(\operatorname{ppcm}(4;6)=12\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 2</div>
+<ol>
+  <li>Déterminer les multiples de \(7\) inférieurs à \(50\).</li>
+  <li>Déterminer \(\operatorname{ppcm}(5;3)\), \(\operatorname{ppcm}(12;18)\) et \(\operatorname{ppcm}(5;20)\).</li>
+  <li>Soient \(a\), \(b\), \(c\) trois entiers naturels. Montrer que si \(b\) et \(c\) sont des multiples de \(a\), alors \(2b+3c\) est un multiple de \(a\).</li>
+</ol>
+  </div>
+  <h3><span class="n">II.2</span>Diviseurs d'un entier – PGCD</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soient \(a\) et \(b\) deux entiers naturels avec \(a\neq0\).</p>
+<ul>
+  <li>On dit que \(a\) est un <strong>diviseur</strong> de \(b\) (ou que \(a\) <strong>divise</strong> \(b\), ou que \(b\) est <strong>divisible</strong> par \(a\)) s'il existe \(k\in\mathbb{N}\) tel que \(b=k\,a\). On écrit \(a\mid b\).</li>
+  <li>Le <strong>plus grand commun diviseur</strong> de deux entiers non nuls \(a\) et \(b\) se note \(\operatorname{pgcd}(a;b)\) ou \(a\wedge b\).</li>
+</ul>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<p>« \(a\) divise \(b\) » et « \(b\) est un multiple de \(a\) » ont le même sens. Tout entier \(n\ge1\) admet au moins deux diviseurs : \(1\) et \(n\).</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Trouver tous les diviseurs d'un entier \(n\)</div>
+<p>On teste les entiers \(d=1,2,3,\dots\) tant que \(d\le\sqrt n\) : chaque fois que \(d\) divise \(n\), on obtient le couple de diviseurs \(d\) et \(\dfrac nd\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Diviseurs de \(36\) : \(36=1\times36=2\times18=3\times12=4\times9=6\times6\), donc \(D_{36}=\{1;2;3;4;6;9;12;18;36\}\).<br> \(D_{12}=\{1;2;3;4;6;12\}\) et \(D_{18}=\{1;2;3;6;9;18\}\) : les diviseurs communs sont \(1;2;3;6\), donc \(\operatorname{pgcd}(12;18)=6\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 3</div>
+<ol>
+  <li>Déterminer les diviseurs de \(24\), puis ceux de \(60\).</li>
+  <li>Déterminer \(\operatorname{pgcd}(8;6)\), \(\operatorname{pgcd}(6;26)\) et \(\operatorname{pgcd}(36;9)\).</li>
+</ol>
+  </div>
+  <h3><span class="n">II.3</span>Critères de divisibilité</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Un entier naturel est divisible :</p>
+<ul>
+  <li>par \(2\) si son chiffre des unités est pair ;</li>
+  <li>par \(5\) si son chiffre des unités est \(0\) ou \(5\) ;</li>
+  <li>par \(4\) si le nombre formé par ses deux derniers chiffres est divisible par \(4\) ;</li>
+  <li>par \(3\) si la somme de ses chiffres est un multiple de \(3\) ;</li>
+  <li>par \(9\) si la somme de ses chiffres est un multiple de \(9\) ;</li>
+  <li>par \(10\) si son chiffre des unités est \(0\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(74\,250\) est divisible par \(2\), \(5\) et \(10\) (chiffre des unités \(0\)), et par \(3\) et \(9\) car \(7+4+2+5+0=18\). Il n'est pas divisible par \(4\) car \(50\) n'est pas divisible par \(4\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 4</div>
+<p>Cocher les cases convenables :</p>
+<div class="tableau"><table><thead><tr><th scope="col"></th><th scope="col">\(14\)</th><th scope="col">\(6\)</th><th scope="col">\(49\)</th><th scope="col">\(81\)</th><th scope="col">\(495\)</th><th scope="col">\(540\)</th></tr></thead><tbody><tr><td>Divisible par \(2\)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Divisible par \(3\)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Divisible par \(4\)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Divisible par \(5\)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Divisible par \(9\)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr></tbody></table></div>
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Nombres premiers">
+  <h2><span class="num">III</span><span class="titre">Nombres premiers</span></h2>
+  <div class="bloc act"><div class="tag">Activité 3</div>
+<p>Déterminer \(D_2\), \(D_3\), \(D_5\), \(D_{13}\) et \(D_{37}\). Que remarque-t-on ?</p>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Un entier naturel \(p\ge2\) est dit <strong>premier</strong> si ses seuls diviseurs sont \(1\) et \(p\).<br> Les nombres premiers inférieurs à \(50\) sont : \(2\), \(3\), \(5\), \(7\), \(11\), \(13\), \(17\), \(19\), \(23\), \(29\), \(31\), \(37\), \(41\), \(43\), \(47\).</p>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<ul>
+  <li>\(0\) et \(1\) ne sont pas premiers. \(2\) est le seul nombre premier pair.</li>
+  <li>Il existe une infinité de nombres premiers.</li>
+</ul>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Tester si un entier \(n\) est premier</div>
+<p>On cherche tous les nombres premiers \(p\) tels que \(p\le\sqrt n\) (c'est-à-dire \(p^2\le n\)). Si \(n\) n'est divisible par aucun d'eux, alors \(n\) est premier ; sinon, il ne l'est pas.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>\(97\) : on a \(\sqrt{97}&lt;10\) ; les nombres premiers inférieurs à \(10\) sont \(2\), \(3\), \(5\), \(7\), et aucun ne divise \(97\). Donc \(97\) est premier.</li>
+  <li>\(391\) : on a \(\sqrt{391}&lt;20\) ; on teste \(2,3,5,7,11,13,17,19\) : \(391=17\times23\). Donc \(391\) n'est pas premier.</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 5</div>
+<ol>
+  <li>Trouver les nombres premiers parmi : \(17\), \(45\), \(9\), \(41\), \(27\), \(11\), \(29\), \(143\).</li>
+  <li>Montrer que le nombre \(1\,000\,701\) n'est pas premier.</li>
+</ol>
+  </div>
+  <h3><span class="n">III.1</span>Décomposition en produit de facteurs premiers</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Tout entier naturel \(n\ge2\) se décompose de façon <strong>unique</strong> (à l'ordre des facteurs près) en un produit de facteurs premiers.</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Décomposer un entier</div>
+<p>On divise successivement par les nombres premiers \(2\), \(3\), \(5\), \(7\), … tant que c'est possible, en notant les quotients dans une colonne.<br> Exemple : \(1400=2^3\times5^2\times7\).</p>
+<div class="tableau"><table><tbody><tr><td>\(1400\)</td><td>\(2\)</td></tr><tr><td>\(700\)</td><td>\(2\)</td></tr><tr><td>\(350\)</td><td>\(2\)</td></tr><tr><td>\(175\)</td><td>\(5\)</td></tr><tr><td>\(35\)</td><td>\(5\)</td></tr><tr><td>\(7\)</td><td>\(7\)</td></tr><tr><td>\(1\)</td><td></td></tr></tbody></table></div>
+  </div>
+  <div class="bloc app"><div class="tag">Application 6</div>
+<ol>
+  <li>Déterminer les entiers naturels \(n\), \(m\) et \(p\) tels que \(3240=2^n\times3^m\times5^p\).</li>
+  <li>Décomposer en produit de facteurs premiers les nombres : \(12\) ; \(3520\) ; \(4576\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="PGCD, PPCM et nombres premiers entre eux">
+  <h2><span class="num">IV</span><span class="titre">PGCD, PPCM et nombres premiers entre eux</span></h2>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(a\) et \(b\) deux entiers naturels supérieurs ou égaux à \(2\), décomposés en produits de facteurs premiers.</p>
+<ul>
+  <li>\(\operatorname{pgcd}(a;b)\) est le produit des facteurs premiers <strong>communs</strong>, chacun affecté du <strong>plus petit</strong> exposant.</li>
+  <li>\(\operatorname{ppcm}(a;b)\) est le produit des facteurs premiers <strong>communs et non communs</strong>, chacun affecté du <strong>plus grand</strong> exposant.</li>
+  <li>Pour tous entiers \(a,b\ge1\) : \(\operatorname{pgcd}(a;b)\times\operatorname{ppcm}(a;b)=a\times b\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(120=2^3\times3\times5\) et \(45=3^2\times5\). Donc</p>
+\[ \operatorname{pgcd}(120;45)=3\times5=15 \qquad\text{et}\qquad \operatorname{ppcm}(120;45)=2^3\times3^2\times5=360. \]
+<p>Vérification : \(15\times360=5400=120\times45\).</p>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Deux entiers naturels non nuls \(a\) et \(b\) sont <strong>premiers entre eux</strong> si \(\operatorname{pgcd}(a;b)=1\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(\operatorname{pgcd}(5;13)=1\), donc \(5\) et \(13\) sont premiers entre eux. \(\operatorname{pgcd}(12;30)=6\), donc \(12\) et \(30\) ne sont pas premiers entre eux.</p>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<p>Si \(a\) et \(b\) sont premiers entre eux, alors \(\operatorname{ppcm}(a;b)=a\times b\). Deux nombres premiers distincts sont toujours premiers entre eux.</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 7</div>
+<ol>
+  <li>Calculer \(\operatorname{pgcd}(1400;3240)\) et \(\operatorname{ppcm}(1400;3240)\).</li>
+  <li>Décomposer \(123\) et \(595\) en produits de facteurs premiers, puis en déduire qu'ils sont premiers entre eux.</li>
+  <li><strong>Problème.</strong> Deux phares s'allument ensemble à minuit : le premier toutes les \(12\) secondes, le second toutes les \(18\) secondes. Au bout de combien de temps s'allumeront-ils de nouveau ensemble ?</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ V ============================ -->
+<section class="chap" id="s5" data-toc="Division euclidienne">
+  <h2><span class="num">V</span><span class="titre">Division euclidienne</span></h2>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(a\in\mathbb{N}\) et \(b\in\mathbb{N}^*\). Il existe un unique couple \((q;r)\) d'entiers naturels tel que</p>
+\[ a=b\times q+r \qquad\text{et}\qquad 0\le r&lt;b. \]
+<p>\(a\) est le <strong>dividende</strong>, \(b\) le <strong>diviseur</strong>, \(q\) le <strong>quotient</strong> et \(r\) le <strong>reste</strong>. \(b\) divise \(a\) si et seulement si \(r=0\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(17=5\times3+2\) avec \(0\le2&lt;5\) : le quotient est \(3\) et le reste est \(2\).<br> Attention : \(17=5\times2+7\) n'est pas la division euclidienne de \(17\) par \(5\), car \(7\ge5\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 8</div>
+<ol>
+  <li>Effectuer la division euclidienne de \(2027\) par \(13\).</li>
+  <li>Montrer que tout entier naturel \(n\) s'écrit sous l'une des formes \(3k\), \(3k+1\) ou \(3k+2\) (\(k\in\mathbb{N}\)).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ VI ============================ -->
+<section class="chap" id="s6" data-toc="Synthèse">
+  <h2><span class="num">VI</span><span class="titre">Synthèse</span></h2>
+  <div class="bloc ret"><div class="tag">À retenir</div>
+<div class="tableau"><table><thead><tr><th scope="col">Notion</th><th scope="col">À retenir</th></tr></thead><tbody><tr><td>Pair, impair</td><td>\(a=2k\) ; \(a=2k+1\) (\(k\in\mathbb{N}\))</td></tr><tr><td>Multiple, diviseur</td><td>\(b=ka\) : \(b\) est un multiple de \(a\) et \(a\) divise \(b\)</td></tr><tr><td>Nombre premier</td><td>\(p\ge2\) dont les seuls diviseurs sont \(1\) et \(p\) ; test avec les premiers \(p\le\sqrt n\)</td></tr><tr><td>PGCD</td><td>facteurs premiers communs, plus petit exposant</td></tr><tr><td>PPCM</td><td>tous les facteurs premiers, plus grand exposant</td></tr><tr><td>Relation</td><td>\(\operatorname{pgcd}(a;b)\times\operatorname{ppcm}(a;b)=a\times b\)</td></tr><tr><td>Premiers entre eux</td><td>\(\operatorname{pgcd}(a;b)=1\)</td></tr><tr><td>Division euclidienne</td><td>\(a=bq+r\) avec \(0\le r&lt;b\)</td></tr></tbody></table></div>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}

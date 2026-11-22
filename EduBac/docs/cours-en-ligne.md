@@ -28,6 +28,12 @@ générées depuis les fichiers LaTeX de l'enseignant (figures TikZ/pgfplots/tkz
 le PDF d'origine est dans le dossier `Cours` de chaque leçon. Un bloc trop haut se coupe entre deux
 pages (listes, tableaux ligne par ligne avec en-tête répété).
 
+Tronc commun scientifique (`TCS`) : les 15 leçons (01 à 15), générées de la même façon depuis les
+fichiers `TC_*.tex` ; le PDF d'origine (`TC_*.pdf`) est dans le dossier `Cours` de chaque leçon. Les
+numéros suivent l'ordre du site (pas le « Leçon N » des PDF). Le volume horaire de chaque leçon
+(130 h au total) est dans `education/data/repartition_horaire.json` (entrée `TCS`) : c'est une
+**proposition à valider**, aucun document officiel n'ayant été fourni pour ce niveau.
+
 ## Livre 3D
 
 Le fichier `.livre.json` décrit une « double page » par partie du cours :

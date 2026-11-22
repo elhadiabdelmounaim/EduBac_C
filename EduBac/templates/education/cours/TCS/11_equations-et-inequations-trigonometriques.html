@@ -1,0 +1,223 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : Tronc commun scientifique — Calcul trigonométrique (2) (chapitre 11, ).
+Généré depuis TC_Calcul_trigonometrique_2.tex (le PDF d'origine est dans le dossier Cours de la leçon, media/lessons/TCS/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < », « > » et « & » sont écrits &lt;, &gt; et &amp;.
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">Tronc commun scientifique</span>
+        <span class="chip or">Chapitre 11</span>
+        <span class="chip">Semestre 2</span>
+      </div>
+      <h1 id="cours-titre">Calcul trigonométrique (2)</h1>
+      <p class="sous-titre">Volume horaire : 8 heures</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectif"><strong>Contenus</strong>
+<ul>
+  <li>Équations \(\cos x=a\), \(\sin x=a\), \(\tan x=a\).</li>
+  <li>Inéquations trigonométriques sur un intervalle.</li>
+  <li>Angle inscrit, angle au centre ; quadrilatère inscriptible.</li>
+  <li>Aire d'un triangle ; loi des sinus.</li>
+</ul>
+  </div>
+  <div class="cadre objectif"><strong>Capacités attendues</strong>
+<ul>
+  <li>Résoudre une équation trigonométrique dans \(\mathbb{R}\) puis dans un intervalle.</li>
+  <li>Résoudre une inéquation à l'aide du cercle trigonométrique.</li>
+  <li>Utiliser les angles inscrits.</li>
+  <li>Calculer aires, longueurs et rayon du cercle circonscrit.</li>
+</ul>
+  </div>
+
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Équations trigonométriques fondamentales">
+  <h2><span class="num">I</span><span class="titre">Équations trigonométriques fondamentales</span></h2>
+  <div class="bloc act"><div class="tag">Activité 1</div>
+<div class="avec-fig">
+<div>
+<p>Sur le cercle trigonométrique, placer les points \(M\) dont l'abscisse vaut \(\dfrac12\), puis ceux dont l'ordonnée vaut \(\dfrac12\).<br> En déduire les réels \(x\in]-\pi;\pi]\) tels que \(\cos x=\dfrac12\), puis tels que \(\sin x=\dfrac12\).<br> Peut-on trouver un réel \(x\) tel que \(\cos x=\dfrac32\) ?</p>
+</div>
+<figure class="fig"><svg viewBox="-58.8 -58.8 117.6 117.6" role="img" aria-label="Figure"><path d="M-52.8 -0.0 L52.8 -0.0 M0.0 52.8 L0.0 -52.8" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="0.0" cy="-0.0" r="44.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M22.0 50.6 L22.0 -50.6" fill="none" stroke="var(--fig-accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M-50.6 -22.0 L50.6 -22.0" fill="none" stroke="var(--meth)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="25.5" y="11.5" text-anchor="start" style="font-size:10.0px">1/2</text><text x="-3.5" y="-25.5" text-anchor="end" style="font-size:10.0px">1/2</text></svg></figure>
+</div>
+  </div>
+  <h3><span class="n">I.1</span>Équations de la forme \(\cos x=a\)</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soit \(a\in\mathbb{R}\).</p>
+<ul>
+  <li>Si \(|a|&gt;1\), l'équation \(\cos x=a\) n'admet aucune solution dans \(\mathbb{R}\).</li>
+  <li>Si \(|a|\le1\), il existe un réel \(\alpha\) tel que \(\cos\alpha=a\), et :
+\[ \cos x=a\iff\cos x=\cos\alpha\iff x=\alpha+2k\pi\ \ \text{ou}\ \ x=-\alpha+2k\pi\qquad(k\in\mathbb{Z}). \]</li>
+</ul>
+  </div>
+  <h3><span class="n">I.2</span>Équations de la forme \(\sin x=a\)</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soit \(a\in\mathbb{R}\).</p>
+<ul>
+  <li>Si \(|a|&gt;1\), l'équation \(\sin x=a\) n'admet aucune solution dans \(\mathbb{R}\).</li>
+  <li>Si \(|a|\le1\), il existe un réel \(\alpha\) tel que \(\sin\alpha=a\), et :
+\[ \sin x=a\iff\sin x=\sin\alpha\iff x=\alpha+2k\pi\ \ \text{ou}\ \ x=\pi-\alpha+2k\pi\qquad(k\in\mathbb{Z}). \]</li>
+</ul>
+  </div>
+  <h3><span class="n">I.3</span>Équations de la forme \(\tan x=a\)</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soit \(a\in\mathbb{R}\). Il existe un réel \(\alpha\in\left]-\frac\pi2;\frac\pi2\right[\) tel que \(\tan\alpha=a\), et, pour \(x\neq\frac\pi2+k\pi\) :</p>
+\[ \tan x=a\iff x=\alpha+k\pi\qquad(k\in\mathbb{Z}). \]
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Résoudre dans un intervalle \(I\)</div>
+<ol>
+  <li>On écrit \(a\) comme le cosinus (sinus, tangente) d'un angle usuel \(\alpha\) et on résout dans \(\mathbb{R}\).</li>
+  <li>Pour chaque famille \(x=x_0+2k\pi\), on encadre : \(x_0+2k\pi\in I\), ce qui donne les valeurs entières de \(k\).</li>
+  <li>On remplace \(k\) par ces valeurs et on regroupe les solutions.</li>
+</ol>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>\(\cos x=\dfrac12=\cos\dfrac\pi3\iff x=\dfrac\pi3+2k\pi\) ou \(x=-\dfrac\pi3+2k\pi\). Dans \([0;2\pi]\) : \(S=\left\{\dfrac\pi3\,;\,\dfrac{5\pi}3\right\}\).</li>
+  <li>\(\sin x=\dfrac12=\sin\dfrac\pi6\iff x=\dfrac\pi6+2k\pi\) ou \(x=\dfrac{5\pi}6+2k\pi\). Dans \(]-\pi;\pi]\) : \(S=\left\{\dfrac\pi6\,;\,\dfrac{5\pi}6\right\}\).</li>
+  <li>\(\tan x=\sqrt3=\tan\dfrac\pi3\iff x=\dfrac\pi3+k\pi\). Dans \(]-\pi;\pi]\) : \(S=\left\{-\dfrac{2\pi}3\,;\,\dfrac\pi3\right\}\).</li>
+  <li>Dans \(I=[-\pi;3\pi]\) : \(2\cos x+\sqrt3=0\iff\cos x=-\dfrac{\sqrt3}2=\cos\dfrac{5\pi}6\iff x=\dfrac{5\pi}6+2k\pi\) ou \(x=-\dfrac{5\pi}6+2k\pi\).
+\[\begin{aligned}
+  -\pi\le\frac{5\pi}6+2k\pi\le3\pi&amp;\iff-\frac{11}{12}\le k\le\frac{13}{12}\iff k\in\{0\,;\,1\}\\
+  -\pi\le-\frac{5\pi}6+2k\pi\le3\pi&amp;\iff-\frac1{12}\le k\le\frac{23}{12}\iff k\in\{0\,;\,1\}
+  \end{aligned}\]
+Donc \(S=\left\{-\dfrac{5\pi}6\,;\,\dfrac{5\pi}6\,;\,\dfrac{7\pi}6\,;\,\dfrac{17\pi}6\right\}\).</li>
+</ul>
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Inéquations trigonométriques">
+  <h2><span class="num">II</span><span class="titre">Inéquations trigonométriques</span></h2>
+  <div class="bloc meth"><div class="tag">Méthode — Résoudre une inéquation sur un intervalle</div>
+<ol>
+  <li>On résout d'abord l'équation associée dans l'intervalle.</li>
+  <li>On place les solutions sur le cercle trigonométrique et on repère l'arc des points \(M(x)\) dont l'abscisse (pour \(\cos\)) ou l'ordonnée (pour \(\sin\)) vérifie l'inégalité.</li>
+  <li>On lit cet arc en parcourant l'intervalle dans le sens direct.</li>
+</ol>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<div class="avec-fig">
+<div>
+<ul>
+  <li>Dans \([0;2\pi]\) : \(\cos x\le\dfrac12\iff x\in\left[\dfrac\pi3;\dfrac{5\pi}3\right]\) (arc en couleur : abscisse \(\le\frac12\)).</li>
+  <li>Dans \([-\pi;\pi]\) : \(\sin x\le\dfrac12\iff x\in\left[-\pi;\dfrac\pi6\right]\cup\left[\dfrac{5\pi}6;\pi\right]\).</li>
+  <li>Dans \([-\pi;\pi]\), \(\tan x\) n'est pas définie en \(\pm\frac\pi2\) et :<br> \(\tan x\le\sqrt3\iff x\in\left[-\pi;-\dfrac{2\pi}3\right]\cup\left]-\dfrac\pi2;\dfrac\pi3\right]\cup\left]\dfrac\pi2;\pi\right]\).</li>
+</ul>
+</div>
+<figure class="fig"><svg viewBox="-68.5 -68.5 137.0 137.0" role="img" aria-label="Figure"><path d="M25.0 -43.3" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M25.0 43.3" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-62.5 -0.0 L62.5 -0.0 M0.0 62.5 L0.0 -62.5" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="0.0" cy="-0.0" r="50.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.40"/><path d="M0.0 -0.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.40"/><path d="M25.0 -43.3 A50.0 50.0 0 1 0 25.0 43.3" fill="none" stroke="var(--fig-accent)" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M25.0 55.0 L25.0 -55.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><circle cx="25.0" cy="-43.3" r="1.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="28.5" y="-46.8" text-anchor="start" style="font-size:11.5px">π/3</text><circle cx="25.0" cy="43.3" r="1.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="28.5" y="56.0" text-anchor="start" style="font-size:11.5px">5π/3</text><text x="28.5" y="11.5" text-anchor="start" style="font-size:10.0px">1/2</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+<p>Résoudre dans l'intervalle \(I\) les équations et inéquations suivantes :</p>
+<ol>
+  <li>\(\cos x=\dfrac{\sqrt2}2\) et \(\cos x&lt;\dfrac{\sqrt2}2\), avec \(I=[-\pi;\pi]\).</li>
+  <li>\(\sin x=\dfrac{\sqrt2}2\) et \(\sin x&lt;\dfrac{\sqrt2}2\), avec \(I=[0;2\pi]\).</li>
+  <li>\(2\sin x+\sqrt3=0\) et \(2\sin x+\sqrt3\ge0\), avec \(I=[-2\pi;\pi]\).</li>
+  <li>\(\tan x=1\) et \(\tan x&lt;1\), avec \(I=[0;2\pi]\).</li>
+  <li>\(\tan\left(x+\dfrac\pi3\right)+\sqrt3=0\), avec \(I=[-2\pi;\pi]\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Angles inscrits – Quadrilatères inscriptibles">
+  <h2><span class="num">III</span><span class="titre">Angles inscrits – Quadrilatères inscriptibles</span></h2>
+  <h3><span class="n">III.1</span>Angle inscrit – Angle au centre</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+<div class="avec-fig">
+<div>
+<p>Soit \((\mathcal C)\) un cercle de centre \(O\), \([AB]\) une corde de \((\mathcal C)\) et \(M\) un point de \((\mathcal C)\) distinct de \(A\) et \(B\).</p>
+<ul>
+  <li>L'angle \(\widehat{AMB}\) est un <strong>angle inscrit</strong> interceptant l'arc \(\overset{\frown}{AB}\) (celui qui ne contient pas \(M\)).</li>
+  <li>L'angle \(\widehat{AOB}\) est l'<strong>angle au centre</strong> interceptant le même arc.</li>
+</ul>
+</div>
+<figure class="fig"><svg viewBox="-55.7 -52.0 111.3 118.9" role="img" aria-label="Figure"><path d="M0.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="0.0" cy="-0.0" r="46.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M-39.8 -23.0 A46.0 46.0 0 0 1 39.8 -23.0" fill="none" stroke="var(--fig-accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M-39.8 -23.0 L-15.7 43.2 L39.8 -23.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-39.8 -23.0 L0.0 -0.0 L39.8 -23.0" fill="none" stroke="var(--meth)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="0.0" cy="-0.0" r="1.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="0.0" y="14.2" text-anchor="middle" style="font-size:11.5px">O</text><text x="-43.3" y="-26.5" text-anchor="end" style="font-size:11.5px">A</text><text x="43.3" y="-26.5" text-anchor="start" style="font-size:11.5px">B</text><text x="-15.7" y="57.4" text-anchor="middle" style="font-size:11.5px">M</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<ul>
+  <li>La mesure d'un angle inscrit est égale à la moitié de celle de l'angle au centre qui intercepte le même arc : \(\widehat{AOB}=2\,\widehat{AMB}\).</li>
+  <li>Deux angles inscrits qui interceptent le <strong>même arc</strong> sont égaux ; deux angles inscrits interceptant la même corde, avec les sommets de part et d'autre de cette corde, sont <strong>supplémentaires</strong>.</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 2</div>
+<p>Soit \((\mathcal C)\) un cercle de diamètre \([AB]\) et \(C\) un point de \((\mathcal C)\) distinct de \(A\) et \(B\). Montrer, à l'aide de l'angle au centre, que le triangle \(ABC\) est rectangle en \(C\).</p>
+  </div>
+  <h3><span class="n">III.2</span>Quadrilatères inscriptibles</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Un <strong>quadrilatère inscriptible</strong> est un quadrilatère dont les sommets appartiennent à un même cercle (le cercle <strong>circonscrit</strong>) ; ses sommets sont dits <strong>cocycliques</strong>.</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<div class="avec-fig">
+<div>
+<p>Soit \(ABCD\) un quadrilatère convexe.<br> \(ABCD\) est inscriptible \(\iff\) ses angles opposés sont supplémentaires :</p>
+\[ \widehat{BAD}+\widehat{BCD}=\pi. \]
+<p>De même, si \(A\) et \(D\) sont du même côté de la droite \((BC)\) : \(A\), \(B\), \(C\), \(D\) sont cocycliques \(\iff\widehat{BAC}=\widehat{BDC}\).</p>
+</div>
+<figure class="fig"><svg viewBox="-58.7 -59.1 108.7 119.4" role="img" aria-label="Figure"><circle cx="0.0" cy="-0.0" r="44.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M-41.3 -15.0 L-22.0 38.1 L33.7 28.3 L22.0 -38.1 Z" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><text x="-46.3" y="-11.0" text-anchor="end" style="font-size:11.5px">A</text><text x="-25.5" y="50.8" text-anchor="end" style="font-size:11.5px">B</text><text x="37.2" y="41.0" text-anchor="start" style="font-size:11.5px">C</text><text x="25.5" y="-41.6" text-anchor="start" style="font-size:11.5px">D</text></svg></figure>
+</div>
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Relations métriques dans un triangle">
+  <h2><span class="num">IV</span><span class="titre">Relations métriques dans un triangle</span></h2>
+  <h3><span class="n">IV.1</span>Aire d'un triangle</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<div class="avec-fig">
+<div>
+<p>Soit \(ABC\) un triangle d'aire \(S\). On pose \(a=BC\), \(b=AC\) et \(c=AB\). Alors :</p>
+\[ S=\frac12\,ab\sin\widehat C=\frac12\,ac\sin\widehat B=\frac12\,bc\sin\widehat A. \]
+</div>
+<figure class="fig"><svg viewBox="-17.3 -92.9 162.6 116.6" role="img" aria-label="Figure"><path d="M41.6 -70.4 L0.0 -0.0 L128.0 -0.0 Z" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M41.6 -70.4 L41.6 -0.0" fill="none" stroke="var(--fig-accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M41.6 -0.0 L48.0 -0.0 L48.0 -6.4 L41.6 -6.4 Z" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="41.6" y="-75.4" text-anchor="middle" style="font-size:11.5px">A</text><text x="-5.0" y="4.0" text-anchor="end" style="font-size:11.5px">B</text><text x="133.0" y="4.0" text-anchor="start" style="font-size:11.5px">C</text><text x="41.6" y="14.2" text-anchor="middle" style="font-size:11.5px">H</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc ex"><div class="tag">Démonstration</div>
+<p>Soit \(H\) le projeté orthogonal de \(A\) sur \((BC)\). On a \(S=\dfrac12\,BC\times AH\). Dans le triangle \(AHC\) rectangle en \(H\) : \(\sin\widehat C=\dfrac{AH}{AC}\), donc \(AH=b\sin\widehat C\) et \(S=\dfrac12\,ab\sin\widehat C\). On procède de même pour les deux autres égalités.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>L'aire d'un triangle équilatéral de côté \(3\) est \(S=\dfrac12\times3\times3\times\sin\dfrac\pi3=\dfrac92\times\dfrac{\sqrt3}2=\dfrac{9\sqrt3}4\).</p>
+  </div>
+  <h3><span class="n">IV.2</span>Loi des sinus – Cercles circonscrit et inscrit</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soit \(ABC\) un triangle, \(R\) le rayon de son cercle circonscrit, \(r\) le rayon de son cercle inscrit et \(p=a+b+c\) son périmètre.</p>
+\[ \frac a{\sin\widehat A}=\frac b{\sin\widehat B}=\frac c{\sin\widehat C}=2R \qquad\text{et}\qquad S=\frac12\,p\,r. \]
+  </div>
+  <div class="bloc ex"><div class="tag">Démonstration de \(S=\frac12pr\)</div>
+<p>Soit \(I\) le centre du cercle inscrit. \(S=S_{IBC}+S_{IAC}+S_{IAB}=\dfrac12\,r\times a+\dfrac12\,r\times b+\dfrac12\,r\times c=\dfrac12\,r(a+b+c)=\dfrac12\,pr\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Dans un triangle \(ABC\) tel que \(b=AC=6\), \(\widehat B=\dfrac\pi3\) et \(\widehat C=\dfrac\pi4\) :</p>
+\[ c=\frac{b\sin\widehat C}{\sin\widehat B}=\frac{6\times\frac{\sqrt2}2}{\frac{\sqrt3}2}=\frac{6\sqrt2}{\sqrt3}=2\sqrt6 \qquad\text{et}\qquad R=\frac b{2\sin\widehat B}=\frac6{\sqrt3}=2\sqrt3. \]
+  </div>
+  <div class="bloc app"><div class="tag">Application 3</div>
+<p>Soit \(ABC\) un triangle tel que \(AB=4\), \(AC=6\) et \(\widehat{BAC}=\dfrac{2\pi}3\).</p>
+<ol>
+  <li>Calculer l'aire \(S\) du triangle \(ABC\).</li>
+  <li>Sachant que \(BC=2\sqrt{19}\), calculer le rayon \(R\) du cercle circonscrit, puis le rayon \(r\) du cercle inscrit.</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ V ============================ -->
+<section class="chap" id="s5" data-toc="Synthèse">
+  <h2><span class="num">V</span><span class="titre">Synthèse</span></h2>
+  <div class="bloc ret"><div class="tag">À retenir</div>
+<div class="tableau"><table><thead><tr><th scope="col">Notion</th><th scope="col">À retenir</th></tr></thead><tbody><tr><td>\(\cos x=\cos\alpha\)</td><td>\(x=\alpha+2k\pi\) ou \(x=-\alpha+2k\pi\)</td></tr><tr><td>\(\sin x=\sin\alpha\)</td><td>\(x=\alpha+2k\pi\) ou \(x=\pi-\alpha+2k\pi\)</td></tr><tr><td>\(\tan x=\tan\alpha\)</td><td>\(x=\alpha+k\pi\)</td></tr><tr><td>Inéquations</td><td>lecture d'un arc sur le cercle trigonométrique</td></tr><tr><td>Angle inscrit</td><td>\(\widehat{AOB}=2\widehat{AMB}\) ; inscriptible \(\iff\) angles opposés supplémentaires</td></tr><tr><td>Triangle</td><td>\(S=\frac12ab\sin\widehat C\) ; \(\frac a{\sin\widehat A}=2R\) ; \(S=\frac12pr\)</td></tr></tbody></table></div>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}

@@ -1,0 +1,205 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : Tronc commun scientifique — La droite dans le plan (chapitre 8, ).
+Généré depuis TC_La_droite_dans_le_plan.tex (le PDF d'origine est dans le dossier Cours de la leçon, media/lessons/TCS/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < », « > » et « & » sont écrits &lt;, &gt; et &amp;.
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">Tronc commun scientifique</span>
+        <span class="chip or">Chapitre 8</span>
+        <span class="chip">Semestre 1</span>
+      </div>
+      <h1 id="cours-titre">La droite dans le plan</h1>
+      <p class="sous-titre">Volume horaire : 10 heures</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectif"><strong>Contenus</strong>
+<ul>
+  <li>Repère ; coordonnées d'un point, d'un vecteur.</li>
+  <li>Milieu ; distance (repère orthonormé).</li>
+  <li>Déterminant ; colinéarité ; alignement.</li>
+  <li>Représentation paramétrique ; équation cartésienne ; équation réduite.</li>
+  <li>Positions relatives de deux droites.</li>
+</ul>
+  </div>
+  <div class="cadre objectif"><strong>Capacités attendues</strong>
+<ul>
+  <li>Calculer coordonnées, milieu et distance.</li>
+  <li>Démontrer une colinéarité ou un alignement à l'aide du déterminant.</li>
+  <li>Déterminer une équation d'une droite.</li>
+  <li>Étudier la position relative de deux droites et calculer leur point d'intersection.</li>
+</ul>
+  </div>
+
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Repère du plan – Coordonnées">
+  <h2><span class="num">I</span><span class="titre">Repère du plan – Coordonnées</span></h2>
+  <h3><span class="n">I.1</span>Repère – Coordonnées d'un point et d'un vecteur</h3>
+  <div class="bloc act"><div class="tag">Activité 1</div>
+<p>Dans un repère \((O;\vec\imath,\vec\jmath)\), on considère les points \(A(2\,;\,1)\), \(B(-1\,;\,3)\) et \(C(4\,;\,-1)\).</p>
+<ol>
+  <li>Placer les points \(A\), \(B\) et \(C\).</li>
+  <li>Lire les coordonnées des vecteurs \(\overrightarrow{AB}\), \(\overrightarrow{AC}\), \(\overrightarrow{BC}\), puis calculer celles de \(\overrightarrow{AB}+\overrightarrow{AC}\) et de \(2\overrightarrow{BC}\).</li>
+  <li>Déterminer les coordonnées du milieu \(I\) du segment \([AC]\).</li>
+</ol>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Trois points \(O\), \(I\), \(J\) non alignés définissent un <strong>repère</strong> \((O;I,J)\) du plan. En posant \(\vec\imath=\overrightarrow{OI}\) et \(\vec\jmath=\overrightarrow{OJ}\), on le note aussi \((O;\vec\imath,\vec\jmath)\) ; le couple \((\vec\imath,\vec\jmath)\) est une <strong>base</strong>.<br> \(O\) est l'<strong>origine</strong>, \((OI)\) l'<strong>axe des abscisses</strong> et \((OJ)\) l'<strong>axe des ordonnées</strong>.</p>
+<figure class="fig"><svg viewBox="-25.2 -76.4 389.6 126.4" role="img" aria-label="Figure"><defs><marker id="mg1-438" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker><marker id="mg1-729" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fig-trait)"/></marker></defs><path d="M-19.2 9.6 L70.4 -35.2" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-438)"/><path d="M-9.6 19.2 L28.8 -70.4" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-438)"/><path d="M0.0 -0.0 L38.4 -19.2" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-729)"/><text x="41.9" y="-6.5" text-anchor="start" style="font-size:11.5px;fill:var(--fig-trait)">⃗</text><path d="M0.0 -0.0 L14.4 -38.4" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-729)"/><text x="9.4" y="-34.4" text-anchor="end" style="font-size:11.5px;fill:var(--fig-trait)">⃗</text><text x="0.0" y="17.4" text-anchor="middle" style="font-size:11.5px">O</text><text x="25.6" y="39.9" text-anchor="middle" style="font-size:13.5px">quelconque</text><path d="M124.8 -0.0 L214.4 -0.0" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-438)"/><path d="M144.0 19.2 L144.0 -70.4" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-438)"/><path d="M144.0 -0.0 L188.8 -0.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-729)"/><text x="188.8" y="14.2" text-anchor="middle" style="font-size:11.5px;fill:var(--fig-trait)">⃗</text><path d="M144.0 -0.0 L144.0 -25.6" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-729)"/><text x="139.0" y="-21.6" text-anchor="end" style="font-size:11.5px;fill:var(--fig-trait)">⃗</text><path d="M144.0 -0.0 L150.4 -0.0 L150.4 -6.4 L144.0 -6.4 Z" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="140.5" y="12.7" text-anchor="end" style="font-size:11.5px">O</text><text x="169.6" y="39.9" text-anchor="middle" style="font-size:13.5px">orthogonal</text><path d="M268.8 -0.0 L358.4 -0.0" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-438)"/><path d="M288.0 19.2 L288.0 -70.4" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-438)"/><path d="M288.0 -0.0 L320.0 -0.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-729)"/><text x="320.0" y="14.2" text-anchor="middle" style="font-size:11.5px;fill:var(--fig-trait)">⃗</text><path d="M288.0 -0.0 L288.0 -32.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-729)"/><text x="283.0" y="-28.0" text-anchor="end" style="font-size:11.5px;fill:var(--fig-trait)">⃗</text><path d="M288.0 -0.0 L294.4 -0.0 L294.4 -6.4 L288.0 -6.4 Z" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="284.5" y="12.7" text-anchor="end" style="font-size:11.5px">O</text><text x="313.6" y="39.9" text-anchor="middle" style="font-size:13.5px">orthonormé</text></svg></figure>
+<p>Le repère est <strong>orthogonal</strong> si \((OI)\perp(OJ)\), et <strong>orthonormé</strong> si de plus \(OI=OJ=1\).</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soit \((O;\vec\imath,\vec\jmath)\) un repère du plan.</p>
+<ul>
+  <li>Pour tout point \(M\), il existe un unique couple \((x\,;\,y)\) de réels tel que \(\overrightarrow{OM}=x\vec\imath+y\vec\jmath\) : ce sont les <strong>coordonnées</strong> de \(M\) ; on note \(M(x\,;\,y)\).</li>
+  <li>Pour tout vecteur \(\vec u\), il existe un unique couple \((x\,;\,y)\) tel que \(\vec u=x\vec\imath+y\vec\jmath\) : on note \(\vec u(x\,;\,y)\) ou \(\vec u\begin{pmatrix}x\\y\end{pmatrix}\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soit \(ABCD\) un parallélogramme de centre \(O\). Dans le repère \((A;\overrightarrow{AB},\overrightarrow{AD})\) : \(A(0\,;\,0)\), \(B(1\,;\,0)\), \(D(0\,;\,1)\), \(C(1\,;\,1)\) car \(\overrightarrow{AC}=\overrightarrow{AB}+\overrightarrow{AD}\), et \(O\left(\frac12\,;\,\frac12\right)\) car \(\overrightarrow{AO}=\frac12\overrightarrow{AC}\).</p>
+  </div>
+  <h3><span class="n">I.2</span>Calculs dans un repère</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(A(x_A\,;\,y_A)\), \(B(x_B\,;\,y_B)\), \(\vec u(x\,;\,y)\), \(\vec v(x'\,;\,y')\) et \(k\in\mathbb{R}\).</p>
+<ul>
+  <li>\(\overrightarrow{AB}(x_B-x_A\,;\,y_B-y_A)\) ; \(\vec u+\vec v\,(x+x'\,;\,y+y')\) ; \(k\vec u\,(kx\,;\,ky)\) ; \(\vec u=\vec v\iff x=x'\) et \(y=y'\).</li>
+  <li>Le milieu \(I\) de \([AB]\) a pour coordonnées \(\left(\dfrac{x_A+x_B}{2}\,;\,\dfrac{y_A+y_B}{2}\right)\).</li>
+  <li>Si le repère est <strong>orthonormé</strong> : \(\|\vec u\|=\sqrt{x^2+y^2}\) et \(AB=\sqrt{(x_B-x_A)^2+(y_B-y_A)^2}\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Avec les points de l'activité : \(\overrightarrow{AB}(-3\,;\,2)\), \(\overrightarrow{AC}(2\,;\,-2)\), \(\overrightarrow{BC}(5\,;\,-4)\), donc \(\overrightarrow{AB}+\overrightarrow{AC}\,(-1\,;\,0)\) et \(2\overrightarrow{BC}\,(10\,;\,-8)\). Le milieu de \([AC]\) est \(I(3\,;\,0)\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+<p>Dans un repère orthonormé, on donne \(A(3\,;\,3)\), \(B(1\,;\,1)\) et \(C(4\,;\,-2)\).</p>
+<ol>
+  <li>Calculer les distances \(AB\), \(BC\) et \(AC\). En déduire la nature du triangle \(ABC\).</li>
+  <li>Déterminer les coordonnées du point \(D\) tel que \(ABCD\) soit un parallélogramme, puis celles de son centre.</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Déterminant – Colinéarité">
+  <h2><span class="num">II</span><span class="titre">Déterminant – Colinéarité</span></h2>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soient \(\vec u(a\,;\,b)\) et \(\vec v(a'\,;\,b')\) deux vecteurs. Le <strong>déterminant</strong> de \(\vec u\) et \(\vec v\) (dans cet ordre) est le réel :</p>
+\[ \det(\vec u,\vec v)=\begin{vmatrix} a &amp; a'\\ b &amp; b'\end{vmatrix}=ab'-a'b. \]
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Pour \(\vec u(2\,;\,3)\) et \(\vec v(-4\,;\,5)\) : \(\det(\vec u,\vec v)=\begin{vmatrix}2 &amp; -4\\ 3 &amp; 5\end{vmatrix}=2\times5-(-4)\times3=22\).</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<ul>
+  <li>\(\vec u\) et \(\vec v\) sont <strong>colinéaires</strong> \(\iff\det(\vec u,\vec v)=0\).</li>
+  <li>Les points \(A\), \(B\), \(C\) sont <strong>alignés</strong> \(\iff\det(\overrightarrow{AB},\overrightarrow{AC})=0\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(A(1\,;\,4)\), \(B(-1\,;\,0)\), \(C(3\,;\,8)\) : \(\overrightarrow{AB}(-2\,;\,-4)\), \(\overrightarrow{AC}(2\,;\,4)\) et \(\det(\overrightarrow{AB},\overrightarrow{AC})=(-2)\times4-2\times(-4)=0\) : \(A\), \(B\), \(C\) sont alignés.</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 2</div>
+<ol>
+  <li>Soit \(m\in\mathbb{R}\), \(\vec u(m-1\,;\,2)\) et \(\vec v(3\,;\,m)\). Déterminer les valeurs de \(m\) pour lesquelles \(\vec u\) et \(\vec v\) sont colinéaires.</li>
+  <li>Soient \(A(2\,;\,3)\), \(B(3\,;\,5)\) et \(C(m-1\,;\,3m-2)\). Déterminer \(m\) pour que \(C\) appartienne à la droite \((AB)\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Équations d'une droite">
+  <h2><span class="num">III</span><span class="titre">Équations d'une droite</span></h2>
+  <h3><span class="n">III.1</span>Représentation paramétrique</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+<div class="avec-fig">
+<div>
+<p>Soit \(A\) un point et \(\vec u\) un vecteur non nul. La droite \(D(A,\vec u)\) passant par \(A\) et de <strong>vecteur directeur</strong> \(\vec u\) est l'ensemble des points \(M\) tels que \(\overrightarrow{AM}=t\vec u\), \(t\in\mathbb{R}\).<br> Si \(A(x_A\,;\,y_A)\) et \(\vec u(a\,;\,b)\), le système</p>
+\[ \begin{cases} x=x_A+at\\ y=y_A+bt\end{cases}\qquad(t\in\mathbb{R}) \]
+<p>est une <strong>représentation paramétrique</strong> de \(D(A,\vec u)\).</p>
+</div>
+<figure class="fig"><svg viewBox="-27.6 -76.0 183.3 103.8" role="img" aria-label="Figure"><defs><marker id="mg2-895" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fig-accent)"/></marker></defs><path d="M0.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M93.6 -46.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-21.6 10.8 L122.4 -61.2" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><text x="127.4" y="-56.5" text-anchor="start" style="font-size:13.5px;fill:var(--fig-trait)">(D)</text><path d="M0.0 -0.0 L36.0 -18.0" fill="none" stroke="var(--fig-accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg2-895)"/><text x="36.0" y="-23.0" text-anchor="middle" style="font-size:13.5px;fill:var(--fig-accent)">u⃗</text><circle cx="0.0" cy="-0.0" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="0.0" y="15.8" text-anchor="middle" style="font-size:13.5px">A</text><circle cx="93.6" cy="-46.8" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="97.1" y="-32.5" text-anchor="start" style="font-size:13.5px">M</text><text x="57.6" y="18.4" text-anchor="middle" style="font-size:11.5px;fill:var(--doux)"><tspan text-decoration="overline">AM</tspan>=tu⃗</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>La droite passant par \(A(1\,;\,-2)\) et de vecteur directeur \(\vec u(2\,;\,3)\) : \(\begin{cases}x=1+2t\\y=-2+3t\end{cases}\) \((t\in\mathbb{R})\).<br> Le point \(B(5\,;\,4)\) lui appartient (\(t=2\)) ; le point \(C(3\,;\,2)\) non : \(3=1+2t\) donne \(t=1\), mais alors \(y=1\neq2\).</p>
+  </div>
+  <h3><span class="n">III.2</span>Équation cartésienne</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<ul>
+  <li>Toute droite du plan admet une équation de la forme \(ax+by+c=0\), avec \((a\,;\,b)\neq(0\,;\,0)\) : c'est une <strong>équation cartésienne</strong>. Le vecteur \(\vec u(-b\,;\,a)\) est un vecteur directeur.</li>
+  <li>Réciproquement, l'ensemble des points \(M(x\,;\,y)\) tels que \(ax+by+c=0\), avec \((a\,;\,b)\neq(0\,;\,0)\), est une droite.</li>
+</ul>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Déterminer une équation cartésienne de \(D(A,\vec u)\)</div>
+<p>\(M(x\,;\,y)\in D(A,\vec u)\iff\overrightarrow{AM}\) et \(\vec u\) colinéaires \(\iff\det(\overrightarrow{AM},\vec u)=0\), puis on développe.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p><strong>Droite \((AB)\) avec \(A(2\,;\,-1)\) et \(B(-1\,;\,3)\) :</strong> \(\overrightarrow{AB}(-3\,;\,4)\) et, pour \(M(x\,;\,y)\), \(\overrightarrow{AM}(x-2\,;\,y+1)\).</p>
+\[ M\in(AB)\iff\begin{vmatrix} x-2 &amp; -3\\ y+1 &amp; 4\end{vmatrix}=0\iff4(x-2)+3(y+1)=0\iff4x+3y-5=0. \]
+<p>Vérification : \(4\times2+3\times(-1)-5=0\) et \(4\times(-1)+3\times3-5=0\).<br> <strong>Passage d'une équation cartésienne à une représentation paramétrique :</strong> pour \(2x-y+3=0\), le point \((0\,;\,3)\) appartient à la droite et \(\vec u(1\,;\,2)\) la dirige : \(\begin{cases}x=t\\y=3+2t\end{cases}\) \((t\in\mathbb{R})\).<br> <strong>Passage inverse :</strong> de \(\begin{cases}x=1+2t\\y=-2+3t\end{cases}\) on tire \(t=\dfrac{x-1}{2}\), d'où \(y=-2+\dfrac{3(x-1)}{2}\), soit \(3x-2y-7=0\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 3</div>
+<ol>
+  <li><p>Compléter :</p>
+<div class="tableau"><table><thead><tr><th scope="col">Équation cartésienne</th><th scope="col">Vecteur directeur</th></tr></thead><tbody><tr><td>\(2x+5y+4=0\)</td><td>\(\vec u(\ \cdots\ ;\ \cdots\ )\)</td></tr><tr><td>\(y+3x-2=0\)</td><td>\(\vec u(\ \cdots\ ;\ \cdots\ )\)</td></tr><tr><td>\(\cdots\cdots\cdots=6\)</td><td>\(\vec u(3\,;\,5)\)</td></tr><tr><td>\(x+4=0\)</td><td>\(\vec u(\ \cdots\ ;\ \cdots\ )\)</td></tr></tbody></table></div></li>
+  <li>Donner une équation cartésienne de la droite \(D(A,\vec u)\) avec \(A(-1\,;\,2)\) et \(\vec u(3\,;\,-1)\), puis de la droite \((BC)\) avec \(B(-2\,;\,3)\) et \(C(0\,;\,-4)\).</li>
+  <li>Donner une représentation paramétrique de la droite \((MN)\) avec \(M(-1\,;\,4)\) et \(N(5\,;\,4)\).</li>
+</ol>
+  </div>
+  <h3><span class="n">III.3</span>Équation réduite – Coefficient directeur</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soit \((D):\ ax+by+c=0\).</p>
+<ul>
+  <li>Si \(b\neq0\), \((D)\) admet une <strong>équation réduite</strong> de la forme \(y=mx+p\) : \(m\) est le <strong>coefficient directeur</strong> (ou pente) et \(p\) l'<strong>ordonnée à l'origine</strong> ; \(\vec u(1\,;\,m)\) est un vecteur directeur.</li>
+  <li>Si \(b=0\), \((D)\) est parallèle à l'axe des ordonnées et a une équation de la forme \(x=k\).</li>
+  <li>Si \(A\) et \(B\) sont deux points de \((D)\) avec \(x_A\neq x_B\), alors \(m=\dfrac{y_B-y_A}{x_B-x_A}\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\((AB):\ 4x+3y-5=0\iff y=-\dfrac43x+\dfrac53\) : coefficient directeur \(-\dfrac43\), ce que confirme \(\dfrac{3-(-1)}{-1-2}=-\dfrac43\).</p>
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Positions relatives de deux droites">
+  <h2><span class="num">IV</span><span class="titre">Positions relatives de deux droites</span></h2>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \((D)\) et \((\Delta)\) deux droites de vecteurs directeurs respectifs \(\vec u\) et \(\vec v\).</p>
+<ul>
+  <li>\((D)\parallel(\Delta)\iff\det(\vec u,\vec v)=0\) (elles sont alors strictement parallèles ou confondues).</li>
+  <li>\((D)\) et \((\Delta)\) sont <strong>sécantes</strong> \(\iff\det(\vec u,\vec v)\neq0\) ; leur point d'intersection s'obtient en résolvant le système formé par leurs équations.</li>
+  <li>Avec les équations réduites \(y=mx+p\) et \(y=m'x+p'\) : \((D)\parallel(\Delta)\iff m=m'\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\((D):\ 3x-y+4=0\) et \((\Delta):\ -6x+2y-1=0\) : \(\vec u(1\,;\,3)\), \(\vec v(-2\,;\,-6)\) et \(\det(\vec u,\vec v)=1\times(-6)-(-2)\times3=0\) : les droites sont parallèles. Elles sont strictement parallèles car \(A(0\,;\,4)\in(D)\) mais \(-6\times0+2\times4-1=7\neq0\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 4</div>
+<p>Étudier la position relative de \((D)\) et \((\Delta)\) et déterminer, s'il existe, leur point d'intersection :</p>
+<ol>
+  <li>\((D):\ x+2y-4=0\) et \((\Delta):\ 3x-y-5=0\).</li>
+  <li>\((D):\ 2x+y-7=0\) et \((\Delta):\ \begin{cases}x=t\\y=1+t\end{cases}\) \((t\in\mathbb{R})\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ V ============================ -->
+<section class="chap" id="s5" data-toc="Synthèse">
+  <h2><span class="num">V</span><span class="titre">Synthèse</span></h2>
+  <div class="bloc ret"><div class="tag">À retenir</div>
+<div class="tableau"><table><thead><tr><th scope="col">Notion</th><th scope="col">À retenir</th></tr></thead><tbody><tr><td>Vecteur, milieu</td><td>\(\overrightarrow{AB}(x_B-x_A;y_B-y_A)\) ; \(I\left(\frac{x_A+x_B}2;\frac{y_A+y_B}2\right)\)</td></tr><tr><td>Distance (orthonormé)</td><td>\(AB=\sqrt{(x_B-x_A)^2+(y_B-y_A)^2}\)</td></tr><tr><td>Colinéarité, alignement</td><td>\(\det(\vec u,\vec v)=ab'-a'b=0\) ; \(\det(\overrightarrow{AB},\overrightarrow{AC})=0\)</td></tr><tr><td>Représentation paramétrique</td><td>\(x=x_A+at\), \(y=y_A+bt\) (\(\vec u(a;b)\) directeur)</td></tr><tr><td>Équation cartésienne</td><td>\(ax+by+c=0\), vecteur directeur \(\vec u(-b;a)\)</td></tr><tr><td>Positions relatives</td><td>\(\det(\vec u,\vec v)=0\) : parallèles ; \(\neq0\) : sécantes</td></tr></tbody></table></div>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}

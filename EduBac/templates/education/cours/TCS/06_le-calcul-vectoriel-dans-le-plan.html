@@ -1,0 +1,234 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : Tronc commun scientifique — Calcul vectoriel dans le plan (chapitre 6, ).
+Généré depuis TC_Calcul_vectoriel.tex (le PDF d'origine est dans le dossier Cours de la leçon, media/lessons/TCS/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < », « > » et « & » sont écrits &lt;, &gt; et &amp;.
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">Tronc commun scientifique</span>
+        <span class="chip or">Chapitre 6</span>
+        <span class="chip">Semestre 1</span>
+      </div>
+      <h1 id="cours-titre">Calcul vectoriel dans le plan</h1>
+      <p class="sous-titre">Volume horaire : 6 heures</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectif"><strong>Contenus</strong>
+<ul>
+  <li>Égalité de deux vecteurs ; somme ; relation de Chasles.</li>
+  <li>Multiplication d'un vecteur par un réel.</li>
+  <li>Colinéarité ; points alignés ; droites parallèles.</li>
+  <li>Milieu d'un segment.</li>
+</ul>
+  </div>
+  <div class="cadre objectif"><strong>Capacités attendues</strong>
+<ul>
+  <li>Construire un point défini par une égalité vectorielle.</li>
+  <li>Simplifier une écriture vectorielle (Chasles).</li>
+  <li>Démontrer un alignement ou un parallélisme par le calcul vectoriel.</li>
+  <li>Utiliser la caractérisation vectorielle du milieu.</li>
+</ul>
+  </div>
+
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Égalité de deux vecteurs – Somme de deux vecteurs">
+  <h2><span class="num">I</span><span class="titre">Égalité de deux vecteurs – Somme de deux vecteurs</span></h2>
+  <div class="bloc act"><div class="tag">Activité 1</div>
+<p>Soient \(A\), \(B\), \(C\) et \(D\) quatre points du plan.</p>
+<ol>
+  <li>Construire les points \(M\) et \(N\) tels que \(\overrightarrow{AN}=\overrightarrow{AC}+\overrightarrow{AD}\) et \(\overrightarrow{AM}=\overrightarrow{AB}+\overrightarrow{AD}\).</li>
+  <li>Montrer que \(\overrightarrow{MN}=\overrightarrow{BC}\), puis en déduire la nature du quadrilatère \(MNCB\).</li>
+</ol>
+  </div>
+  <h3><span class="n">I.1</span>Vecteur – Égalité de deux vecteurs</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+<div class="avec-fig">
+<div>
+<p>Un vecteur non nul \(\overrightarrow{AB}\) est caractérisé par :</p>
+<ul>
+  <li>sa <strong>direction</strong> : celle de la droite \((AB)\) ;</li>
+  <li>son <strong>sens</strong> : de \(A\) vers \(B\) ;</li>
+  <li>sa <strong>norme</strong> (longueur) : \(\|\overrightarrow{AB}\|=AB\).</li>
+</ul>
+<p>Deux vecteurs sont <strong>égaux</strong> s'ils ont la même direction, le même sens et la même norme. Le vecteur \(\overrightarrow{AA}\) est le <strong>vecteur nul</strong>, noté \(\vec0\).</p>
+</div>
+<figure class="fig"><svg viewBox="-18.4 -43.6 130.4 129.1" role="img" aria-label="Figure"><defs><marker id="mg1-868" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fig-trait)"/></marker></defs><path d="M0.0 -0.0 L72.0 -28.8" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-868)"/><path d="M21.6 43.2 L93.6 14.4" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-868)"/><path d="M0.0 -0.0 L21.6 43.2 M72.0 -28.8 L93.6 14.4" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="-5.0" y="4.7" text-anchor="end" style="font-size:13.5px">A</text><text x="77.0" y="-24.1" text-anchor="start" style="font-size:13.5px">B</text><text x="16.6" y="47.9" text-anchor="end" style="font-size:13.5px">C</text><text x="98.6" y="19.1" text-anchor="start" style="font-size:13.5px">D</text><text x="46.8" y="76.0" text-anchor="middle" style="font-size:11.5px;fill:var(--doux)"><tspan text-decoration="overline">AB</tspan>=<tspan text-decoration="overline">CD</tspan></text></svg></figure>
+</div>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(A\), \(B\), \(C\) et \(D\) quatre points du plan.</p>
+<ul>
+  <li>\(\overrightarrow{AB}=\overrightarrow{CD}\iff ABDC\) est un <strong>parallélogramme</strong> (attention à l'ordre des lettres).</li>
+  <li>\(\overrightarrow{AB}=\overrightarrow{CD}\iff\) les segments \([AD]\) et \([BC]\) ont le même milieu.</li>
+  <li>L'<strong>opposé</strong> de \(\overrightarrow{AB}\) est \(\overrightarrow{BA}\) : \(-\overrightarrow{AB}=\overrightarrow{BA}\).</li>
+</ul>
+  </div>
+  <h3><span class="n">I.2</span>Somme de deux vecteurs – Relation de Chasles</h3>
+  <div class="bloc prop"><div class="tag">Propriétés</div>
+<div class="avec-fig">
+<div>
+<ul>
+  <li><strong>Relation de Chasles :</strong> pour tous points \(A\), \(B\), \(C\) :
+\[ \overrightarrow{AB}+\overrightarrow{BC}=\overrightarrow{AC}. \]</li>
+  <li><strong>Règle du parallélogramme :</strong>
+\[ \overrightarrow{AB}+\overrightarrow{AC}=\overrightarrow{AD}\iff ABDC \]
+est un parallélogramme.</li>
+  <li>\(\overrightarrow{AB}+\overrightarrow{BA}=\overrightarrow{AA}=\vec0\).</li>
+</ul>
+</div>
+<figure class="fig"><svg viewBox="-16.9 -95.2 163.1 119.6" role="img" aria-label="Figure"><defs><marker id="mg2-579" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fig-accent)"/></marker><marker id="mg2-868" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fig-trait)"/></marker></defs><path d="M98.8 -11.4 L129.2 -72.2 L30.4 -60.8" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M0.0 -0.0 L98.8 -11.4" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg2-868)"/><path d="M0.0 -0.0 L30.4 -60.8" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg2-868)"/><path d="M0.0 -0.0 L129.2 -72.2" fill="none" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg2-579)"/><text x="-3.5" y="14.3" text-anchor="end" style="font-size:13.5px">A</text><text x="102.3" y="2.9" text-anchor="start" style="font-size:13.5px">B</text><text x="26.9" y="-64.3" text-anchor="end" style="font-size:13.5px">C</text><text x="132.7" y="-75.7" text-anchor="start" style="font-size:13.5px">D</text><text x="58.9" y="-39.7" text-anchor="middle" style="font-size:11.5px;fill:var(--fig-accent)"><tspan text-decoration="overline">AB</tspan>+<tspan text-decoration="overline">AC</tspan></text></svg></figure>
+</div>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Simplifier avec la relation de Chasles</div>
+<ul>
+  <li>On remplace chaque « \(-\overrightarrow{XY}\) » par « \(+\overrightarrow{YX}\) ».</li>
+  <li>On réordonne les vecteurs pour que l'<strong>extrémité</strong> de l'un soit l'<strong>origine</strong> du suivant : \(\overrightarrow{A\square}+\overrightarrow{\square B}=\overrightarrow{AB}\).</li>
+  <li>Pour faire apparaître un point \(M\) : \(\overrightarrow{AB}=\overrightarrow{AM}+\overrightarrow{MB}\) (« on insère \(M\) »).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(\vec U=\overrightarrow{AC}-\overrightarrow{BC}+\overrightarrow{BD}-\overrightarrow{AD}=\overrightarrow{AC}+\overrightarrow{CB}+\overrightarrow{BD}+\overrightarrow{DA}=\overrightarrow{AB}+\overrightarrow{BD}+\overrightarrow{DA}=\overrightarrow{AD}+\overrightarrow{DA}=\vec0\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+<ol>
+  <li>Simplifier : \(\vec U=\overrightarrow{BC}-\overrightarrow{AC}-\overrightarrow{BA}+\overrightarrow{AB}\) et \(\vec W=\overrightarrow{MA}-\overrightarrow{MB}+\overrightarrow{CB}-\overrightarrow{CA}\).</li>
+  <li>Soient \(A\), \(B\), \(C\), \(D\) et \(E\) des points du plan. Montrer que : \(\overrightarrow{AC}-\overrightarrow{DB}+\overrightarrow{CE}+\overrightarrow{DA}+\overrightarrow{EB}=\vec0\).</li>
+  <li>Soient \(A\), \(B\), \(C\), \(D\) quatre points. Montrer que \(\overrightarrow{AB}+\overrightarrow{CD}=\overrightarrow{AD}+\overrightarrow{CB}\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Multiplication d'un vecteur par un réel">
+  <h2><span class="num">II</span><span class="titre">Multiplication d'un vecteur par un réel</span></h2>
+  <div class="bloc act"><div class="tag">Activité 2</div>
+<p>Soit \(ABC\) un triangle. Construire les points \(M\), \(N\), \(L\) et \(K\) tels que :</p>
+\[ \overrightarrow{AM}=2\overrightarrow{AB}\ ; \qquad \overrightarrow{BN}=-2\overrightarrow{BC}\ ; \qquad \overrightarrow{AL}=\frac12\overrightarrow{AC}\ ; \qquad \overrightarrow{CK}=\frac23\overrightarrow{CB}. \]
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soient \(\vec u\) un vecteur non nul et \(k\) un réel non nul. Le vecteur \(k\vec u\) est le vecteur :</p>
+<ul>
+  <li>de même <strong>direction</strong> que \(\vec u\) ;</li>
+  <li>de même <strong>sens</strong> que \(\vec u\) si \(k&gt;0\), de <strong>sens contraire</strong> si \(k&lt;0\) ;</li>
+  <li>de <strong>norme</strong> \(\|k\vec u\|=|k|\times\|\vec u\|\).</li>
+</ul>
+<p>Par convention : \(0\cdot\vec u=\vec0\) et \(k\cdot\vec0=\vec0\).</p>
+<figure class="fig"><svg viewBox="-6.0 -47.0 318.0 53.0" role="img" aria-label="Figure"><defs><marker id="mg3-445" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--att)"/></marker><marker id="mg3-579" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fig-accent)"/></marker><marker id="mg3-868" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fig-trait)"/></marker></defs><path d="M0.0 -0.0 L54.0 -18.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg3-868)"/><text x="27.0" y="-14.0" text-anchor="middle" style="font-size:13.5px;fill:var(--fig-trait)">u⃗</text><path d="M90.0 -0.0 L198.0 -36.0" fill="none" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg3-579)"/><text x="144.0" y="-23.0" text-anchor="middle" style="font-size:13.5px;fill:var(--fig-accent)">2u⃗</text><path d="M306.0 -36.0 L225.0 -9.0" fill="none" stroke="var(--att)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg3-445)"/><text x="265.5" y="-27.5" text-anchor="middle" style="font-size:13.5px;fill:var(--att)">−1,5 u⃗</text></svg></figure>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Pour tous vecteurs \(\vec u\), \(\vec v\) et tous réels \(\alpha\), \(\beta\) :</p>
+<ul>
+  <li>\(\alpha(\vec u+\vec v)=\alpha\vec u+\alpha\vec v\)</li>
+  <li>\((\alpha+\beta)\vec u=\alpha\vec u+\beta\vec u\)</li>
+  <li>\(\alpha(\beta\vec u)=(\alpha\beta)\vec u\)</li>
+  <li>\(1\cdot\vec u=\vec u\)</li>
+</ul>
+<ul>
+  <li>\(\alpha\vec u=\vec0\iff\alpha=0\) ou \(\vec u=\vec0\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soit \(ABC\) un triangle et \(D\) le point tel que \(\overrightarrow{BD}=3\overrightarrow{DC}\). Exprimons \(\overrightarrow{BD}\) en fonction de \(\overrightarrow{BC}\) :</p>
+\[ \overrightarrow{BD}=3\overrightarrow{DC}=3\big(\overrightarrow{DB}+\overrightarrow{BC}\big)=-3\overrightarrow{BD}+3\overrightarrow{BC}, \quad\text{donc}\quad 4\overrightarrow{BD}=3\overrightarrow{BC}\quad\text{et}\quad \overrightarrow{BD}=\frac34\overrightarrow{BC}. \]
+<p>Le point \(D\) est donc sur le segment \([BC]\), aux trois quarts en partant de \(B\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 2</div>
+<ol>
+  <li>Simplifier : \(\vec a=3(\vec u-2\vec v)+2(\vec u+4\vec v)\) et \(\vec b=4(2\vec u+\vec v)+2\vec u\). En déduire une relation entre \(\vec a\) et \(\vec b\).</li>
+  <li>Soit \(ABC\) un triangle et \(E\) le point tel que \(2\overrightarrow{EA}+\overrightarrow{EB}=\vec0\). Montrer que \(\overrightarrow{AE}=\dfrac13\overrightarrow{AB}\), puis placer \(E\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Colinéarité – Alignement – Parallélisme">
+  <h2><span class="num">III</span><span class="titre">Colinéarité – Alignement – Parallélisme</span></h2>
+  <div class="bloc act"><div class="tag">Activité 3</div>
+<p>Soit \(ABC\) un triangle. On considère les points \(D\) et \(E\) tels que : \(\overrightarrow{AD}=2\overrightarrow{AB}+\overrightarrow{AC}\) et \(\overrightarrow{BE}=\dfrac13\overrightarrow{BC}\).</p>
+<ol>
+  <li>Faire une figure.</li>
+  <li>Exprimer \(\overrightarrow{AE}\) en fonction de \(\overrightarrow{AB}\) et \(\overrightarrow{AC}\), puis en déduire une relation entre \(\overrightarrow{AD}\) et \(\overrightarrow{AE}\).</li>
+  <li>Que peut-on dire des points \(A\), \(D\) et \(E\) ?</li>
+</ol>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<ul>
+  <li>Deux vecteurs \(\vec u\) et \(\vec v\) sont <strong>colinéaires</strong> s'il existe un réel \(k\) tel que \(\vec v=k\vec u\) (ou \(\vec u=k\vec v\)). <br> Le vecteur nul est colinéaire à tout vecteur.</li>
+  <li>Trois points \(A\), \(B\) et \(C\) (avec \(A\neq B\)) sont <strong>alignés</strong> si et seulement si \(\overrightarrow{AB}\) et \(\overrightarrow{AC}\) sont colinéaires, c'est-à-dire s'il existe un réel \(\alpha\) tel que \(\overrightarrow{AC}=\alpha\overrightarrow{AB}\).<br> Le réel \(\alpha\) est appelé l'<strong>abscisse</strong> du point \(C\) dans le repère \((A,B)\).</li>
+</ul>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(A\), \(B\), \(C\), \(D\) quatre points tels que \(A\neq B\) et \(C\neq D\).</p>
+\[ (AB)\parallel(CD)\iff \overrightarrow{AB}\ \text{et}\ \overrightarrow{CD}\ \text{sont colinéaires.} \]
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Démontrer un alignement</div>
+<ol>
+  <li>On choisit une <strong>origine</strong> commune (souvent un sommet) et on exprime deux vecteurs, par exemple \(\overrightarrow{AD}\) et \(\overrightarrow{AE}\), en fonction des <strong>mêmes</strong> vecteurs de base (\(\overrightarrow{AB}\) et \(\overrightarrow{AC}\)), à l'aide de Chasles.</li>
+  <li>On cherche un réel \(k\) tel que \(\overrightarrow{AD}=k\overrightarrow{AE}\).</li>
+  <li>On conclut : les vecteurs sont colinéaires, donc \(A\), \(D\), \(E\) sont alignés.</li>
+</ol>
+<p>Même démarche pour un parallélisme, avec deux vecteurs \(\overrightarrow{AB}\) et \(\overrightarrow{CD}\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Dans l'activité :</p>
+\[ \overrightarrow{AE}=\overrightarrow{AB}+\overrightarrow{BE}=\overrightarrow{AB}+\frac13\big(\overrightarrow{BA}+\overrightarrow{AC}\big)=\frac23\overrightarrow{AB}+\frac13\overrightarrow{AC}=\frac13\big(2\overrightarrow{AB}+\overrightarrow{AC}\big)=\frac13\overrightarrow{AD}. \]
+<p>Donc \(\overrightarrow{AD}=3\overrightarrow{AE}\) : les vecteurs sont colinéaires et les points \(A\), \(D\), \(E\) sont <strong>alignés</strong>.<br> L'écriture \(\overrightarrow{AC}=\dfrac43\overrightarrow{AD}\) signifie que \(A\), \(C\), \(D\) sont alignés et que \(\dfrac43\) est l'abscisse de \(C\) dans le repère \((A,D)\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 3</div>
+<ol>
+  <li>Soit \(ABC\) un triangle, \(D\) et \(E\) les points tels que \(\overrightarrow{AD}=\dfrac23\overrightarrow{AB}\) et \(\overrightarrow{DE}=\dfrac23\overrightarrow{BC}\). Montrer que \(\overrightarrow{AE}=\dfrac23\overrightarrow{AC}\). Que peut-on en déduire ?</li>
+  <li>Soit \(ABCD\) un parallélogramme, \(E\) et \(F\) les points tels que \(\overrightarrow{AE}=\dfrac32\overrightarrow{AB}\) et \(\overrightarrow{AF}=3\overrightarrow{AD}\).
+<ol class="alpha">
+  <li>Exprimer \(\overrightarrow{CE}\) et \(\overrightarrow{CF}\) en fonction de \(\overrightarrow{AB}\) et \(\overrightarrow{AD}\).</li>
+  <li>En déduire que les points \(C\), \(E\) et \(F\) sont alignés.</li>
+</ol></li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Milieu d'un segment">
+  <h2><span class="num">IV</span><span class="titre">Milieu d'un segment</span></h2>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(A\), \(B\) et \(I\) trois points du plan.</p>
+\[ I \text{ est le milieu de } [AB] \iff \overrightarrow{AI}=\overrightarrow{IB} \iff \overrightarrow{IA}+\overrightarrow{IB}=\vec0 \iff \overrightarrow{AI}=\frac12\overrightarrow{AB}. \]
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété caractéristique du milieu</div>
+<p>Si \(I\) est le milieu du segment \([AB]\), alors pour tout point \(M\) du plan :</p>
+\[ \overrightarrow{MA}+\overrightarrow{MB}=2\overrightarrow{MI}. \]
+  </div>
+  <div class="bloc ex"><div class="tag">Démonstration</div>
+<p>\(\overrightarrow{MA}+\overrightarrow{MB}=\big(\overrightarrow{MI}+\overrightarrow{IA}\big)+\big(\overrightarrow{MI}+\overrightarrow{IB}\big)=2\overrightarrow{MI}+\big(\overrightarrow{IA}+\overrightarrow{IB}\big)=2\overrightarrow{MI}+\vec0=2\overrightarrow{MI}\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 4</div>
+<ol>
+  <li>Soit \(ABC\) un triangle, \(I\) et \(J\) les milieux respectifs de \([AB]\) et \([AC]\). Montrer que \(\overrightarrow{IJ}=\dfrac12\overrightarrow{BC}\) (théorème de la droite des milieux).</li>
+  <li>Soit \(ABC\) un triangle, \(I\) le milieu de \([BC]\) et \(G\) le point tel que \(\overrightarrow{GA}+\overrightarrow{GB}+\overrightarrow{GC}=\vec0\).
+<ol class="alpha">
+  <li>Montrer que \(\overrightarrow{GA}+2\overrightarrow{GI}=\vec0\), puis que \(\overrightarrow{AG}=\dfrac23\overrightarrow{AI}\).</li>
+  <li>Placer \(G\). Que représente ce point pour le triangle \(ABC\) ?</li>
+</ol></li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ V ============================ -->
+<section class="chap" id="s5" data-toc="Synthèse">
+  <h2><span class="num">V</span><span class="titre">Synthèse</span></h2>
+  <div class="bloc ret"><div class="tag">À retenir</div>
+<div class="tableau"><table><thead><tr><th scope="col">Situation</th><th scope="col">Outil</th></tr></thead><tbody><tr><td>Simplifier une somme</td><td>Chasles : \(\overrightarrow{AB}+\overrightarrow{BC}=\overrightarrow{AC}\) ; \(-\overrightarrow{AB}=\overrightarrow{BA}\)</td></tr><tr><td>Parallélogramme</td><td>\(\overrightarrow{AB}=\overrightarrow{CD}\iff ABDC\) parallélogramme ; \(\overrightarrow{AB}+\overrightarrow{AC}=\overrightarrow{AD}\)</td></tr><tr><td>Construire un point</td><td>isoler le vecteur \(\overrightarrow{AM}\) (origine connue) en fonction de vecteurs connus</td></tr><tr><td>Alignement de \(A\), \(B\), \(C\)</td><td>trouver \(k\) tel que \(\overrightarrow{AC}=k\overrightarrow{AB}\)</td></tr><tr><td>Parallélisme \((AB)\parallel(CD)\)</td><td>trouver \(k\) tel que \(\overrightarrow{CD}=k\overrightarrow{AB}\)</td></tr><tr><td>Milieu \(I\) de \([AB]\)</td><td>\(\overrightarrow{IA}+\overrightarrow{IB}=\vec0\) ; \(\overrightarrow{MA}+\overrightarrow{MB}=2\overrightarrow{MI}\) pour tout \(M\)</td></tr></tbody></table></div>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}

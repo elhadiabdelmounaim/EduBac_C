@@ -100,8 +100,8 @@
       var rep = data.repartition;
       if (rep) {
         infoLecon.hidden = false;
-        infoLecon.textContent = 'Leçon : ' + duree(rep.heures * 60) + ' · semaines ' + rep.semaines
-          + ' · répartition ' + rep.annee;
+        infoLecon.textContent = 'Leçon : ' + duree(rep.heures * 60)
+          + (rep.semaines ? ' · semaines ' + rep.semaines : '') + ' · répartition ' + rep.annee;
       }
       if (data.cahier_url) lienCahier.href = data.cahier_url;
       champClasse.innerHTML = '';

@@ -1,0 +1,253 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : Tronc commun scientifique — Équations, inéquations et systèmes (chapitre 5, ).
+Généré depuis TC_Equations_inequations_systemes.tex (le PDF d'origine est dans le dossier Cours de la leçon, media/lessons/TCS/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < », « > » et « & » sont écrits &lt;, &gt; et &amp;.
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">Tronc commun scientifique</span>
+        <span class="chip or">Chapitre 5</span>
+        <span class="chip">Semestre 1</span>
+      </div>
+      <h1 id="cours-titre">Équations, inéquations et systèmes</h1>
+      <p class="sous-titre">Volume horaire : 14 heures</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectif"><strong>Contenus</strong>
+<ul>
+  <li>Équations et inéquations du 1<sup>er</sup> degré ; signe de \(ax+b\).</li>
+  <li>Équations du 2<sup>nd</sup> degré ; discriminant ; forme canonique.</li>
+  <li>Somme et produit des racines ; signe du trinôme.</li>
+  <li>Équations et systèmes à deux inconnues ; déterminant.</li>
+  <li>Régionnement du plan.</li>
+</ul>
+  </div>
+  <div class="cadre objectif"><strong>Capacités attendues</strong>
+<ul>
+  <li>Résoudre une équation ou inéquation se ramenant au 1<sup>er</sup> ou 2<sup>nd</sup> degré.</li>
+  <li>Dresser un tableau de signes.</li>
+  <li>Factoriser un trinôme.</li>
+  <li>Résoudre un système par la méthode du déterminant.</li>
+  <li>Représenter graphiquement les solutions d'une inéquation à deux inconnues.</li>
+</ul>
+  </div>
+
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Équations et inéquations du premier degré à une inconnue">
+  <h2><span class="num">I</span><span class="titre">Équations et inéquations du premier degré à une inconnue</span></h2>
+  <h3><span class="n">I.1</span>Équations du premier degré</h3>
+  <div class="bloc act"><div class="tag">Activité 1</div>
+<p>Résoudre dans \(\mathbb{R}\) : \((E_1):\ 2x+4=3(x-2)+8\) ; \((E_2):\ \dfrac{3x-1}{2x+3}=0\) ; \((E_3):\ |2x+3|=|x-2|\).</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(a\) et \(b\) deux réels. L'équation \(ax+b=0\) :</p>
+<ul>
+  <li>si \(a\neq0\), admet une unique solution : \(x=-\dfrac ba\) ;</li>
+  <li>si \(a=0\) et \(b\neq0\), n'admet aucune solution : \(S=\varnothing\) ;</li>
+  <li>si \(a=0\) et \(b=0\), est vérifiée par tout réel : \(S=\mathbb{R}\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>\((E_1)\) : \(2x+4=3x+2\iff x=2\) ; \(S=\{2\}\).</li>
+  <li>\((E_2)\) : on impose \(2x+3\neq0\), soit \(x\neq-\frac32\) ; \(\dfrac{3x-1}{2x+3}=0\iff3x-1=0\iff x=\dfrac13\) ; \(S=\left\{\dfrac13\right\}\).</li>
+  <li>\((E_3)\) : \(|A|=|B|\iff A=B\) ou \(A=-B\). \(2x+3=x-2\iff x=-5\) ; \(2x+3=-x+2\iff x=-\dfrac13\) ; \(S=\left\{-5\,;\,-\dfrac13\right\}\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemple — Discussion selon un paramètre</div>
+<p>Résolvons \((E):\ mx+5=x-1\), où \(m\) est un réel : \((E)\iff(m-1)x=-6\).</p>
+<ul>
+  <li>Si \(m\neq1\) : \(S=\left\{\dfrac{-6}{m-1}\right\}\). \(\bullet\) Si \(m=1\) : l'équation devient \(0x=-6\), donc \(S=\varnothing\).</li>
+</ul>
+  </div>
+  <h3><span class="n">I.2</span>Signe de \(ax+b\) – Inéquations</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<div class="avec-fig">
+<div>
+<p>Soit \(a\neq0\). Le binôme \(ax+b\) s'annule en \(-\dfrac ba\) ; il est <strong>du signe de \(a\) à droite</strong> de \(-\dfrac ba\) et du <strong>signe contraire</strong> à gauche.</p>
+</div>
+<figure class="fig tabvar"><svg viewBox="-6.0 -6.0 294.0 53.6" role="img" aria-label="Tableau"><path d="M0 0 H282.0 V41.6 H0 Z" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M64 0 V41.6" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 20.8 H282.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><text x="32.0" y="14.9" text-anchor="middle" style="font-size:13.0px">x</text><text x="32.0" y="35.8" text-anchor="middle" style="font-size:13.0px">ax+b</text><text x="86.0" y="14.9" text-anchor="middle" style="font-size:13.0px">−∞</text><text x="173.0" y="14.9" text-anchor="middle" style="font-size:13.0px">−b/a</text><text x="260.0" y="14.9" text-anchor="middle" style="font-size:13.0px">+∞</text><text x="129.5" y="35.4" text-anchor="middle" style="font-size:12.0px">signe de −a</text><text x="173.0" y="35.8" text-anchor="middle" style="font-size:13.0px">0</text><path d="M173.0 20.8 V25.4" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M173.0 37.0 V41.6" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="216.5" y="35.4" text-anchor="middle" style="font-size:12.0px">signe de a</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Résoudre une inéquation produit ou quotient</div>
+<ol>
+  <li>On ramène tout dans un membre et on factorise (produit ou quotient de binômes).</li>
+  <li>On dresse le <strong>tableau de signes</strong> : une ligne par facteur, une ligne pour le résultat (règle des signes).</li>
+  <li>Pour un quotient, les valeurs qui annulent le dénominateur sont <strong>interdites</strong> (double barre).</li>
+</ol>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<div class="avec-fig">
+<div>
+<p>Soit \(p(x)=(2x-5)(-3x+4)\).<br> \(2x-5\) s'annule en \(\frac52\) et \(-3x+4\) en \(\frac43\).<br> D'après le tableau :</p>
+\[ p(x)\le0\iff x\in\left]-\infty;\tfrac43\right]\cup\left[\tfrac52;+\infty\right[. \]
+</div>
+<figure class="fig tabvar"><svg viewBox="-6.0 -6.0 282.0 84.8" role="img" aria-label="Tableau"><path d="M0 0 H270.0 V72.8 H0 Z" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M64 0 V72.8" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 18.2 H270.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 36.4 H270.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 54.6 H270.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><text x="32.0" y="13.6" text-anchor="middle" style="font-size:13.0px">x</text><text x="32.0" y="31.8" text-anchor="middle" style="font-size:13.0px">2x−5</text><text x="32.0" y="50.0" text-anchor="middle" style="font-size:13.0px">−3x+4</text><text x="32.0" y="68.2" text-anchor="middle" style="font-size:13.0px">p(x)</text><text x="86.0" y="13.6" text-anchor="middle" style="font-size:13.0px">−∞</text><text x="140.0" y="13.6" text-anchor="middle" style="font-size:13.0px">4/3</text><text x="194.0" y="13.6" text-anchor="middle" style="font-size:13.0px">5/2</text><text x="248.0" y="13.6" text-anchor="middle" style="font-size:13.0px">+∞</text><text x="113.0" y="32.2" text-anchor="middle" style="font-size:14.0px">−</text><path d="M140.0 18.2 V36.4" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="167.0" y="32.2" text-anchor="middle" style="font-size:14.0px">−</text><text x="194.0" y="31.8" text-anchor="middle" style="font-size:13.0px">0</text><path d="M194.0 18.2 V22.2" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M194.0 32.4 V36.4" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="221.0" y="32.2" text-anchor="middle" style="font-size:14.0px">+</text><text x="113.0" y="50.4" text-anchor="middle" style="font-size:14.0px">+</text><text x="140.0" y="50.0" text-anchor="middle" style="font-size:13.0px">0</text><path d="M140.0 36.4 V40.4" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M140.0 50.6 V54.6" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="167.0" y="50.4" text-anchor="middle" style="font-size:14.0px">−</text><path d="M194.0 36.4 V54.6" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="221.0" y="50.4" text-anchor="middle" style="font-size:14.0px">−</text><text x="113.0" y="68.6" text-anchor="middle" style="font-size:14.0px">−</text><text x="140.0" y="68.2" text-anchor="middle" style="font-size:13.0px">0</text><path d="M140.0 54.6 V58.6" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M140.0 68.8 V72.8" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="167.0" y="68.6" text-anchor="middle" style="font-size:14.0px">+</text><text x="194.0" y="68.2" text-anchor="middle" style="font-size:13.0px">0</text><path d="M194.0 54.6 V58.6" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M194.0 68.8 V72.8" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="221.0" y="68.6" text-anchor="middle" style="font-size:14.0px">−</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+<p>Résoudre dans \(\mathbb{R}\) : \((I_1):\ -4x+7\le2x+14\) ; \((I_2):\ 4x^2-25\ge0\) ; \((I_3):\ \dfrac{(3x-1)(x+2)}{2x+5}&lt;0\).</p>
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Équations et inéquations du second degré">
+  <h2><span class="num">II</span><span class="titre">Équations et inéquations du second degré</span></h2>
+  <h3><span class="n">II.1</span>Forme canonique – Discriminant</h3>
+  <div class="bloc act"><div class="tag">Activité 2</div>
+<ol>
+  <li>Vérifier que \(x^2-6x+5=(x-3)^2-4\), puis résoudre l'équation \(x^2-6x+5=0\).</li>
+  <li>Écrire de même \(x^2+4x+7\) sous la forme \((x+\alpha)^2+\beta\). L'équation \(x^2+4x+7=0\) a-t-elle des solutions ?</li>
+</ol>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soit \(P(x)=ax^2+bx+c\) un <strong>trinôme du second degré</strong> (\(a\neq0\)). On a, pour tout réel \(x\) :</p>
+\[ ax^2+bx+c=a\left[\left(x+\frac b{2a}\right)^2-\frac{b^2-4ac}{4a^2}\right] \qquad\text{(\textbf{forme canonique}).} \]
+<p>Le nombre \(\Delta=b^2-4ac\) est appelé le <strong>discriminant</strong> du trinôme.</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Résolution de \(ax^2+bx+c=0\) (\(a\neq0\))</div>
+<ul>
+  <li>Si \(\Delta&lt;0\) : l'équation n'a <strong>pas de solution</strong> dans \(\mathbb{R}\) : \(S=\varnothing\).</li>
+  <li>Si \(\Delta=0\) : une solution (double) : \(x_0=-\dfrac b{2a}\) ; \(S=\left\{-\dfrac b{2a}\right\}\).</li>
+  <li>Si \(\Delta&gt;0\) : deux solutions distinctes : \(x_1=\dfrac{-b-\sqrt\Delta}{2a}\) et \(x_2=\dfrac{-b+\sqrt\Delta}{2a}\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>\(2x^2+2x-12=0\) : \(\Delta=4+96=100\), \(x_1=\dfrac{-2-10}{4}=-3\), \(x_2=\dfrac{-2+10}{4}=2\) ; \(S=\{-3\,;\,2\}\).</li>
+  <li>\(9x^2-12x+4=0\) : \(\Delta=144-144=0\), \(x_0=\dfrac{12}{18}=\dfrac23\) ; \(S=\left\{\dfrac23\right\}\).</li>
+  <li>\(5x^2-4x+2=0\) : \(\Delta=16-40=-24&lt;0\) ; \(S=\varnothing\).</li>
+</ul>
+  </div>
+  <h3><span class="n">II.2</span>Factorisation – Somme et produit des racines</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soit \(P(x)=ax^2+bx+c\) (\(a\neq0\)) de discriminant \(\Delta\).</p>
+<ul>
+  <li>Si \(\Delta&lt;0\) : \(P(x)\) ne se factorise pas en produit de facteurs du premier degré.</li>
+  <li>Si \(\Delta=0\) : \(P(x)=a\left(x+\dfrac b{2a}\right)^2\).</li>
+  <li>Si \(\Delta&gt;0\) : \(P(x)=a(x-x_1)(x-x_2)\), et alors \(x_1+x_2=-\dfrac ba\) et \(x_1x_2=\dfrac ca\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>\(2x^2+2x-12=2(x+3)(x-2)\) ; \(9x^2-12x+4=9\left(x-\dfrac23\right)^2=(3x-2)^2\).</li>
+  <li>\(1\) est une racine évidente de \(2026x^2-x-2025\) (car \(2026-1-2025=0\)) ; le produit des racines vaut \(\dfrac ca=-\dfrac{2025}{2026}\), donc l'autre racine est \(-\dfrac{2025}{2026}\).</li>
+  <li>Deux réels de somme \(13\) et de produit \(12\) sont les solutions de \(X^2-13X+12=0\), c'est-à-dire \(1\) et \(12\).</li>
+</ul>
+  </div>
+  <h3><span class="n">II.3</span>Signe du trinôme</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soit \(P(x)=ax^2+bx+c\) (\(a\neq0\)).</p>
+<div class="tableau"><table><tbody><tr><td><strong>Si \(\Delta&lt;0\)</strong></td><td><figure class="fig tabvar"><svg viewBox="-6.0 -6.0 270.0 48.4" role="img" aria-label="Tableau"><path d="M0 0 H258.0 V36.4 H0 Z" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M64 0 V36.4" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 18.2 H258.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><text x="32.0" y="13.6" text-anchor="middle" style="font-size:13.0px">x</text><text x="32.0" y="31.8" text-anchor="middle" style="font-size:13.0px">P(x)</text><text x="86.0" y="13.6" text-anchor="middle" style="font-size:13.0px">−∞</text><text x="236.0" y="13.6" text-anchor="middle" style="font-size:13.0px">+∞</text><text x="161.0" y="31.5" text-anchor="middle" style="font-size:12.0px">signe de a</text></svg></figure></td></tr><tr><td><strong>Si \(\Delta=0\)</strong></td><td><figure class="fig tabvar"><svg viewBox="-6.0 -6.0 270.0 48.4" role="img" aria-label="Tableau"><path d="M0 0 H258.0 V36.4 H0 Z" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M64 0 V36.4" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 18.2 H258.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><text x="32.0" y="13.6" text-anchor="middle" style="font-size:13.0px">x</text><text x="32.0" y="31.8" text-anchor="middle" style="font-size:13.0px">P(x)</text><text x="86.0" y="13.6" text-anchor="middle" style="font-size:13.0px">−∞</text><text x="161.0" y="13.6" text-anchor="middle" style="font-size:13.0px">x₀</text><text x="236.0" y="13.6" text-anchor="middle" style="font-size:13.0px">+∞</text><text x="123.5" y="31.5" text-anchor="middle" style="font-size:12.0px">signe de a</text><text x="161.0" y="31.8" text-anchor="middle" style="font-size:13.0px">0</text><path d="M161.0 18.2 V22.2" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M161.0 32.4 V36.4" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="198.5" y="31.5" text-anchor="middle" style="font-size:12.0px">signe de a</text></svg></figure></td></tr><tr><td><strong>Si \(\Delta&gt;0\)</strong> <br> (\(x_1&lt;x_2\))</td><td><figure class="fig tabvar"><svg viewBox="-6.0 -6.0 372.0 48.4" role="img" aria-label="Tableau"><path d="M0 0 H360.0 V36.4 H0 Z" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M64 0 V36.4" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 18.2 H360.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><text x="32.0" y="13.6" text-anchor="middle" style="font-size:13.0px">x</text><text x="32.0" y="31.8" text-anchor="middle" style="font-size:13.0px">P(x)</text><text x="86.0" y="13.6" text-anchor="middle" style="font-size:13.0px">−∞</text><text x="170.0" y="13.6" text-anchor="middle" style="font-size:13.0px">x₁</text><text x="254.0" y="13.6" text-anchor="middle" style="font-size:13.0px">x₂</text><text x="338.0" y="13.6" text-anchor="middle" style="font-size:13.0px">+∞</text><text x="128.0" y="31.5" text-anchor="middle" style="font-size:12.0px">signe de a</text><text x="170.0" y="31.8" text-anchor="middle" style="font-size:13.0px">0</text><path d="M170.0 18.2 V22.2" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M170.0 32.4 V36.4" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="212.0" y="31.5" text-anchor="middle" style="font-size:12.0px">signe de −a</text><text x="254.0" y="31.8" text-anchor="middle" style="font-size:13.0px">0</text><path d="M254.0 18.2 V22.2" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M254.0 32.4 V36.4" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="296.0" y="31.5" text-anchor="middle" style="font-size:12.0px">signe de a</text></svg></figure></td></tr></tbody></table></div>
+<p><strong>À retenir :</strong> le trinôme est du signe de \(a\), sauf <strong>entre</strong> ses racines (lorsqu'elles existent).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(P(x)=2x^2+2x-12\) a pour racines \(-3\) et \(2\) et \(a=2&gt;0\), donc \(P(x)\le0\iff x\in[-3;2]\).<br> \(Q(x)=-x^2+4x-5\) : \(\Delta=16-20=-4&lt;0\) et \(a=-1&lt;0\), donc \(Q(x)&lt;0\) pour tout réel \(x\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 2</div>
+<ol>
+  <li>Factoriser, si possible : \(P_1(x)=x^2-x-6\), \(P_2(x)=3x^2-4\), \(P_3(x)=3x^2+4\), \(P_4(x)=x^2-2\sqrt3x+3\).</li>
+  <li>Résoudre dans \(\mathbb{R}\) : \(P_1(x)\ge0\) ; \(P_3(x)\le0\) ; \(\dfrac{P_1(x)}{x-1}\ge0\).</li>
+  <li>Résoudre dans \(\mathbb{R}\) les équations : \(2x^4-2x^2-4=0\) ; \(2x^2-2|x|-4=0\) ; \(2x-2\sqrt x-4=0\)<br> (on pourra poser \(X=x^2\), \(X=|x|\), puis \(X=\sqrt x\)).</li>
+  <li>Résoudre dans \(\mathbb{R}\) : \(\dfrac2{x^2-x-6}+\dfrac x{2x^2+3x-2}=0\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Équations et systèmes du premier degré à deux inconnues">
+  <h2><span class="num">III</span><span class="titre">Équations et systèmes du premier degré à deux inconnues</span></h2>
+  <h3><span class="n">III.1</span>Équations à deux inconnues</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+<ul>
+  <li>\(\mathbb{R}^2\) est l'ensemble des couples \((x\,;\,y)\) de réels.</li>
+  <li>Toute équation de la forme \(ax+by+c=0\), avec \((a\,;\,b)\neq(0\,;\,0)\), est une <strong>équation du premier degré à deux inconnues</strong>.</li>
+  <li>Le couple \((x_0\,;\,y_0)\) est une <strong>solution</strong> si \(ax_0+by_0+c=0\). Une telle équation admet une infinité de solutions : les coordonnées des points d'une droite.</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Pour \(3x-2y+6=0\) : \((0\,;\,3)\) est solution car \(0-6+6=0\) ; \((2\,;\,1)\) ne l'est pas car \(6-2+6=14\neq0\).<br> Le couple \((2a-1\,;\,a)\) est solution de \(2x-y+3=0\) \(\iff 4a-2-a+3=0\iff a=-\dfrac13\).</p>
+  </div>
+  <h3><span class="n">III.2</span>Systèmes de deux équations – Méthode du déterminant</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>On considère le système \((S):\begin{cases} ax+by=c\\ a'x+b'y=c'\end{cases}\) et on pose :</p>
+\[ D=\begin{vmatrix} a &amp; b\\ a' &amp; b'\end{vmatrix}=ab'-a'b\ ;\qquad D_x=\begin{vmatrix} c &amp; b\\ c' &amp; b'\end{vmatrix}=cb'-c'b\ ;\qquad D_y=\begin{vmatrix} a &amp; c\\ a' &amp; c'\end{vmatrix}=ac'-a'c. \]
+<p>\(D\) est appelé le <strong>déterminant</strong> du système.</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<ul>
+  <li>Si \(D\neq0\) : le système admet une <strong>unique</strong> solution dans \(\mathbb{R}^2\) : \(\left(\dfrac{D_x}{D}\,;\,\dfrac{D_y}{D}\right)\).</li>
+  <li>Si \(D=0\) et (\(D_x\neq0\) ou \(D_y\neq0\)) : le système n'a <strong>aucune</strong> solution.</li>
+  <li>Si \(D=D_x=D_y=0\) : le système admet une <strong>infinité</strong> de solutions (les deux équations sont proportionnelles).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>\(\begin{cases}3x+y=8\\2x-y=2\end{cases}\) : \(D=3\times(-1)-2\times1=-5\), \(D_x=8\times(-1)-2\times1=-10\), \(D_y=3\times2-2\times8=-10\).<br> Donc \(x=\dfrac{-10}{-5}=2\), \(y=\dfrac{-10}{-5}=2\) et \(S=\{(2\,;\,2)\}\).</li>
+  <li>\(\begin{cases}x-2y=1\\2x-4y=2\end{cases}\) : \(D=-4+4=0\), \(D_x=-4+4=0\), \(D_y=2-2=0\) : infinité de solutions, \(S=\{(2y+1\,;\,y)\ /\ y\in\mathbb{R}\}\).</li>
+</ul>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<p>On peut aussi résoudre un système par <strong>substitution</strong> (on exprime une inconnue en fonction de l'autre) ou par <strong>combinaison linéaire</strong> (on additionne les équations multipliées par des coefficients bien choisis).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 3</div>
+<ol>
+  <li>Résoudre dans \(\mathbb{R}^2\) : \((S_1):\begin{cases}5x-2y=1\\-10x+4y=3\end{cases}\) \((S_2):\begin{cases}3x+y=7\\2x-y=8\end{cases}\)</li>
+  <li><strong>a)</strong> Résoudre dans \(\mathbb{R}^2\) le système \(\begin{cases}-x+3y=4\\x-2y=11\end{cases}\).<br> <strong>b)</strong> En déduire les solutions des systèmes : \(\begin{cases}-\sqrt x+\dfrac3y=4\\[2mm]\sqrt x-\dfrac2y=11\end{cases}\) \(\begin{cases}-|x+1|+3y=4\\|x+1|-2y=11\end{cases}\)</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Régionnement du plan">
+  <h2><span class="num">IV</span><span class="titre">Régionnement du plan</span></h2>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<div class="avec-fig">
+<div>
+<p>Dans un repère, la droite \((D):\ ax+by+c=0\) partage le plan en deux <strong>demi-plans</strong> ouverts :</p>
+<ul>
+  <li>l'un est l'ensemble des points \(M(x\,;\,y)\) tels que \(ax+by+c&gt;0\) ;</li>
+  <li>l'autre est l'ensemble des points tels que \(ax+by+c&lt;0\).</li>
+</ul>
+</div>
+<figure class="fig"><svg viewBox="-79.2 -92.9 166.9 164.9" role="img" aria-label="Figure"><defs><marker id="mg6-761" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M-66.0 66.0 L-51.3 66.0 L36.7 -66.0 L-66.0 -66.0 Z" fill="color-mix(in srgb, var(--doux) 12%, var(--surface))" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-51.3 66.0 L36.7 -66.0 L66.0 -66.0 L66.0 66.0 Z" fill="color-mix(in srgb, var(--fig-trait) 22%, var(--surface))" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-66.0 -0.0 L70.4 -0.0" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg6-761)"/><text x="75.4" y="4.0" text-anchor="start" style="font-size:11.5px;fill:var(--doux)">x</text><path d="M0.0 66.0 L0.0 -70.4" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg6-761)"/><text x="0.0" y="-75.4" text-anchor="middle" style="font-size:11.5px;fill:var(--doux)">y</text><path d="M-51.3 65.9 L-49.1 62.6 L-46.9 59.3 L-44.7 56.0 L-42.5 52.7 L-40.3 49.4 L-38.1 46.1 L-35.9 42.8 L-33.7 39.5 L-31.5 36.2 L-29.3 32.9 L-27.1 29.6 L-24.9 26.3 L-22.7 23.0 L-20.5 19.7 L-18.3 16.4 L-16.1 13.1 L-13.9 9.8 L-11.7 6.5 L-9.5 3.2 L-7.3 -0.1 L-5.1 -3.4 L-2.9 -6.7 L-0.7 -10.0 L1.5 -13.3 L3.7 -16.6 L5.9 -19.9 L8.1 -23.2 L10.3 -26.5 L12.5 -29.8 L14.7 -33.1 L16.9 -36.4 L19.1 -39.7 L21.3 -43.0 L23.5 -46.3 L25.7 -49.6 L27.9 -52.9 L30.1 -56.2 L32.3 -59.5 L34.5 -62.8 L36.7 -66.1" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><text x="-35.2" y="-48.8" text-anchor="middle" style="font-size:11.5px;fill:var(--fig-trait)">(D)</text><circle cx="0.0" cy="-0.0" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-3.5" y="12.7" text-anchor="end" style="font-size:11.5px">O</text><text x="39.6" y="39.2" text-anchor="middle" style="font-size:11.5px">3x−2y+1&gt;0</text><text x="-35.2" y="-18.0" text-anchor="middle" style="font-size:11.5px">3x−2y+1&lt;0</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Résoudre graphiquement \(ax+by+c\ge0\)</div>
+<ol>
+  <li>On trace la droite \((D):\ ax+by+c=0\).</li>
+  <li>On teste un point qui n'est pas sur \((D)\), souvent l'origine \(O(0\,;\,0)\) : si \(O\) vérifie l'inégalité, la solution est le demi-plan contenant \(O\) ; sinon, c'est l'autre.</li>
+  <li>On hachure la partie <strong>non</strong> solution (ou on colorie la partie solution), en précisant si la droite est incluse (\(\ge\)) ou exclue (\(&gt;\)).</li>
+</ol>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Pour \((D):\ 3x-2y+1=0\) : en \(O(0\,;\,0)\), on a \(3\times0-2\times0+1=1&gt;0\). L'ensemble des solutions de \(3x-2y+1\ge0\) est donc le demi-plan fermé de frontière \((D)\) contenant \(O\) (en couleur foncée ci-dessus). Le point \((0\,;\,1)\) n'en fait pas partie : \(-2+1=-1&lt;0\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 4</div>
+<ol>
+  <li>Résoudre graphiquement dans \(\mathbb{R}^2\) : \((I_1):\ x+2y-2&lt;0\) et \((I_2):\ 2x+y+2\ge0\).</li>
+  <li>En déduire les solutions du système \(\begin{cases}x+2y-2&lt;0\\2x+y+2\ge0\end{cases}\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ V ============================ -->
+<section class="chap" id="s5" data-toc="Synthèse">
+  <h2><span class="num">V</span><span class="titre">Synthèse</span></h2>
+  <div class="bloc ret"><div class="tag">À retenir</div>
+<div class="tableau"><table><thead><tr><th scope="col">Notion</th><th scope="col">À retenir</th></tr></thead><tbody><tr><td>Signe de \(ax+b\)</td><td>signe de \(a\) à droite de \(-\frac ba\)</td></tr><tr><td>Discriminant</td><td>\(\Delta=b^2-4ac\) ; \(x_{1,2}=\frac{-b\pm\sqrt\Delta}{2a}\) si \(\Delta&gt;0\)</td></tr><tr><td>Factorisation</td><td>\(ax^2+bx+c=a(x-x_1)(x-x_2)\) ; \(x_1+x_2=-\frac ba\), \(x_1x_2=\frac ca\)</td></tr><tr><td>Signe du trinôme</td><td>signe de \(a\), sauf entre les racines</td></tr><tr><td>Système \(2\times2\)</td><td>\(D=ab'-a'b\neq0\) : solution unique \(\left(\frac{D_x}D;\frac{D_y}D\right)\)</td></tr><tr><td>Régionnement</td><td>tracer la droite, tester un point (souvent \(O\))</td></tr></tbody></table></div>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}

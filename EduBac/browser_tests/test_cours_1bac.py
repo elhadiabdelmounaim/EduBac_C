@@ -81,6 +81,8 @@ class Cours1BacBrowserTests(StaticLiveServerTestCase):
 
     def check(self, page, fichier, vue):
         html = (COURS / (fichier + '.html')).read_text(encoding='utf-8')
+        # Mesure une fois l'animation d'entrée de la page terminée (elle décale le contenu de 16 px).
+        page.evaluate("Promise.all(document.getAnimations().map(a => a.finished.catch(() => null)))")
         state = page.evaluate(ETAT)
         msg = '%s (%s)' % (fichier, vue)
         self.assertEqual(state['blocs'], html.count('<div class="bloc '), msg)

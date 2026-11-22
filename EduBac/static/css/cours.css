@@ -146,6 +146,8 @@ h3 .n { color: var(--turquoise); margin-right: 6px; font-weight: 700; }
 .fig.tabvar { max-width: 460px; margin: 8px auto; background: var(--surface); }
 .bloc ol.alpha { list-style: lower-alpha; }
 .li-suite { list-style: none; }
+.encadre { border: 1.5px solid var(--fig-accent); border-radius: 3px; padding: 0 .3em; font-weight: 700; }
+.tableau td > figure { margin: 4px auto; }
 .avec-fig:has(> figure.tabvar) { grid-template-columns: minmax(0, 1fr) minmax(0, 340px); }
 .avec-fig > figure.tabvar { max-width: 340px; }
 .feuille-corps figure > svg { max-height: 55vh; margin: 0 auto; }

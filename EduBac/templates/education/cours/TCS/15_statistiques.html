@@ -1,0 +1,168 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : Tronc commun scientifique — Statistique (chapitre 15, ).
+Généré depuis TC_Statistique.tex (le PDF d'origine est dans le dossier Cours de la leçon, media/lessons/TCS/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < », « > » et « & » sont écrits &lt;, &gt; et &amp;.
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">Tronc commun scientifique</span>
+        <span class="chip or">Chapitre 15</span>
+        <span class="chip">Semestre 2</span>
+      </div>
+      <h1 id="cours-titre">Statistique</h1>
+      <p class="sous-titre">Volume horaire : 6 heures</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectif"><strong>Contenus</strong>
+<ul>
+  <li>Vocabulaire : population, caractère, effectif, fréquence.</li>
+  <li>Effectifs et fréquences cumulés.</li>
+  <li>Représentations graphiques.</li>
+  <li>Paramètres de position : mode, moyenne, médiane.</li>
+  <li>Paramètres de dispersion : étendue, écart moyen, variance, écart-type.</li>
+</ul>
+  </div>
+  <div class="cadre objectif"><strong>Capacités attendues</strong>
+<ul>
+  <li>Organiser des données dans un tableau.</li>
+  <li>Choisir et construire une représentation adaptée.</li>
+  <li>Calculer et interpréter les paramètres d'une série.</li>
+  <li>Comparer deux séries.</li>
+</ul>
+  </div>
+
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Vocabulaire statistique">
+  <h2><span class="num">I</span><span class="titre">Vocabulaire statistique</span></h2>
+  <div class="bloc def"><div class="tag">Définition</div>
+<ul>
+  <li>La <strong>population</strong> est l'ensemble étudié ; chacun de ses éléments est un <strong>individu</strong>.</li>
+  <li>Le <strong>caractère</strong> (ou variable statistique) est la propriété étudiée. Il est <strong>qualitatif</strong> s'il n'est pas mesurable (situation familiale, couleur…) et <strong>quantitatif</strong> s'il est mesurable ; un caractère quantitatif est <strong>discret</strong> s'il prend des valeurs isolées (notes, nombre d'enfants) et <strong>continu</strong> s'il prend ses valeurs dans des intervalles appelés <strong>classes</strong> (taille, vitesse).</li>
+  <li>L'<strong>effectif</strong> \(n_i\) d'une valeur \(x_i\) est le nombre d'individus correspondant à cette valeur ; l'<strong>effectif total</strong> est \(N=n_1+n_2+\dots+n_p\).</li>
+  <li>La <strong>fréquence</strong> de \(x_i\) est \(f_i=\dfrac{n_i}N\) ; on a \(f_1+f_2+\dots+f_p=1\). En pourcentage : \(p_i=100\,f_i\).</li>
+  <li>L'<strong>effectif cumulé croissant</strong> \(N_i\) de \(x_i\) est la somme des effectifs des valeurs inférieures ou égales à \(x_i\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Les notes obtenues par \(20\) élèves d'une classe de tronc commun à un devoir sont :</p>
+<div class="tableau"><table><thead><tr><th scope="col">Note \(x_i\)</th><th scope="col">\(7\)</th><th scope="col">\(8\)</th><th scope="col">\(10\)</th><th scope="col">\(11\)</th><th scope="col">\(12\)</th><th scope="col">\(14\)</th><th scope="col">\(16\)</th></tr></thead><tbody><tr><td>Effectif \(n_i\)</td><td>\(1\)</td><td>\(2\)</td><td>\(3\)</td><td>\(5\)</td><td>\(4\)</td><td>\(3\)</td><td>\(2\)</td></tr><tr><td>Effectif cumulé \(N_i\)</td><td>\(1\)</td><td>\(3\)</td><td>\(6\)</td><td>\(11\)</td><td>\(15\)</td><td>\(18\)</td><td>\(20\)</td></tr><tr><td>Fréquence \(f_i\)</td><td>\(0{,}05\)</td><td>\(0{,}10\)</td><td>\(0{,}15\)</td><td>\(0{,}25\)</td><td>\(0{,}20\)</td><td>\(0{,}15\)</td><td>\(0{,}10\)</td></tr><tr><td>Pourcentage \(p_i\)</td><td>\(5\,\%\)</td><td>\(10\,\%\)</td><td>\(15\,\%\)</td><td>\(25\,\%\)</td><td>\(20\,\%\)</td><td>\(15\,\%\)</td><td>\(10\,\%\)</td></tr></tbody></table></div>
+<p>La population est l'ensemble des \(20\) élèves ; le caractère « note » est quantitatif discret. Le nombre d'élèves ayant une note inférieure ou égale à \(12\) est \(N_5=15\).</p>
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Représentations graphiques">
+  <h2><span class="num">II</span><span class="titre">Représentations graphiques</span></h2>
+  <div class="bloc prop"><div class="tag">Choisir une représentation</div>
+<div class="tableau"><table><thead><tr><th scope="col">Type de caractère</th><th scope="col">Représentations</th></tr></thead><tbody><tr><td>Quantitatif discret</td><td>diagramme en <strong>bâtons</strong> ; <strong>polygone des effectifs</strong> (on joint les sommets des bâtons)</td></tr><tr><td>Quantitatif continu</td><td><strong>histogramme</strong> (rectangles d'aires proportionnelles aux effectifs) ; polygone des effectifs (milieux des classes) ; courbe des effectifs cumulés</td></tr><tr><td>Qualitatif</td><td>diagramme en <strong>barres</strong> ; diagramme <strong>circulaire</strong> : angle \(\alpha_i=360^\circ\times f_i\)</td></tr></tbody></table></div>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<figure class="fig"><svg viewBox="-24.9 -43.8 309.0 253.2" role="img" aria-label="Figure"><defs><clipPath id="cg1"><rect x="-2" y="-2" width="263.2" height="169.6"/></clipPath><marker id="mg1-643" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M33.8 0 V165.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M56.3 0 V165.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M101.4 0 V165.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M124.0 0 V165.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M146.5 0 V165.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M191.6 0 V165.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M236.7 0 V165.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 138.0 H259.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 110.4 H259.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 82.8 H259.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 55.2 H259.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 27.6 H259.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M33.8 165.6 V138.0 M56.3 165.6 V110.4 M101.4 165.6 V82.8 M124.0 165.6 V27.6 M146.5 165.6 V55.2 M191.6 165.6 V82.8 M236.7 165.6 V110.4" fill="none" stroke="var(--fig-trait)" stroke-width="4.2" stroke-linecap="butt" stroke-linejoin="round"/><path d="M33.8 138.0 L56.3 110.4 L101.4 82.8 L124.0 27.6 L146.5 55.2 L191.6 82.8 L236.7 110.4" fill="none" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg1)"/><path d="M0 165.6 H259.2" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-643)"/><path d="M0.0 165.6 V0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-643)"/><text x="129.6" y="199.8" text-anchor="middle" style="font-size:12.0px;fill:var(--doux)">notes</text><text x="11.0" y="-5.8" text-anchor="start" style="font-size:12.0px;fill:var(--doux)">effectifs</text><text x="129.6" y="-25.8" text-anchor="middle" style="font-size:12.0px;fill:var(--doux)">Diagramme en bâtons et polygone des effectifs</text><text x="33.8" y="179.4" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">7</text><text x="56.3" y="179.4" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">8</text><text x="101.4" y="179.4" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">10</text><text x="124.0" y="179.4" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">11</text><text x="146.5" y="179.4" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">12</text><text x="191.6" y="179.4" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">14</text><text x="236.7" y="179.4" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">16</text><text x="-5.0" y="141.8" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">1</text><text x="-5.0" y="114.2" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">2</text><text x="-5.0" y="86.6" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">3</text><text x="-5.0" y="59.1" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">4</text><text x="-5.0" y="31.4" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">5</text><circle cx="33.8" cy="138.0" r="1.7" fill="var(--fig-accent)" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><circle cx="56.3" cy="110.4" r="1.7" fill="var(--fig-accent)" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><circle cx="101.4" cy="82.8" r="1.7" fill="var(--fig-accent)" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><circle cx="124.0" cy="27.6" r="1.7" fill="var(--fig-accent)" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><circle cx="146.5" cy="55.2" r="1.7" fill="var(--fig-accent)" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><circle cx="191.6" cy="82.8" r="1.7" fill="var(--fig-accent)" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><circle cx="236.7" cy="110.4" r="1.7" fill="var(--fig-accent)" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/></svg></figure>
+<figure class="fig"><svg viewBox="-23.1 -43.8 288.3 253.2" role="img" aria-label="Figure"><defs><clipPath id="cg2"><rect x="-2" y="-2" width="263.2" height="169.6"/></clipPath><marker id="mg2-643" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M25.9 0 V165.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M77.8 0 V165.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M129.6 0 V165.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M181.4 0 V165.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M233.3 0 V165.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 124.2 H259.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 82.8 H259.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 41.4 H259.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 0.0 H259.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M25.9 165.6 V82.8 H77.8 V165.6 Z" fill="color-mix(in srgb, var(--fig-trait) 45%, var(--surface))" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M77.8 165.6 V20.7 H129.6 V165.6 Z" fill="color-mix(in srgb, var(--fig-trait) 45%, var(--surface))" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M129.6 165.6 V41.4 H181.4 V165.6 Z" fill="color-mix(in srgb, var(--fig-trait) 45%, var(--surface))" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M181.4 165.6 V103.5 H233.3 V165.6 Z" fill="color-mix(in srgb, var(--fig-trait) 45%, var(--surface))" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 165.6 H259.2" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg2-643)"/><path d="M0.0 165.6 V0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg2-643)"/><text x="129.6" y="199.8" text-anchor="middle" style="font-size:12.0px;fill:var(--doux)">taille (cm)</text><text x="11.0" y="-5.8" text-anchor="start" style="font-size:12.0px;fill:var(--doux)">effectifs</text><text x="129.6" y="-25.8" text-anchor="middle" style="font-size:12.0px;fill:var(--doux)">Histogramme (tailles de 40 employés)</text><text x="25.9" y="179.4" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">160</text><text x="77.8" y="179.4" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">164</text><text x="129.6" y="179.4" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">168</text><text x="181.4" y="179.4" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">172</text><text x="233.3" y="179.4" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">176</text><text x="-5.0" y="128.0" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">4</text><text x="-5.0" y="86.6" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">8</text><text x="-5.0" y="45.3" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">12</text><text x="-5.0" y="3.8" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">16</text></svg></figure>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<div class="avec-fig">
+<div>
+<p>On a interrogé \(50\) élèves sur leur moyen de transport :</p>
+<div class="tableau"><table><thead><tr><th scope="col">Moyen</th><th scope="col">À pied</th><th scope="col">Bus</th><th scope="col">Vélo</th><th scope="col">Voiture</th></tr></thead><tbody><tr><td>Effectif</td><td>\(18\)</td><td>\(15\)</td><td>\(10\)</td><td>\(7\)</td></tr><tr><td>Angle</td><td>\(129{,}6^\circ\)</td><td>\(108^\circ\)</td><td>\(72^\circ\)</td><td>\(50{,}4^\circ\)</td></tr></tbody></table></div>
+<p>Le caractère est qualitatif ; par exemple, l'angle du secteur « À pied » est \(360^\circ\times\dfrac{18}{50}=129{,}6^\circ\).</p>
+</div>
+<figure class="fig"><svg viewBox="-63.2 -63.2 126.4 126.4" role="img" aria-label="Figure"><path d="M0.0 -0.0 L57.2 -0.0 A57.2 57.2 0 0 0 -36.5 -44.1 Z" fill="color-mix(in srgb, var(--fig-trait) 60%, var(--surface))" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L-36.5 -44.1 A57.2 57.2 0 0 0 -30.6 48.3 Z" fill="color-mix(in srgb, var(--fig-accent) 70%, var(--surface))" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L-30.6 48.3 A57.2 57.2 0 0 0 36.5 44.1 Z" fill="color-mix(in srgb, var(--meth) 50%, var(--surface))" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L36.5 44.1 A57.2 57.2 0 0 0 57.2 0.0 Z" fill="color-mix(in srgb, var(--att) 45%, var(--surface))" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="0.0" cy="-0.0" r="57.2" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="14.9" y="-28.4" text-anchor="middle" style="font-size:10.0px">À pied</text><text x="-35.1" y="6.0" text-anchor="middle" style="font-size:10.0px">Bus</text><text x="2.6" y="40.8" text-anchor="middle" style="font-size:10.0px">Vélo</text><text x="33.9" y="19.3" text-anchor="middle" style="font-size:10.0px">Voit.</text></svg></figure>
+</div>
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Paramètres de position">
+  <h2><span class="num">III</span><span class="titre">Paramètres de position</span></h2>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soit une série statistique de valeurs \(x_1,\dots,x_p\) d'effectifs \(n_1,\dots,n_p\) et d'effectif total \(N\).</p>
+<ul>
+  <li>Le <strong>mode</strong> est la valeur de plus grand effectif ; pour une série en classes, on parle de <strong>classe modale</strong>.</li>
+  <li>La <strong>moyenne arithmétique</strong> est : \(\overline{x}=\dfrac{n_1x_1+n_2x_2+\dots+n_px_p}N=\dfrac1N\displaystyle\sum_{i=1}^pn_ix_i=\sum_{i=1}^pf_ix_i\).<br> Pour une série en classes, \(x_i\) désigne le <strong>centre</strong> de la classe.</li>
+  <li>La <strong>médiane</strong> \(Me\) est la valeur qui partage la série <strong>ordonnée</strong> en deux parties de même effectif.</li>
+</ul>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Déterminer la médiane</div>
+<ul>
+  <li><strong>Série discrète :</strong> on range les valeurs dans l'ordre croissant. Si \(N\) est impair, \(Me\) est la valeur de rang \(\frac{N+1}2\) ; si \(N\) est pair, \(Me\) est la moyenne des valeurs de rangs \(\frac N2\) et \(\frac N2+1\). On utilise les effectifs cumulés pour repérer ces rangs.</li>
+  <li><strong>Série en classes :</strong> on repère la classe \([a;b[\) où l'effectif cumulé atteint \(\frac N2\), puis on fait une interpolation linéaire (lecture sur la courbe des effectifs cumulés) : \(Me=a+(b-a)\times\dfrac{\frac N2-N_{a}}{n}\), où \(N_a\) est l'effectif cumulé avant la classe et \(n\) l'effectif de la classe.</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li><strong>Notes :</strong> le mode est \(11\) ; \(\overline{x}=\dfrac{7+16+30+55+48+42+32}{20}=\dfrac{230}{20}=11{,}5\). \(N=20\) : les valeurs de rangs \(10\) et \(11\) valent toutes deux \(11\) (car \(N_3=6&lt;10\) et \(N_4=11\)), donc \(Me=11\).</li>
+  <li><strong>Tailles :</strong> classe modale \([164;168[\) ; centres \(162\), \(166\), \(170\), \(174\) :
+\[ \overline{x}=\frac{8\times162+14\times166+12\times170+6\times174}{40}=\frac{6704}{40}=167{,}6\ \text{cm}. \]
+Effectifs cumulés : \(8\), \(22\), \(34\), \(40\) ; \(\frac N2=20\) est atteint dans \([164;168[\) : \(Me=164+4\times\dfrac{20-8}{14}\approx167{,}4\) cm.</li>
+</ul>
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Paramètres de dispersion">
+  <h2><span class="num">IV</span><span class="titre">Paramètres de dispersion</span></h2>
+  <div class="bloc act"><div class="tag">Activité 1</div>
+<p>Deux classes ont obtenu les notes suivantes :</p>
+<div class="tableau"><table><thead><tr><th scope="col">Classe A : note</th><th scope="col">\(9\)</th><th scope="col">\(10\)</th><th scope="col">\(11\)</th></tr></thead><tbody><tr><td>Effectif</td><td>\(3\)</td><td>\(4\)</td><td>\(3\)</td></tr></tbody></table></div>
+<div class="tableau"><table><thead><tr><th scope="col">Classe B : note</th><th scope="col">\(6\)</th><th scope="col">\(8\)</th><th scope="col">\(10\)</th><th scope="col">\(12\)</th><th scope="col">\(14\)</th></tr></thead><tbody><tr><td>Effectif</td><td>\(2\)</td><td>\(2\)</td><td>\(2\)</td><td>\(2\)</td><td>\(2\)</td></tr></tbody></table></div>
+<p>Montrer que les deux classes ont la même moyenne. Les deux séries sont-elles pour autant semblables ?</p>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<ul>
+  <li>L'<strong>étendue</strong> est la différence entre la plus grande et la plus petite valeur.</li>
+  <li>L'<strong>écart moyen</strong> est : \(e=\dfrac1N\displaystyle\sum_{i=1}^pn_i\,|x_i-\overline{x}|\).</li>
+  <li>La <strong>variance</strong> est : \(V=\dfrac1N\displaystyle\sum_{i=1}^pn_i\,(x_i-\overline{x})^2=\dfrac1N\displaystyle\sum_{i=1}^pn_ix_i^2-\overline{x}^{\,2}\).</li>
+  <li>L'<strong>écart-type</strong> est : \(\sigma=\sqrt V\).</li>
+</ul>
+<p>Plus ces paramètres sont grands, plus les valeurs sont <strong>dispersées</strong> autour de la moyenne.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Dans l'activité, les deux moyennes valent \(10\).</p>
+<ul>
+  <li>Classe A : étendue \(2\) ; \(e=\dfrac{3\times1+4\times0+3\times1}{10}=0{,}6\) ; \(V=\dfrac{3\times1+3\times1}{10}=0{,}6\) ; \(\sigma\approx0{,}77\).</li>
+  <li>Classe B : étendue \(8\) ; \(e=\dfrac{2(4+2+0+2+4)}{10}=2{,}4\) ; \(V=\dfrac{2(16+4+0+4+16)}{10}=8\) ; \(\sigma=2\sqrt2\approx2{,}83\).</li>
+</ul>
+<p>Les notes de la classe B sont beaucoup plus dispersées que celles de la classe A.</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Organiser le calcul dans un tableau</div>
+<p>On ajoute au tableau les lignes \(n_ix_i\), \(|x_i-\overline{x}|\), \(n_i|x_i-\overline{x}|\) et \(n_ix_i^2\), puis on fait la somme de chaque ligne.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Nombre d'enfants dans \(30\) familles :</p>
+<div class="tableau"><table><thead><tr><th scope="col">\(x_i\)</th><th scope="col">\(0\)</th><th scope="col">\(1\)</th><th scope="col">\(2\)</th><th scope="col">\(3\)</th><th scope="col">\(4\)</th><th scope="col">Total</th></tr></thead><tbody><tr><td>\(n_i\)</td><td>\(4\)</td><td>\(6\)</td><td>\(10\)</td><td>\(6\)</td><td>\(4\)</td><td>\(30\)</td></tr><tr><td>\(n_ix_i\)</td><td>\(0\)</td><td>\(6\)</td><td>\(20\)</td><td>\(18\)</td><td>\(16\)</td><td>\(60\)</td></tr><tr><td>\(n_i|x_i-\overline{x}|\)</td><td>\(8\)</td><td>\(6\)</td><td>\(0\)</td><td>\(6\)</td><td>\(8\)</td><td>\(28\)</td></tr><tr><td>\(n_ix_i^2\)</td><td>\(0\)</td><td>\(6\)</td><td>\(40\)</td><td>\(54\)</td><td>\(64\)</td><td>\(164\)</td></tr></tbody></table></div>
+<p>\(\overline{x}=\dfrac{60}{30}=2\) ; \(e=\dfrac{28}{30}\approx0{,}93\) ; \(V=\dfrac{164}{30}-2^2=\dfrac{22}{15}\approx1{,}47\) ; \(\sigma=\sqrt{\dfrac{22}{15}}\approx1{,}21\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+<p>Des agents de la circulation ont relevé les vitesses (en km/h) de \(18\) voitures :</p>
+<div class="tableau"><table><tbody><tr><td>\(80\)</td><td>\(90\)</td><td>\(70\)</td><td>\(100\)</td><td>\(90\)</td><td>\(80\)</td></tr><tr><td>\(90\)</td><td>\(110\)</td><td>\(80\)</td><td>\(90\)</td><td>\(70\)</td><td>\(100\)</td></tr><tr><td>\(80\)</td><td>\(90\)</td><td>\(100\)</td><td>\(70\)</td><td>\(90\)</td><td>\(80\)</td></tr></tbody></table></div>
+<ol>
+  <li>Donner la population et le caractère étudiés ; préciser la nature du caractère.</li>
+  <li>Dresser le tableau des effectifs, des effectifs cumulés et des fréquences.</li>
+  <li>Construire le diagramme en bâtons de cette série.</li>
+  <li>Déterminer le mode, la médiane et la moyenne de cette série.</li>
+  <li>Calculer l'étendue, la variance et l'écart-type.</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ V ============================ -->
+<section class="chap" id="s5" data-toc="Synthèse">
+  <h2><span class="num">V</span><span class="titre">Synthèse</span></h2>
+  <div class="bloc ret"><div class="tag">À retenir</div>
+<div class="tableau"><table><thead><tr><th scope="col">Paramètre</th><th scope="col">Formule / méthode</th></tr></thead><tbody><tr><td>Fréquence</td><td>\(f_i=\frac{n_i}N\), \(\sum f_i=1\)</td></tr><tr><td>Moyenne</td><td>\(\overline{x}=\frac1N\sum n_ix_i\) (centres des classes pour une série continue)</td></tr><tr><td>Médiane</td><td>partage la série ordonnée en deux ; effectifs cumulés</td></tr><tr><td>Mode</td><td>valeur (ou classe) de plus grand effectif</td></tr><tr><td>Variance, écart-type</td><td>\(V=\frac1N\sum n_ix_i^2-\overline{x}^{\,2}\), \(\sigma=\sqrt V\)</td></tr></tbody></table></div>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}

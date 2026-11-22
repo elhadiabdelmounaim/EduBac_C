@@ -1,0 +1,229 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : Tronc commun scientifique — Les ensembles de nombres $\mathbb{N}$, $\mathbb{Z}$, $\mathbb{D}$, $\mathbb{Q}$ et $\mathbb{R}$ (chapitre 2, ).
+Généré depuis TC_Ensembles_de_nombres.tex (le PDF d'origine est dans le dossier Cours de la leçon, media/lessons/TCS/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < », « > » et « & » sont écrits &lt;, &gt; et &amp;.
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">Tronc commun scientifique</span>
+        <span class="chip or">Chapitre 2</span>
+        <span class="chip">Semestre 1</span>
+      </div>
+      <h1 id="cours-titre">Les ensembles de nombres \(\mathbb{N}\), \(\mathbb{Z}\), \(\mathbb{D}\), \(\mathbb{Q}\) et \(\mathbb{R}\)</h1>
+      <p class="sous-titre">Volume horaire : 8 heures</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectif"><strong>Contenus</strong>
+<ul>
+  <li>Les ensembles \(\mathbb{N}\), \(\mathbb{Z}\), \(\mathbb{D}\), \(\mathbb{Q}\), \(\mathbb{R}\) et leurs inclusions.</li>
+  <li>Opérations sur les fractions.</li>
+  <li>Puissances ; écriture scientifique.</li>
+  <li>Racines carrées ; expression conjuguée.</li>
+  <li>Identités remarquables ; factorisation.</li>
+</ul>
+  </div>
+  <div class="cadre objectif"><strong>Capacités attendues</strong>
+<ul>
+  <li>Reconnaître la nature d'un nombre et utiliser \(\in\), \(\notin\), \(\subset\), \(\not\subset\).</li>
+  <li>Calculer avec des fractions, des puissances, des racines.</li>
+  <li>Développer et factoriser avec les identités remarquables.</li>
+</ul>
+  </div>
+
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Les ensembles ℕ, ℤ, D, Q et ℝ">
+  <h2><span class="num">I</span><span class="titre">Les ensembles \(\mathbb{N}\), \(\mathbb{Z}\), \(\mathbb{D}\), \(\mathbb{Q}\) et \(\mathbb{R}\)</span></h2>
+  <div class="bloc act"><div class="tag">Activité 1</div>
+<p>Cocher les cases convenables :</p>
+<div class="tableau"><table><thead><tr><th scope="col"></th><th scope="col">\(\frac{-\sqrt{16}}{2}\)</th><th scope="col">\(-\frac52\)</th><th scope="col">\(12{,}23\)</th><th scope="col">\(\frac\pi2\)</th><th scope="col">\(8\)</th><th scope="col">\(\sqrt2\)</th><th scope="col">\(-6\)</th></tr></thead><tbody><tr><td>Entier naturel</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Entier relatif</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Nombre décimal</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Nombre rationnel</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Nombre irrationnel</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Nombre réel</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr></tbody></table></div>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<ul>
+  <li>\(\mathbb{N}=\{0;1;2;3;\dots\}\) est l'ensemble des <strong>entiers naturels</strong>.</li>
+  <li>\(\mathbb{Z}=\{\dots;-2;-1;0;1;2;\dots\}\) est l'ensemble des <strong>entiers relatifs</strong>.</li>
+  <li>\(\mathbb{D}=\left\{\dfrac{a}{10^p}\ /\ a\in\mathbb{Z} \text{ et } p\in\mathbb{N}\right\}\) est l'ensemble des <strong>nombres décimaux</strong> : ce sont les nombres qui s'écrivent avec un nombre <strong>fini</strong> de chiffres après la virgule.</li>
+  <li>\(\mathbb{Q}=\left\{\dfrac ab\ /\ a\in\mathbb{Z} \text{ et } b\in\mathbb{N}^*\right\}\) est l'ensemble des <strong>nombres rationnels</strong>.</li>
+  <li>\(\mathbb{R}\) est l'ensemble des <strong>nombres réels</strong> : il est formé des nombres rationnels et des nombres <strong>irrationnels</strong> (comme \(\sqrt2\) ou \(\pi\)).</li>
+</ul>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<div class="avec-fig">
+<div>
+<p>On a les inclusions : \(\mathbb{N}\subset\mathbb{Z}\subset\mathbb{D}\subset\mathbb{Q}\subset\mathbb{R}\).<br> Le symbole « \(\subset\) » se lit « <em>est inclus dans</em> ».<br> Notations : \(\mathbb{R}^*\) (réels non nuls), \(\mathbb{R}_+\) (réels positifs), \(\mathbb{R}_-\) (réels négatifs), \(\mathbb{R}_+^*\) (réels strictement positifs), \(\mathbb{Z}^*\), \(\mathbb{N}^*\), …</p>
+</div>
+<figure class="fig"><svg viewBox="-157.2 -88.8 314.4 177.6" role="img" aria-label="Figure"><path d="M0.0 -0.0" fill="color-mix(in srgb, var(--fig-trait) 80%, var(--surface))" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-18.0 5.4" fill="color-mix(in srgb, var(--fig-trait) 55%, var(--surface))" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-34.2 9.0" fill="color-mix(in srgb, var(--fig-trait) 35%, var(--surface))" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-48.6 12.6" fill="color-mix(in srgb, var(--fig-trait) 18%, var(--surface))" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-63.0 16.2" fill="var(--surface)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="0.0" cy="-0.0" rx="151.2" ry="82.8" fill="color-mix(in srgb, var(--fig-trait) 80%, var(--surface))" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="-18.0" cy="5.4" rx="122.4" ry="66.6" fill="color-mix(in srgb, var(--fig-trait) 55%, var(--surface))" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="-34.2" cy="9.0" rx="97.2" ry="52.2" fill="color-mix(in srgb, var(--fig-trait) 35%, var(--surface))" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="-48.6" cy="12.6" rx="72.0" ry="38.9" fill="color-mix(in srgb, var(--fig-trait) 18%, var(--surface))" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="-63.0" cy="16.2" rx="45.0" ry="25.9" fill="var(--surface)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-63.0" y="8.3" text-anchor="middle" style="font-size:13.5px">ℕ</text><text x="-82.8" y="25.6" text-anchor="middle" style="font-size:11.5px">0</text><text x="-46.8" y="29.2" text-anchor="middle" style="font-size:11.5px">7</text><text x="7.2" y="-7.9" text-anchor="middle" style="font-size:13.5px">ℤ</text><text x="9.0" y="22.0" text-anchor="middle" style="font-size:11.5px">−3</text><text x="36.0" y="-25.9" text-anchor="middle" style="font-size:13.5px">D</text><text x="41.4" y="16.6" text-anchor="middle" style="font-size:11.5px">2,5</text><text x="68.4" y="-40.3" text-anchor="middle" style="font-size:13.5px;fill:var(--surface)">Q</text><text x="77.4" y="11.2" text-anchor="middle" style="font-size:11.5px;fill:var(--surface)">1/3</text><text x="118.8" y="-34.9" text-anchor="middle" style="font-size:13.5px;fill:var(--surface)">ℝ</text><text x="127.8" y="4.0" text-anchor="middle" style="font-size:11.5px;fill:var(--surface)">√2</text><text x="118.8" y="34.6" text-anchor="middle" style="font-size:11.5px;fill:var(--surface)">π</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>\(\dfrac34=0{,}75=\dfrac{75}{100}\in\mathbb{D}\) et \(-15{,}237=\dfrac{-15\,237}{10^3}\in\mathbb{D}\).</li>
+  <li>\(\dfrac13=0{,}333\ldots\) est rationnel mais <strong>n'est pas décimal</strong> : si \(\dfrac13=\dfrac a{10^p}\), alors \(10^p=3a\), donc \(3\) diviserait \(10^p=2^p\times5^p\), ce qui est impossible.</li>
+  <li>Le développement décimal d'un rationnel est fini ou <strong>périodique</strong> : \(\dfrac1{11}=0{,}0909\ldots\) ; \(\dfrac{47}{37}=1{,}270\,270\ldots\)</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Démonstration — \(\sqrt2\) est irrationnel</div>
+<p>Supposons par l'absurde que \(\sqrt2=\dfrac ab\) avec \(a,b\in\mathbb{N}^*\) et \(\dfrac ab\) irréductible. Alors \(a^2=2b^2\), donc \(a^2\) est pair, donc \(a\) est pair : \(a=2k\). Alors \(4k^2=2b^2\), soit \(b^2=2k^2\) : \(b\) est pair aussi.<br> Ainsi \(a\) et \(b\) sont pairs, ce qui contredit le fait que \(\dfrac ab\) est irréductible. Donc \(\sqrt2\notin\mathbb{Q}\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+<p>Compléter à l'aide de l'un des symboles suivants : \(\in\), \(\notin\), \(\subset\), \(\not\subset\).</p>
+\[
+\begin{array}{llllll}
+10\ \dots\ \mathbb{N} &amp; \dfrac{2\pi}{3}\ \dots\ \mathbb{R} &amp; \mathbb{R}\ \dots\ \mathbb{Z} &amp; \mathbb{N}\ \dots\ \mathbb{D} &amp; 3{,}5\ \dots\ \mathbb{Z} &amp; \dfrac{\sqrt2}{3}\ \dots\ \mathbb{Q}\\[3mm]
+\mathbb{R}\ \dots\ \mathbb{N} &amp; \dfrac{-\sqrt{12}}{\sqrt3}\ \dots\ \mathbb{Z} &amp; \mathbb{Z}\ \dots\ \mathbb{Q} &amp; 0\ \dots\ \mathbb{R}^* &amp; \sqrt{49}\ \dots\ \mathbb{N} &amp; \mathbb{D}\ \dots\ \mathbb{R}\\[3mm]
+\pi\ \dots\ \mathbb{Q} &amp; \dfrac13\ \dots\ \mathbb{D} &amp; \dfrac{9}{125}\ \dots\ \mathbb{D} &amp; &amp; &amp;
+\end{array}
+\]
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Les opérations dans ℝ">
+  <h2><span class="num">II</span><span class="titre">Les opérations dans \(\mathbb{R}\)</span></h2>
+  <div class="bloc act"><div class="tag">Activité 2</div>
+<ol>
+  <li>Simplifier l'expression : \(A=a-(b-c)-(b-c-a)-\big[(c-a-b)-(a+b+c)\big]\).</li>
+  <li>Calculer le nombre : \(B=\left(\dfrac12-\dfrac23-\dfrac34\right)\times\dfrac4{11}+3\left(5-\dfrac29\right)\).</li>
+</ol>
+  </div>
+  <div class="bloc prop"><div class="tag">Règles de calcul sur les fractions</div>
+<p>Soient \(a\), \(b\), \(c\), \(d\) des nombres réels.</p>
+<ul>
+  <li>\(\dfrac ab+\dfrac cd=\dfrac{ad+bc}{bd}\) (\(b\neq0\), \(d\neq0\))</li>
+  <li>\(\dfrac{1}{\frac ab}=\dfrac ba\) (\(a\neq0\), \(b\neq0\))</li>
+  <li>\(\dfrac ab=c\iff a=bc\) (\(b\neq0\))</li>
+  <li>\(\dfrac ab\times\dfrac cd=\dfrac{ac}{bd}\) (\(b\neq0\), \(d\neq0\))</li>
+  <li>\(\dfrac{\frac ab}{\frac cd}=\dfrac ab\times\dfrac dc\) (\(b,c,d\neq0\))</li>
+  <li>\(\dfrac ab=\dfrac cd\iff ad=bc\) (\(b\neq0\), \(d\neq0\))</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 2</div>
+<ol>
+  <li>Calculer : \(A=\left(\dfrac{1+\frac13}{1-\frac13}\right)\times\left(\dfrac{1+\frac12}{1-\frac12}\right)\).</li>
+  <li>Soient \(x\) et \(y\) deux réels non nuls tels que \(x\neq y\). Montrer que \(\dfrac{-1+\frac{x}{x-y}}{1+\frac{y}{x-y}}=\dfrac yx\).</li>
+  <li>Déterminer les valeurs de \(x\) pour lesquelles on peut calculer \(A=\dfrac{5}{2(x+3)}+\dfrac{4}{2(1-x)}\), puis écrire \(A\) sous forme d'une seule fraction.</li>
+  <li>Soient \(a\), \(b\), \(c\) trois réels distincts. Montrer que \(\dfrac{1}{(a-b)(a-c)}+\dfrac{1}{(b-c)(b-a)}+\dfrac{1}{(c-a)(c-b)}=0\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Puissances – Écriture scientifique">
+  <h2><span class="num">III</span><span class="titre">Puissances – Écriture scientifique</span></h2>
+  <div class="bloc prop"><div class="tag">Règles de calcul sur les puissances</div>
+<p>Soient \(a\) et \(b\) deux réels non nuls et \(n\), \(p\) deux entiers relatifs.</p>
+<ul>
+  <li>\(a^n\times a^p=a^{n+p}\)</li>
+  <li>\(\dfrac{a^n}{a^p}=a^{n-p}\)</li>
+  <li>\(\big(a^n\big)^p=a^{np}\)</li>
+  <li>\(\dfrac1{a^n}=a^{-n}\)</li>
+  <li>\(a^n\times b^n=(ab)^n\)</li>
+  <li>\(\dfrac{a^n}{b^n}=\left(\dfrac ab\right)^n\)</li>
+</ul>
+<p>Par convention \(a^0=1\). Si \(n\) est pair, \((-a)^n=a^n\) ; si \(n\) est impair, \((-a)^n=-a^n\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 3</div>
+<ol>
+  <li>Simplifier : \(A=2^{-5}\times3^{-3}\times2^{10}\times3^3\times(-1)^{2017}\) et \(B=\dfrac{4\times(10^{-2})^3\times10}{10^{-5}\times16}\).</li>
+  <li>On considère \(A=\dfrac{6^{15}\times25^7}{3^7\times9^4}\). Déterminer les entiers \(m\) et \(n\) tels que \(A=2^m\times5^n\).</li>
+</ol>
+  </div>
+  <div class="bloc def"><div class="tag">Définition — Écriture scientifique</div>
+<p>Tout nombre décimal non nul \(x\) s'écrit de façon unique sous la forme \(x=a\times10^n\), avec \(n\in\mathbb{Z}\) et \(1\le|a|&lt;10\) (c'est-à-dire \(1\le a&lt;10\) ou \(-10&lt;a\le-1\)). C'est l'<strong>écriture scientifique</strong> de \(x\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(0{,}043=4{,}3\times10^{-2}\) ; \(47{,}3=4{,}73\times10^{1}\) ; \(5110=5{,}11\times10^{3}\) ; \(-0{,}00757=-7{,}57\times10^{-3}\).<br> Le nombre \(6500\times10^5\) n'est pas en écriture scientifique : \(6500\times10^5=6{,}5\times10^3\times10^5=6{,}5\times10^8\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 4</div>
+<p>Écrire les nombres suivants en écriture scientifique :</p>
+\[ 251{,}3 \ ; \ 0{,}095 \ ; \ 27{,}31\times10^3 \ ; \ 150\times10^{-3} \ ; \ -5248{,}3 \ ; \ -872{,}731\times10^{-4} \ ; \ 0{,}012\times10^{-3}. \]
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Racines carrées">
+  <h2><span class="num">IV</span><span class="titre">Racines carrées</span></h2>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soit \(x\) un réel positif. La <strong>racine carrée</strong> de \(x\), notée \(\sqrt x\), est le réel <strong>positif</strong> dont le carré est égal à \(x\).</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(a\in\mathbb{R}_+\), \(b\in\mathbb{R}_+\) et \(n\in\mathbb{N}^*\).</p>
+<ul>
+  <li>\(\big(\sqrt a\big)^2=\sqrt{a^2}=a\)</li>
+  <li>\(\sqrt{a}\times\sqrt b=\sqrt{ab}\)</li>
+  <li>\(\sqrt{a^n}=\big(\sqrt a\big)^n\)</li>
+  <li>\(\dfrac{\sqrt a}{\sqrt b}=\sqrt{\dfrac ab}\) (\(b\neq0\))</li>
+  <li>\(\dfrac{1}{\sqrt a}=\dfrac{\sqrt a}{a}\) (\(a\neq0\))</li>
+  <li>\(\sqrt{x^2}=|x|\) pour tout \(x\in\mathbb{R}\)</li>
+</ul>
+  </div>
+  <div class="bloc att"><div class="tag">Attention — erreurs fréquentes</div>
+<ul>
+  <li>En général, \(\sqrt{a+b}\neq\sqrt a+\sqrt b\) : par exemple \(\sqrt{9+16}=5\) alors que \(\sqrt9+\sqrt{16}=7\).</li>
+</ul>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Supprimer une racine au dénominateur (expression conjuguée)</div>
+<p>Pour \(a,b\in\mathbb{R}_+\) avec \(a\neq b\), on multiplie par l'expression conjuguée : \((\sqrt a-\sqrt b)(\sqrt a+\sqrt b)=a-b\).<br> Exemple : \(\dfrac{1}{\sqrt5-\sqrt3}=\dfrac{\sqrt5+\sqrt3}{(\sqrt5-\sqrt3)(\sqrt5+\sqrt3)}=\dfrac{\sqrt5+\sqrt3}{2}\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 5</div>
+<ol>
+  <li>Simplifier : \(A=\sqrt{2^2\times12^3\times3}\) ; \(B=\sqrt{4^2+3^2}\) ; \(C=\sqrt{\dfrac25}\times\sqrt{\dfrac{10}{16}}\) ; \(D=(\sqrt3+\sqrt6)(1-\sqrt2)\).</li>
+  <li>Soient \(a\) et \(b\) deux réels positifs. Simplifier : \(\sqrt a\sqrt{a^3b^2}-\sqrt b\sqrt{a^4b}+\sqrt{a^4b^4}\).</li>
+  <li>Montrer que : \(\dfrac{5\sqrt7}{\sqrt2-\sqrt7}+\dfrac{5\sqrt2}{\sqrt2+\sqrt7}\in\mathbb{Z}\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ V ============================ -->
+<section class="chap" id="s5" data-toc="Identités remarquables">
+  <h2><span class="num">V</span><span class="titre">Identités remarquables</span></h2>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Pour tous réels \(a\) et \(b\) :</p>
+<ul>
+  <li>\((a+b)^2=a^2+2ab+b^2\)</li>
+  <li>\((a-b)^2=a^2-2ab+b^2\)</li>
+  <li>\((a-b)(a+b)=a^2-b^2\)</li>
+  <li>\((a+b)^3=a^3+3a^2b+3ab^2+b^3\)</li>
+  <li>\((a-b)^3=a^3-3a^2b+3ab^2-b^3\)</li>
+  <li>\(a^3+b^3=(a+b)(a^2-ab+b^2)\)</li>
+  <li>\(a^3-b^3=(a-b)(a^2+ab+b^2)\)</li>
+</ul>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Factoriser une expression</div>
+<ol>
+  <li>Chercher un <strong>facteur commun</strong> (éventuellement après avoir factorisé une partie de l'expression).</li>
+  <li>Sinon, reconnaître une <strong>identité remarquable</strong>, puis recommencer.</li>
+</ol>
+<p>Exemple : \(x^2-9+(x-1)(x+3)=(x-3)(x+3)+(x-1)(x+3)=(x+3)(2x-4)=2(x+3)(x-2)\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 6</div>
+<ol>
+  <li>Développer : \((a+2)(a^2-2a+4)\) ; \((x-1)(x^2+x+1)\) ; \((b+2)^3\) ; \((y-5)^3\).</li>
+  <li>Factoriser les expressions suivantes :
+<ul>
+  <li>\(A(x)=x^2-9+(x-1)(x+3)-2(x+3)^2\) \(B(x)=4x^2-36x\) \(C(x)=x^3-1000\)</li>
+  <li>\(D(x)=x^3-8+4(x^2-4)-3x+6\) \(E(x)=x^3+1+2(x^2-1)-(x+1)\)</li>
+</ul></li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ VI ============================ -->
+<section class="chap" id="s6" data-toc="Synthèse">
+  <h2><span class="num">VI</span><span class="titre">Synthèse</span></h2>
+  <div class="bloc ret"><div class="tag">À retenir</div>
+<div class="tableau"><table><thead><tr><th scope="col">Notion</th><th scope="col">À retenir</th></tr></thead><tbody><tr><td>Ensembles</td><td>\(\mathbb{N}\subset\mathbb{Z}\subset\mathbb{D}\subset\mathbb{Q}\subset\mathbb{R}\) ; \(\mathbb{D}=\left\{\frac a{10^p}\right\}\), \(\mathbb{Q}=\left\{\frac ab\right\}\)</td></tr><tr><td>Fractions</td><td>\(\dfrac ab+\dfrac cd=\dfrac{ad+bc}{bd}\) ; \(\dfrac ab=\dfrac cd\iff ad=bc\)</td></tr><tr><td>Puissances</td><td>\(a^na^p=a^{n+p}\), \(\frac{a^n}{a^p}=a^{n-p}\), \((a^n)^p=a^{np}\), \(a^{-n}=\frac1{a^n}\)</td></tr><tr><td>Écriture scientifique</td><td>\(x=a\times10^n\) avec \(1\le|a|&lt;10\) et \(n\in\mathbb{Z}\)</td></tr><tr><td>Racines</td><td>\(\sqrt a\sqrt b=\sqrt{ab}\) ; \(\sqrt{x^2}=|x|\) ; conjugué : \((\sqrt a-\sqrt b)(\sqrt a+\sqrt b)=a-b\)</td></tr><tr><td>Identités</td><td>\((a\pm b)^2\), \(a^2-b^2\), \((a\pm b)^3\), \(a^3\pm b^3=(a\pm b)(a^2\mp ab+b^2)\)</td></tr></tbody></table></div>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}

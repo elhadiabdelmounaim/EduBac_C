@@ -1,0 +1,230 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : Tronc commun scientifique — Les polynômes (chapitre 4, ).
+Généré depuis TC_Polynomes.tex (le PDF d'origine est dans le dossier Cours de la leçon, media/lessons/TCS/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < », « > » et « & » sont écrits &lt;, &gt; et &amp;.
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">Tronc commun scientifique</span>
+        <span class="chip or">Chapitre 4</span>
+        <span class="chip">Semestre 1</span>
+      </div>
+      <h1 id="cours-titre">Les polynômes</h1>
+      <p class="sous-titre">Volume horaire : 8 heures</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectif"><strong>Contenus</strong>
+<ul>
+  <li>Monôme, polynôme, degré.</li>
+  <li>Égalité de deux polynômes ; somme et produit.</li>
+  <li>Racine d'un polynôme ; divisibilité par \(x-a\).</li>
+  <li>Division euclidienne par \(x-a\) ; méthode de Horner.</li>
+  <li>Factorisation.</li>
+</ul>
+  </div>
+  <div class="cadre objectif"><strong>Capacités attendues</strong>
+<ul>
+  <li>Reconnaître un polynôme et donner son degré.</li>
+  <li>Identifier des coefficients.</li>
+  <li>Vérifier qu'un réel est racine.</li>
+  <li>Effectuer la division par \(x-a\).</li>
+  <li>Factoriser un polynôme et résoudre \(P(x)=0\).</li>
+</ul>
+  </div>
+
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Définitions">
+  <h2><span class="num">I</span><span class="titre">Définitions</span></h2>
+  <div class="bloc act"><div class="tag">Activité 1</div>
+<p>Les dimensions d'un pavé droit sont \(x-1\), \(x+1\) et \(x+3\), où \(x\) est un réel strictement supérieur à \(1\). On note \(P(x)\) son volume.<br> Développer \(P(x)\), puis donner la plus grande puissance de \(x\) qui y figure et le coefficient de chaque puissance.</p>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<ul>
+  <li>Un <strong>monôme</strong> de la variable \(x\) est une expression de la forme \(a\,x^n\), où \(a\in\mathbb{R}^*\) est son <strong>coefficient</strong> et \(n\in\mathbb{N}\) son <strong>degré</strong>.</li>
+  <li>Un <strong>polynôme</strong> est une somme de monômes :
+\[ P(x)=a_nx^n+a_{n-1}x^{n-1}+\dots+a_1x+a_0 \qquad (a_n\neq0). \]</li>
+  <li>Le <strong>degré</strong> de \(P\), noté \(\mathrm{d}^\circ P\) (ou \(\deg P\)), est le plus grand degré de ses monômes : ici \(\mathrm{d}^\circ P=n\).<br> \(a_n\) est le <strong>coefficient dominant</strong> et \(a_0\) le <strong>terme constant</strong>.</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(P(x)=(x-1)(x+1)(x+3)=x^3+3x^2-x-3\) est un polynôme de <strong>degré \(3\)</strong> : le coefficient de \(x^2\) est \(3\), celui de \(x\) est \(-1\) et le terme constant est \(-3\).</p>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<ul>
+  <li>Un polynôme de degré \(1\) s'écrit \(ax+b\) (\(a\neq0\)) ; de degré \(2\) : \(ax^2+bx+c\) (\(a\neq0\)) ; de degré \(3\) : \(ax^3+bx^2+cx+d\) (\(a\neq0\)).</li>
+  <li>Une constante non nulle est un polynôme de degré \(0\). Le <strong>polynôme nul</strong> (\(P(x)=0\)) n'a pas de degré.</li>
+  <li>Une expression contenant \(|x|\), \(\sqrt x\) ou \(\dfrac1x\) n'est pas un polynôme.</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+<p>Parmi les expressions suivantes, lesquelles sont des polynômes ? Donner alors le degré, le coefficient de \(x^2\) et celui de \(x^3\).</p>
+\[ x^6+24x^2+\frac{\sqrt2}{5}\ ; \qquad x^4-|x|+4\ ; \qquad 2x^2+\sqrt x+2\ ; \qquad 6\ ; \qquad 2\left(\frac1x\right)^2+x\ ; \qquad (x-1)^2-x^2. \]
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Égalité et opérations">
+  <h2><span class="num">II</span><span class="titre">Égalité et opérations</span></h2>
+  <h3><span class="n">II.1</span>Égalité de deux polynômes</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Deux polynômes sont <strong>égaux</strong> si et seulement s'ils ont le <strong>même degré</strong> et si les coefficients des monômes de même degré sont <strong>égaux</strong>.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(P(x)=x(x+1)^2-x^2+1=x^3+x^2+x+1\) et \(Q(x)=x^3-x^2+x+1\) : les coefficients de \(x^2\) sont différents (\(1\neq-1\)), donc \(P\neq Q\).</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Identification des coefficients</div>
+<p>Pour déterminer des paramètres rendant deux polynômes égaux, on écrit chacun sous forme développée et réduite, puis on égale les coefficients de \(x^n\), \(x^{n-1}\), …, et les termes constants.</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 2</div>
+<p>On considère \(P(x)=2x^2-(b-1)x+5\) et \(Q(x)=(a+1)x^2+4x+c\).<br> Déterminer les réels \(a\), \(b\) et \(c\) pour que \(P\) et \(Q\) soient égaux.</p>
+  </div>
+  <h3><span class="n">II.2</span>Somme et produit</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(P\) et \(Q\) deux polynômes non nuls.</p>
+<ul>
+  <li>\(P+Q\) et \(P-Q\) sont des polynômes (on additionne les coefficients des monômes de même degré), et, s'ils ne sont pas nuls,
+\[ \mathrm{d}^\circ(P+Q)\le\max\big(\mathrm{d}^\circ P\,;\,\mathrm{d}^\circ Q\big). \]</li>
+  <li>\(P\times Q\) est un polynôme et \(\mathrm{d}^\circ(P\times Q)=\mathrm{d}^\circ P+\mathrm{d}^\circ Q\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soient \(P(x)=4x^3-3x+1\) et \(Q(x)=-3x^3+x+2\).</p>
+<ul>
+  <li>\(P(x)+Q(x)=x^3-2x+3\) et \(P(x)-Q(x)=7x^3-4x-1\).</li>
+  <li>\(P(x)\times Q(x)=-12x^6+13x^4+5x^3-3x^2-5x+2\) : de degré \(6=3+3\).</li>
+  <li>Le degré d'une somme peut <strong>diminuer</strong> : \((x^2+x)+(-x^2+1)=x+1\) est de degré \(1\).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 3</div>
+<p>Déterminer le degré du polynôme \(Q\), puis sa forme développée, sachant que :</p>
+\[ x^4-2x^3+x^2-2x=(x^2+1)\,Q(x). \]
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Racine d'un polynôme – Divisibilité par x−a">
+  <h2><span class="num">III</span><span class="titre">Racine d'un polynôme – Divisibilité par \(x-a\)</span></h2>
+  <h3><span class="n">III.1</span>Racine d'un polynôme</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soient \(P\) un polynôme et \(a\) un réel. On dit que \(a\) est une <strong>racine</strong> (ou un <strong>zéro</strong>) de \(P\) si \(P(a)=0\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soit \(P(x)=x^3-2x^2-x+2\). \(P(1)=1-2-1+2=0\), \(P(-1)=-1-2+1+2=0\), \(P(2)=8-8-2+2=0\) : les réels \(1\), \(-1\) et \(2\) sont des racines de \(P\).<br> En revanche \(P(\sqrt2)=2\sqrt2-4-\sqrt2+2=\sqrt2-2\neq0\) : \(\sqrt2\) n'est pas une racine.</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 4</div>
+<ol>
+  <li>Montrer que \(0\) est une racine de \(P(x)=5x^3+5x^2-10x\), puis trouver ses deux autres racines parmi \(-2\), \(-1\), \(1\) et \(2\).</li>
+  <li>Déterminer le réel \(a\) pour que \(2\) soit une racine du polynôme \(P(x)=x^3-2x^2+ax+6\).</li>
+</ol>
+  </div>
+  <h3><span class="n">III.2</span>Divisibilité par \(x-a\)</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(P\) un polynôme de degré \(n\ge1\) et \(a\) un réel.</p>
+<ul>
+  <li>Il existe un unique polynôme \(Q\), de degré \(n-1\), tel que :
+\[ P(x)=(x-a)\,Q(x)+P(a). \]
+\(Q(x)\) est le <strong>quotient</strong> et \(P(a)\) le <strong>reste</strong> de la division euclidienne de \(P(x)\) par \(x-a\).</li>
+  <li>\(P(x)\) est <strong>divisible</strong> par \(x-a\) \(\iff\) \(a\) est une <strong>racine</strong> de \(P\) \(\iff\) \(P(x)=(x-a)Q(x)\).</li>
+</ul>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<p>Si \(a\) et \(b\) sont deux racines distinctes de \(P\), alors \(P(x)\) est divisible par \((x-a)(x-b)\).</p>
+  </div>
+  <h3><span class="n">III.3</span>Déterminer le quotient : trois méthodes</h3>
+  <div class="bloc meth"><div class="tag">Méthode 1 — La division euclidienne (« potence »)</div>
+<p>On divise le monôme de plus haut degré de \(P\) par \(x\), on multiplie par \((x-a)\), on soustrait, et on recommence jusqu'à obtenir un reste constant.</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode 2 — L'identification</div>
+<p>On écrit \(Q(x)=bx^{n-1}+\dots\) avec des coefficients inconnus, on développe \((x-a)Q(x)+P(a)\) et on identifie avec \(P(x)\).</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode 3 — Le tableau de Horner</div>
+<p>On écrit les coefficients de \(P\) (sans en oublier : un coefficient absent vaut \(0\)) sur la première ligne.<br> On abaisse le premier coefficient ; puis chaque nombre obtenu est multiplié par \(a\) et ajouté au coefficient suivant.<br> La dernière ligne donne les coefficients de \(Q\), et le dernier nombre est le reste \(P(a)\).</p>
+<p>Division de \(x^4-3x^3+2x^2+5x-4\) par \(x-2\)</p>
+<div class="tableau"><table><tbody><tr><td></td><td>\(1\)</td><td>\(-3\)</td><td>\(2\)</td><td>\(5\)</td><td>\(-4\)</td></tr><tr><td>\(a=2\)</td><td></td><td>\(2\)</td><td>\(-2\)</td><td>\(0\)</td><td>\(10\)</td></tr><tr><td></td><td>\(\mathbf 1\)</td><td>\(\mathbf{-1}\)</td><td>\(\mathbf 0\)</td><td>\(\mathbf 5\)</td><td><span class="encadre">\(\mathbf 6\)</span></td></tr></tbody></table></div>
+<p>\(Q(x)=x^3-x^2+5\) reste \(=6=P(2)\)</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Division de \(P(x)=x^4-3x^3+2x^2+5x-4\) par \(x-2\) à la potence :</p>
+\[
+\begin{array}{rrrrr|l}
+x^4&amp;-3x^3&amp;+2x^2&amp;+5x&amp;-4 &amp; \,x-2\\ \cline{6-6}
+-(x^4&amp;-2x^3)&amp;&amp;&amp;&amp; \,x^3-x^2+5\\ \cline{1-2}
+&amp;-x^3&amp;+2x^2&amp;&amp;&amp;\\
+&amp;-(-x^3&amp;+2x^2)&amp;&amp;&amp;\\ \cline{2-3}
+&amp;&amp;0&amp;+5x&amp;-4&amp;\\
+&amp;&amp;&amp;-(5x&amp;-10)&amp;\\ \cline{4-5}
+&amp;&amp;&amp;&amp;6&amp;
+\end{array}
+\]
+<p>Donc \(x^4-3x^3+2x^2+5x-4=(x-2)(x^3-x^2+5)+6\) ; on vérifie que \(P(2)=16-24+8+10-4=6\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 5</div>
+<p>On considère \(P(x)=2x^3-x^2+x+4\) et \(Q(x)=x^3-3x^2+x+3\).</p>
+<ol>
+  <li><strong>a)</strong> \(P(x)\) est-il divisible par \(x+1\) ? <strong>b)</strong> Effectuer la division euclidienne de \(P(x)\) par \(x+1\).</li>
+  <li><strong>a)</strong> \(Q(x)\) est-il divisible par \(x-3\) ? <strong>b)</strong> Effectuer la division euclidienne de \(Q(x)\) par \(x-3\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Factorisation d'un polynôme">
+  <h2><span class="num">IV</span><span class="titre">Factorisation d'un polynôme</span></h2>
+  <div class="bloc meth"><div class="tag">Méthode — Factoriser et résoudre \(P(x)=0\)</div>
+<ol>
+  <li>On cherche une racine « évidente » \(a\) parmi \(0\), \(\pm1\), \(\pm2\), \(\pm3\), … (souvent un diviseur du terme constant).</li>
+  <li>On écrit \(P(x)=(x-a)Q(x)\) (Horner, potence ou identification).</li>
+  <li>On factorise \(Q(x)\) (racine évidente, identité remarquable…).</li>
+  <li>On résout \(P(x)=0\) à l'aide de : un produit est nul si et seulement si l'un de ses facteurs est nul.</li>
+</ol>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soit \(P(x)=2x^3-3x^2-11x+6\).</p>
+<ul>
+  <li>\(P(3)=54-27-33+6=0\), donc \(P(x)\) est divisible par \(x-3\).</li>
+  <li><p>Horner avec \(a=3\) :</p>
+<div class="tableau"><table><tbody><tr><td></td><td>\(2\)</td><td>\(-3\)</td><td>\(-11\)</td><td>\(6\)</td></tr><tr><td>\(3\)</td><td></td><td>\(6\)</td><td>\(9\)</td><td>\(-6\)</td></tr><tr><td></td><td>\(2\)</td><td>\(3\)</td><td>\(-2\)</td><td>\(0\)</td></tr></tbody></table></div>
+<p>donc \(P(x)=(x-3)(2x^2+3x-2)\).</p></li>
+  <li>\(2x^2+3x-2\) admet la racine \(-2\) (\(8-6-2=0\)), et \(2x^2+3x-2=(x+2)(2x-1)\).</li>
+  <li>Finalement \(P(x)=(x-3)(x+2)(2x-1)\), et l'ensemble des solutions de \(P(x)=0\) est \(S=\left\{-2\,;\,\dfrac12\,;\,3\right\}\).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 6</div>
+<p>On considère le polynôme \(P(x)=x^3-2x^2-5x+6\).</p>
+<ol>
+  <li>Montrer que \(P(x)\) est divisible par \(x-1\).</li>
+  <li>Déterminer, par deux méthodes différentes, le polynôme \(Q(x)\) tel que \(P(x)=(x-1)Q(x)\).</li>
+  <li>Montrer que \(3\) est une racine de \(Q\), puis factoriser \(Q(x)\).</li>
+  <li>En déduire une factorisation de \(P(x)\) et résoudre l'équation \(P(x)=0\).</li>
+</ol>
+  </div>
+  <div class="bloc app"><div class="tag">Application — Pour aller plus loin</div>
+<p>Soit \(n\in\mathbb{N}^*\) et \(P(x)=(x-2)^{3n}+(x-1)^{2n}-1\).</p>
+<ol>
+  <li>Montrer qu'il existe un polynôme \(Q\) tel que \(P(x)=(x-2)Q(x)\).</li>
+  <li>Quel est le degré de \(Q\) ? Justifier.</li>
+  <li>Calculer \(P(1)\) en fonction de \(n\), puis déterminer les valeurs de \(n\) pour lesquelles \(P(x)\) est divisible par \(x-1\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ V ============================ -->
+<section class="chap" id="s5" data-toc="Synthèse">
+  <h2><span class="num">V</span><span class="titre">Synthèse</span></h2>
+  <div class="bloc ret"><div class="tag">À retenir</div>
+<div class="tableau"><table><thead><tr><th scope="col">Notion</th><th scope="col">À retenir</th></tr></thead><tbody><tr><td>Degré</td><td>plus grande puissance ; \(\mathrm{d}^\circ(PQ)=\mathrm{d}^\circ P+\mathrm{d}^\circ Q\)</td></tr><tr><td>Égalité</td><td>même degré et mêmes coefficients (identification)</td></tr><tr><td>Racine</td><td>\(a\) racine de \(P\iff P(a)=0\)</td></tr><tr><td>Division par \(x-a\)</td><td>\(P(x)=(x-a)Q(x)+P(a)\), \(\mathrm{d}^\circ Q=\mathrm{d}^\circ P-1\)</td></tr><tr><td>Divisibilité</td><td>\(P\) divisible par \(x-a\iff P(a)=0\)</td></tr><tr><td>Horner</td><td>abaisser, multiplier par \(a\), ajouter ; dernier nombre \(=P(a)\)</td></tr></tbody></table></div>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}

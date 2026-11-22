@@ -1,0 +1,231 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : Tronc commun scientifique — Calcul trigonométrique (1) (chapitre 9, ).
+Généré depuis TC_Calcul_trigonometrique_1.tex (le PDF d'origine est dans le dossier Cours de la leçon, media/lessons/TCS/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < », « > » et « & » sont écrits &lt;, &gt; et &amp;.
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">Tronc commun scientifique</span>
+        <span class="chip or">Chapitre 9</span>
+        <span class="chip">Semestre 2</span>
+      </div>
+      <h1 id="cours-titre">Calcul trigonométrique (1)</h1>
+      <p class="sous-titre">Volume horaire : 10 heures</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectif"><strong>Contenus</strong>
+<ul>
+  <li>Radian, degré, grade.</li>
+  <li>Cercle trigonométrique ; abscisses curvilignes.</li>
+  <li>Angle orienté ; relation de Chasles.</li>
+  <li>Cosinus, sinus, tangente d'un réel ; signes.</li>
+  <li>Valeurs usuelles ; angles associés.</li>
+</ul>
+  </div>
+  <div class="cadre objectif"><strong>Capacités attendues</strong>
+<ul>
+  <li>Convertir entre degrés, radians et grades.</li>
+  <li>Déterminer l'abscisse curviligne principale.</li>
+  <li>Utiliser la relation de Chasles.</li>
+  <li>Calculer des rapports trigonométriques à l'aide des angles associés.</li>
+</ul>
+  </div>
+
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Unités de mesure des angles">
+  <h2><span class="num">I</span><span class="titre">Unités de mesure des angles</span></h2>
+  <div class="bloc act"><div class="tag">Activité 1</div>
+<div class="avec-fig">
+<div>
+<p>Soit \((\mathcal C)\) un cercle de centre \(O\) et de rayon \(R\), et \(I\), \(M\) deux points de \((\mathcal C)\) tels que \(\widehat{IOM}=\alpha^\circ\) (\(0\le\alpha\le360\)).<br> Sachant que le périmètre du cercle est \(2\pi R\) et que la longueur d'un arc est proportionnelle à l'angle, exprimer la longueur \(\ell\) de l'arc \(\overset{\frown}{IM}\) en fonction de \(\alpha\) et \(R\).<br> Que devient \(\ell\) lorsque \(R=1\) ?</p>
+</div>
+<figure class="fig"><svg viewBox="-45.6 -55.4 103.6 101.0" role="img" aria-label="Figure"><path d="M0.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="0.0" cy="-0.0" r="39.6" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L39.6 -0.0 M0.0 -0.0 L22.7 -32.4" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M39.6 -0.0 A39.6 39.6 0 0 0 22.7 -32.4" fill="none" stroke="var(--fig-accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.6 -0.0 A12.6 12.6 0 0 0 7.2 -10.3" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="17.6" y="-5.0" text-anchor="middle" style="font-size:11.5px">α</text><circle cx="0.0" cy="-0.0" r="1.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-5.0" y="4.7" text-anchor="end" style="font-size:13.5px">O</text><text x="44.6" y="4.7" text-anchor="start" style="font-size:13.5px">I</text><text x="26.2" y="-35.9" text-anchor="start" style="font-size:13.5px">M</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soit \((\mathcal C)\) un cercle de centre \(O\) et de <strong>rayon \(1\)</strong>, et \(I\), \(M\) deux points de \((\mathcal C)\).<br> La mesure en <strong>radians</strong> de l'angle géométrique \(\widehat{IOM}\) est la longueur de l'arc \(\overset{\frown}{IM}\) qu'il intercepte.</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Un angle plat mesure \(180^\circ=\pi\ \text{rad}=200\ \text{gr}\). Si \(x\), \(y\) et \(z\) sont les mesures d'un même angle respectivement en degrés, en radians et en grades, alors :</p>
+\[ \frac x{180}=\frac y\pi=\frac z{200}. \]
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(60^\circ=\dfrac{60\pi}{180}=\dfrac\pi3\) rad \(=\dfrac{60\times200}{180}=\dfrac{200}3\) gr ; \(150\) gr \(=\dfrac{150\times180}{200}=135^\circ=\dfrac{3\pi}4\) rad.</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+<p>Compléter le tableau suivant :</p>
+<div class="tableau"><table><tbody><tr><td>Mesure en degrés</td><td>\(0\)</td><td>\(30\)</td><td>\(45\)</td><td>\(60\)</td><td>\(90\)</td><td></td><td>\(120\)</td><td></td></tr><tr><td>Mesure en radians</td><td></td><td></td><td></td><td></td><td></td><td>\(\dfrac\pi8\)</td><td></td><td>\(2\pi\)</td></tr></tbody></table></div>
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Cercle trigonométrique – Abscisses curvilignes">
+  <h2><span class="num">II</span><span class="titre">Cercle trigonométrique – Abscisses curvilignes</span></h2>
+  <div class="bloc def"><div class="tag">Définition</div>
+<div class="avec-fig">
+<div>
+<p>On munit le plan d'un repère orthonormé \((O;\overrightarrow{OI},\overrightarrow{OJ})\). Le <strong>cercle trigonométrique</strong> est le cercle \((\mathcal C)\) de centre \(O\), de rayon \(1\), orienté dans le <strong>sens direct</strong> (ou positif), c'est-à-dire le sens contraire des aiguilles d'une montre. Le point \(I\) est l'<strong>origine</strong> du cercle.</p>
+<p>On « enroule » la droite réelle sur \((\mathcal C)\) à partir de \(I\) : à tout réel \(\alpha\) correspond un unique point \(M\) de \((\mathcal C)\). On dit que \(\alpha\) est <strong>une abscisse curviligne</strong> de \(M\) et on note \(M(\alpha)\).</p>
+</div>
+<figure class="fig"><svg viewBox="-73.5 -78.5 152.0 152.0" role="img" aria-label="Figure"><defs><marker id="mg2-158" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fig-accent)"/></marker><marker id="mg2-291" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M50.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -50.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-50.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-0.0 50.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-28.7 -41.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-67.5 -0.0 L72.5 -0.0" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg2-291)"/><path d="M0.0 67.5 L0.0 -72.5" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg2-291)"/><circle cx="0.0" cy="-0.0" r="50.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M54.0 -19.7 A57.5 57.5 0 0 0 19.7 -54.0" fill="none" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg2-158)"/><text x="47.7" y="-43.7" text-anchor="middle" style="font-size:11.5px;fill:var(--fig-accent)">+</text><circle cx="50.0" cy="-0.0" r="1.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="53.5" y="12.7" text-anchor="start" style="font-size:11.5px">I</text><circle cx="0.0" cy="-50.0" r="1.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-3.5" y="-53.5" text-anchor="end" style="font-size:11.5px">J</text><circle cx="-50.0" cy="-0.0" r="1.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-53.5" y="12.7" text-anchor="end" style="font-size:11.5px">I'</text><circle cx="-0.0" cy="50.0" r="1.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="3.5" y="62.7" text-anchor="start" style="font-size:11.5px">J'</text><text x="-3.5" y="12.7" text-anchor="end" style="font-size:11.5px">O</text><circle cx="-28.7" cy="-41.0" r="1.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-32.2" y="-44.5" text-anchor="end" style="font-size:11.5px">M(α)</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<ul>
+  <li>Si \(\alpha\) est une abscisse curviligne de \(M\), alors les abscisses curvilignes de \(M\) sont les réels \(\alpha+2k\pi\), \(k\in\mathbb{Z}\).</li>
+  <li>Parmi elles, une seule appartient à l'intervalle \(]-\pi;\pi]\) : c'est l'<strong>abscisse curviligne principale</strong> de \(M\).</li>
+  <li>Deux réels \(x\) et \(y\) sont abscisses d'un même point \(\iff x-y=2k\pi\) (\(k\in\mathbb{Z}\)). On écrit \(x\equiv y\ [2\pi]\) (« \(x\) congru à \(y\) modulo \(2\pi\) »).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Les abscisses principales de \(I\), \(J\), \(I'\), \(J'\) sont \(0\), \(\dfrac\pi2\), \(\pi\) et \(-\dfrac\pi2\).</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Abscisse curviligne principale de \(M\left(\frac{p\pi}{q}\right)\)</div>
+<ul>
+  <li><strong>Méthode 1 :</strong> on écrit \(\dfrac pq\) comme un entier pair plus un reste compris entre \(-1\) et \(1\) : \(\dfrac{p\pi}q=2k\pi+\alpha_0\) avec \(\alpha_0\in]-\pi;\pi]\).</li>
+  <li><strong>Méthode 2 :</strong> on cherche \(k\in\mathbb{Z}\) tel que \(-\pi&lt;\dfrac{p\pi}q-2k\pi\le\pi\) (on résout l'encadrement en \(k\)).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>\(\dfrac{37\pi}3=\dfrac{36\pi+\pi}3=12\pi+\dfrac\pi3\) : l'abscisse principale de \(M\left(\frac{37\pi}3\right)\) est \(\dfrac\pi3\).</li>
+  <li>\(\dfrac{29\pi}4=\dfrac{32\pi-3\pi}4=8\pi-\dfrac{3\pi}4\) : l'abscisse principale est \(-\dfrac{3\pi}4\).</li>
+  <li>Pour \(-\dfrac{47\pi}6\) : \(-\pi&lt;-\dfrac{47\pi}6-2k\pi\le\pi\iff-\dfrac{53}{12}\le k&lt;-\dfrac{41}{12}\), soit \(-4{,}41\le k&lt;-3{,}41\), donc \(k=-4\) et l'abscisse principale est \(-\dfrac{47\pi}6+8\pi=\dfrac\pi6\).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 2</div>
+<ol>
+  <li>Vérifier si la relation \(x\equiv y\ [2\pi]\) est vraie : <strong>a)</strong> \(x=\dfrac{43\pi}{12}\), \(y=-\dfrac{5\pi}{12}\) <strong>b)</strong> \(x=-\dfrac{13\pi}8\), \(y=\dfrac{9\pi}4\).</li>
+  <li>Déterminer l'abscisse principale de chacun des points : \(A\left(\frac{17\pi}{3}\right)\), \(B\left(-\frac{25\pi}{4}\right)\), \(C(101\pi)\), \(D\left(\frac{-35\pi}{6}\right)\), puis les placer sur le cercle trigonométrique.</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Angles orientés">
+  <h2><span class="num">III</span><span class="titre">Angles orientés</span></h2>
+  <h3><span class="n">III.1</span>Angle orienté de deux demi-droites, de deux vecteurs</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soient \(A(\alpha)\) et \(B(\beta)\) deux points du cercle trigonométrique de centre \(O\).</p>
+<ul>
+  <li>Le couple de demi-droites \(([OA),[OB))\) définit un <strong>angle orienté</strong>, noté \(\big(\widehat{OA,OB}\big)\) ou \(\big(\widehat{\overrightarrow{OA},\overrightarrow{OB}}\big)\).</li>
+  <li>Le réel \(\beta-\alpha\) est <strong>une mesure</strong> de cet angle ; ses mesures sont les réels \(\beta-\alpha+2k\pi\), \(k\in\mathbb{Z}\) :
+\[ \big(\widehat{\overrightarrow{OA},\overrightarrow{OB}}\big)\equiv\beta-\alpha\ [2\pi]. \]</li>
+  <li>La mesure appartenant à \(]-\pi;\pi]\) est la <strong>mesure principale</strong>.</li>
+  <li>Pour deux vecteurs non nuls \(\vec u\) et \(\vec v\), l'angle orienté \(\big(\widehat{\vec u,\vec v}\big)\) est l'angle \(\big(\widehat{OA,OB}\big)\) où \(\overrightarrow{OA}\) et \(\overrightarrow{OB}\) sont colinéaires de même sens que \(\vec u\) et \(\vec v\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(A\left(-\frac{\pi}{3}\right)\) et \(B\left(\frac{25\pi}6\right)\) : \(\big(\widehat{\overrightarrow{OA},\overrightarrow{OB}}\big)\equiv\dfrac{25\pi}6+\dfrac\pi3=\dfrac{27\pi}6=4\pi+\dfrac\pi2\equiv\dfrac\pi2\ [2\pi]\) : le triangle \(OAB\) est rectangle isocèle en \(O\).</p>
+  </div>
+  <h3><span class="n">III.2</span>Relation de Chasles</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Pour tous vecteurs non nuls \(\vec u\), \(\vec v\), \(\vec w\) :</p>
+<ul>
+  <li><strong>Relation de Chasles :</strong> \(\big(\widehat{\vec u,\vec v}\big)+\big(\widehat{\vec v,\vec w}\big)\equiv\big(\widehat{\vec u,\vec w}\big)\ [2\pi]\).</li>
+  <li>\(\big(\widehat{\vec v,\vec u}\big)\equiv-\big(\widehat{\vec u,\vec v}\big)\ [2\pi]\).</li>
+  <li>\(\big(\widehat{-\vec u,\vec v}\big)\equiv\big(\widehat{\vec u,-\vec v}\big)\equiv\pi+\big(\widehat{\vec u,\vec v}\big)\ [2\pi]\) et \(\big(\widehat{-\vec u,-\vec v}\big)\equiv\big(\widehat{\vec u,\vec v}\big)\ [2\pi]\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Si \(\big(\widehat{\vec u,\vec v}\big)\equiv\dfrac\pi4\ [2\pi]\) et \(\big(\widehat{\vec u,\vec w}\big)\equiv\dfrac{2\pi}3\ [2\pi]\), alors :<br> \(\big(\widehat{\vec v,\vec w}\big)\equiv\big(\widehat{\vec v,\vec u}\big)+\big(\widehat{\vec u,\vec w}\big)\equiv-\dfrac\pi4+\dfrac{2\pi}3=\dfrac{5\pi}{12}\ [2\pi]\) et \(\big(\widehat{-\vec v,\vec w}\big)\equiv\pi+\dfrac{5\pi}{12}\equiv-\dfrac{7\pi}{12}\ [2\pi]\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 3</div>
+<p>Soient \(M\) et \(N\) deux points du cercle trigonométrique d'abscisses curvilignes \(-\dfrac{37\pi}3\) et \(\dfrac{25\pi}6\).</p>
+<ol>
+  <li>Déterminer les abscisses curvilignes principales de \(M\) et \(N\).</li>
+  <li>Montrer que \(\big(\widehat{\overrightarrow{OM},\overrightarrow{ON}}\big)\equiv\dfrac\pi2\ [2\pi]\), puis en déduire la nature du triangle \(OMN\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Rapports trigonométriques d'un nombre réel">
+  <h2><span class="num">IV</span><span class="titre">Rapports trigonométriques d'un nombre réel</span></h2>
+  <div class="bloc act"><div class="tag">Activité 2</div>
+<p>Soit \(ABC\) un triangle rectangle en \(A\) tel que \(AB=3\) et \(AC=4\). Calculer \(BC\), puis \(\cos\widehat B\), \(\sin\widehat B\) et \(\tan\widehat B\).</p>
+  </div>
+  <h3><span class="n">IV.1</span>Cosinus, sinus et tangente</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+<div class="avec-fig">
+<div>
+<p>Soit \(x\in\mathbb{R}\) et \(M(x)\) le point du cercle trigonométrique d'abscisse curviligne \(x\), dans le repère orthonormé \((O;\overrightarrow{OI},\overrightarrow{OJ})\).</p>
+<ul>
+  <li>L'abscisse de \(M\) est le <strong>cosinus</strong> de \(x\), noté \(\cos x\).</li>
+  <li>L'ordonnée de \(M\) est le <strong>sinus</strong> de \(x\), noté \(\sin x\).</li>
+  <li>Si \(M\neq J\) et \(M\neq J'\), la droite \((OM)\) coupe la tangente \((\Delta)\) au cercle en \(I\) en un point \(T\) ; l'ordonnée de \(T\) est la <strong>tangente</strong> de \(x\), notée \(\tan x\).</li>
+</ul>
+</div>
+<figure class="fig"><svg viewBox="-86.0 -105.7 192.6 188.5" role="img" aria-label="Figure"><defs><marker id="mg3-291" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M49.0 -41.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M64.0 -53.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-80.0 -0.0 L89.6 -0.0" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg3-291)"/><path d="M0.0 76.8 L0.0 -86.4" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg3-291)"/><circle cx="0.0" cy="-0.0" r="64.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M64.0 70.4 L64.0 -83.2" fill="none" stroke="var(--meth)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="64.0" y="-88.2" text-anchor="middle" style="font-size:11.5px;fill:var(--meth)">(Δ)</text><path d="M0.0 -0.0 L64.0 -53.7" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M49.0 -41.1 L49.0 -0.0 M49.0 -41.1 L0.0 -41.1" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M0.0 -0.0 L49.0 -0.0" fill="none" stroke="var(--fig-accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L0.0 -41.1" fill="none" stroke="var(--att)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M64.0 -0.0 L64.0 -53.7" fill="none" stroke="var(--prop)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="49.0" cy="-41.1" r="1.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="45.5" y="-44.6" text-anchor="end" style="font-size:11.5px">M(x)</text><circle cx="64.0" cy="-53.7" r="1.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="69.0" y="-49.7" text-anchor="start" style="font-size:11.5px">T</text><text x="24.5" y="14.2" text-anchor="middle" style="font-size:11.5px;fill:var(--fig-accent)">cos x</text><text x="-5.0" y="-16.5" text-anchor="end" style="font-size:11.5px;fill:var(--att)">sin x</text><text x="69.0" y="-22.8" text-anchor="start" style="font-size:11.5px;fill:var(--prop)">tan x</text><text x="67.5" y="12.7" text-anchor="start" style="font-size:11.5px">I</text><text x="-3.5" y="-67.5" text-anchor="end" style="font-size:11.5px">J</text><text x="-3.5" y="12.7" text-anchor="end" style="font-size:11.5px">O</text><path d="M16.0 -0.0 A16.0 16.0 0 0 0 12.3 -10.3" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="21.7" y="-4.4" text-anchor="middle" style="font-size:10.0px">x</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Pour tout réel \(x\) et tout \(k\in\mathbb{Z}\) :</p>
+<ul>
+  <li>\(-1\le\cos x\le1\) et \(-1\le\sin x\le1\) ;</li>
+  <li>\(\cos^2x+\sin^2x=1\) ;</li>
+  <li>\(\cos(x+2k\pi)=\cos x\), \(\sin(x+2k\pi)=\sin x\) ;</li>
+  <li>si \(x\neq\dfrac\pi2+k\pi\) : \(\tan x=\dfrac{\sin x}{\cos x}\),</li>
+  <li>[] \(\tan(x+k\pi)=\tan x\) et \(1+\tan^2x=\dfrac1{\cos^2x}\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soit \(x\in\left[\frac\pi2;\pi\right]\) tel que \(\sin x=\dfrac35\). Alors \(\cos^2x=1-\dfrac9{25}=\dfrac{16}{25}\) et, comme \(\cos x\le0\) sur cet intervalle, \(\cos x=-\dfrac45\) ; enfin \(\tan x=\dfrac{3/5}{-4/5}=-\dfrac34\).</p>
+  </div>
+  <h3><span class="n">IV.2</span>Signes – Valeurs usuelles</h3>
+  <div class="bloc prop"><div class="tag">Signes selon la position de \(M(x)\)</div>
+<div class="avec-fig">
+<div>
+<div class="tableau"><table><thead><tr><th scope="col">\(x\in\)</th><th scope="col">\(\left]0;\frac\pi2\right[\)</th><th scope="col">\(\left]\frac\pi2;\pi\right[\)</th><th scope="col">\(\left]-\pi;-\frac\pi2\right[\)</th><th scope="col">\(\left]-\frac\pi2;0\right[\)</th></tr></thead><tbody><tr><td>\(\cos x\)</td><td>\(+\)</td><td>\(-\)</td><td>\(-\)</td><td>\(+\)</td></tr><tr><td>\(\sin x\)</td><td>\(+\)</td><td>\(+\)</td><td>\(-\)</td><td>\(-\)</td></tr><tr><td>\(\tan x\)</td><td>\(+\)</td><td>\(-\)</td><td>\(+\)</td><td>\(-\)</td></tr></tbody></table></div>
+</div>
+<figure class="fig"><svg viewBox="-51.6 -51.6 103.2 103.2" role="img" aria-label="Figure"><path d="M-45.6 -0.0 L45.6 -0.0 M0.0 45.6 L0.0 -45.6" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="0.0" cy="-0.0" r="38.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><text x="14.8" y="-17.0" text-anchor="middle" style="font-size:10.0px">cos+</text><text x="14.8" y="-5.5" text-anchor="middle" style="font-size:10.0px">sin+</text><text x="-14.8" y="-17.0" text-anchor="middle" style="font-size:10.0px">cos−</text><text x="-14.8" y="-5.5" text-anchor="middle" style="font-size:10.0px">sin+</text><text x="-14.8" y="12.5" text-anchor="middle" style="font-size:10.0px">cos−</text><text x="-14.8" y="24.0" text-anchor="middle" style="font-size:10.0px">sin−</text><text x="14.8" y="12.5" text-anchor="middle" style="font-size:10.0px">cos+</text><text x="14.8" y="24.0" text-anchor="middle" style="font-size:10.0px">sin−</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc ret"><div class="tag">Valeurs usuelles</div>
+<div class="tableau"><table><thead><tr><th scope="col">\(x\)</th><th scope="col">\(0\)</th><th scope="col">\(\dfrac\pi6\)</th><th scope="col">\(\dfrac\pi4\)</th><th scope="col">\(\dfrac\pi3\)</th><th scope="col">\(\dfrac\pi2\)</th><th scope="col">\(\pi\)</th></tr></thead><tbody><tr><td>\(\cos x\)</td><td>\(1\)</td><td>\(\dfrac{\sqrt3}2\)</td><td>\(\dfrac{\sqrt2}2\)</td><td>\(\dfrac12\)</td><td>\(0\)</td><td>\(-1\)</td></tr><tr><td>\(\sin x\)</td><td>\(0\)</td><td>\(\dfrac12\)</td><td>\(\dfrac{\sqrt2}2\)</td><td>\(\dfrac{\sqrt3}2\)</td><td>\(1\)</td><td>\(0\)</td></tr><tr><td>\(\tan x\)</td><td>\(0\)</td><td>\(\dfrac{\sqrt3}3\)</td><td>\(1\)</td><td>\(\sqrt3\)</td><td>non définie</td><td>\(0\)</td></tr></tbody></table></div>
+  </div>
+  <h3><span class="n">IV.3</span>Angles associés</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<div class="avec-fig">
+<div>
+<p>Pour tout réel \(x\) (et \(x\neq\frac\pi2+k\pi\), ou \(x\neq k\pi\), pour les tangentes) :</p>
+<div class="tableau"><table><thead><tr><th scope="col">Angle</th><th scope="col">\(\cos\)</th><th scope="col">\(\sin\)</th><th scope="col">\(\tan\)</th></tr></thead><tbody><tr><td>\(-x\)</td><td>\(\cos x\)</td><td>\(-\sin x\)</td><td>\(-\tan x\)</td></tr><tr><td>\(\pi-x\)</td><td>\(-\cos x\)</td><td>\(\sin x\)</td><td>\(-\tan x\)</td></tr><tr><td>\(\pi+x\)</td><td>\(-\cos x\)</td><td>\(-\sin x\)</td><td>\(\tan x\)</td></tr><tr><td>\(\frac\pi2-x\)</td><td>\(\sin x\)</td><td>\(\cos x\)</td><td>\(\frac1{\tan x}\)</td></tr><tr><td>\(\frac\pi2+x\)</td><td>\(-\sin x\)</td><td>\(\cos x\)</td><td>\(-\frac1{\tan x}\)</td></tr></tbody></table></div>
+</div>
+<figure class="fig"><svg viewBox="-74.3 -70.8 145.1 141.6" role="img" aria-label="Figure"><path d="M46.8 -27.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M46.8 27.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-46.8 -27.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-46.8 27.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M27.0 -46.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-64.8 -0.0 L64.8 -0.0 M0.0 64.8 L0.0 -64.8" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="0.0" cy="-0.0" r="54.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L46.8 -27.0" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.70"/><circle cx="46.8" cy="-27.0" r="1.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="51.8" y="-23.5" text-anchor="start" style="font-size:10.0px">x</text><path d="M0.0 -0.0 L46.8 27.0" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.70"/><circle cx="46.8" cy="27.0" r="1.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="51.8" y="30.5" text-anchor="start" style="font-size:10.0px">−x</text><path d="M0.0 -0.0 L-46.8 -27.0" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.70"/><circle cx="-46.8" cy="-27.0" r="1.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-51.8" y="-23.5" text-anchor="end" style="font-size:10.0px">π−x</text><path d="M0.0 -0.0 L-46.8 27.0" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.70"/><circle cx="-46.8" cy="27.0" r="1.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-51.8" y="30.5" text-anchor="end" style="font-size:10.0px">π+x</text><path d="M0.0 -0.0 L27.0 -46.8" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.70"/><circle cx="27.0" cy="-46.8" r="1.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="30.5" y="-50.3" text-anchor="start" style="font-size:10.0px">π/2−x</text><path d="M46.8 -27.0 L46.8 27.0 M46.8 -27.0 L-46.8 -27.0 M46.8 -27.0 L-46.8 27.0" fill="none" stroke="var(--fig-accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/></svg></figure>
+</div>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Calculer \(\cos\), \(\sin\), \(\tan\) d'un réel \(\frac{p\pi}q\)</div>
+<p>On fait apparaître un angle usuel : \(\dfrac{p\pi}q=2k\pi+\alpha\) (ou \(k\pi+\alpha\) pour la tangente), puis on utilise les angles associés.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(\cos\dfrac{5\pi}6=\cos\left(\pi-\dfrac\pi6\right)=-\cos\dfrac\pi6=-\dfrac{\sqrt3}2\) ; \(\sin\dfrac{65\pi}4=\sin\left(16\pi+\dfrac\pi4\right)=\dfrac{\sqrt2}2\) ; \(\tan\dfrac{19\pi}6=\tan\left(3\pi+\dfrac\pi6\right)=\dfrac{\sqrt3}3\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 4</div>
+<ol>
+  <li>Calculer : \(\cos\dfrac{2\pi}3\), \(\sin\left(-\dfrac{7\pi}6\right)\), \(\cos\dfrac{31\pi}4\), \(\tan\dfrac{-17\pi}3\).</li>
+  <li>Simplifier, pour tout réel \(x\) : \(A=\sin(\pi-x)+\cos\left(\dfrac\pi2-x\right)-\sin(\pi+x)+\cos\left(\dfrac\pi2+x\right)\).</li>
+  <li>Calculer : \(B=\cos\dfrac\pi7+\cos\dfrac{2\pi}7+\cos\dfrac{5\pi}7+\cos\dfrac{6\pi}7\) et \(C=\sin^2\dfrac\pi8+\sin^2\dfrac{3\pi}8\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ V ============================ -->
+<section class="chap" id="s5" data-toc="Synthèse">
+  <h2><span class="num">V</span><span class="titre">Synthèse</span></h2>
+  <div class="bloc ret"><div class="tag">À retenir</div>
+<div class="tableau"><table><thead><tr><th scope="col">Notion</th><th scope="col">À retenir</th></tr></thead><tbody><tr><td>Conversions</td><td>\(\frac x{180}=\frac y\pi=\frac z{200}\)</td></tr><tr><td>Abscisses curvilignes</td><td>\(\alpha+2k\pi\) ; principale dans \(]-\pi;\pi]\)</td></tr><tr><td>Angle orienté</td><td>\((\widehat{\overrightarrow{OA},\overrightarrow{OB}})\equiv\beta-\alpha\ [2\pi]\) ; Chasles</td></tr><tr><td>Relation fondamentale</td><td>\(\cos^2x+\sin^2x=1\) ; \(1+\tan^2x=\frac1{\cos^2x}\)</td></tr><tr><td>Angles associés</td><td>\(-x\), \(\pi\pm x\), \(\frac\pi2\pm x\) (voir tableau)</td></tr></tbody></table></div>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}

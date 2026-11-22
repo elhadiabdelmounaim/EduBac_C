@@ -1,0 +1,224 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : Tronc commun scientifique — Géométrie dans l'espace (chapitre 14, ).
+Généré depuis TC_Geometrie_espace.tex (le PDF d'origine est dans le dossier Cours de la leçon, media/lessons/TCS/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < », « > » et « & » sont écrits &lt;, &gt; et &amp;.
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">Tronc commun scientifique</span>
+        <span class="chip or">Chapitre 14</span>
+        <span class="chip">Semestre 2</span>
+      </div>
+      <h1 id="cours-titre">Géométrie dans l'espace</h1>
+      <p class="sous-titre">Volume horaire : 8 heures</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectif"><strong>Contenus</strong>
+<ul>
+  <li>Représentation en perspective cavalière.</li>
+  <li>Axiomes de la géométrie dans l'espace ; détermination d'un plan.</li>
+  <li>Positions relatives de droites et de plans.</li>
+  <li>Parallélisme dans l'espace.</li>
+</ul>
+  </div>
+  <div class="cadre objectif"><strong>Capacités attendues</strong>
+<ul>
+  <li>Représenter un solide usuel.</li>
+  <li>Reconnaître la position relative de deux droites, d'une droite et d'un plan, de deux plans.</li>
+  <li>Démontrer un parallélisme ; déterminer l'intersection de deux plans.</li>
+</ul>
+  </div>
+
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Représentation des figures de l'espace">
+  <h2><span class="num">I</span><span class="titre">Représentation des figures de l'espace</span></h2>
+  <div class="bloc act"><div class="tag">Activité 1</div>
+<div class="avec-fig">
+<div>
+<p>On considère le cube \(ABCDEFGH\) représenté ci-contre.</p>
+<ol>
+  <li>Quelles faces sont dessinées en vraie grandeur ? Quelle est la nature des autres faces sur le dessin ?</li>
+  <li>Les arêtes \([AB]\) et \([CD]\) sont-elles parallèles dans l'espace ? sur le dessin ?</li>
+  <li>Pourquoi certains segments sont-ils en pointillés ?</li>
+</ol>
+</div>
+<figure class="fig"><svg viewBox="-17.3 -158.3 185.4 180.4" role="img" aria-label="Figure"><path d="M0.0 -0.0 L104.0 -0.0 L150.8 -33.3 L150.8 -137.3 L46.8 -137.3 L0.0 -104.0 Z L104.0 -0.0 L104.0 -104.0 L0.0 -104.0 M104.0 -104.0 L150.8 -137.3" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L46.8 -33.3 L150.8 -33.3 M46.8 -33.3 L46.8 -137.3" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="-3.5" y="12.7" text-anchor="end" style="font-size:11.5px">A</text><text x="107.5" y="12.7" text-anchor="start" style="font-size:11.5px">B</text><text x="155.8" y="-29.3" text-anchor="start" style="font-size:11.5px">C</text><text x="41.8" y="-29.3" text-anchor="end" style="font-size:11.5px">D</text><text x="-5.0" y="-100.0" text-anchor="end" style="font-size:11.5px">E</text><text x="107.5" y="-91.3" text-anchor="start" style="font-size:11.5px">F</text><text x="154.3" y="-140.8" text-anchor="start" style="font-size:11.5px">G</text><text x="43.3" y="-140.8" text-anchor="end" style="font-size:11.5px">H</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc meth"><div class="tag">Règles de la perspective cavalière</div>
+<ul>
+  <li>Les faces situées dans un plan <strong>frontal</strong> (parallèle à la feuille) sont dessinées en <strong>vraie grandeur</strong>.</li>
+  <li>Deux droites <strong>parallèles</strong> dans l'espace sont représentées par deux droites parallèles.</li>
+  <li>Des points <strong>alignés</strong> sont représentés par des points alignés ; le <strong>milieu</strong> d'un segment est conservé.</li>
+  <li>Les arêtes <strong>cachées</strong> sont dessinées en pointillés.</li>
+  <li>Deux droites sécantes sur le dessin ne le sont pas forcément dans l'espace ; les angles droits et les longueurs des faces fuyantes ne sont pas conservés.</li>
+</ul>
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Axiomes de la géométrie dans l'espace">
+  <h2><span class="num">II</span><span class="titre">Axiomes de la géométrie dans l'espace</span></h2>
+  <div class="bloc prop"><div class="tag">Axiomes</div>
+<ol>
+  <li>Par deux points distincts \(A\) et \(B\) de l'espace passe une <strong>seule droite</strong>, notée \((AB)\).</li>
+  <li>Par trois points <strong>non alignés</strong> \(A\), \(B\), \(C\) passe un <strong>seul plan</strong>, noté \((ABC)\).</li>
+  <li>Si deux points distincts \(A\) et \(B\) appartiennent à un plan \((P)\), alors la droite \((AB)\) est <strong>incluse</strong> dans \((P)\).</li>
+  <li>Si deux plans distincts ont un point commun, alors leur intersection est une <strong>droite</strong> passant par ce point.</li>
+</ol>
+<p>De plus, dans chaque plan de l'espace, on peut appliquer tous les théorèmes de la géométrie plane.</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Conséquence — Détermination d'un plan</div>
+<p>Un plan est déterminé par :</p>
+<ul>
+  <li>trois points non alignés ;</li>
+  <li>une droite et un point n'appartenant pas à cette droite ;</li>
+  <li>deux droites sécantes ;</li>
+  <li>deux droites strictement parallèles.</li>
+</ul>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<p>Des points sont dits <strong>coplanaires</strong> s'ils appartiennent à un même plan. Quatre points ne sont pas toujours coplanaires : par exemple, les sommets \(A\), \(B\), \(C\), \(H\) du cube ne le sont pas.</p>
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Positions relatives de droites et de plans">
+  <h2><span class="num">III</span><span class="titre">Positions relatives de droites et de plans</span></h2>
+  <h3><span class="n">III.1</span>Position relative de deux plans</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Deux plans \((P_1)\) et \((P_2)\) de l'espace sont :</p>
+<ul>
+  <li>soit <strong>sécants</strong> : leur intersection est une droite ;</li>
+  <li>soit <strong>parallèles</strong> : ils sont <strong>confondus</strong> ou <strong>strictement parallèles</strong> (sans point commun).</li>
+</ul>
+<figure class="fig"><svg viewBox="-6.0 -75.4 413.8 128.6" role="img" aria-label="Figure"><path d="M0.0 -0.0 L79.4 -0.0 L104.2 -29.8 L24.8 -29.8 Z" fill="color-mix(in srgb, var(--fig-trait) 15%, var(--surface))" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M29.8 24.8 L74.4 24.8 L74.4 -59.5 L29.8 -59.5 Z" fill="color-mix(in srgb, var(--fig-accent) 25%, var(--surface))" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M148.8 -0.0 L228.2 -0.0 L253.0 -29.8 L173.6 -29.8 Z" fill="color-mix(in srgb, var(--fig-trait) 15%, var(--surface))" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M148.8 -39.7 L228.2 -39.7 L253.0 -69.4 L173.6 -69.4 Z" fill="color-mix(in srgb, var(--fig-accent) 25%, var(--surface))" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M297.6 -14.9 L377.0 -14.9 L401.8 -44.6 L322.4 -44.6 Z" fill="color-mix(in srgb, var(--fig-trait) 25%, var(--surface))" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L79.4 -0.0 L104.2 -29.8 L24.8 -29.8 Z" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M29.8 24.8 L74.4 24.8 L74.4 -59.5 L29.8 -59.5 Z" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M29.8 -14.9 L74.4 -14.9" fill="none" stroke="var(--att)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><text x="52.1" y="43.7" text-anchor="middle" style="font-size:11.5px">sécants</text><path d="M148.8 -0.0 L228.2 -0.0 L253.0 -29.8 L173.6 -29.8 Z" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M148.8 -39.7 L228.2 -39.7 L253.0 -69.4 L173.6 -69.4 Z" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="200.9" y="43.7" text-anchor="middle" style="font-size:11.5px">strictement parallèles</text><path d="M297.6 -14.9 L377.0 -14.9 L401.8 -44.6 L322.4 -44.6 Z" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="349.7" y="43.7" text-anchor="middle" style="font-size:11.5px">confondus</text></svg></figure>
+  </div>
+  <h3><span class="n">III.2</span>Position relative de deux droites</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Deux droites \((D_1)\) et \((D_2)\) de l'espace sont :</p>
+<ul>
+  <li>soit <strong>coplanaires</strong> (contenues dans un même plan) : elles sont alors <strong>sécantes</strong>, <strong>strictement parallèles</strong> ou <strong>confondues</strong> ;</li>
+  <li>soit <strong>non coplanaires</strong> : elles n'ont aucun point commun et ne sont pas parallèles.</li>
+</ul>
+  </div>
+  <div class="bloc att"><div class="tag">Attention — erreurs fréquentes</div>
+<ul>
+  <li>Dans l'espace, deux droites sans point commun ne sont pas forcément parallèles : elles peuvent être non coplanaires.</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+<div class="avec-fig">
+<div>
+<p>On considère le cube \(ABCDEFGH\). Préciser la position relative des droites :</p>
+<ul>
+  <li>\((BC)\) et \((AD)\) ;</li>
+  <li>\((AB)\) et \((GH)\) ;</li>
+  <li>\((AC)\) et \((DC)\) ;</li>
+  <li>\((AC)\) et \((BF)\) ;</li>
+  <li>\((EG)\) et \((EA)\) ;</li>
+  <li>\((AC)\) et \((ED)\).</li>
+</ul>
+</div>
+<figure class="fig"><svg viewBox="-17.3 -137.2 162.2 159.3" role="img" aria-label="Figure"><path d="M0.0 -0.0 L88.0 -0.0 L127.6 -28.2 L127.6 -116.2 L39.6 -116.2 L0.0 -88.0 Z L88.0 -0.0 L88.0 -88.0 L0.0 -88.0 M88.0 -88.0 L127.6 -116.2" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L39.6 -28.2 L127.6 -28.2 M39.6 -28.2 L39.6 -116.2" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="-3.5" y="12.7" text-anchor="end" style="font-size:11.5px">A</text><text x="91.5" y="12.7" text-anchor="start" style="font-size:11.5px">B</text><text x="132.6" y="-24.1" text-anchor="start" style="font-size:11.5px">C</text><text x="34.6" y="-24.1" text-anchor="end" style="font-size:11.5px">D</text><text x="-5.0" y="-84.0" text-anchor="end" style="font-size:11.5px">E</text><text x="91.5" y="-75.3" text-anchor="start" style="font-size:11.5px">F</text><text x="131.1" y="-119.7" text-anchor="start" style="font-size:11.5px">G</text><text x="36.1" y="-119.7" text-anchor="end" style="font-size:11.5px">H</text><path d="M0.0 -0.0 L127.6 -28.2 M0.0 -88.0 L127.6 -116.2" fill="none" stroke="var(--fig-accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></figure>
+</div>
+  </div>
+  <h3><span class="n">III.3</span>Position relative d'une droite et d'un plan</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \((D)\) une droite et \((P)\) un plan. Alors :</p>
+<ul>
+  <li>soit \((D)\) et \((P)\) sont <strong>sécants</strong> en un seul point ;</li>
+  <li>soit \((D)\) est <strong>incluse</strong> dans \((P)\) ;</li>
+  <li>soit \((D)\) et \((P)\) sont <strong>strictement parallèles</strong> (aucun point commun).</li>
+</ul>
+<p>Dans les deux derniers cas, on dit que \((D)\) est <strong>parallèle</strong> au plan \((P)\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 2</div>
+<p>Dans le cube \(ABCDEFGH\), compléter le tableau en mettant une croix dans la case convenable :</p>
+<div class="tableau"><table><thead><tr><th scope="col">Droite</th><th scope="col">Plan</th><th scope="col">Sécants</th><th scope="col">Droite incluse</th><th scope="col">Strictement parallèles</th></tr></thead><tbody><tr><td>\((AB)\)</td><td>\((ABC)\)</td><td></td><td></td><td></td></tr><tr><td>\((AB)\)</td><td>\((EFG)\)</td><td></td><td></td><td></td></tr><tr><td>\((EF)\)</td><td>\((CDH)\)</td><td></td><td></td><td></td></tr><tr><td>\((AG)\)</td><td>\((BCF)\)</td><td></td><td></td><td></td></tr><tr><td>\((DF)\)</td><td>\((BCE)\)</td><td></td><td></td><td></td></tr></tbody></table></div>
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Parallélisme dans l'espace">
+  <h2><span class="num">IV</span><span class="titre">Parallélisme dans l'espace</span></h2>
+  <div class="bloc prop"><div class="tag">Parallélisme de droites</div>
+<ul>
+  <li>Par un point donné passe une <strong>seule</strong> droite parallèle à une droite donnée.</li>
+  <li>Si deux droites sont parallèles à une même troisième, alors elles sont parallèles entre elles.</li>
+</ul>
+  </div>
+  <div class="bloc prop"><div class="tag">Parallélisme d'une droite et d'un plan</div>
+<div class="avec-fig">
+<div>
+<p>Une droite \((D)\) est parallèle à un plan \((P)\) si et seulement si elle est parallèle à une droite \((\Delta)\) contenue dans \((P)\).</p>
+</div>
+<figure class="fig"><svg viewBox="-6.0 -65.3 132.0 73.0" role="img" aria-label="Figure"><path d="M0.0 -0.0 L96.0 -0.0 L120.0 -33.6 L24.0 -33.6 Z" fill="color-mix(in srgb, var(--fig-trait) 15%, var(--surface))" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L96.0 -0.0 L120.0 -33.6 L24.0 -33.6 Z" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M24.0 -14.4 L91.2 -14.4" fill="none" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><text x="96.2" y="-10.9" text-anchor="start" style="font-size:10.0px;fill:var(--fig-accent)">(Δ)</text><path d="M24.0 -52.8 L91.2 -52.8" fill="none" stroke="var(--att)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><text x="96.2" y="-49.3" text-anchor="start" style="font-size:10.0px;fill:var(--att)">(D)</text><text x="14.4" y="-1.3" text-anchor="middle" style="font-size:10.0px">(P)</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc prop"><div class="tag">Parallélisme de deux plans</div>
+<ul>
+  <li>Si un plan \((P)\) contient deux droites <strong>sécantes</strong> parallèles à un plan \((Q)\), alors \((P)\) et \((Q)\) sont parallèles.</li>
+  <li>Deux plans parallèles à un même troisième sont parallèles entre eux.</li>
+  <li>Si deux plans sont parallèles, toute droite incluse dans l'un est parallèle à l'autre.</li>
+  <li>Si deux plans sont parallèles, tout plan qui coupe l'un coupe l'autre, et les droites d'intersection sont parallèles.</li>
+</ul>
+  </div>
+  <div class="bloc prop"><div class="tag">Théorème du toit</div>
+<div class="avec-fig">
+<div>
+<p>Soient \((D_1)\) et \((D_2)\) deux droites parallèles, \((P_1)\) un plan contenant \((D_1)\) et \((P_2)\) un plan contenant \((D_2)\).<br> Si \((P_1)\) et \((P_2)\) sont sécants suivant une droite \((\Delta)\), alors \((\Delta)\) est parallèle à \((D_1)\) et à \((D_2)\).</p>
+</div>
+<figure class="fig"><svg viewBox="-6.0 -73.0 188.5 79.0" role="img" aria-label="Figure"><path d="M0.0 -0.0 L83.2 -0.0 L109.2 -52.0 L26.0 -52.0 Z" fill="color-mix(in srgb, var(--fig-trait) 15%, var(--surface))" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M83.2 -0.0 L166.4 -0.0 L135.2 -52.0 L109.2 -52.0 Z" fill="color-mix(in srgb, var(--fig-accent) 20%, var(--surface))" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L83.2 -0.0 L109.2 -52.0 L26.0 -52.0 Z" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M83.2 -0.0 L166.4 -0.0 L135.2 -52.0 L109.2 -52.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M83.2 -0.0 L109.2 -52.0" fill="none" stroke="var(--att)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><text x="109.2" y="-57.0" text-anchor="middle" style="font-size:10.0px;fill:var(--att)">(Δ)</text><path d="M23.4 -10.4 L44.2 -52.0" fill="none" stroke="var(--meth)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><text x="40.7" y="-55.5" text-anchor="end" style="font-size:10.0px;fill:var(--meth)">(D₁)</text><path d="M140.4 -7.8 L149.5 -26.0" fill="none" stroke="var(--meth)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><text x="154.5" y="-22.5" text-anchor="start" style="font-size:10.0px;fill:var(--meth)">(D₂)</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Déterminer l'intersection de deux plans</div>
+<p>On cherche <strong>deux points communs</strong> distincts aux deux plans (souvent un sommet commun, ou le point d'intersection de deux droites <strong>coplanaires</strong>, une dans chaque plan) : l'intersection est la droite qui les joint. Si l'on connaît un seul point commun et deux droites parallèles (une dans chaque plan), on utilise le théorème du toit.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soit \(ABCD\) un tétraèdre, \(I\in[AB]\) et \(J\in[AC]\) tels que \((IJ)\) ne soit pas parallèle à \((BC)\). Les droites \((IJ)\) et \((BC)\) sont coplanaires (dans le plan \((ABC)\)) et sécantes en un point \(K\).<br> \(D\) et \(K\) appartiennent aux deux plans \((DIJ)\) et \((BCD)\) ; donc \((DIJ)\cap(BCD)=(DK)\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 3</div>
+<div class="avec-fig">
+<div>
+<p>Soit \(SABCD\) une pyramide de base le parallélogramme \(ABCD\), et \(I\), \(J\), \(K\) les milieux respectifs de \([SA]\), \([SB]\) et \([SC]\).</p>
+<ol>
+  <li>Montrer que \(\overrightarrow{IJ}=\dfrac12\overrightarrow{AB}\) ; en déduire la position relative de \((IJ)\) et \((AB)\).</li>
+  <li>En déduire que \((IJ)\) est strictement parallèle au plan \((ABC)\).</li>
+  <li>Montrer que les plans \((IJK)\) et \((ABC)\) sont parallèles.</li>
+  <li>Déterminer l'intersection des plans \((SAB)\) et \((SDC)\).</li>
+</ol>
+</div>
+<figure class="fig"><svg viewBox="-15.8 -128.9 150.8 151.0" role="img" aria-label="Figure"><path d="M0.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M84.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M117.6 -33.6" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M33.6 -33.6" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M56.0 -106.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M28.0 -53.2" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M70.0 -53.2" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M86.8 -70.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L84.0 -0.0 L117.6 -33.6 L56.0 -106.4 Z L56.0 -106.4 L84.0 -0.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L33.6 -33.6 L117.6 -33.6 M56.0 -106.4 L33.6 -33.6" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M28.0 -53.2 L70.0 -53.2 L86.8 -70.0" fill="none" stroke="var(--fig-accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M28.0 -53.2 L86.8 -70.0" fill="none" stroke="var(--fig-accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><circle cx="0.0" cy="-0.0" r="1.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-3.5" y="12.7" text-anchor="end" style="font-size:11.5px">A</text><circle cx="84.0" cy="-0.0" r="1.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="87.5" y="12.7" text-anchor="start" style="font-size:11.5px">B</text><circle cx="117.6" cy="-33.6" r="1.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="122.6" y="-29.6" text-anchor="start" style="font-size:11.5px">C</text><circle cx="33.6" cy="-33.6" r="1.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="28.6" y="-29.6" text-anchor="end" style="font-size:11.5px">D</text><circle cx="56.0" cy="-106.4" r="1.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="56.0" y="-111.4" text-anchor="middle" style="font-size:11.5px">S</text><circle cx="28.0" cy="-53.2" r="1.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="23.0" y="-49.2" text-anchor="end" style="font-size:11.5px">I</text><circle cx="70.0" cy="-53.2" r="1.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="75.0" y="-49.2" text-anchor="start" style="font-size:11.5px">J</text><circle cx="86.8" cy="-70.0" r="1.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="91.8" y="-66.0" text-anchor="start" style="font-size:11.5px">K</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc app"><div class="tag">Application 4</div>
+<p>Soit \(ABCDEFGH\) un cube, et \(I\), \(J\), \(K\) les milieux respectifs des arêtes \([AB]\), \([DC]\) et \([HG]\).</p>
+<ol>
+  <li>Déterminer la nature du quadrilatère \(AIJD\).</li>
+  <li>Montrer que \((JK)\) est parallèle à \((AE)\), puis que \((JK)\) est parallèle au plan \((ABF)\).</li>
+  <li>Montrer que les plans \((IJK)\) et \((BCG)\) sont parallèles.</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ V ============================ -->
+<section class="chap" id="s5" data-toc="Synthèse">
+  <h2><span class="num">V</span><span class="titre">Synthèse</span></h2>
+  <div class="bloc ret"><div class="tag">À retenir</div>
+<div class="tableau"><table><thead><tr><th scope="col">Objectif</th><th scope="col">Outil</th></tr></thead><tbody><tr><td>Déterminer un plan</td><td>3 points non alignés ; 2 droites sécantes ou strictement parallèles</td></tr><tr><td>Deux droites</td><td>coplanaires (sécantes / parallèles) ou non coplanaires</td></tr><tr><td>\((D)\parallel(P)\)</td><td>\((D)\) parallèle à une droite de \((P)\)</td></tr><tr><td>\((P)\parallel(Q)\)</td><td>deux droites sécantes de \((P)\) parallèles à \((Q)\)</td></tr><tr><td>Intersection de deux plans</td><td>deux points communs ; théorème du toit</td></tr></tbody></table></div>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}
