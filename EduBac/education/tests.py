@@ -99,42 +99,54 @@ class CurriculumAutoLoadViewTests(TestCase):
         self.assertEqual(sciences_math.status_code, 200)
         self.assertEqual(len(sciences_math.context['lessons']), 12)
 
-    def test_logged_in_student_keeps_access_limited_to_their_level(self):
-        student = User(
-            username='curriculum_student',
-            email='curriculum-student@example.test',
-            role='student',
-        )
-        student.set_password('test-password')
-        student.save()
-        StudentProfile.objects.create(user=student, niveau='2eme_bac_sm')
-
+    def login(self, role, niveau=None):
+        user = User(username=f'curriculum_{role}', email=f'curriculum-{role}@example.test', role=role)
+        user.set_password('test-password')
+        user.save()
+        if niveau:
+            StudentProfile.objects.create(user=user, niveau=niveau)
         session = self.client.session
-        session['user_id'] = student.pk
+        session['user_id'] = user.pk
         session.save()
+        return user
 
-        with tempfile.TemporaryDirectory() as media_root:
-            with override_settings(MEDIA_ROOT=media_root):
-                own_level = self.client.get(
-                    reverse(
-                        'education:niveau_detail',
-                        kwargs={'niveau': '2eme_bac_sm'},
-                    )
-                )
-                other_level = self.client.get(
-                    reverse(
-                        'education:niveau_detail',
-                        kwargs={'niveau': 'tronc_commun'},
-                    )
-                )
+    def lessons_seen(self):
+        """Pour chaque niveau : code HTTP et nombre de leçons affichées."""
+        from .curriculum import STUDENT_LEVELS
+        vus = {}
+        with tempfile.TemporaryDirectory() as media_root, override_settings(MEDIA_ROOT=media_root):
+            for item in STUDENT_LEVELS:
+                r = self.client.get(reverse('education:niveau_detail', kwargs={'niveau': item['code']}))
+                vus[item['code']] = (r.status_code, len(r.context['lessons']) if r.status_code == 200 else None)
+            cartes = self.client.get(reverse('education:niveaux')).content.decode()
+        return vus, cartes
 
-        self.assertEqual(own_level.status_code, 200)
-        self.assertEqual(len(own_level.context['lessons']), 12)
-        self.assertEqual(other_level.status_code, 302)
-        self.assertEqual(
-            other_level['Location'],
-            reverse(
-                'education:niveau_detail',
-                kwargs={'niveau': '2eme_bac_sm'},
-            ),
-        )
+    def test_every_level_is_visible_to_visitors_students_and_teachers(self):
+        """Le niveau du profil ne filtre jamais les niveaux ni leurs leçons."""
+        visiteur, cartes_visiteur = self.lessons_seen()
+        self.assertTrue(all(code == 200 for code, _ in visiteur.values()), visiteur)
+        self.assertEqual(visiteur['2eme_bac_sm'][1], 12)
+        eleve_user = self.login('student', niveau='2eme_bac_sm')
+        self.assertEqual(self.client.get(reverse('education:niveaux')).wsgi_request.edubac_user, eleve_user)
+        eleve, cartes_eleve = self.lessons_seen()
+        self.assertEqual(eleve, visiteur)
+        prof = self.login('teacher')
+        self.assertEqual(self.client.get(reverse('education:niveaux')).wsgi_request.edubac_user, prof)
+        enseignant, cartes_enseignant = self.lessons_seen()
+        self.assertEqual(enseignant, visiteur)
+        from .curriculum import STUDENT_LEVELS
+        for item in STUDENT_LEVELS:
+            lien = reverse('education:niveau_detail', kwargs={'niveau': item.get('maps_to') or item['code']})
+            for page in (cartes_visiteur, cartes_eleve, cartes_enseignant):
+                self.assertIn(item['label'], page)
+                self.assertIn(lien, page)
+
+    def test_student_opens_lessons_of_another_level(self):
+        self.login('student', niveau='2eme_bac_sm')
+        with tempfile.TemporaryDirectory() as media_root, override_settings(MEDIA_ROOT=media_root):
+            page = self.client.get(reverse('education:niveau_detail', kwargs={'niveau': 'tronc_commun'}))
+            self.assertEqual(page.status_code, 200)
+            lesson = Lesson.objects.filter(course__niveau='tronc_commun').order_by('order').first()
+            self.assertContains(page, reverse('education:lesson_detail', args=[lesson.pk]))
+            self.assertEqual(self.client.get(reverse('education:lesson_detail', args=[lesson.pk])).status_code, 200)
+        self.assertNotContains(page, "n'est pas associé à votre compte")

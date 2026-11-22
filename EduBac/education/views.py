@@ -5,7 +5,6 @@ from django.conf import settings
 from django.http import FileResponse, Http404
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.management import call_command
 from django.db.models import Count
 from .models import Course, Lesson, Resources
@@ -92,28 +91,11 @@ def niveau_detail(request, niveau):
     """Détail d'un niveau : toutes les leçons + bouton Accéder au cours."""
     from pathlib import Path
     from django.conf import settings
-    from django.contrib import messages
     from django.urls import reverse
     from .media_library import chapter_relative, course_html_template, documents
-    # Sécurité : un élève ne voit que son niveau (sauf lecture libre si non connecté)
-    user = getattr(request, 'edubac_user', None) or getattr(request, 'user', None)
-    if user and getattr(user, 'is_authenticated', False) and getattr(user, 'role', None) == 'student':
-        try:
-            student_profile = user.student_profile
-        except (AttributeError, ObjectDoesNotExist):
-            student_profile = None
-        if student_profile:
-            student_niveau = student_profile.niveau
-            effective_niveau = {
-                'tronc_commun_lettres': 'tronc_commun',
-            }.get(niveau, niveau)
-            if effective_niveau != student_niveau:
-                messages.warning(
-                    request,
-                    "Ce niveau n'est pas associé à votre compte. "
-                    f"Votre niveau : {student_profile.get_niveau_display()}."
-                )
-                return redirect('education:niveau_detail', niveau=student_niveau)
+    # Contenu public : tous les niveaux sont consultables par tous (visiteur, élève, enseignant),
+    # quel que soit le niveau du profil. Seules les fonctions privées (classes, quiz assignés,
+    # résultats…) dépendent du compte.
     _ensure_curriculum_loaded()
     meta = next((n for n in CURRICULUM if n['code'] == niveau), None)
     label = meta['label'] if meta else niveau
