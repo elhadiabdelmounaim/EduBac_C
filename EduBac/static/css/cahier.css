@@ -103,3 +103,12 @@ body.cahier-avec-selection .cahier-page { padding-bottom: 90px; }
   .cahier-actions { width: 100%; }
 }
 @media print { .cahier-barre-selection, .cahier-filtres, .cahier-choix { display: none !important; } }
+/* Progression des leçons (haut de la page d'un niveau) et durée d'une séance. */
+.cahier-suivis { margin: 0 0 20px; }
+.cahier-suivis-titre { font-size: 1.1rem; margin: 0 0 10px; }
+.cahier-suivis-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 12px; }
+.cahier-suivi { padding: 14px 16px; border: 1px solid var(--nb-line, #d9e0ec); border-radius: 14px; background: var(--nb-card, #fff); }
+.cahier-suivi h3 { font-size: 1rem; margin: 0 0 2px; }
+.cahier-suivi-meta { margin: 0 0 4px; font-size: .85rem; color: var(--nb-muted, #56627a); }
+.cahier-duree-champ { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 8px; font-size: .9rem; }
+.cahier-duree-champ input { width: 110px; }

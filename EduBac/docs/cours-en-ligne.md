@@ -109,3 +109,43 @@ tout le niveau (`niveau/<niveau>/pdf/`, avec couverture, période et sommaire).
 
 Droits : un enseignant ne voit que ses séances ; un compte « staff » ou superutilisateur voit celles de
 tous les enseignants (lecture et PDF), mais seul l'auteur d'une séance la modifie ou la supprime.
+
+## Documents d'une leçon (boutons COURS et EXERCICES)
+
+En bas de la page d'une leçon, deux boutons ouvrent la liste des documents :
+
+- **COURS** : les PDF du dossier `media/lessons/<niveau>/<leçon>/Cours`, les documents de l'admin de
+  catégorie « Cours », le PDF historique de la leçon et, s'il existe, le cours en ligne.
+- **EXERCICES** : les PDF du dossier `Exercices` et les documents de catégorie « Exercices ».
+
+Chaque document a « Ouvrir » (affichage dans le navigateur : PDF, images, texte) et « Télécharger ».
+Les formats non lisibles par le navigateur (Word, PowerPoint, Excel, GeoGebra, ZIP…) n'ont que
+« Télécharger ». Les documents de catégorie « Autre ressource » restent dans « Ressources
+pédagogiques complémentaires ».
+
+**Admin › Leçons › une leçon › Documents de la leçon** : ajouter autant de documents que nécessaire
+(catégorie, ordre, titre, description, fichier). Remplacer le fichier d'un document supprime
+l'ancien fichier ; supprimer le document supprime son fichier. Le « Gestionnaire de fichiers »
+(Admin › Cours) continue de ranger les PDF dans les dossiers `Cours` / `Exercices`.
+
+## Suivi du temps d'enseignement
+
+- **Durée prévue** d'une leçon : Admin › Leçon › « Durée prévue (minutes) ». Vide : volume de
+  `education/data/repartition_horaire.json` (1BAC_SE, TCS).
+- **Durée réalisée** d'une séance : saisie dans le panneau « Séance » (proposée d'après les éléments
+  cochés) ou modifiée sur la page du niveau (« Ajouter une observation · durée »). Une séance
+  ancienne sans durée compte la durée prévue de ses éléments.
+- Réalisé = somme des durées des séances (même enseignant, même classe, même leçon) ; restant =
+  prévu − réalisé (jamais négatif) ; progression = réalisé / prévu × 100 (deux décimales). Le calcul
+  est refait à chaque affichage : enregistrer de nouveau, modifier ou supprimer une séance ne
+  déduit jamais deux fois.
+- La barre (prévu, réalisé, restant, % réalisé / % restant) apparaît dans le panneau « Séance »
+  après chaque enregistrement, en haut de la page du niveau (« Progression des leçons ») et sur
+  chaque séance.
+
+## Outil de conversion LaTeX → cours en ligne
+
+`tools/tex2html.py` (aucune dépendance). Voir l'aide en tête du fichier, par exemple :
+
+    python tools/tex2html.py TC_Polynomes.tex 4 templates/education/cours/TCS/04_les-polynomes.html \
+        "Tronc commun scientifique" TCS "8 heures"

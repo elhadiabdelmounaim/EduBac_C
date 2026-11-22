@@ -14,6 +14,9 @@ class Seance(models.Model):
                                related_name='seances_cahier', verbose_name='Leçon')
     date = models.DateField(verbose_name='Date')
     observations = models.TextField(blank=True, verbose_name='Observations')
+    duree_minutes = models.PositiveIntegerField(
+        null=True, blank=True, verbose_name='Durée réalisée (min)',
+        help_text='Vide (séances anciennes) : durée prévue des éléments traités.')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

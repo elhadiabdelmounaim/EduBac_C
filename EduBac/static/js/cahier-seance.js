@@ -20,6 +20,9 @@
   var ouvreurs = document.querySelectorAll('[data-seance-ouvrir]');
   var lecon = panneau.getAttribute('data-lecon');
   var infoLecon = document.getElementById('seanceLecon');
+  var champDuree = document.getElementById('seanceDuree');
+  var blocSuivi = document.getElementById('seanceSuivi');
+  var dureeSaisie = false;  // la durée a été tapée (ou vient d'une séance enregistrée) : on n'y touche plus
   var minutesDe = {};      // clé → minutes prévues (répartition horaire)
   var charge = false;
   var plan = [];
@@ -98,10 +101,11 @@
     charger('').then(function (data) {
       plan = data.plan || [];
       var rep = data.repartition;
-      if (rep) {
+      if (data.prevu_texte) {
         infoLecon.hidden = false;
-        infoLecon.textContent = 'Leçon : ' + duree(rep.heures * 60)
-          + (rep.semaines ? ' · semaines ' + rep.semaines : '') + ' · répartition ' + rep.annee;
+        infoLecon.textContent = 'Durée prévue de la leçon : ' + data.prevu_texte
+          + (rep && rep.semaines ? ' · semaines ' + rep.semaines : '')
+          + (rep && rep.annee ? ' · répartition ' + rep.annee : '');
       }
       if (data.cahier_url) lienCahier.href = data.cahier_url;
       champClasse.innerHTML = '';
@@ -139,8 +143,11 @@
         if (numero !== requete) return;
         var brouillon = lire(cleBrouillon());
         var selection = data.existe ? data.selection : (brouillon ? brouillon.split(',') : courantes());
+        dureeSaisie = !!(data.existe && data.duree);
+        if (champDuree) champDuree.value = dureeSaisie ? data.duree : '';
         cocher(selection, data.deja || {});
         if (champObs) champObs.value = data.observations || '';
+        afficherSuivi(data.suivi);
         if (data.existe) dire('Une séance est déjà enregistrée à cette date : elle sera mise à jour.', 'info');
       })
       .catch(function () { if (numero === requete) dire('Connexion impossible.', 'erreur'); });
@@ -239,6 +246,8 @@
     var temps = cles.reduce(function (t, c) { return t + (minutesDe[c] || 0); }, 0);
     compte.textContent = n ? n + ' élément' + (n > 1 ? 's' : '') + ' coché' + (n > 1 ? 's' : '')
       + (temps ? ' · ' + duree(temps) : '') : 'Rien de coché';
+    // Durée proposée : temps prévu des éléments cochés, tant que l'enseignant ne l'a pas saisie.
+    if (champDuree && !dureeSaisie) champDuree.value = temps ? Math.min(480, temps) : '';
     bouton.disabled = !n || !champClasse.value;
   }
 
@@ -261,11 +270,53 @@
     majParents();
   }
 
+  if (champDuree) champDuree.addEventListener('input', function () { dureeSaisie = champDuree.value !== ''; });
+
+  // ---------- Barre de progression de la leçon (même rendu que cahier/_suivi.html) ----------
+  function afficherSuivi(b) {
+    if (!blocSuivi) return;
+    blocSuivi.innerHTML = '';
+    blocSuivi.hidden = !b;
+    if (!b) return;
+    if (!b.connu) {
+      blocSuivi.appendChild(el('p', { 'class': 'suivi-inconnu' },
+        'Durée réalisée : ' + b.realise_texte + ' · durée prévue de la leçon non renseignée.'));
+      return;
+    }
+    var suivi = el('div', { 'class': 'suivi' });
+    var barre = el('div', { 'class': 'suivi-barre', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100',
+                            'aria-valuenow': String(b.pourcent),
+                            'aria-valuetext': b.pourcent_texte + ' % réalisé, ' + b.reste_pourcent_texte + ' % restant' });
+    var fait = el('span', { 'class': 'suivi-fait' });
+    fait.style.width = b.largeur + '%';
+    barre.appendChild(fait);
+    suivi.appendChild(barre);
+    var pc = el('p', { 'class': 'suivi-pourcents' });
+    var a = el('span'); a.appendChild(el('strong', null, b.pourcent_texte + ' %')); a.appendChild(document.createTextNode(' réalisé'));
+    pc.appendChild(a);
+    pc.appendChild(el('span', null, b.reste_pourcent_texte + ' % restant'));
+    suivi.appendChild(pc);
+    var dl = el('dl', { 'class': 'suivi-durees' });
+    [['Durée prévue', b.prevu_texte], ['Durée réalisée', b.realise_texte], ['Durée restante', b.restant_texte]]
+      .forEach(function (x) {
+        var d = el('div'); d.appendChild(el('dt', null, x[0])); d.appendChild(el('dd', null, x[1])); dl.appendChild(d);
+      });
+    suivi.appendChild(dl);
+    if (b.depassement) suivi.appendChild(el('p', { 'class': 'suivi-depasse' }, 'Durée prévue dépassée de ' + b.depassement_texte + '.'));
+    blocSuivi.appendChild(suivi);
+  }
+
   // ---------- Enregistrer ----------
   bouton.addEventListener('click', function () {
     var cles = courantes();
     if (!cles.length) { dire('Cochez au moins un élément traité.', 'erreur'); return; }
     if (!champDate.value) { dire('Choisissez la date.', 'erreur'); return; }
+    var minutes = champDuree ? parseInt(champDuree.value, 10) : NaN;
+    if (champDuree && !(minutes >= 1 && minutes <= 480)) {
+      dire('Indiquez la durée réalisée (entre 1 et 480 minutes).', 'erreur');
+      champDuree.focus();
+      return;
+    }
     bouton.disabled = true;
     dire('Enregistrement…');
     fetch(panneau.getAttribute('data-enregistrer'), {
@@ -274,13 +325,16 @@
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json',
                  'X-CSRFToken': panneau.getAttribute('data-csrf') },
       body: JSON.stringify({ classe: champClasse.value, date: champDate.value, cles: cles,
-                             observations: champObs ? champObs.value : undefined })
+                             observations: champObs ? champObs.value : undefined,
+                             duree: champDuree ? minutes : undefined })
     }).then(function (r) {
       return r.json().catch(function () { return { ok: false, message: 'Erreur ' + r.status + '.' }; });
     }).then(function (data) {
       if (!data.ok) { dire(data.message || 'Enregistrement impossible.', 'erreur'); return; }
       oublier(cleBrouillon());
       dire(data.message, 'succes');
+      dureeSaisie = true;
+      afficherSuivi(data.suivi);
       if (data.url) lienCahier.href = data.url;
     }).catch(function () {
       dire('Connexion impossible : rien n’a été perdu, réessayez.', 'erreur');

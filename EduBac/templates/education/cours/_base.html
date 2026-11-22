@@ -18,7 +18,7 @@ d.className+=' pagine';setTimeout(function(){if(!/\bpagine-pret\b/.test(d.classN
 <script defer src="{% asset 'vendor/jquery/jquery-3.7.1.min.js' %}"></script>
 <script defer src="{% asset 'js/cours.js' %}"></script>
 <script defer src="{% asset 'vendor/mathjax/tex-svg-3.2.2.js' %}"></script>
-{% if can_present %}<link rel="stylesheet" href="{% asset 'css/cahier-seance.css' %}">
+{% if can_present %}<link rel="stylesheet" href="{% asset 'css/cahier-seance.css' %}"><link rel="stylesheet" href="{% asset 'css/suivi.css' %}">
 <script defer src="{% asset 'js/cahier-seance.js' %}"></script>{% endif %}
 </head>
 <body>
@@ -101,8 +101,13 @@ d.className+=' pagine';setTimeout(function(){if(!/\bpagine-pret\b/.test(d.classN
     <label>Classe <select id="seanceClasse"></select></label>
   </div>
   <p class="seance-lecon" id="seanceLecon" hidden></p>
+  <div class="seance-suivi" id="seanceSuivi" aria-live="polite" hidden></div>
   <p class="seance-aide">Cochez les parties, sous-titres et blocs traités. ✓ = déjà vu lors d'une autre séance.</p>
   <div class="seance-arbre" id="seanceArbre" aria-live="polite"><p class="seance-info">Chargement…</p></div>
+  <label class="seance-duree">Durée réalisée
+    <span class="seance-duree-saisie"><input type="number" id="seanceDuree" min="1" max="480" step="5" inputmode="numeric"> min</span>
+    <span class="seance-duree-aide" id="seanceDureeAide">Proposée d’après les éléments cochés ; modifiable.</span>
+  </label>
   <label class="seance-obs">Observations <span>(facultatif)</span>
     <textarea id="seanceObservations" rows="2" maxlength="4000" placeholder="Devoir donné, difficultés, absences…"></textarea>
   </label>

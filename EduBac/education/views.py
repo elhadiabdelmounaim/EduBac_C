@@ -162,6 +162,50 @@ def course_detail(request, pk):
     })
 
 
+VISIBLES = {'.pdf', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.txt'}   # pas de SVG : il peut contenir du script
+
+
+def _documents_lecon(lesson, resources, resource_descriptions, course_html_url):
+    """Fichiers des boutons COURS et EXERCICES de la leçon.
+
+    Réunit les PDF rangés dans media/lessons/<niveau>/<leçon>/Cours|Exercices (gestionnaire
+    de fichiers) et les documents ajoutés dans l'admin (Leçon › Documents, catégorie Cours ou
+    Exercices). « Ouvrir » n'est proposé que pour les formats lisibles dans le navigateur."""
+    from .media_library import documents
+    root = Path(settings.MEDIA_ROOT).resolve()
+    groupes = {'cours': [], 'exercices': []}
+    for kind, cle in (('Cours', 'cours'), ('Exercices', 'exercices')):
+        for path in documents(lesson, kind):
+            url = reverse('education:lesson_document', args=[lesson.pk, kind, path.name])
+            ouvrir = course_html_url if (kind == 'Cours' and course_html_url) else url
+            groupes[cle].append({
+                'titre': path.name, 'extension': 'PDF',
+                'description': resource_descriptions.get(path.relative_to(root).as_posix(), ''),
+                'ouvrir': ouvrir, 'telecharger': url + '?download=1',
+                'en_ligne': ouvrir == course_html_url,
+            })
+    for resource in resources:
+        if resource.categorie not in groupes or not resource.file or not resource.file.name.startswith('resources/'):
+            continue
+        extension = Path(resource.file.name).suffix.lower()
+        url = reverse('education:resource_download', args=[lesson.pk, resource.pk])
+        groupes[resource.categorie].append({
+            'titre': resource.name, 'extension': extension.lstrip('.').upper() or 'Fichier',
+            'description': resource.description,
+            'ouvrir': url if extension in VISIBLES else '', 'telecharger': url + '?download=1',
+            'en_ligne': False,
+        })
+    if lesson.pdf:
+        url = reverse('education:lesson_pdf', args=[lesson.pk])
+        groupes['cours'].append({'titre': Path(lesson.pdf.name).name, 'extension': 'PDF', 'description': '',
+                                 'ouvrir': url, 'telecharger': url + '?download=1', 'en_ligne': False})
+    if course_html_url and not any(d['en_ligne'] for d in groupes['cours']):
+        groupes['cours'].insert(0, {'titre': 'Cours en ligne', 'extension': 'Interactif',
+                                    'description': 'Cours paginé, lisible sur ordinateur, téléphone et au vidéoprojecteur.',
+                                    'ouvrir': course_html_url, 'telecharger': '', 'en_ligne': True})
+    return groupes
+
+
 def lesson_detail(request, pk):
     lesson = get_object_or_404(Lesson, pk=pk)
     from .media_library import chapter_relative, course_book_data, course_html_template, documents
@@ -172,7 +216,9 @@ def lesson_detail(request, pk):
         course_content = ''
         course_content_error = str(exc)
     course = lesson.course
-    resources = list(lesson.resources.all().order_by('name', 'pk'))
+    resources = list(lesson.resources.all().order_by('ordre', 'name', 'pk'))
+    course_html_url = (reverse('education:lesson_course_html', args=[lesson.pk])
+                       if course_html_template(lesson) else '')
     resource_descriptions = {
         resource.file.name: resource.description
         for resource in resources
@@ -214,6 +260,7 @@ def lesson_detail(request, pk):
                 faq_items.append({'q': q.strip(), 'a': a.strip()})
             else:
                 faq_items.append({'q': line, 'a': ''})
+    docs = _documents_lecon(lesson, resources, resource_descriptions, course_html_url)
     return render(request, 'education/lesson_detail.html', {
         'lesson': lesson,
         'course_content': course_content,
@@ -228,30 +275,17 @@ def lesson_detail(request, pk):
         'prev_lesson': prev_lesson,
         'is_fav': is_fav,
         'faq_items': faq_items,
-        'document_groups': [
-            {
-                'kind': kind,
-                'files': [
-                    {
-                        'filename': path.name,
-                        'description': resource_descriptions.get(
-                            path.relative_to(Path(settings.MEDIA_ROOT).resolve()).as_posix(),
-                            '',
-                        ),
-                    }
-                    for path in documents(lesson, kind)
-                ],
-            }
-            for kind in ('Cours', 'Exercices')
+        'docs_boutons': [
+            {'cle': cle, 'libelle': libelle, 'titre': titre, 'icone': icone, 'docs': docs[cle]}
+            for cle, libelle, titre, icone in (('cours', 'COURS', 'Cours', 'bi-journal-text'),
+                                               ('exercices', 'EXERCICES', 'Exercices', 'bi-pencil-square'))
         ],
         'attached_resources': [
             resource for resource in resources
             if resource.file and resource.file.name.startswith('resources/')
+            and resource.categorie not in ('cours', 'exercices')
         ],
-        'course_html_url': (
-            reverse('education:lesson_course_html', args=[lesson.pk])
-            if course_html_template(lesson) else ''
-        ),
+        'course_html_url': course_html_url,
         'course_book_url': (
             reverse('education:lesson_book_3d', args=[lesson.pk])
             if course_book_data(lesson) else ''
@@ -292,7 +326,7 @@ def resource_download(request, pk, resource_id):
     response = FileResponse(
         handle,
         content_type=content_type,
-        as_attachment=resource.type == 'doc' or request.GET.get('download') == '1',
+        as_attachment=file_path.suffix.lower() not in VISIBLES or request.GET.get('download') == '1',
         filename=filename,
     )
     response['X-Content-Type-Options'] = 'nosniff'

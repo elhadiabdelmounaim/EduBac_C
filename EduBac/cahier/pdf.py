@@ -80,7 +80,7 @@ def _bloc(s, st, avec_enseignant):
     if avec_enseignant:
         infos.append('<b>Enseignant :</b> %s' % _e(s.teacher.get_full_name() or s.teacher.username))
     if getattr(s, 'minutes_texte', None) and s.minutes:
-        infos.append('<b>Durée prévue :</b> %s' % _e(s.minutes_texte))
+        infos.append('<b>Durée réalisée :</b> %s' % _e(s.minutes_texte))
     tete = [bandeau, Spacer(1, 4), Paragraph(' · '.join(infos), st['base']),
             Paragraph('Contenu pédagogique réalisé', st['rubrique'])]
     corps = []

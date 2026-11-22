@@ -11,7 +11,7 @@ class SeanceElementInline(admin.TabularInline):
 
 @admin.register(Seance)
 class SeanceAdmin(admin.ModelAdmin):
-    list_display = ('date', 'classroom', 'lesson', 'teacher', 'updated_at')
+    list_display = ('date', 'classroom', 'lesson', 'teacher', 'duree_minutes', 'updated_at')
     list_filter = ('date', 'classroom')
     search_fields = ('lesson__title', 'classroom__name', 'teacher__username')
     list_select_related = ('classroom', 'lesson', 'teacher')

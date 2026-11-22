@@ -24,3 +24,14 @@ def repartition_de_lecon(lesson):
     if not entree:
         return None
     return dict(entree, annee=_donnees().get('annee', ''))
+
+
+def duree_prevue_minutes(lesson):
+    """Volume horaire de la leçon en minutes : saisi dans l'admin (Leçon › Durée prévue),
+    sinon celui de la répartition horaire du niveau ; None si aucun des deux n'est connu."""
+    if lesson.duree_prevue_minutes:
+        return int(lesson.duree_prevue_minutes)
+    entree = repartition_de_lecon(lesson)
+    if entree and entree.get('heures'):
+        return int(round(float(entree['heures']) * 60))
+    return None

@@ -16,11 +16,12 @@ from accounts.decorators import teacher_required
 from classrooms.models import Classroom
 from education.models import Course, Lesson
 
-from education.repartition import repartition_de_lecon
+from education.repartition import duree_prevue_minutes, repartition_de_lecon
 
 from .models import Seance, SeanceElement
 from .pdf import document
 from .rubriques import elements, plan_de_lecon
+from .suivi import bilan, bilan_lecon, duree, lire_duree, minutes_realisees
 
 
 def _enseignant(request):
@@ -64,6 +65,9 @@ def etat(request, pk):
         'repartition': repartition_de_lecon(lesson),
         'cahier_url': reverse('cahier:niveau', args=[lesson.course.niveau]),
         'observations': '',
+        'duree': None,
+        'suivi': None,
+        'prevu_texte': duree(duree_prevue_minutes(lesson)) if duree_prevue_minutes(lesson) else '',
         'creer_classe_url': reverse('classrooms:create'),
     }
     classe = next((c for c in classes if str(c.pk) == request.GET.get('classe')), None)
@@ -77,9 +81,11 @@ def etat(request, pk):
                 data['selection'] = cles
                 data['existe'] = True
                 data['observations'] = s.observations
+                data['duree'] = minutes_realisees(s)
             else:
                 for k in cles:
                     data['deja'][k] = s.date.strftime('%d/%m')
+        data['suivi'] = bilan_lecon(seances, lesson)
     return JsonResponse(data)
 
 
@@ -114,12 +120,18 @@ def enregistrer(request, pk):
     choisis.sort(key=lambda e: e['ordre'])
     observations = corps.get('observations')
     observations = observations.strip()[:4000] if isinstance(observations, str) else None
+    try:
+        minutes = lire_duree(corps.get('duree'))
+    except ValueError as exc:
+        return _refus(str(exc), 400)
     with transaction.atomic():
         seance, cree = Seance.objects.get_or_create(teacher=user, classroom=classe, lesson=lesson, date=jour)
         if not cree:
             seance.elements.all().delete()
         if observations is not None:
             seance.observations = observations
+        if minutes is not None:
+            seance.duree_minutes = minutes      # remplace la durée précédente : pas de double déduction
         seance.save()
         SeanceElement.objects.bulk_create([
             SeanceElement(seance=seance, key=e['key'], title=e['titre'][:255], partie=e['partie'][:255],
@@ -131,6 +143,9 @@ def enregistrer(request, pk):
         'message': ('Séance enregistrée' if cree else 'Séance mise à jour')
                    + f' : {len(choisis)} élément{"s" if len(choisis) > 1 else ""}, le {jour:%d/%m/%Y}.',
         'url': reverse('cahier:niveau', args=[lesson.course.niveau]) + f'#seance-{seance.pk}',
+        'duree': minutes_realisees(seance),
+        'suivi': bilan_lecon(Seance.objects.filter(teacher=user, classroom=classe, lesson=lesson)
+                             .prefetch_related('elements'), lesson),
     })
 
 
@@ -147,19 +162,9 @@ def _regrouper(seance):
     return parties
 
 
-def duree(minutes):
-    """95 → « 1 h 35 » ; 40 → « 40 min »."""
-    minutes = int(minutes or 0)
-    if minutes < 60:
-        return f'{minutes} min'
-    h, m = divmod(minutes, 60)
-    return f'{h} h {m:02d}' if m else f'{h} h'
-
-
 def _progression(seances):
-    """Pour chaque séance : temps prévu de tout ce qui a été traité dans cette leçon avec
-    cette classe (par le même enseignant) jusqu'à cette date incluse, comparé aux heures
-    de la répartition."""
+    """Pour chaque séance : temps réellement passé sur la leçon avec cette classe (même
+    enseignant) jusqu'à cette séance incluse, comparé à la durée prévue de la leçon."""
     triplets = {(s.teacher_id, s.classroom_id, s.lesson_id) for s in seances}
     if not triplets:
         return
@@ -167,23 +172,30 @@ def _progression(seances):
     for s in (Seance.objects.filter(teacher_id__in={t for t, _, _ in triplets},
                                     classroom_id__in={c for _, c, _ in triplets},
                                     lesson_id__in={le for _, _, le in triplets})
-              .prefetch_related('elements').order_by('date')):
+              .prefetch_related('elements').order_by('date', 'created_at', 'pk')):
         historiques.setdefault((s.teacher_id, s.classroom_id, s.lesson_id), []).append(s)
     for s in seances:
-        repartition = repartition_de_lecon(s.lesson)
-        vus = {}
+        realise = 0
         for h in historiques.get((s.teacher_id, s.classroom_id, s.lesson_id), []):
             if h.date > s.date:
                 break
-            for e in h.elements.all():
-                vus[e.key] = e.minutes
-        fait = sum(vus.values())
-        s.progression = None
-        if repartition:
-            prevu = int(round(repartition['heures'] * 60))
-            s.progression = {'fait': duree(fait), 'prevu': duree(prevu),
-                             'pourcent': min(100, round(100 * fait / prevu)) if prevu else 0}
+            realise += minutes_realisees(h)
+        s.progression = bilan(duree_prevue_minutes(s.lesson), realise)
 
+
+def suivi_des_lecons(seances):
+    """Une ligne par (enseignant, classe, leçon) : bilan de toutes les séances enregistrées."""
+    groupes = {}
+    for s in seances:
+        groupes.setdefault((s.teacher_id, s.classroom_id, s.lesson_id), []).append(s)
+    lignes = []
+    for liste in groupes.values():
+        s = liste[0]
+        lignes.append({'lecon': s.lesson, 'classe': s.classroom, 'enseignant': s.teacher,
+                       'seances': len(liste), 'derniere': max(x.date for x in liste),
+                       'bilan': bilan_lecon(liste, s.lesson)})
+    lignes.sort(key=lambda l: (l['classe'].name, l['lecon'].order, l['lecon'].title, l['enseignant'].pk))
+    return lignes
 
 NIVEAUX = dict(Course.NIVEAU_CHOICES)
 ICONES = {
@@ -232,7 +244,8 @@ def preparer(seances):
     _numeroter(seances)
     for s in seances:
         s.parties = _regrouper(s)
-        s.minutes = sum(e.minutes for e in s.elements.all())
+        s.minutes_prevues = sum(e.minutes for e in s.elements.all())
+        s.minutes = minutes_realisees(s)
         s.minutes_texte = duree(s.minutes)
         s.activites = [e.title for e in s.elements.all() if ACTIVITE.match(e.title)]
     return seances
@@ -287,6 +300,10 @@ def niveau(request, niveau):
     preparer(page.object_list)
     _progression(page.object_list)
     classes = Classroom.objects.filter(pk__in=toutes.values('classroom')).order_by('name')
+    pour_suivi = toutes
+    if filtres['classe'].isdigit():
+        pour_suivi = pour_suivi.filter(classroom_id=int(filtres['classe']))
+    suivis = suivi_des_lecons(list(pour_suivi.order_by('date')))
     params = request.GET.copy()
     params.pop('page', None)
     return render(request, 'cahier/niveau.html', {
@@ -294,6 +311,7 @@ def niveau(request, niveau):
         'total': toutes.count(), 'trouvees': page.paginator.count, 'filtres': filtres, 'classes': classes,
         'params': params.urlencode(), 'directeur': est_directeur(user), 'moi': user.pk,
         'filtre_actif': any(filtres[k] for k in ('q', 'du', 'au', 'classe')),
+        'suivis': suivis,
     })
 
 
@@ -337,11 +355,23 @@ def niveau_pdf(request, niveau):
 @teacher_required
 @require_POST
 def observations(request, pk):
-    """Seul l'enseignant de la séance écrit ses observations."""
+    """Seul l'enseignant de la séance complète ses observations et sa durée réalisée."""
     seance = get_object_or_404(Seance.objects.select_related('lesson__course'), pk=pk, teacher=request.edubac_user)
-    seance.observations = (request.POST.get('observations') or '').strip()[:4000]
-    seance.save(update_fields=['observations', 'updated_at'])
-    messages.success(request, 'Observations enregistrées.')
+    champs = ['updated_at']
+    if 'observations' in request.POST:
+        seance.observations = (request.POST.get('observations') or '').strip()[:4000]
+        champs.append('observations')
+    if 'duree' in request.POST:
+        try:
+            minutes = lire_duree(request.POST.get('duree'))
+        except ValueError as exc:
+            messages.error(request, str(exc))
+            return redirect(reverse('cahier:niveau', args=[seance.lesson.course.niveau]) + f'#seance-{seance.pk}')
+        if minutes is not None:
+            seance.duree_minutes = minutes
+            champs.append('duree_minutes')
+    seance.save(update_fields=champs)
+    messages.success(request, 'Séance mise à jour.')
     return redirect(reverse('cahier:niveau', args=[seance.lesson.course.niveau]) + f'#seance-{seance.pk}')
 
 

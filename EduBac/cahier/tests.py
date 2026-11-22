@@ -210,10 +210,12 @@ class MinutageTests(CahierBase):
         self.assertEqual([e.minutes for e in seance.elements.all()], [minutes['s1-b2'], minutes['s1-b3']])
         page = self.client.get(reverse('cahier:niveau', args=['1ere_bac_sc'])).content.decode()
         from .views import duree
-        cumul = minutes['s1-b1'] + minutes['s1-b2'] + minutes['s1-b3']
-        self.assertIn(f'Durée prévue : {duree(minutes["s1-b2"] + minutes["s1-b3"])}', page)
-        self.assertIn(f'Leçon : {duree(cumul)} / 13 h', page)
-        self.assertIn(f'Leçon : {duree(minutes["s1-b1"] + minutes["s1-b2"])} / 13 h', page)   # séance du 20
+        # Temps réellement passé : somme des deux séances (s1-b2, revu le 21, compte deux fois).
+        cumul = (minutes['s1-b1'] + minutes['s1-b2']) + (minutes['s1-b2'] + minutes['s1-b3'])
+        # Sans durée saisie, la durée réalisée vaut la durée prévue des éléments cochés.
+        self.assertIn(f'Durée réalisée : <strong>{duree(minutes["s1-b2"] + minutes["s1-b3"])}</strong>', page)
+        self.assertIn(f'Leçon : <strong>{duree(cumul)}</strong> / 13 h', page)
+        self.assertIn(f'Leçon : <strong>{duree(minutes["s1-b1"] + minutes["s1-b2"])}</strong> / 13 h', page)   # séance du 20
 
     def test_duration_format(self):
         from .views import duree
@@ -392,3 +394,120 @@ class JournalNiveauTests(CahierBase):
         self.login_as(self.eleve)
         for url in (self.url, self.pdf_url, reverse('cahier:seance_pdf', args=[self.s1.pk])):
             self.assertRedirects(self.client.get(url), reverse('education:home'), fetch_redirect_response=False)
+
+
+class SuiviTempsTests(CahierBase):
+    """Durée réalisée des séances, déduite de la durée prévue de la leçon (sans double déduction)."""
+
+    def setUp(self):
+        super().setUp()
+        self.lesson.duree_prevue_minutes = 360           # 6 h, prioritaire sur la répartition (13 h)
+        self.lesson.save()
+        self.login_as(self.prof)
+
+    def seance(self, jour, minutes, classe=None, cles=('s1-b1',)):
+        r = self.post({'classe': (classe or self.classe).pk, 'date': jour, 'cles': list(cles), 'duree': minutes})
+        self.assertEqual(r.status_code, 200, r.content)
+        return r.json()
+
+    def test_example_from_the_specification(self):
+        self.seance('2026-11-02', 60)
+        self.seance('2026-11-09', 90)
+        suivi = self.seance('2026-11-16', 60)['suivi']
+        self.assertEqual((suivi['prevu'], suivi['realise'], suivi['restant']), (360, 210, 150))
+        self.assertEqual((suivi['prevu_texte'], suivi['realise_texte'], suivi['restant_texte']), ('6 h', '3 h 30', '2 h 30'))
+        self.assertEqual((suivi['pourcent'], suivi['reste_pourcent']), (58.33, 41.67))
+        self.assertEqual((suivi['pourcent_texte'], suivi['reste_pourcent_texte']), ('58,33', '41,67'))
+        # Même bilan à la réouverture du panneau et sur la page du niveau.
+        etat = self.client.get(self.etat_url, {'classe': self.classe.pk, 'date': '2026-11-16'}).json()
+        self.assertEqual((etat['duree'], etat['suivi']['realise'], etat['prevu_texte']), (60, 210, '6 h'))
+        page = self.client.get(reverse('cahier:niveau', args=['1ere_bac_sc'])).content.decode()
+        self.assertIn('Progression des leçons', page)
+        self.assertIn('<strong>58,33 %</strong> réalisé', page)
+        self.assertIn('41,67 % restant', page)
+        self.assertIn('<dt>Durée restante</dt><dd>2 h 30</dd>', page)
+        self.assertIn('Durée réalisée : <strong>1 h 30</strong>', page)
+
+    def test_saving_again_replaces_the_duration_instead_of_adding_it(self):
+        self.seance('2026-11-02', 60)
+        self.seance('2026-11-02', 60)
+        suivi = self.seance('2026-11-02', 90)['suivi']
+        self.assertEqual(Seance.objects.count(), 1)
+        self.assertEqual(suivi['realise'], 90)
+
+    def test_edit_and_delete_recompute_the_progress(self):
+        self.seance('2026-11-02', 60)
+        self.seance('2026-11-09', 90)
+        s = Seance.objects.get(date='2026-11-09')
+        self.client.post(reverse('cahier:observations', args=[s.pk]), {'duree': '30', 'observations': 'ok'})
+        s.refresh_from_db()
+        self.assertEqual((s.duree_minutes, s.observations), (30, 'ok'))
+        etat = self.client.get(self.etat_url, {'classe': self.classe.pk, 'date': '2026-11-09'}).json()
+        self.assertEqual(etat['suivi']['realise'], 90)
+        self.client.post(reverse('cahier:supprimer', args=[s.pk]))
+        etat = self.client.get(self.etat_url, {'classe': self.classe.pk, 'date': '2026-11-09'}).json()
+        self.assertEqual((etat['suivi']['realise'], etat['suivi']['restant']), (60, 300))
+        # Observations seules : la durée ne change pas.
+        premiere = Seance.objects.get()
+        self.client.post(reverse('cahier:observations', args=[premiere.pk]), {'observations': 'devoir'})
+        premiere.refresh_from_db()
+        self.assertEqual(premiere.duree_minutes, 60)
+
+    def test_remaining_time_is_never_negative(self):
+        for k in range(4):
+            suivi = self.seance(f'2026-11-0{k + 1}', 120)['suivi']
+        self.assertEqual((suivi['realise'], suivi['restant'], suivi['pourcent'], suivi['reste_pourcent']), (480, 0, 100, 0))
+        self.assertEqual(suivi['depassement_texte'], '2 h')
+
+    def test_invalid_durations_are_refused(self):
+        for valeur in (0, 481, 'abc', -5):
+            r = self.post({'classe': self.classe.pk, 'date': '2026-11-02', 'cles': ['s1-b1'], 'duree': valeur})
+            self.assertEqual(r.status_code, 400, valeur)
+        self.assertFalse(Seance.objects.exists())
+        self.seance('2026-11-02', 60)
+        s = Seance.objects.get()
+        self.client.post(reverse('cahier:observations', args=[s.pk]), {'duree': '0'})
+        s.refresh_from_db()
+        self.assertEqual(s.duree_minutes, 60)
+
+    def test_each_class_and_each_lesson_has_its_own_progress(self):
+        autre = Classroom.objects.create(name='1BAC SE 3', niveau='1ere_bac_sc', teacher=self.prof)
+        self.seance('2026-11-02', 120)
+        self.assertEqual(self.seance('2026-11-02', 45, classe=autre)['suivi']['realise'], 45)
+        etat = self.client.get(self.etat_url, {'classe': self.classe.pk, 'date': '2026-11-03'}).json()
+        self.assertEqual(etat['suivi']['realise'], 120)
+        # Une autre leçon (autre niveau) n'est pas touchée.
+        tc = Lesson.objects.create(title='Les polynômes', content='', order=4,
+                                   course=Course.objects.create(name='Maths', niveau='tronc_commun'))
+        from .suivi import bilan_lecon
+        self.assertEqual(bilan_lecon(Seance.objects.filter(lesson=tc), tc)['realise'], 0)
+
+    def test_old_sessions_without_duration_use_the_planned_minutes(self):
+        self.post({'classe': self.classe.pk, 'date': '2026-11-02', 'cles': ['s1-b1', 's1-b2']})
+        s = Seance.objects.get()
+        self.assertIsNone(s.duree_minutes)
+        prevues = sum(e.minutes for e in s.elements.all())
+        etat = self.client.get(self.etat_url, {'classe': self.classe.pk, 'date': '2026-11-02'}).json()
+        self.assertEqual((etat['duree'], etat['suivi']['realise']), (prevues, prevues))
+
+    def test_planned_duration_falls_back_to_the_timetable(self):
+        from education.repartition import duree_prevue_minutes
+        self.assertEqual(duree_prevue_minutes(self.lesson), 360)
+        self.lesson.duree_prevue_minutes = None
+        self.lesson.save()
+        self.assertEqual(duree_prevue_minutes(self.lesson), 13 * 60)
+        sans = Lesson.objects.create(title='Inconnue', content='', order=40, course=self.lesson.course)
+        self.assertIsNone(duree_prevue_minutes(sans))
+        from .suivi import bilan
+        self.assertEqual(bilan(None, 75), {'realise': 75, 'realise_texte': '1 h 15', 'prevu': None,
+                                           'prevu_texte': '', 'connu': False})
+
+    def test_pdf_shows_the_real_duration(self):
+        self.seance('2026-11-02', 75)
+        s = Seance.objects.get()
+        from io import BytesIO
+        from pypdf import PdfReader
+        r = self.client.get(reverse('cahier:seance_pdf', args=[s.pk]))
+        texte = ' '.join(p.extract_text() for p in PdfReader(BytesIO(r.content)).pages)
+        self.assertIn('Durée réalisée', texte)
+        self.assertIn('1 h 15', texte)

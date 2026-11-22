@@ -1,0 +1,27 @@
+{% comment %}
+Barre de progression d'une leçon. Paramètres : b (bilan de cahier/suivi.py), compact (facultatif).
+Durées : prévue (admin ou répartition horaire), réalisée (somme des séances), restante.
+{% endcomment %}
+{% if b.connu %}
+<div class="suivi{% if compact %} suivi-compact{% endif %}">
+  <div class="suivi-barre" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ b.pourcent }}"
+       aria-valuetext="{{ b.pourcent_texte }} % réalisé, {{ b.reste_pourcent_texte }} % restant">
+    <span class="suivi-fait" style="width: {{ b.largeur }}%"></span>
+  </div>
+  {% if compact %}
+  <p class="suivi-ligne">Leçon : <strong>{{ b.realise_texte }}</strong> / {{ b.prevu_texte }}
+    · <strong>{{ b.pourcent_texte }} %</strong> réalisé · reste {{ b.restant_texte }} ({{ b.reste_pourcent_texte }} %)</p>
+  {% else %}
+  <p class="suivi-pourcents"><span><strong>{{ b.pourcent_texte }} %</strong> réalisé</span>
+    <span>{{ b.reste_pourcent_texte }} % restant</span></p>
+  <dl class="suivi-durees">
+    <div><dt>Durée prévue</dt><dd>{{ b.prevu_texte }}</dd></div>
+    <div><dt>Durée réalisée</dt><dd>{{ b.realise_texte }}</dd></div>
+    <div><dt>Durée restante</dt><dd>{{ b.restant_texte }}</dd></div>
+  </dl>
+  {% endif %}
+  {% if b.depassement %}<p class="suivi-depasse"><i class="bi bi-exclamation-circle" aria-hidden="true"></i> Durée prévue dépassée de {{ b.depassement_texte }}.</p>{% endif %}
+</div>
+{% else %}
+<p class="suivi-inconnu">Durée réalisée : <strong>{{ b.realise_texte }}</strong> · durée prévue de la leçon non renseignée.</p>
+{% endif %}

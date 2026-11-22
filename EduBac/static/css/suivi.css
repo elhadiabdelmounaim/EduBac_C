@@ -1,0 +1,20 @@
+/* Suivi du temps d'une leçon (cahier de textes et panneau « Séance ») :
+   barre réalisé / restant, durées prévue, réalisée et restante. */
+.suivi { --suivi-fait: var(--nb-orange, #f39c12); --suivi-reste: var(--nb-line, #d9e0ec);
+  --suivi-texte: var(--nb-muted, #56627a); margin: 8px 0 0; }
+.suivi-barre { position: relative; height: 12px; border-radius: 999px; background: var(--suivi-reste); overflow: hidden; }
+.suivi-fait { display: block; height: 100%; min-width: 2px; background: var(--suivi-fait); border-radius: inherit;
+  transition: width .4s ease; }
+.suivi-pourcents { display: flex; justify-content: space-between; gap: 12px; margin: 6px 0 4px; font-size: .92rem; color: var(--suivi-texte); }
+.suivi-durees { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 6px 0 0; }
+.suivi-durees > div { padding: 6px 10px; border-radius: 10px; background: rgba(127, 140, 160, .1); }
+.suivi-durees dt { font-size: .78rem; font-weight: 600; color: var(--suivi-texte); }
+.suivi-durees dd { margin: 0; font-size: 1.05rem; font-weight: 700; }
+.suivi-compact .suivi-barre { height: 8px; max-width: 320px; }
+.suivi-ligne, .suivi-inconnu, .suivi-depasse { margin: 4px 0 0; font-size: .9rem; color: var(--suivi-texte); }
+.suivi-depasse { color: #b4232c; }
+@media (max-width: 480px) {
+  .suivi-durees { grid-template-columns: minmax(0, 1fr); }
+  .suivi-durees > div { display: flex; justify-content: space-between; align-items: baseline; }
+}
+@media (prefers-reduced-motion: reduce) { .suivi-fait { transition: none; } }

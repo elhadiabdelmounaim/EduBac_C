@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load edubac_assets %}
-{% block extra_css %}<link rel="stylesheet" href="{% asset 'css/cahier.css' %}">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% asset 'css/cahier.css' %}"><link rel="stylesheet" href="{% asset 'css/suivi.css' %}">{% endblock %}
 {% block content %}
 <div class="cahier-page" id="cahierNiveau" data-niveau="{{ niveau }}" data-pdf="{% url 'cahier:niveau_pdf' niveau %}">
   <nav class="cahier-fil" aria-label="Fil d’Ariane">
@@ -41,6 +41,22 @@
   </form>
   {% endif %}
 
+  {% if suivis %}
+  <section class="cahier-suivis" aria-labelledby="titreSuivis">
+    <h2 id="titreSuivis" class="cahier-suivis-titre"><i class="bi bi-hourglass-split" aria-hidden="true"></i> Progression des leçons</h2>
+    <div class="cahier-suivis-liste">
+      {% for l in suivis %}
+      <article class="cahier-suivi">
+        <h3>{{ l.lecon.title }}</h3>
+        <p class="cahier-suivi-meta">{{ l.classe.name }}{% if directeur %} · {{ l.enseignant.get_full_name|default:l.enseignant.username }}{% endif %}
+          · {{ l.seances }} séance{{ l.seances|pluralize }} · dernière le {{ l.derniere|date:"j F Y" }}</p>
+        {% include "cahier/_suivi.html" with b=l.bilan %}
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
   {% for s in page %}
   <article class="cahier-seance" id="seance-{{ s.pk }}">
     <div class="cahier-seance-tete">
@@ -54,12 +70,11 @@
           {% if directeur %}<span class="cahier-prof"><i class="bi bi-person" aria-hidden="true"></i> {{ s.teacher.get_full_name }}</span>{% endif %}</p>
         <p class="cahier-theme">{{ s.lesson.title }}</p>
         <p class="cahier-duree">
-          {% if s.minutes %}<span><i class="bi bi-clock" aria-hidden="true"></i> Durée prévue : {{ s.minutes_texte }}</span>{% endif %}
-          {% if s.progression %}<span class="cahier-progression" title="Temps prévu de tout ce qui a été traité dans cette leçon avec cette classe">
-            Leçon : {{ s.progression.fait }} / {{ s.progression.prevu }}
-            <span class="cahier-barre" aria-hidden="true"><span style="width: {{ s.progression.pourcent }}%"></span></span>
-            {{ s.progression.pourcent }} %</span>{% endif %}
+          <span><i class="bi bi-clock" aria-hidden="true"></i> Durée réalisée : <strong>{{ s.minutes_texte }}</strong></span>
         </p>
+        <div class="cahier-progression" title="Temps passé sur cette leçon avec cette classe jusqu’à cette séance incluse">
+          {% include "cahier/_suivi.html" with b=s.progression compact=True %}
+        </div>
       </div>
       <div class="cahier-actions">
         <a class="btn btn-sm btn-outline-secondary" href="{% url 'cahier:seance_pdf' s.pk %}" title="Télécharger en PDF"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i> PDF</a>
@@ -102,9 +117,12 @@
       {% if s.observations %}<p class="cahier-obs-texte">{{ s.observations|linebreaksbr }}</p>{% elif s.teacher_id != moi %}<p class="cahier-obs-vide">—</p>{% endif %}
       {% if s.teacher_id == moi %}
       <details>
-        <summary>{% if s.observations %}Modifier{% else %}Ajouter une observation{% endif %}</summary>
+        <summary>{% if s.observations %}Modifier{% else %}Ajouter une observation{% endif %} · durée</summary>
         <form method="post" action="{% url 'cahier:observations' s.pk %}">
           {% csrf_token %}
+          <label class="cahier-duree-champ">Durée réalisée (minutes)
+            <input type="number" name="duree" min="1" max="480" step="5" value="{{ s.minutes }}" required>
+          </label>
           <textarea name="observations" rows="3" maxlength="4000" placeholder="Difficultés, travail à la maison, devoir, absences…">{{ s.observations }}</textarea>
           <button type="submit" class="btn btn-sm btn-edubac">Enregistrer</button>
         </form>

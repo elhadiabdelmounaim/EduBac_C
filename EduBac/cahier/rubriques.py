@@ -229,15 +229,15 @@ def _nettoyer(noeuds):
 def plan_de_lecon(lesson):
     """Plan du cours HTML de la leçon (avec les minutes prévues si la répartition horaire
     connaît la leçon), ou None si la leçon n'a pas de cours HTML."""
-    from education.repartition import repartition_de_lecon
+    from education.repartition import duree_prevue_minutes
 
     template = course_html_template(lesson)
     if template is None:
         return None
     brut = plan_du_fichier(Path(settings.BASE_DIR) / 'templates' / template)
-    repartition = repartition_de_lecon(lesson)
-    if repartition:
-        plan = minuter(_copie(brut), int(round(repartition['heures'] * 60)))
+    prevu = duree_prevue_minutes(lesson)
+    if prevu:
+        plan = minuter(_copie(brut), prevu)
         return _nettoyer(plan)
     return _nettoyer(brut)
 

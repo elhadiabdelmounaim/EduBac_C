@@ -670,7 +670,7 @@
         if (sortir && plein()) { try { var q = sortir.call(document); if (q && q.catch) q.catch(function () {}); } catch (e) { /* déjà sorti */ } }
       }
       taille = '';
-      if (pages.length) afficher(paginer(), true);
+      if (pages.length) { afficher(paginer(), true); verifierPages(); }
     }
 
     function noir(actif) { $root.toggleClass('noir', !!actif); }
@@ -692,6 +692,18 @@
 
     // ---------- Construction, puis reconstruction si la taille de l'écran change ----------
     var attente = null;
+    // Filet de sécurité : si, une fois affichée, une page déborde (mise en page finale un peu
+    // différente de celle mesurée), on refait la pagination une fois.
+    var verification = null;
+    function verifierPages() {
+      clearTimeout(verification);
+      verification = setTimeout(function () {
+        if (!pages.some(function (p) { return !tient(p); })) return;
+        var cible = paginer();
+        if (enPresentation() && pages[cible]) pages[cible].vu = pages[cible].etapes.length;
+        afficher(cible, true);
+      }, 600);
+    }
     function reconstruire() {
       clearTimeout(attente);
       attente = setTimeout(function () {
@@ -714,6 +726,7 @@
       afficher(demande || cible, true);
       $root.addClass('pagine-pret');
       $(window).on('resize orientationchange', reconstruire);
+      verifierPages();
       if (document.fonts && document.fonts.addEventListener) {
         document.fonts.addEventListener('loadingdone', function () { taille = ''; reconstruire(); });
       }

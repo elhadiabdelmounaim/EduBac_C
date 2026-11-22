@@ -1,3 +1,4 @@
+from django.core.validators import FileExtensionValidator
 from django.db import models
 
 
@@ -57,6 +58,13 @@ class Lesson(models.Model):
         verbose_name='Fichier PDF',
     )
     order = models.PositiveIntegerField(default=0, verbose_name='Ordre')
+    duree_prevue_minutes = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name='Durée prévue (minutes)',
+        help_text='Volume horaire de la leçon (ex. 360 pour 6 h). '
+                  'Vide : volume de la répartition horaire du niveau, s’il existe.',
+    )
     course = models.ForeignKey(
         Course,
         on_delete=models.CASCADE,
@@ -193,6 +201,13 @@ class Resources(models.Model):
         ('image', 'Image'),
         ('doc', 'Document'),
     ]
+    CATEGORIE_CHOICES = [
+        ('cours', 'Cours'),
+        ('exercices', 'Exercices'),
+        ('autre', 'Autre ressource'),
+    ]
+    EXTENSIONS = ['pdf', 'doc', 'docx', 'odt', 'ppt', 'pptx', 'odp', 'xls', 'xlsx', 'ods',
+                  'txt', 'md', 'tex', 'csv', 'ggb', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'zip']
 
     name = models.CharField(max_length=200, verbose_name='Nom')
     description = models.TextField(
@@ -200,7 +215,20 @@ class Resources(models.Model):
         default='',
         verbose_name='Description',
     )
-    file = models.FileField(upload_to='resources/', verbose_name='Fichier')
+    file = models.FileField(
+        upload_to='resources/',
+        verbose_name='Fichier',
+        validators=[FileExtensionValidator(EXTENSIONS)],
+        help_text='PDF, Word, PowerPoint, Excel, LibreOffice, texte, GeoGebra, image ou ZIP.',
+    )
+    categorie = models.CharField(
+        max_length=20,
+        choices=CATEGORIE_CHOICES,
+        default='autre',
+        verbose_name='Catégorie',
+        help_text='Cours et Exercices apparaissent sous les boutons COURS et EXERCICES de la leçon.',
+    )
+    ordre = models.PositiveIntegerField(default=0, verbose_name='Ordre')
     type = models.CharField(
         max_length=20,
         choices=TYPE_CHOICES,
@@ -217,6 +245,7 @@ class Resources(models.Model):
     class Meta:
         verbose_name = 'Ressource'
         verbose_name_plural = 'Ressources'
+        ordering = ['ordre', 'name', 'pk']
 
     def __str__(self):
         return f"{self.name} ({self.get_type_display()})"
@@ -225,6 +254,15 @@ class Resources(models.Model):
         if self.file:
             return self.file.url
         return None
+
+    def save(self, *args, **kwargs):
+        # Remplacement du fichier : l'ancien fichier est supprimé du stockage.
+        ancien = None
+        if self.pk:
+            ancien = Resources.objects.filter(pk=self.pk).values_list('file', flat=True).first()
+        super().save(*args, **kwargs)
+        if ancien and ancien != self.file.name and not Resources.objects.filter(file=ancien).exists():
+            self.file.storage.delete(ancien)
 
     def delete(self, *args, **kwargs):
         if self.file:

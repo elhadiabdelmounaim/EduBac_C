@@ -116,6 +116,7 @@ class CoursTroncCommunBrowserTests(StaticLiveServerTestCase):
                 pr.click('#coursPresenter')
                 pr.wait_for_function("document.documentElement.classList.contains('presentation')"
                                      f" && document.querySelectorAll('.feuille').length !== {normal}")
+                pr.wait_for_timeout(900)      # contrôle de débordement de cours.js (600 ms après l'affichage)
                 self.check(pr, fichier, 'projecteur')
                 # Les heures de la répartition sont réparties entre tous les blocs.
                 minutage = pr.evaluate("JSON.parse(document.getElementById('cours-minutage').textContent)")
