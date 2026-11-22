@@ -21,10 +21,11 @@ class CourseHtmlTests(TestCase):
         self.lesson = Lesson.objects.create(
             title='Le produit scalaire dans le plan', content='', course=self.course, order=4)
         self.other = Lesson.objects.create(
-            title='Calcul trigonométrique', content='', course=self.course, order=6)
+            title='Les ensembles', content='',
+            course=Course.objects.create(name='Mathématiques TC', niveau='tronc_commun'), order=1)
 
-    def add_pdf(self, lesson_folder, name='produit_scalaire.pdf'):
-        folder = Path(self.temp_media.name) / 'lessons' / '1BAC_SE' / lesson_folder / 'Cours'
+    def add_pdf(self, lesson_folder, name='produit_scalaire.pdf', niveau='1BAC_SE'):
+        folder = Path(self.temp_media.name) / 'lessons' / niveau / lesson_folder / 'Cours'
         folder.mkdir(parents=True)
         (folder / name).write_bytes(b'%PDF-1.4\nEduBac\n')
         return name
@@ -68,7 +69,7 @@ class CourseHtmlTests(TestCase):
         self.assertNotIn(f'href="{pdf_url}">Ouvrir</a>', page)
 
     def test_lesson_without_html_course_keeps_pdf_open_button(self):
-        name = self.add_pdf('06_calcul-trigonometrique', 'trigonometrie.pdf')
+        name = self.add_pdf('01_les-ensembles', 'ensembles.pdf', 'TCS')
         pdf_url = reverse('education:lesson_document', args=[self.other.pk, 'Cours', name])
         page = self.client.get(reverse('education:lesson_detail', args=[self.other.pk])).content.decode()
         self.assertIn(f'href="{pdf_url}">Ouvrir</a>', page)

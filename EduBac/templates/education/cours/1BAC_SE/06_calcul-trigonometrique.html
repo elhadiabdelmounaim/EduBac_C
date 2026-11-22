@@ -1,0 +1,313 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : 1ère Bac Sciences — Calcul trigonométrique (chapitre 6, 10 heures).
+Généré depuis Calcul_trigonometrique_1Bac_SE.tex (le PDF d'origine est dans le dossier Cours de la leçon, media/lessons/1BAC_SE/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < », « > » et « & » sont écrits &lt;, &gt; et &amp;.
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">1ère année Bac Sciences</span>
+        <span class="chip or">Chapitre 6</span>
+        <span class="chip">Semestre 1</span>
+      </div>
+      <h1 id="cours-titre">Calcul trigonométrique</h1>
+      <p class="sous-titre">Volume horaire : 10 heures</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectif"><strong>Contenus</strong>
+<ul>
+  <li>Formules d'addition : \(\cos(a\pm b)\), \(\sin(a\pm b)\), \(\tan(a\pm b)\).</li>
+  <li>Formules de duplication et de linéarisation.</li>
+  <li>Expressions en fonction de \(t=\tan\frac x2\).</li>
+  <li>Transformation de produits en sommes et de sommes en produits.</li>
+  <li>Transformation de \(a\cos x+b\sin x\).</li>
+  <li>Équations et inéquations trigonométriques.</li>
+</ul>
+  </div>
+  <div class="cadre objectif"><strong>Capacités attendues</strong>
+<ul>
+  <li>Utiliser les formules de transformation pour calculer des valeurs exactes et simplifier des expressions.</li>
+  <li>Écrire \(a\cos x+b\sin x\) sous la forme \(r\cos(x-\alpha)\).</li>
+  <li>Résoudre des équations et des inéquations trigonométriques et représenter les solutions sur le cercle trigonométrique.</li>
+</ul>
+  </div>
+  <div class="cadre">Le plan est rapporté à un repère orthonormé direct \((O;\vec i;\vec j)\), et \((\mathcal{C})\) est le cercle trigonométrique associé.</div>
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Rappels du tronc commun">
+  <h2><span class="num">I</span><span class="titre">Rappels du tronc commun</span></h2>
+  <div class="bloc prop"><div class="tag">Rappel — Cercle trigonométrique et valeurs remarquables</div>
+<div class="avec-fig">
+<div>
+<p>Pour tout réel \(x\) : \(\cos^2x+\sin^2x=1\), \(-1\le\cos x\le1\), \(-1\le\sin x\le1\), et, si \(\cos x\neq0\), \(\tan x=\dfrac{\sin x}{\cos x}\).</p>
+<div class="tableau"><table><thead><tr><th scope="col">\(x\)</th><th scope="col">\(0\)</th><th scope="col">\(\frac\pi6\)</th><th scope="col">\(\frac\pi4\)</th><th scope="col">\(\frac\pi3\)</th><th scope="col">\(\frac\pi2\)</th></tr></thead><tbody><tr><td>\(\cos x\)</td><td>\(1\)</td><td>\(\frac{\sqrt3}2\)</td><td>\(\frac{\sqrt2}2\)</td><td>\(\frac12\)</td><td>\(0\)</td></tr><tr><td>\(\sin x\)</td><td>\(0\)</td><td>\(\frac12\)</td><td>\(\frac{\sqrt2}2\)</td><td>\(\frac{\sqrt3}2\)</td><td>\(1\)</td></tr><tr><td>\(\tan x\)</td><td>\(0\)</td><td>\(\frac{\sqrt3}3\)</td><td>\(1\)</td><td>\(\sqrt3\)</td><td>\(\times\)</td></tr></tbody></table></div>
+</div>
+<figure class="fig"><svg viewBox="-106.8 -123.3 241.8 225.9" role="img" aria-label="Figure"><defs><marker id="mg1-133" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M72.7 -42.0" fill="var(--fig-accent)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M59.4 -59.4" fill="var(--fig-accent)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M42.0 -72.7" fill="var(--fig-accent)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-100.8 -0.0 L105.0 -0.0" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-133)"/><text x="110.0" y="4.0" text-anchor="start" style="font-size:11.5px;fill:var(--doux)">cos</text><path d="M0.0 96.6 L0.0 -100.8" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-133)"/><text x="0.0" y="-105.8" text-anchor="middle" style="font-size:11.5px;fill:var(--doux)">sin</text><circle cx="0.0" cy="-0.0" r="84.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L72.7 -42.0" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.70"/><circle cx="72.7" cy="-42.0" r="2.1" fill="var(--fig-accent)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="85.1" y="-45.6" text-anchor="middle" style="font-size:10.0px">π/6</text><path d="M0.0 -0.0 L59.4 -59.4" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.70"/><circle cx="59.4" cy="-59.4" r="2.1" fill="var(--fig-accent)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="69.5" y="-66.0" text-anchor="middle" style="font-size:10.0px">π/4</text><path d="M0.0 -0.0 L42.0 -72.7" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.70"/><circle cx="42.0" cy="-72.7" r="2.1" fill="var(--fig-accent)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="49.1" y="-81.6" text-anchor="middle" style="font-size:10.0px">π/3</text><path d="M42.0 -72.7 L42.0 -0.0" fill="none" stroke="var(--meth)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="42.0" y="13.0" text-anchor="middle" style="font-size:10.0px;fill:var(--meth)">1/2</text><path d="M42.0 -72.7 L0.0 -72.7" fill="none" stroke="var(--meth)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="-5.0" y="-69.2" text-anchor="end" style="font-size:10.0px;fill:var(--meth)">√3/2</text><text x="-3.5" y="11.5" text-anchor="end" style="font-size:10.0px">O</text><text x="87.5" y="11.5" text-anchor="start" style="font-size:10.0px">I</text><text x="-3.5" y="-87.5" text-anchor="end" style="font-size:10.0px">J</text></svg></figure>
+</div>
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Formules d'addition">
+  <h2><span class="num">II</span><span class="titre">Formules d'addition</span></h2>
+  <div class="bloc act"><div class="tag">Activité 1</div>
+<p>Soient \(a\) et \(b\) deux réels, et \(\vec u\), \(\vec v\) deux vecteurs tels que \(\|\vec u\|=\|\vec v\|=1\), \(\big(\widehat{\vec i,\vec u}\big)\equiv b\ [2\pi]\) et \(\big(\widehat{\vec i,\vec v}\big)\equiv a\ [2\pi]\).</p>
+<ol>
+  <li>Donner les coordonnées de \(\vec u\) et de \(\vec v\), puis une mesure de l'angle \(\big(\widehat{\vec u,\vec v}\big)\) en fonction de \(a\) et \(b\).</li>
+  <li>Calculer le produit scalaire \(\vec u\cdot\vec v\) de deux façons.</li>
+  <li>En déduire que \(\cos(a-b)=\cos a\cos b+\sin a\sin b\).</li>
+  <li>En remplaçant \(b\) par \(-b\), montrer que \(\cos(a+b)=\cos a\cos b-\sin a\sin b\).</li>
+  <li>En utilisant \(\cos\left(\frac\pi2-x\right)=\sin x\), montrer que \(\sin(a-b)=\sin a\cos b-\cos a\sin b\) et \(\sin(a+b)=\sin a\cos b+\cos a\sin b\).</li>
+</ol>
+  </div>
+  <h3><span class="n">II.1</span>Formules d'addition pour le cosinus et le sinus</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Pour tous réels \(a\) et \(b\) :</p>
+<ul>
+  <li>\(\cos(a-b)=\cos a\cos b+\sin a\sin b\)</li>
+  <li>\(\cos(a+b)=\cos a\cos b-\sin a\sin b\)</li>
+  <li>\(\sin(a-b)=\sin a\cos b-\cos a\sin b\)</li>
+  <li>\(\sin(a+b)=\sin a\cos b+\cos a\sin b\)</li>
+</ul>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Calculer une valeur exacte</div>
+<p>On écrit l'angle comme somme ou différence d'angles remarquables (\(\frac\pi6\), \(\frac\pi4\), \(\frac\pi3\), …), puis on applique la formule. On vérifie le <strong>signe</strong> du résultat avec la position de l'angle sur le cercle.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(\dfrac{7\pi}{12}=\dfrac\pi3+\dfrac\pi4\), donc \(\cos\dfrac{7\pi}{12}=\cos\dfrac\pi3\cos\dfrac\pi4-\sin\dfrac\pi3\sin\dfrac\pi4=\dfrac12\times\dfrac{\sqrt2}2-\dfrac{\sqrt3}2\times\dfrac{\sqrt2}2=\dfrac{\sqrt2-\sqrt6}{4}\).<br> Ce nombre est négatif, ce qui est cohérent car \(\frac{7\pi}{12}\in\left]\frac\pi2;\pi\right[\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+<ol>
+  <li>Sachant que \(\dfrac{5\pi}{12}=\dfrac\pi4+\dfrac\pi6\) et \(\dfrac{\pi}{12}=\dfrac\pi3-\dfrac\pi4\), calculer \(\cos\dfrac{5\pi}{12}\), \(\sin\dfrac{5\pi}{12}\), \(\cos\dfrac{\pi}{12}\) et \(\sin\dfrac{\pi}{12}\).</li>
+  <li>Soit \(x\in\mathbb{R}\). Montrer que : \(\sin x=\sin\left(x+\dfrac\pi3\right)-\sin\left(\dfrac\pi3-x\right)\) et \(\cos x=\cos\left(x+\dfrac\pi3\right)+\cos\left(\dfrac\pi3-x\right)\).</li>
+  <li>Soient \(a,b\in\left]0;\dfrac\pi2\right[\) tels que \(\sin a=\cos b=\dfrac13\). Déterminer \(a+b\).</li>
+</ol>
+  </div>
+  <h3><span class="n">II.2</span>Formules d'addition pour la tangente</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(a\) et \(b\) deux réels tels que \(a\neq\frac\pi2+k\pi\) et \(b\neq\frac\pi2+k\pi\) pour tout \(k\in\mathbb{Z}\).</p>
+<ul>
+  <li>Si \(a+b\neq\frac\pi2+k\pi\) pour tout \(k\in\mathbb{Z}\) : \(\tan(a+b)=\dfrac{\tan a+\tan b}{1-\tan a\tan b}\).</li>
+  <li>Si \(a-b\neq\frac\pi2+k\pi\) pour tout \(k\in\mathbb{Z}\) : \(\tan(a-b)=\dfrac{\tan a-\tan b}{1+\tan a\tan b}\).</li>
+</ul>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<p>Pour démontrer ces formules, on écrit \(\tan(a+b)=\dfrac{\sin(a+b)}{\cos(a+b)}\), on développe, puis on divise le numérateur et le dénominateur par \(\cos a\cos b\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 2</div>
+<p>Soit \(x\) un réel tel que \(x\neq\frac\pi2+k\pi\), \(x\neq\frac\pi4+k\pi\) et \(x\neq-\frac\pi4+k\pi\) pour tout \(k\in\mathbb{Z}\).<br> Simplifier l'expression \(\tan\left(\dfrac\pi4-x\right)\times\tan\left(\dfrac\pi4+x\right)\).</p>
+  </div>
+  <h3><span class="n">II.3</span>Formules de duplication et de linéarisation</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Pour tout réel \(a\) (en prenant \(b=a\) dans les formules d'addition) :</p>
+<ul>
+  <li>\(\cos2a=\cos^2a-\sin^2a=2\cos^2a-1=1-2\sin^2a\)</li>
+  <li>\(\sin2a=2\sin a\cos a\)</li>
+  <li>\(\cos^2a=\dfrac{1+\cos2a}{2}\)</li>
+  <li>\(\sin^2a=\dfrac{1-\cos2a}{2}\)</li>
+</ul>
+<ul>
+  <li>Si \(a\neq\frac\pi2+k\pi\) et \(a\neq\frac\pi4+k\frac\pi2\) : \(\tan2a=\dfrac{2\tan a}{1-\tan^2a}\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(\cos^2\dfrac\pi8=\dfrac{1+\cos\frac\pi4}{2}=\dfrac{2+\sqrt2}{4}\). Comme \(\frac\pi8\in\left]0;\frac\pi2\right[\), \(\cos\frac\pi8&gt;0\), donc \(\cos\dfrac\pi8=\dfrac{\sqrt{2+\sqrt2}}{2}\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 3</div>
+<ol>
+  <li>Sachant que \(\dfrac\pi4=2\times\dfrac\pi8\), calculer \(\sin\dfrac\pi8\) et \(\tan\dfrac\pi8\).</li>
+  <li>Soit \(x\in\mathbb{R}\). Montrer que \(1+\cos x+2\sin^2\left(\dfrac x2\right)=2\).</li>
+  <li>Soit \(x\) un réel tel que \(x\neq k\pi\) pour tout \(k\in\mathbb{Z}\). Montrer que \(\dfrac{1-\cos x}{\sin x}=\tan\left(\dfrac x2\right)\).</li>
+</ol>
+  </div>
+  <h3><span class="n">II.4</span>Expressions de \(\cos x\), \(\sin x\) et \(\tan x\) en fonction de \(t=\tan\frac x2\)</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soit \(x\) un réel tel que \(x\neq\pi+2k\pi\) (\(k\in\mathbb{Z}\)). En posant \(t=\tan\dfrac x2\) :</p>
+\[ \cos x=\frac{1-t^2}{1+t^2}, \qquad \sin x=\frac{2t}{1+t^2}, \qquad \tan x=\frac{2t}{1-t^2}\ \ (\text{si } t^2\neq1). \]
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<p>On l'obtient en écrivant \(\cos x=\cos^2\frac x2-\sin^2\frac x2\) et \(\sin x=2\sin\frac x2\cos\frac x2\), puis en divisant par \(1=\cos^2\frac x2+\sin^2\frac x2\), et enfin le numérateur et le dénominateur par \(\cos^2\frac x2\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Calculons \(t=\tan\frac\pi8\). On a \(\sin\frac\pi4=\dfrac{2t}{1+t^2}\), soit \(\dfrac{\sqrt2}{2}=\dfrac{2t}{1+t^2}\), d'où \(t^2-2\sqrt2\,t+1=0\).<br> Les solutions sont \(\sqrt2+1\) et \(\sqrt2-1\). Comme \(0&lt;\frac\pi8&lt;\frac\pi4\), on a \(0&lt;t&lt;1\), donc \(\tan\dfrac\pi8=\sqrt2-1\).</p>
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Transformation de produits en sommes et de sommes en produits">
+  <h2><span class="num">III</span><span class="titre">Transformation de produits en sommes et de sommes en produits</span></h2>
+  <div class="bloc act"><div class="tag">Activité 2</div>
+<p>Soient \(a\) et \(b\) deux réels. Simplifier les expressions suivantes :</p>
+<ol class="alpha">
+  <li>\(\sin(a+b)+\sin(a-b)\)</li>
+  <li>\(\sin(a+b)-\sin(a-b)\)</li>
+  <li>\(\cos(a+b)+\cos(a-b)\)</li>
+  <li>\(\cos(a+b)-\cos(a-b)\)</li>
+</ol>
+  </div>
+  <h3><span class="n">III.1</span>Transformation de produits en sommes</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Pour tous réels \(a\) et \(b\) :</p>
+<ul>
+  <li>\(\cos a\cos b=\dfrac12\big[\cos(a+b)+\cos(a-b)\big]\)</li>
+  <li>\(\sin a\sin b=\dfrac12\big[\cos(a-b)-\cos(a+b)\big]\)</li>
+  <li>\(\sin a\cos b=\dfrac12\big[\sin(a+b)+\sin(a-b)\big]\)</li>
+  <li>\(\cos a\sin b=\dfrac12\big[\sin(a+b)-\sin(a-b)\big]\)</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 4</div>
+<ol>
+  <li>Calculer \(\cos\dfrac{\pi}{12}\cos\dfrac{5\pi}{12}\) et \(\sin\dfrac{5\pi}{12}\cos\dfrac{\pi}{12}\).</li>
+  <li>Soit \(x\in\mathbb{R}\). Montrer que \(\sin\left(x+\dfrac\pi6\right)\sin\left(x-\dfrac\pi6\right)=-\dfrac12\cos(2x)+\dfrac14\).</li>
+</ol>
+  </div>
+  <h3><span class="n">III.2</span>Transformation de sommes en produits</h3>
+  <div class="bloc rem"><div class="tag">Idée</div>
+<p>On pose \(x=a+b\) et \(y=a-b\), c'est-à-dire \(a=\dfrac{x+y}{2}\) et \(b=\dfrac{x-y}{2}\), dans les formules précédentes.</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Pour tous réels \(x\) et \(y\) :</p>
+<ul>
+  <li>\(\cos x+\cos y=2\cos\dfrac{x+y}{2}\cos\dfrac{x-y}{2}\)</li>
+  <li>\(\cos x-\cos y=-2\sin\dfrac{x+y}{2}\sin\dfrac{x-y}{2}\)</li>
+  <li>\(\sin x+\sin y=2\sin\dfrac{x+y}{2}\cos\dfrac{x-y}{2}\)</li>
+  <li>\(\sin x-\sin y=2\cos\dfrac{x+y}{2}\sin\dfrac{x-y}{2}\)</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(\cos\dfrac{\pi}{12}+\cos\dfrac{5\pi}{12}=2\cos\dfrac{\pi}{4}\cos\left(-\dfrac{\pi}{6}\right)=2\times\dfrac{\sqrt2}{2}\times\dfrac{\sqrt3}{2}=\dfrac{\sqrt6}{2}\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 5</div>
+<ol>
+  <li>Montrer que \(\sin\dfrac{\pi}{12}+\sin\dfrac{5\pi}{12}=\dfrac{\sqrt6}{2}\).</li>
+  <li>Soit \(x\in\mathbb{R}\). Montrer que \(\cos6x-\cos2x=-4\sin^22x\cos2x\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Transformation de l'expression acos x+bsin x">
+  <h2><span class="num">IV</span><span class="titre">Transformation de l'expression \(a\cos x+b\sin x\)</span></h2>
+  <div class="bloc act"><div class="tag">Activité — Préliminaire</div>
+<p>Soient \(a\) et \(b\) deux réels tels que \((a;b)\neq(0;0)\). On a</p>
+\[ a\cos x+b\sin x=\sqrt{a^2+b^2}\left(\frac{a}{\sqrt{a^2+b^2}}\cos x+\frac{b}{\sqrt{a^2+b^2}}\sin x\right). \]
+<p>Comme \(\left(\dfrac{a}{\sqrt{a^2+b^2}}\right)^2+\left(\dfrac{b}{\sqrt{a^2+b^2}}\right)^2=1\), il existe un réel \(\alpha\) tel que</p>
+\[ \cos\alpha=\frac{a}{\sqrt{a^2+b^2}} \qquad\text{et}\qquad \sin\alpha=\frac{b}{\sqrt{a^2+b^2}}. \]
+<p>Donc \(a\cos x+b\sin x=\sqrt{a^2+b^2}\,(\cos x\cos\alpha+\sin x\sin\alpha)=\sqrt{a^2+b^2}\,\cos(x-\alpha)\).</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(a\) et \(b\) deux réels tels que \((a;b)\neq(0;0)\). Pour tout réel \(x\) :</p>
+\[ a\cos x+b\sin x=\sqrt{a^2+b^2}\,\cos(x-\alpha) \qquad\text{où}\qquad \cos\alpha=\frac{a}{\sqrt{a^2+b^2}} \ \text{ et } \ \sin\alpha=\frac{b}{\sqrt{a^2+b^2}}. \]
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Écrire \(a\cos x+b\sin x\) sous la forme \(r\cos(x-\alpha)\)</div>
+<ol>
+  <li>On calcule \(r=\sqrt{a^2+b^2}\).</li>
+  <li>On cherche \(\alpha\) tel que \(\cos\alpha=\dfrac ar\) et \(\sin\alpha=\dfrac br\) (valeurs remarquables).</li>
+  <li>On écrit \(a\cos x+b\sin x=r\cos(x-\alpha)\).</li>
+</ol>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(\cos x+\sqrt3\sin x\) : \(r=\sqrt{1+3}=2\), \(\cos\alpha=\frac12\) et \(\sin\alpha=\frac{\sqrt3}2\), donc \(\alpha=\frac\pi3\) et \(\cos x+\sqrt3\sin x=2\cos\left(x-\dfrac\pi3\right)\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 6</div>
+<ol>
+  <li>Écrire sous la forme \(r\cos(x-\alpha)\) les expressions :
+\[ A(x)=\cos x+\sin x \ ; \qquad B(x)=\sqrt3\cos x-\sin x \ ; \]
+\[ C(x)=\sqrt3\cos\left(2x-\frac\pi3\right)-\sin\left(2x-\frac\pi3\right). \]</li>
+  <li>On pose \(A=\dfrac{\cos\frac{\pi}{12}+\sin\frac{\pi}{12}}{\cos\frac{\pi}{12}-\sin\frac{\pi}{12}}\).
+<ol class="alpha">
+  <li>Montrer que \(\cos\dfrac{\pi}{12}+\sin\dfrac{\pi}{12}=\sqrt2\sin\dfrac\pi3\) et que \(\cos\dfrac{\pi}{12}-\sin\dfrac{\pi}{12}=\sqrt2\sin\dfrac\pi6\).</li>
+  <li>En déduire la valeur de \(A\), puis celle de \(\tan\dfrac{\pi}{12}\).</li>
+</ol></li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ V ============================ -->
+<section class="chap" id="s5" data-toc="Équations et inéquations trigonométriques">
+  <h2><span class="num">V</span><span class="titre">Équations et inéquations trigonométriques</span></h2>
+  <h3><span class="n">V.1</span>Équations fondamentales</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soit \(\alpha\) un réel. Pour tout réel \(x\) :</p>
+<ul>
+  <li>\(\cos x=\cos\alpha\iff x=\alpha+2k\pi\) ou \(x=-\alpha+2k\pi\), \(k\in\mathbb{Z}\) ;</li>
+  <li>\(\sin x=\sin\alpha\iff x=\alpha+2k\pi\) ou \(x=\pi-\alpha+2k\pi\), \(k\in\mathbb{Z}\) ;</li>
+  <li>\(\tan x=\tan\alpha\iff x=\alpha+k\pi\), \(k\in\mathbb{Z}\) (avec \(x,\alpha\neq\frac\pi2+k\pi\)).</li>
+</ul>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Résoudre \(\cos x=c\) ou \(\sin x=c\) sur un intervalle \(I\)</div>
+<ol>
+  <li>Si \(|c|&gt;1\), il n'y a pas de solution.</li>
+  <li>Sinon, on écrit \(c=\cos\alpha\) (ou \(c=\sin\alpha\)) avec un angle remarquable \(\alpha\), puis on applique la propriété.</li>
+  <li>On encadre chaque famille de solutions dans \(I\) pour trouver les valeurs entières de \(k\) qui conviennent.</li>
+  <li>On représente les solutions sur le cercle trigonométrique pour vérifier.</li>
+</ol>
+<p>Cas particuliers : \(\cos x=0\iff x=\frac\pi2+k\pi\) ; \(\sin x=0\iff x=k\pi\) ; \(\cos x=1\iff x=2k\pi\) ; \(\sin x=1\iff x=\frac\pi2+2k\pi\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Résolvons dans \(\mathbb{R}\) l'équation \(\cos3x+\sin3x=1\). On a \(\cos3x+\sin3x=\sqrt2\cos\left(3x-\frac\pi4\right)\), donc :</p>
+\[\begin{aligned}
+\cos\left(3x-\frac\pi4\right)=\frac{\sqrt2}2=\cos\frac\pi4 &amp;\iff 3x-\frac\pi4=\frac\pi4+2k\pi \ \text{ ou } \ 3x-\frac\pi4=-\frac\pi4+2k\pi\\
+&amp;\iff x=\frac\pi6+\frac{2k\pi}3 \ \text{ ou } \ x=\frac{2k\pi}3 \quad (k\in\mathbb{Z}).
+\end{aligned}\]
+<p>\(S=\left\{\dfrac\pi6+\dfrac{2k\pi}3\ ;\ \dfrac{2k\pi}3\ /\ k\in\mathbb{Z}\right\}\).</p>
+  </div>
+  <h3><span class="n">V.2</span>Inéquations trigonométriques</h3>
+  <div class="bloc meth"><div class="tag">Méthode — Résoudre une inéquation à l'aide du cercle trigonométrique</div>
+<div class="avec-fig">
+<div>
+<p>Exemple : résoudre \(\cos x&gt;\dfrac12\) dans \(]-\pi;\pi]\).</p>
+<ol>
+  <li>On résout l'équation associée : \(\cos x=\frac12\iff x=\frac\pi3\) ou \(x=-\frac\pi3\) dans \(]-\pi;\pi]\).</li>
+  <li>On place ces points sur le cercle et on repère l'arc où l'abscisse est \(&gt;\frac12\) (à droite de la droite \(x=\frac12\)).</li>
+  <li>On lit : \(S=\left]-\dfrac\pi3;\dfrac\pi3\right[\).</li>
+</ol>
+<p>Pour une inéquation en \(\sin x\), on compare les <strong>ordonnées</strong> (au-dessus ou au-dessous d'une droite horizontale).</p>
+</div>
+<figure class="fig"><svg viewBox="-87.6 -87.6 178.6 175.2" role="img" aria-label="Figure"><defs><marker id="mg2-133" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M-81.6 -0.0 L85.0 -0.0" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg2-133)"/><path d="M0.0 81.6 L0.0 -81.6" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg2-133)"/><circle cx="0.0" cy="-0.0" r="68.0" fill="none" stroke="var(--doux)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.60"/><path d="M0.0 -0.0" fill="none" stroke="var(--doux)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.60"/><path d="M34.0 58.9 A68.0 68.0 0 0 0 34.0 -58.9" fill="none" stroke="var(--fig-accent)" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M34.0 78.2 L34.0 -78.2" fill="none" stroke="var(--meth)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="30.5" y="11.5" text-anchor="end" style="font-size:10.0px">1/2</text><circle cx="34.0" cy="-58.9" r="2.7" fill="var(--surface)" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><circle cx="34.0" cy="58.9" r="2.7" fill="var(--surface)" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M34.0 -58.9 M34.0 58.9" fill="var(--surface)" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><text x="37.5" y="-62.4" text-anchor="start" style="font-size:11.5px">π/3</text><text x="37.5" y="71.6" text-anchor="start" style="font-size:11.5px">-π/3</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc app"><div class="tag">Application 7</div>
+<ol>
+  <li>Résoudre dans l'intervalle \(I\) les équations suivantes :
+<ol class="alpha">
+  <li>\(2\cos x-\sqrt3=0\) ; \(I=[-\pi;2\pi]\).</li>
+  <li>\(\sqrt2\sin x+1=0\) ; \(I=[0;2\pi]\).</li>
+  <li>\(\tan x=\sqrt3\) ; \(I=[-\pi;\pi]\).</li>
+  <li>\(\sqrt3\cos x-\sin x=\sqrt2\) ; \(I=[-\pi;\pi]\).</li>
+</ol></li>
+  <li>Résoudre dans \(\left[-\pi;\dfrac\pi2\right]\) l'inéquation \(\sqrt3\cos x-\sin x&gt;\sqrt2\).</li>
+</ol>
+  </div>
+  <div class="bloc app"><div class="tag">Exercice de synthèse</div>
+<p>Pour tout réel \(x\), on pose \(A(x)=2\sqrt3\sin^2x-\sin2x-\sqrt3\sin x+\cos x\).</p>
+<ol>
+  <li>Calculer \(A\left(\dfrac\pi6\right)\) et \(A\left(\dfrac\pi3\right)\).</li>
+  <li>Montrer que \((\forall x\in\mathbb{R}) : A(x)=2\cos\left(x+\dfrac\pi3\right)(1-2\sin x)\).</li>
+  <li><ol class="alpha">
+  <li>Résoudre dans \(\mathbb{R}\) l'équation \(A(x)=0\).</li>
+  <li>En déduire les solutions de \(A(x)=0\) dans \(]0;2\pi]\), puis les représenter sur le cercle trigonométrique.</li>
+</ol></li>
+  <li>Résoudre dans \(]0;2\pi]\) l'inéquation \(A(x)&gt;0\) (on pourra dresser un tableau de signes).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ VI ============================ -->
+<section class="chap" id="s6" data-toc="Synthèse">
+  <h2><span class="num">VI</span><span class="titre">Synthèse</span></h2>
+  <div class="bloc ret"><div class="tag">À retenir</div>
+<div class="tableau"><table><thead><tr><th scope="col">Famille</th><th scope="col">Formules</th></tr></thead><tbody><tr><td>Addition</td><td>\(\cos(a\pm b)=\cos a\cos b\mp\sin a\sin b\) ; \(\sin(a\pm b)=\sin a\cos b\pm\cos a\sin b\)</td></tr><tr><td>Tangente</td><td>\(\tan(a\pm b)=\dfrac{\tan a\pm\tan b}{1\mp\tan a\tan b}\) ; \(\tan2a=\dfrac{2\tan a}{1-\tan^2a}\)</td></tr><tr><td>Duplication</td><td>\(\cos2a=2\cos^2a-1=1-2\sin^2a\) ; \(\sin2a=2\sin a\cos a\)</td></tr><tr><td>Linéarisation</td><td>\(\cos^2a=\dfrac{1+\cos2a}{2}\) ; \(\sin^2a=\dfrac{1-\cos2a}{2}\)</td></tr><tr><td>\(t=\tan\frac x2\)</td><td>\(\cos x=\dfrac{1-t^2}{1+t^2}\) ; \(\sin x=\dfrac{2t}{1+t^2}\)</td></tr><tr><td>Somme \(\to\) produit</td><td>\(\cos x+\cos y=2\cos\frac{x+y}2\cos\frac{x-y}2\) ; \(\sin x+\sin y=2\sin\frac{x+y}2\cos\frac{x-y}2\)</td></tr><tr><td>\(a\cos x+b\sin x\)</td><td>\(=\sqrt{a^2+b^2}\cos(x-\alpha)\), \(\cos\alpha=\frac{a}{\sqrt{a^2+b^2}}\), \(\sin\alpha=\frac{b}{\sqrt{a^2+b^2}}\)</td></tr><tr><td>Équations</td><td>\(\cos x=\cos\alpha\iff x=\pm\alpha+2k\pi\) ; \(\sin x=\sin\alpha\iff x=\alpha+2k\pi\) ou \(\pi-\alpha+2k\pi\)</td></tr></tbody></table></div>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}

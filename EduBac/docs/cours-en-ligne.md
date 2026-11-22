@@ -23,8 +23,10 @@ Types de blocs (`<div class="bloc …">`) : `def` (Définition), `prop` (Propri�
 `<` et `>`. Un tableau se met dans `<div class="tableau"><table>…</table></div>` ; un bloc ne se
 coupe pas au milieu d'un tableau : le garder court (au plus 3 ou 4 lignes par bloc).
 
-Cours disponibles : `1BAC_SE/04_le-produit-scalaire-dans-le-plan`,
-`1BAC_SE/05_les-suites-numeriques` (le PDF d'origine est dans le dossier `Cours` de la leçon).
+Cours disponibles : les 12 leçons de `1BAC_SE` (01 à 12). Les leçons 01–03 et 06–12 ont été
+générées depuis les fichiers LaTeX de l'enseignant (figures TikZ/pgfplots/tkz-tab redessinées en SVG) ;
+le PDF d'origine est dans le dossier `Cours` de chaque leçon. Un bloc trop haut se coupe entre deux
+pages (listes, tableaux ligne par ligne avec en-tête répété).
 
 ## Livre 3D
 

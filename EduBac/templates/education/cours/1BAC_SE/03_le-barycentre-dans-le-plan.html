@@ -1,0 +1,278 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : 1ère Bac Sciences — Barycentre dans le plan (chapitre 3, 9 heures).
+Généré depuis Barycentre_1Bac_SE.tex (le PDF d'origine est dans le dossier Cours de la leçon, media/lessons/1BAC_SE/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < », « > » et « & » sont écrits &lt;, &gt; et &amp;.
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">1ère année Bac Sciences</span>
+        <span class="chip or">Chapitre 3</span>
+        <span class="chip">Semestre 1</span>
+      </div>
+      <h1 id="cours-titre">Barycentre dans le plan</h1>
+      <p class="sous-titre">Volume horaire : 9 heures</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectif"><strong>Contenus</strong>
+<ul>
+  <li>Barycentre de deux, trois et quatre points pondérés.</li>
+  <li>Homogénéité, propriété caractéristique, associativité.</li>
+  <li>Coordonnées du barycentre.</li>
+</ul>
+  </div>
+  <div class="cadre objectif"><strong>Capacités attendues</strong>
+<ul>
+  <li>Construire le barycentre de points pondérés.</li>
+  <li>Utiliser le barycentre pour démontrer un alignement ou un concours de droites.</li>
+  <li>Déterminer un ensemble de points à l'aide du barycentre.</li>
+  <li>Calculer les coordonnées d'un barycentre.</li>
+</ul>
+  </div>
+
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Barycentre de deux points pondérés">
+  <h2><span class="num">I</span><span class="titre">Barycentre de deux points pondérés</span></h2>
+  <div class="bloc act"><div class="tag">Activité 1 — Rappels sur le calcul vectoriel</div>
+<p>Soit \(ABC\) un triangle, et \(I\), \(J\), \(K\) les points tels que \(\overrightarrow{AI}=\dfrac12\overrightarrow{AB}\), \(\overrightarrow{AJ}=\dfrac25\overrightarrow{AC}\) et \(\overrightarrow{BK}=-2\overrightarrow{BC}\).</p>
+<ol>
+  <li>Placer les points \(I\), \(J\) et \(K\).</li>
+  <li>Vérifier que \(\overrightarrow{AK}=3\overrightarrow{AB}-2\overrightarrow{AC}\).</li>
+  <li>Montrer que \(\overrightarrow{IJ}=-\dfrac12\overrightarrow{AB}+\dfrac25\overrightarrow{AC}\) et que \(\overrightarrow{IK}=\dfrac52\overrightarrow{AB}-2\overrightarrow{AC}\).</li>
+  <li><ol class="alpha">
+  <li>Vérifier que \(\overrightarrow{IK}=-5\,\overrightarrow{IJ}\).</li>
+  <li>Que peut-on dire des points \(I\), \(J\) et \(K\) ?</li>
+</ol></li>
+</ol>
+  </div>
+  <div class="bloc act"><div class="tag">Activité 2</div>
+<p>Soient \(A\) et \(B\) deux points distincts du plan, et \(G\) un point tel que \(2\overrightarrow{GA}+3\overrightarrow{GB}=\vec{0}\).</p>
+<ol>
+  <li><ol class="alpha">
+  <li>En écrivant \(\overrightarrow{GB}=\overrightarrow{GA}+\overrightarrow{AB}\), montrer que \(\overrightarrow{AG}=\dfrac35\overrightarrow{AB}\).</li>
+  <li>Construire le point \(G\).</li>
+</ol></li>
+  <li><ol class="alpha">
+  <li>Vérifier que, pour tout point \(M\) du plan : \(2\overrightarrow{MA}+3\overrightarrow{MB}=5\overrightarrow{MG}\).</li>
+  <li>En déduire l'ensemble des points \(M\) du plan tels que \(\big\|2\overrightarrow{MA}+3\overrightarrow{MB}\big\|=15\).</li>
+</ol></li>
+  <li>Existe-t-il un point \(G\) tel que \(2\overrightarrow{GA}-2\overrightarrow{GB}=\vec{0}\) ?</li>
+</ol>
+  </div>
+  <h3><span class="n">I.1</span>Définition</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soient \((A;a)\) et \((B;b)\) deux <strong>points pondérés</strong> (le réel \(a\) est le <strong>poids</strong> de \(A\)) tels que \(a+b\neq0\).<br> Il existe un <strong>unique</strong> point \(G\) tel que</p>
+\[ a\,\overrightarrow{GA}+b\,\overrightarrow{GB}=\vec{0} . \]
+<p>Ce point s'appelle le <strong>barycentre</strong> des points pondérés \((A;a)\) et \((B;b)\) ; on écrit \(G=\operatorname{bar}\{(A;a),(B;b)\}\).<br> Si \(a=b\), le point \(G\) est le milieu de \([AB]\) ; on l'appelle l'<strong>isobarycentre</strong> de \(A\) et \(B\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Démonstration de l'existence et de l'unicité</div>
+<p>\(a\overrightarrow{GA}+b\overrightarrow{GB}=\vec{0}\iff a\overrightarrow{GA}+b\big(\overrightarrow{GA}+\overrightarrow{AB}\big)=\vec{0}\iff(a+b)\overrightarrow{GA}=-b\overrightarrow{AB}\iff\overrightarrow{AG}=\dfrac{b}{a+b}\overrightarrow{AB}\).<br> Comme \(a+b\neq0\), cette dernière égalité définit un point \(G\) et un seul.</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété — Position du barycentre</div>
+<p>Si \(G=\operatorname{bar}\{(A;a),(B;b)\}\), alors :</p>
+\[ \overrightarrow{AG}=\frac{b}{a+b}\overrightarrow{AB} \qquad\text{et}\qquad \overrightarrow{BG}=\frac{a}{a+b}\overrightarrow{BA}. \]
+<p>Si \(A\neq B\), les points \(A\), \(B\) et \(G\) sont <strong>alignés</strong>.</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Construire le barycentre de deux points</div>
+<div class="avec-fig">
+<div>
+<ol>
+  <li>On calcule \(k=\dfrac{b}{a+b}\), de sorte que \(\overrightarrow{AG}=k\overrightarrow{AB}\).</li>
+  <li>Si \(0\le k\le1\), \(G\) est sur le segment \([AB]\) ; sinon, il est sur la droite \((AB)\), en dehors du segment.</li>
+  <li>On partage \([AB]\) en \(|a+b|\) parts égales et on place \(G\) à partir de \(A\).</li>
+</ol>
+<p>Le barycentre est toujours <strong>plus proche du point de plus grand poids</strong> (en valeur absolue).</p>
+</div>
+<figure class="fig"><svg viewBox="-21.8 -47.8 273.6 74.2" role="img" aria-label="Figure"><defs><marker id="mg1-98" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fig-accent)"/></marker></defs><path d="M0.0 -0.0" fill="var(--fig-trait)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M230.0 -0.0" fill="var(--fig-trait)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M138.0 -0.0" fill="var(--fig-accent)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L230.0 -0.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -4.6 L0.0 4.6" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M46.0 -4.6 L46.0 4.6" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M92.0 -4.6 L92.0 4.6" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M138.0 -4.6 L138.0 4.6" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M184.0 -4.6 L184.0 4.6" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M230.0 -4.6 L230.0 4.6" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="0.0" cy="-0.0" r="2.8" fill="var(--fig-trait)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="0.0" y="16.2" text-anchor="middle" style="font-size:14.0px">A</text><text x="0.0" y="-5.0" text-anchor="middle" style="font-size:11.5px">(A;2)</text><circle cx="230.0" cy="-0.0" r="2.8" fill="var(--fig-trait)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="230.0" y="16.2" text-anchor="middle" style="font-size:14.0px">B</text><text x="230.0" y="-5.0" text-anchor="middle" style="font-size:11.5px">(B;3)</text><circle cx="138.0" cy="-0.0" r="3.4" fill="var(--fig-accent)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="138.0" y="16.2" text-anchor="middle" style="font-size:14.0px">G</text><path d="M0.0 -25.3 L138.0 -25.3" fill="none" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-98)"/><text x="69.0" y="-30.3" text-anchor="middle" style="font-size:11.5px;fill:var(--fig-accent)"><tspan text-decoration="overline">AG</tspan>=3/5<tspan text-decoration="overline">AB</tspan></text></svg><figcaption>\(G=\operatorname{bar}\{(A;2),(B;3)\}\) : \([AB]\) est partagé en \(5\) parts.</figcaption></figure>
+</div>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<ul>
+  <li>Si \(I\) est le milieu de \([AB]\), alors \(\overrightarrow{IA}+\overrightarrow{IB}=\vec{0}\) : \(I=\operatorname{bar}\{(A;1),(B;1)\}\).</li>
+  <li>Si \(a+b=0\) (et \(a\neq0\)), il n'y a pas de barycentre : \(a\overrightarrow{MA}-a\overrightarrow{MB}=a\overrightarrow{BA}\) est un vecteur <strong>constant</strong>, indépendant de \(M\).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+<ol>
+  <li>Déterminer \(a\) et \(b\) pour que \(G\) soit le barycentre de \(\{(A;a),(B;b)\}\) dans chacun des cas suivants :
+\[ \text{a) }\ \overrightarrow{GA}+3\overrightarrow{GB}=2\overrightarrow{AB} \qquad\qquad \text{b) }\ 2\overrightarrow{GA}-5\overrightarrow{GB}=3\overrightarrow{AB}. \]</li>
+  <li>Construire le point \(G\) dans le premier cas.</li>
+</ol>
+  </div>
+  <h3><span class="n">I.2</span>Propriétés</h3>
+  <div class="bloc prop"><div class="tag">Propriété — Homogénéité</div>
+<p>Si \(G=\operatorname{bar}\{(A;a),(B;b)\}\), alors \(G=\operatorname{bar}\{(A;ka),(B;kb)\}\) pour tout réel \(k\) <strong>non nul</strong>.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(\operatorname{bar}\{(A;0{,}05),(B;0{,}1)\}=\operatorname{bar}\{(A;5),(B;10)\}=\operatorname{bar}\{(A;1),(B;2)\}\) : on peut simplifier les poids.</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété caractéristique</div>
+<p>Soient \((A;a)\) et \((B;b)\) deux points pondérés tels que \(a+b\neq0\).</p>
+\[ G=\operatorname{bar}\{(A;a),(B;b)\}\iff\text{pour tout point } M \text{ du plan} :\ a\overrightarrow{MA}+b\overrightarrow{MB}=(a+b)\overrightarrow{MG}. \]
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<p>En prenant \(M=A\) (ou \(M=B\)), on retrouve \(\overrightarrow{AG}=\dfrac{b}{a+b}\overrightarrow{AB}\) (ou \(\overrightarrow{BG}=\dfrac{a}{a+b}\overrightarrow{BA}\) ).</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Déterminer un ensemble de points avec le barycentre</div>
+<ol>
+  <li>On remplace chaque somme \(a\overrightarrow{MA}+b\overrightarrow{MB}\) (avec \(a+b\neq0\)) par \((a+b)\overrightarrow{MG}\), où \(G\) est le barycentre.</li>
+  <li>On conclut :
+<ul>
+  <li>\(\|\,(a+b)\overrightarrow{MG}\,\|=k\) (\(k&gt;0\)) \(\iff MG=\dfrac{k}{|a+b|}\) : c'est un <strong>cercle</strong> de centre \(G\) ;</li>
+  <li>\(\|\,s\overrightarrow{MG}\,\|=\|\,s\overrightarrow{MG'}\,\|\iff MG=MG'\) : c'est la <strong>médiatrice</strong> de \([GG']\) (si \(G\neq G'\)).</li>
+</ul></li>
+</ol>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soient \(A\) et \(B\) deux points distincts. Déterminons l'ensemble \((\Gamma)\) des points \(M\) tels que \(\big\|2\overrightarrow{MA}+4\overrightarrow{MB}\big\|=12\).<br> Soit \(G=\operatorname{bar}\{(A;2),(B;4)\}\). Pour tout \(M\) : \(2\overrightarrow{MA}+4\overrightarrow{MB}=6\overrightarrow{MG}\). Donc \(M\in(\Gamma)\iff6MG=12\iff MG=2\).<br> \((\Gamma)\) est le cercle de centre \(G\) et de rayon \(2\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 2</div>
+<p>Soient \(A\) et \(B\) deux points distincts du plan \((P)\).</p>
+<ol>
+  <li>Déterminer l'ensemble des points \(M\) de \((P)\) tels que \(\big\|2\overrightarrow{MA}+\overrightarrow{MB}\big\|=6\).</li>
+  <li>Déterminer l'ensemble des points \(M\) de \((P)\) tels que \(\big\|3\overrightarrow{MA}+\overrightarrow{MB}\big\|=\big\|-2\overrightarrow{MA}+6\overrightarrow{MB}\big\|\).</li>
+</ol>
+  </div>
+  <h3><span class="n">I.3</span>Coordonnées du barycentre</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Le plan est muni d'un repère \((O;\vec i;\vec j)\). Si \(G=\operatorname{bar}\{(A;a),(B;b)\}\), alors \(\overrightarrow{OG}=\dfrac{a\overrightarrow{OA}+b\overrightarrow{OB}}{a+b}\), d'où :</p>
+\[ x_G=\frac{a\,x_A+b\,x_B}{a+b} \qquad\text{et}\qquad y_G=\frac{a\,y_A+b\,y_B}{a+b}. \]
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soient \(A(-2;3)\), \(B(1;4)\) et \(G=\operatorname{bar}\{(A;3),(B;1)\}\). Alors \(x_G=\dfrac{3\times(-2)+1\times1}{4}=-\dfrac54\) et \(y_G=\dfrac{3\times3+1\times4}{4}=\dfrac{13}{4}\). Donc \(G\left(-\dfrac54;\dfrac{13}4\right)\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 3</div>
+<p>Dans un repère \((O;\vec i;\vec j)\), on considère les points \(A(2;-5)\) et \(B(4;3)\), et les points \(G=\operatorname{bar}\{(A;3),(B;6)\}\) et \(G'=\operatorname{bar}\{(A;-2),(B;1)\}\).<br> Déterminer les coordonnées des points \(G\) et \(G'\).</p>
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Barycentre de trois points pondérés">
+  <h2><span class="num">II</span><span class="titre">Barycentre de trois points pondérés</span></h2>
+  <h3><span class="n">II.1</span>Définition</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soient \((A;a)\), \((B;b)\) et \((C;c)\) trois points pondérés tels que \(a+b+c\neq0\). Il existe un unique point \(G\) tel que</p>
+\[ a\overrightarrow{GA}+b\overrightarrow{GB}+c\overrightarrow{GC}=\vec{0} . \]
+<p>On l'appelle le barycentre de \(\{(A;a),(B;b),(C;c)\}\) et on écrit \(G=\operatorname{bar}\{(A;a),(B;b),(C;c)\}\).<br> Si \(a=b=c\), \(G\) est l'<strong>isobarycentre</strong> des points \(A\), \(B\), \(C\) : c'est le <strong>centre de gravité</strong> du triangle \(ABC\).</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété — Position du barycentre</div>
+<p>Si \(G=\operatorname{bar}\{(A;a),(B;b),(C;c)\}\), alors :</p>
+\[ \overrightarrow{AG}=\frac{b}{a+b+c}\overrightarrow{AB}+\frac{c}{a+b+c}\overrightarrow{AC}. \]
+<p>(On obtient de même \(\overrightarrow{BG}\) en fonction de \(\overrightarrow{BA}\) et \(\overrightarrow{BC}\), et \(\overrightarrow{CG}\) en fonction de \(\overrightarrow{CA}\) et \(\overrightarrow{CB}\).)</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 4</div>
+<p>Soit \(ABC\) un triangle.</p>
+<ol>
+  <li>Déterminer \(a\), \(b\) et \(c\) pour que \(G\) soit le barycentre de \(\{(A;a),(B;b),(C;c)\}\), sachant que
+\[ \overrightarrow{GA}+\overrightarrow{GB}+2\overrightarrow{GC}=3\overrightarrow{AB}-\overrightarrow{AC}. \]</li>
+  <li>Construire le point \(G=\operatorname{bar}\{(A;2),(B;-1),(C;-2)\}\).</li>
+</ol>
+  </div>
+  <h3><span class="n">II.2</span>Propriétés</h3>
+  <div class="bloc prop"><div class="tag">Homogénéité et propriété caractéristique</div>
+<p>Soient \((A;a)\), \((B;b)\) et \((C;c)\) tels que \(a+b+c\neq0\).</p>
+<ul>
+  <li>Pour tout \(k\neq0\) : \(\operatorname{bar}\{(A;a),(B;b),(C;c)\}=\operatorname{bar}\{(A;ka),(B;kb),(C;kc)\}\).</li>
+  <li>\(G=\operatorname{bar}\{(A;a),(B;b),(C;c)\}\iff\) pour tout point \(M\) : \(a\overrightarrow{MA}+b\overrightarrow{MB}+c\overrightarrow{MC}=(a+b+c)\overrightarrow{MG}\).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 5</div>
+<p>Soient \(A\), \(B\) et \(C\) trois points du plan \((P)\).</p>
+<ol>
+  <li>Déterminer l'ensemble des points \(M\) de \((P)\) tels que \(\big\|\overrightarrow{MA}+\overrightarrow{MB}+\overrightarrow{MC}\big\|=4\).</li>
+  <li>Déterminer l'ensemble des points \(M\) de \((P)\) tels que \(\big\|2\overrightarrow{MA}+\overrightarrow{MB}-\overrightarrow{MC}\big\|=\big\|3\overrightarrow{MA}-\overrightarrow{MB}\big\|\).</li>
+</ol>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété — Coordonnées</div>
+<p>Dans un repère \((O;\vec i;\vec j)\), si \(G=\operatorname{bar}\{(A;a),(B;b),(C;c)\}\), alors :</p>
+\[ x_G=\frac{a\,x_A+b\,x_B+c\,x_C}{a+b+c} \qquad\text{et}\qquad y_G=\frac{a\,y_A+b\,y_B+c\,y_C}{a+b+c}. \]
+  </div>
+  <div class="bloc app"><div class="tag">Application 6</div>
+<p>Déterminer les coordonnées du barycentre \(G\) de \(\{(A;2),(B;-3),(C;-6)\}\), avec \(A(1;4)\), \(B(0;5)\) et \(C(2;-1)\).</p>
+  </div>
+  <h3><span class="n">II.3</span>Associativité du barycentre</h3>
+  <div class="bloc prop"><div class="tag">Propriété — Associativité (barycentre partiel)</div>
+<p>Soient \((A;a)\), \((B;b)\) et \((C;c)\) tels que \(a+b+c\neq0\) et \(a+b\neq0\).<br> Si \(G=\operatorname{bar}\{(A;a),(B;b),(C;c)\}\) et \(H=\operatorname{bar}\{(A;a),(B;b)\}\), alors \(G=\operatorname{bar}\{(H;a+b),(C;c)\}\).<br> Autrement dit : on peut <strong>remplacer deux points par leur barycentre</strong>, affecté de la somme de leurs poids.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Le centre de gravité d'un triangle</div>
+<div class="avec-fig">
+<div>
+<p>Soient \(ABC\) un triangle, \(G\) son centre de gravité et \(A'\) le milieu de \([BC]\).<br> \(A'=\operatorname{bar}\{(B;1),(C;1)\}\), donc, par associativité, \(G=\operatorname{bar}\{(A;1),(A';2)\}\), d'où</p>
+\[ \overrightarrow{AG}=\frac23\overrightarrow{AA'} . \]
+<p>Le centre de gravité est situé aux <strong>deux tiers de chaque médiane</strong> en partant du sommet : les trois médianes sont concourantes en \(G\).</p>
+</div>
+<figure class="fig"><svg viewBox="-16.9 -139.7 192.3 164.0" role="img" aria-label="Figure"><path d="M21.6 -115.2" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M158.4 -14.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M79.2 -7.2" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M90.0 -64.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M10.8 -57.6" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M60.0 -43.2" fill="var(--fig-accent)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M21.6 -115.2 L0.0 -0.0 L158.4 -14.4 Z" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M21.6 -115.2 L79.2 -7.2 M0.0 -0.0 L90.0 -64.8 M158.4 -14.4 L10.8 -57.6" fill="none" stroke="var(--meth)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="21.6" cy="-115.2" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="21.6" y="-120.2" text-anchor="middle" style="font-size:13.5px">A</text><circle cx="0.0" cy="-0.0" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-3.5" y="14.3" text-anchor="end" style="font-size:13.5px">B</text><circle cx="158.4" cy="-14.4" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="161.9" y="-0.1" text-anchor="start" style="font-size:13.5px">C</text><circle cx="79.2" cy="-7.2" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="79.2" y="8.6" text-anchor="middle" style="font-size:13.5px">A'</text><circle cx="90.0" cy="-64.8" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="93.5" y="-68.3" text-anchor="start" style="font-size:13.5px">B'</text><circle cx="10.8" cy="-57.6" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="5.8" y="-52.9" text-anchor="end" style="font-size:13.5px">C'</text><circle cx="60.0" cy="-43.2" r="3.1" fill="var(--fig-accent)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="63.5" y="-46.7" text-anchor="start" style="font-size:13.5px">G</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Démontrer un alignement ou un concours de droites</div>
+<ul>
+  <li>Pour montrer que \(G\), \(H\) et \(C\) sont <strong>alignés</strong>, on montre que \(G\) est le barycentre de \(H\) et \(C\) (avec des poids convenables).</li>
+  <li>Pour montrer que trois droites sont <strong>concourantes</strong>, on montre que chacune passe par un même barycentre \(G\), en utilisant l'associativité de trois façons différentes.</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 7</div>
+<p>Soient \(ABC\) un triangle, \(K\) le point défini par \(\overrightarrow{BK}=-\dfrac43\overrightarrow{BC}\) et \(G=\operatorname{bar}\{(A;3),(B;7),(C;-4)\}\).</p>
+<ol>
+  <li>Vérifier que \(K=\operatorname{bar}\{(B;7),(C;-4)\}\).</li>
+  <li>Montrer que \(G\) est le milieu du segment \([AK]\).</li>
+</ol>
+  </div>
+  <div class="bloc app"><div class="tag">Application 8</div>
+<p>Soient \(ABC\) un triangle, \(G=\operatorname{bar}\{(A;-2),(B;3),(C;3)\}\), \(I\) le milieu de \([BC]\), et \(K\), \(H\) les points tels que \(\overrightarrow{AK}=3\overrightarrow{AB}\) et \(\overrightarrow{AH}=3\overrightarrow{AC}\).</p>
+<ol>
+  <li>Vérifier que \(K=\operatorname{bar}\{(A;-2),(B;3)\}\) et \(H=\operatorname{bar}\{(A;-2),(C;3)\}\).</li>
+  <li><ol class="alpha">
+  <li>Montrer que \(G=\operatorname{bar}\{(K;1),(C;3)\}\).</li>
+  <li>Montrer que \(G=\operatorname{bar}\{(H;1),(B;3)\}\).</li>
+  <li>Montrer que \(G=\operatorname{bar}\{(A;-1),(I;3)\}\).</li>
+</ol></li>
+  <li>En déduire que les droites \((CK)\), \((BH)\) et \((AI)\) sont concourantes en un point que l'on précisera.</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Barycentre de quatre points pondérés">
+  <h2><span class="num">III</span><span class="titre">Barycentre de quatre points pondérés</span></h2>
+  <div class="bloc prop"><div class="tag">Généralisation</div>
+<p>La définition et les propriétés d'homogénéité, de caractérisation et d'associativité s'étendent à quatre points pondérés \((A;a)\), \((B;b)\), \((C;c)\), \((D;d)\) tels que \(a+b+c+d\neq0\) :</p>
+\[ G=\operatorname{bar}\{(A;a),(B;b),(C;c),(D;d)\}\iff a\overrightarrow{GA}+b\overrightarrow{GB}+c\overrightarrow{GC}+d\overrightarrow{GD}=\vec{0} . \]
+<p>Dans un repère : \(x_G=\dfrac{a\,x_A+b\,x_B+c\,x_C+d\,x_D}{a+b+c+d}\) et \(y_G=\dfrac{a\,y_A+b\,y_B+c\,y_C+d\,y_D}{a+b+c+d}\).</p>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<p>L'isobarycentre des sommets d'un parallélogramme \(ABCD\) est son centre \(O\) : en effet, si \(I\) et \(J\) sont les milieux de \([AB]\) et \([CD]\), l'isobarycentre est le milieu de \([IJ]\), c'est-à-dire \(O\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemple — Construction par associativité</div>
+<div class="avec-fig">
+<div>
+<p>Construisons \(G=\operatorname{bar}\{(A;-1),(B;3),(C;-1),(D;2)\}\).</p>
+<ul>
+  <li>\(G_1=\operatorname{bar}\{(A;-1),(B;3)\}\) : \(\overrightarrow{AG_1}=\dfrac32\overrightarrow{AB}\).</li>
+  <li>\(G_2=\operatorname{bar}\{(C;-1),(D;2)\}\) : \(\overrightarrow{CG_2}=2\overrightarrow{CD}\).</li>
+  <li>Par associativité, \(G=\operatorname{bar}\{(G_1;2),(G_2;1)\}\), donc \(\overrightarrow{G_1G}=\dfrac13\overrightarrow{G_1G_2}\).</li>
+</ul>
+</div>
+<figure class="fig"><svg viewBox="-47.4 -126.5 166.3 152.3" role="img" aria-label="Figure"><path d="M0.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M68.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M102.0 -102.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M34.0 -102.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M102.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-34.0 -102.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M56.7 -34.0" fill="var(--fig-accent)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L68.0 -0.0 L102.0 -102.0 L34.0 -102.0 Z" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M68.0 -0.0 L102.0 -0.0 M34.0 -102.0 L-34.0 -102.0" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M102.0 -0.0 L-34.0 -102.0" fill="none" stroke="var(--meth)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><circle cx="0.0" cy="-0.0" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="0.0" y="15.8" text-anchor="middle" style="font-size:13.5px">A</text><circle cx="68.0" cy="-0.0" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="68.0" y="15.8" text-anchor="middle" style="font-size:13.5px">B</text><circle cx="102.0" cy="-102.0" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="105.5" y="-105.5" text-anchor="start" style="font-size:13.5px">C</text><circle cx="34.0" cy="-102.0" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="34.0" y="-107.0" text-anchor="middle" style="font-size:13.5px">D</text><circle cx="102.0" cy="-0.0" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="102.0" y="15.8" text-anchor="middle" style="font-size:13.5px">G₁</text><circle cx="-34.0" cy="-102.0" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-34.0" y="-107.0" text-anchor="middle" style="font-size:13.5px">G₂</text><circle cx="56.7" cy="-34.0" r="3.1" fill="var(--fig-accent)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="53.2" y="-19.7" text-anchor="end" style="font-size:13.5px">G</text></svg></figure>
+</div>
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Synthèse">
+  <h2><span class="num">IV</span><span class="titre">Synthèse</span></h2>
+  <div class="bloc ret"><div class="tag">À retenir</div>
+<div class="tableau"><table><thead><tr><th scope="col">Notion</th><th scope="col">À retenir</th></tr></thead><tbody><tr><td>Définition</td><td>\(G=\operatorname{bar}\{(A;a),(B;b)\}\iff a\overrightarrow{GA}+b\overrightarrow{GB}=\vec{0}\) (avec \(a+b\neq0\))</td></tr><tr><td>Position</td><td>\(\overrightarrow{AG}=\dfrac{b}{a+b}\overrightarrow{AB}\) ; \(\overrightarrow{AG}=\dfrac{b}{a+b+c}\overrightarrow{AB}+\dfrac{c}{a+b+c}\overrightarrow{AC}\)</td></tr><tr><td>Propriété caractéristique</td><td>\(a\overrightarrow{MA}+b\overrightarrow{MB}+c\overrightarrow{MC}=(a+b+c)\overrightarrow{MG}\) pour tout \(M\)</td></tr><tr><td>Homogénéité</td><td>on peut multiplier tous les poids par un même \(k\neq0\)</td></tr><tr><td>Associativité</td><td>on remplace des points par leur barycentre partiel, affecté de la somme de leurs poids</td></tr><tr><td>Coordonnées</td><td>\(x_G=\dfrac{a x_A+b x_B+c x_C}{a+b+c}\), \(y_G=\dfrac{a y_A+b y_B+c y_C}{a+b+c}\)</td></tr><tr><td>Ensembles de points</td><td>\(MG=r\) : cercle ; \(MG=MG'\) : médiatrice de \([GG']\)</td></tr></tbody></table></div>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}

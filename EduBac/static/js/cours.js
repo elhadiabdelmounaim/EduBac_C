@@ -341,7 +341,7 @@
     var mouvements = [];    // chaque déplacement, pour tout remettre en place avant de repaginer
 
     function decoupable(el) {
-      return /^(OL|UL)$/.test(el.tagName) || (el.tagName === 'DIV' && !$(el).hasClass('tag'));
+      return /^(OL|UL|LI|TABLE)$/.test(el.tagName) || (el.tagName === 'DIV' && !$(el).hasClass('tag'));
     }
 
     function premierContenu(el) {
@@ -351,6 +351,19 @@
     // Déplace le dernier morceau de « src » au début de « dst » (structure identique).
     function retirerDernier(src, dst, miroirs) {
       for (;;) {
+        // Tableau : on déplace ses lignes ; la suite reprend l'en-tête du tableau.
+        if (src.tagName === 'TABLE' && src.tBodies.length) {
+          if (src.tHead && !dst.tHead) dst.appendChild(src.tHead.cloneNode(true));
+          var corps = src.tBodies[0];
+          var copie = $(dst).children('tbody').filter(function () { return $(this).data('miroir') === corps; })[0];
+          if (!copie) {
+            copie = corps.cloneNode(false);
+            $(copie).data('miroir', corps);
+            dst.appendChild(copie);
+          }
+          src = corps;
+          dst = copie;
+        }
         var enfants = $(src).children().not('.tag, .app-voile').toArray();
         if (enfants.length >= 2) {
           var dernier = enfants[enfants.length - 1];
@@ -389,8 +402,11 @@
       // Une liste numérotée continue sa numérotation.
       $.each(miroirs, function (_, m) {
         if (m.source.tagName === 'OL') {
-          $(m.copie).attr('start', (parseInt($(m.source).attr('start'), 10) || 1) + $(m.source).children('li').length);
+          // Un élément coupé en deux garde son numéro : sa suite n'en affiche pas.
+          var coupe = $(m.copie).children('li').first().data('miroir') ? 1 : 0;
+          $(m.copie).attr('start', (parseInt($(m.source).attr('start'), 10) || 1) + $(m.source).children('li').length - coupe);
         }
+        if (m.source.tagName === 'LI') $(m.copie).addClass('li-suite');
       });
       if (!tient(page)) page.$p.addClass('deborde');
       if (!deplace) return page;

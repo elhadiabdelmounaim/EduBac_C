@@ -1,0 +1,496 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : 1ère Bac Sciences — Généralités sur les fonctions numériques (chapitre 2, 10 heures).
+Généré depuis Generalites_fonctions_1Bac_SE.tex (le PDF d'origine est dans le dossier Cours de la leçon, media/lessons/1BAC_SE/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < », « > » et « & » sont écrits &lt;, &gt; et &amp;.
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">1ère année Bac Sciences</span>
+        <span class="chip or">Chapitre 2</span>
+        <span class="chip">Semestre 1</span>
+      </div>
+      <h1 id="cours-titre">Généralités sur les fonctions numériques</h1>
+      <p class="sous-titre">Volume horaire : 10 heures</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectif"><strong>Contenus</strong>
+<ul>
+  <li>Fonction majorée, minorée, bornée ; extremums.</li>
+  <li>Fonction périodique.</li>
+  <li>Comparaison de deux fonctions ; résolution graphique.</li>
+  <li>Image d'un intervalle.</li>
+  <li>Monotonie de \(f+k\), \(\lambda f\) et \(g\circ f\).</li>
+  <li>Étude de \(x\mapsto ax^3\) et \(x\mapsto\sqrt{x+a}\).</li>
+</ul>
+  </div>
+  <div class="cadre objectif"><strong>Capacités attendues</strong>
+<ul>
+  <li>Montrer qu'une fonction est majorée, minorée ou bornée.</li>
+  <li>Déterminer un extremum, une période.</li>
+  <li>Comparer deux fonctions et interpréter graphiquement.</li>
+  <li>Déterminer le domaine, l'expression et les variations d'une composée.</li>
+  <li>Résoudre graphiquement équations et inéquations.</li>
+</ul>
+  </div>
+
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Rappels du tronc commun">
+  <h2><span class="num">I</span><span class="titre">Rappels du tronc commun</span></h2>
+  <h3><span class="n">I.1</span>Parité</h3>
+  <div class="bloc def"><div class="tag">Rappel — Fonction paire, fonction impaire</div>
+<p>Soit \(f\) une fonction de domaine \(D_f\) <strong>symétrique par rapport à \(0\)</strong> (pour tout \(x\in D_f\), \(-x\in D_f\)).</p>
+<ul>
+  <li>\(f\) est <strong>paire</strong> si \((\forall x\in D_f) : f(-x)=f(x)\) ; sa courbe est symétrique par rapport à l'axe des ordonnées.</li>
+  <li>\(f\) est <strong>impaire</strong> si \((\forall x\in D_f) : f(-x)=-f(x)\) ; sa courbe est symétrique par rapport à l'origine \(O\).</li>
+</ul>
+<p>Si \(f\) est paire ou impaire, il suffit de l'étudier sur \(D_f\cap[0;+\infty[\). Une fonction paire a des variations <strong>contraires</strong> sur \(I\) et sur \(-I\) ; une fonction impaire a les <strong>mêmes</strong> variations sur \(I\) et sur \(-I\).</p>
+  </div>
+  <h3><span class="n">I.2</span>Monotonie et taux d'accroissement</h3>
+  <div class="bloc meth"><div class="tag">Méthode — Étudier la monotonie avec le taux d'accroissement</div>
+<p>Pour \(x\neq y\) dans un intervalle \(I\), on calcule \(T=\dfrac{f(x)-f(y)}{x-y}\).</p>
+<ul>
+  <li>Si \(T&gt;0\) pour tous \(x\neq y\) de \(I\), alors \(f\) est strictement croissante sur \(I\).</li>
+  <li>Si \(T&lt;0\) pour tous \(x\neq y\) de \(I\), alors \(f\) est strictement décroissante sur \(I\).</li>
+  <li>Si \(T=0\) pour tous \(x\neq y\) de \(I\), alors \(f\) est constante sur \(I\).</li>
+</ul>
+  </div>
+  <h3><span class="n">I.3</span>Fonctions de référence</h3>
+  <div class="bloc prop"><div class="tag">Rappel — Trinôme et fonction homographique</div>
+<div class="tableau"><table><thead><tr><th scope="col"></th><th scope="col">\(f(x)=ax^2+bx+c\) (\(a\neq0\))</th><th scope="col">\(f(x)=\dfrac{ax+b}{cx+d}\) (\(c\neq0\), \(ad-bc\neq0\))</th></tr></thead><tbody><tr><td><strong>Courbe</strong></td><td>parabole de sommet \(S\!\left(-\frac{b}{2a};f\!\left(-\frac{b}{2a}\right)\right)\), d'axe \(x=-\frac{b}{2a}\)</td><td>hyperbole de centre \(\Omega\!\left(-\frac dc;\frac ac\right)\), d'asymptotes \(x=-\frac dc\) et \(y=\frac ac\)</td></tr><tr><td><strong>Variations</strong></td><td>\(a&gt;0\) : décroissante puis croissante ;<br> \(a&lt;0\) : croissante puis décroissante</td><td>\(ad-bc&gt;0\) : croissante sur chaque intervalle ;<br> \(ad-bc&lt;0\) : décroissante sur chaque intervalle</td></tr><tr><td><strong>Exemple</strong></td><td>\(x^2-6x+5=(x-3)^2-4\) : sommet \(S(3;-4)\), minimum \(-4\)</td><td>\(\dfrac{x+3}{x-1}\) : \(ad-bc=-4&lt;0\), centre \(\Omega(1;1)\)</td></tr></tbody></table></div>
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Fonction majorée, minorée, bornée">
+  <h2><span class="num">II</span><span class="titre">Fonction majorée, minorée, bornée</span></h2>
+  <div class="bloc act"><div class="tag">Activité 1</div>
+<p>On considère la fonction \(f\) définie par \(f(x)=\dfrac{2x^2+3}{x^2+1}\).</p>
+<ol>
+  <li>Déterminer \(D_f\), l'ensemble de définition de \(f\).</li>
+  <li>Montrer que \((\forall x\in D_f) : f(x)\le 3\). On dit que \(f\) est <strong>majorée</strong> par \(3\) sur \(D_f\).</li>
+  <li>Montrer que \((\forall x\in D_f) : f(x)\ge 2\). On dit que \(f\) est <strong>minorée</strong> par \(2\) sur \(D_f\).</li>
+  <li>En déduire que \((\forall x\in D_f) : 2\le f(x)\le 3\). On dit que \(f\) est <strong>bornée</strong> sur \(D_f\).</li>
+</ol>
+  </div>
+  <div class="bloc def"><div class="tag">Définitions</div>
+<p>Soit \(f\) une fonction définie sur un intervalle \(I\). On dit que :</p>
+<ul>
+  <li>\(f\) est <strong>majorée</strong> sur \(I\) s'il existe un réel \(M\) tel que \((\forall x\in I) : f(x)\le M\) ;</li>
+  <li>\(f\) est <strong>minorée</strong> sur \(I\) s'il existe un réel \(m\) tel que \((\forall x\in I) : f(x)\ge m\) ;</li>
+  <li>\(f\) est <strong>bornée</strong> sur \(I\) si elle est à la fois majorée et minorée sur \(I\) : il existe \(m,M\in\mathbb{R}\) tels que \((\forall x\in I) : m\le f(x)\le M\).</li>
+</ul>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<div class="avec-fig">
+<div>
+<ul>
+  <li>Si \(f\) est majorée par \(M\) sur \(I\), alors \((\mathcal{C}_f)\) est <strong>au-dessous</strong> de la droite d'équation \(y=M\) sur \(I\).</li>
+  <li>Si \(f\) est minorée par \(m\) sur \(I\), alors \((\mathcal{C}_f)\) est <strong>au-dessus</strong> de la droite d'équation \(y=m\) sur \(I\).</li>
+  <li>\(f\) est bornée sur \(I\) si et seulement s'il existe \(A&gt;0\) tel que \((\forall x\in I) : |f(x)|\le A\).</li>
+</ul>
+</div>
+<figure class="fig"><svg viewBox="-6.0 -13.8 242.4 178.2" role="img" aria-label="Figure"><defs><clipPath id="cg1"><rect x="-2" y="-2" width="234.4" height="162.4"/></clipPath><marker id="mg1-53" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M13.6 79.2 L17.0 68.8 L20.4 59.7 L23.9 51.8 L27.3 45.3 L30.8 40.3 L34.2 36.7 L37.7 34.5 L41.1 34.0 L44.6 36.2 L48.0 41.5 L51.4 49.2 L54.9 58.7 L58.4 69.3 L61.8 80.4 L65.2 91.3 L68.7 101.5 L72.1 110.2 L75.6 116.9 L79.0 120.8 L82.5 121.5 L85.9 120.3 L89.4 117.6 L92.8 113.8 L96.3 109.1 L99.7 103.7 L103.1 97.7 L106.6 91.4 L110.0 85.0 L113.5 78.7 L116.9 72.8 L120.4 67.3 L123.8 62.4 L127.3 56.7 L130.7 50.6 L134.1 44.4 L137.6 38.6 L141.0 33.8 L144.5 30.2 L147.9 28.4 L151.4 29.1 L154.8 33.3 L158.3 40.4 L161.7 49.7 L165.2 60.5 L168.6 72.2 L172.0 84.0 L175.5 95.3 L179.0 105.4 L182.4 113.6 L185.8 119.2 L189.3 121.6 L192.7 121.1 L196.2 119.2 L199.6 115.9 L203.1 111.3 L206.5 105.3 L210.0 98.0 L213.4 89.2 L216.8 79.2" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg1)"/><path d="M0.0 22.6 L1.9 22.6 L3.8 22.6 L5.8 22.6 L7.7 22.6 L9.6 22.6 L11.5 22.6 L13.4 22.6 L15.4 22.6 L17.3 22.6 L19.2 22.6 L21.1 22.6 L23.0 22.6 L25.0 22.6 L26.9 22.6 L28.8 22.6 L30.7 22.6 L32.6 22.6 L34.6 22.6 L36.5 22.6 L38.4 22.6 L40.3 22.6 L42.2 22.6 L44.2 22.6 L46.1 22.6 L48.0 22.6 L49.9 22.6 L51.8 22.6 L53.8 22.6 L55.7 22.6 L57.6 22.6 L59.5 22.6 L61.4 22.6 L63.4 22.6 L65.3 22.6 L67.2 22.6 L69.1 22.6 L71.0 22.6 L73.0 22.6 L74.9 22.6 L76.8 22.6 L78.7 22.6 L80.6 22.6 L82.6 22.6 L84.5 22.6 L86.4 22.6 L88.3 22.6 L90.2 22.6 L92.2 22.6 L94.1 22.6 L96.0 22.6 L97.9 22.6 L99.8 22.6 L101.8 22.6 L103.7 22.6 L105.6 22.6 L107.5 22.6 L109.4 22.6 L111.4 22.6 L113.3 22.6 L115.2 22.6 L117.1 22.6 L119.0 22.6 L121.0 22.6 L122.9 22.6 L124.8 22.6 L126.7 22.6 L128.6 22.6 L130.6 22.6 L132.5 22.6 L134.4 22.6 L136.3 22.6 L138.2 22.6 L140.2 22.6 L142.1 22.6 L144.0 22.6 L145.9 22.6 L147.8 22.6 L149.8 22.6 L151.7 22.6 L153.6 22.6 L155.5 22.6 L157.4 22.6 L159.4 22.6 L161.3 22.6 L163.2 22.6 L165.1 22.6 L167.0 22.6 L169.0 22.6 L170.9 22.6 L172.8 22.6 L174.7 22.6 L176.6 22.6 L178.6 22.6 L180.5 22.6 L182.4 22.6 L184.3 22.6 L186.2 22.6 L188.2 22.6 L190.1 22.6 L192.0 22.6 L193.9 22.6 L195.8 22.6 L197.8 22.6 L199.7 22.6 L201.6 22.6 L203.5 22.6 L205.4 22.6 L207.4 22.6 L209.3 22.6 L211.2 22.6 L213.1 22.6 L215.0 22.6 L217.0 22.6 L218.9 22.6 L220.8 22.6 L222.7 22.6 L224.6 22.6 L226.6 22.6 L228.5 22.6 L230.4 22.6" fill="none" stroke="var(--meth)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4" clip-path="url(#cg1)"/><path d="M0.0 135.8 L1.9 135.8 L3.8 135.8 L5.8 135.8 L7.7 135.8 L9.6 135.8 L11.5 135.8 L13.4 135.8 L15.4 135.8 L17.3 135.8 L19.2 135.8 L21.1 135.8 L23.0 135.8 L25.0 135.8 L26.9 135.8 L28.8 135.8 L30.7 135.8 L32.6 135.8 L34.6 135.8 L36.5 135.8 L38.4 135.8 L40.3 135.8 L42.2 135.8 L44.2 135.8 L46.1 135.8 L48.0 135.8 L49.9 135.8 L51.8 135.8 L53.8 135.8 L55.7 135.8 L57.6 135.8 L59.5 135.8 L61.4 135.8 L63.4 135.8 L65.3 135.8 L67.2 135.8 L69.1 135.8 L71.0 135.8 L73.0 135.8 L74.9 135.8 L76.8 135.8 L78.7 135.8 L80.6 135.8 L82.6 135.8 L84.5 135.8 L86.4 135.8 L88.3 135.8 L90.2 135.8 L92.2 135.8 L94.1 135.8 L96.0 135.8 L97.9 135.8 L99.8 135.8 L101.8 135.8 L103.7 135.8 L105.6 135.8 L107.5 135.8 L109.4 135.8 L111.4 135.8 L113.3 135.8 L115.2 135.8 L117.1 135.8 L119.0 135.8 L121.0 135.8 L122.9 135.8 L124.8 135.8 L126.7 135.8 L128.6 135.8 L130.6 135.8 L132.5 135.8 L134.4 135.8 L136.3 135.8 L138.2 135.8 L140.2 135.8 L142.1 135.8 L144.0 135.8 L145.9 135.8 L147.8 135.8 L149.8 135.8 L151.7 135.8 L153.6 135.8 L155.5 135.8 L157.4 135.8 L159.4 135.8 L161.3 135.8 L163.2 135.8 L165.1 135.8 L167.0 135.8 L169.0 135.8 L170.9 135.8 L172.8 135.8 L174.7 135.8 L176.6 135.8 L178.6 135.8 L180.5 135.8 L182.4 135.8 L184.3 135.8 L186.2 135.8 L188.2 135.8 L190.1 135.8 L192.0 135.8 L193.9 135.8 L195.8 135.8 L197.8 135.8 L199.7 135.8 L201.6 135.8 L203.5 135.8 L205.4 135.8 L207.4 135.8 L209.3 135.8 L211.2 135.8 L213.1 135.8 L215.0 135.8 L217.0 135.8 L218.9 135.8 L220.8 135.8 L222.7 135.8 L224.6 135.8 L226.6 135.8 L228.5 135.8 L230.4 135.8" fill="none" stroke="var(--att)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4" clip-path="url(#cg1)"/><path d="M0 79.2 H230.4" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-53)"/><path d="M94.9 158.4 V0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-53)"/><text x="226.9" y="92.3" text-anchor="end" style="font-size:12.0px;fill:var(--doux)">x</text><text x="99.9" y="4.2" text-anchor="start" style="font-size:12.0px;fill:var(--doux)">y</text><text x="226.9" y="19.1" text-anchor="end" style="font-size:11.5px;fill:var(--meth)">y=M</text><text x="226.9" y="148.5" text-anchor="end" style="font-size:11.5px;fill:var(--att)">y=m</text><text x="165.3" y="43.6" text-anchor="middle" style="font-size:11.5px;fill:var(--fig-trait)">(𝒞<tspan baseline-shift="sub" font-size="72%">f</tspan>)</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Montrer que \(f\) est majorée par \(M\) (ou minorée par \(m\))</div>
+<p>On étudie le <strong>signe de la différence</strong> \(f(x)-M\) (ou \(f(x)-m\)) : on la met au même dénominateur, on factorise ou on fait apparaître un carré.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soit \(f : x\mapsto 1-\dfrac1x\).</p>
+<ul>
+  <li>\(f\) est majorée par \(1\) sur \(]0;+\infty[\) : pour tout \(x&gt;0\), \(f(x)-1=-\dfrac1x&lt;0\).</li>
+  <li>\(f\) est minorée par \(1\) sur \(]-\infty;0[\) : pour tout \(x&lt;0\), \(f(x)-1=-\dfrac1x&gt;0\).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+<p>On considère les fonctions \(f\) et \(g\) définies par \(f(x)=3-\sqrt{1-2x}\) et \(g(x)=\sqrt{x^2+4}\).</p>
+<ol>
+  <li>Déterminer \(D_f\) et \(D_g\).</li>
+  <li>Montrer que \(f\) est majorée par \(3\) sur \(D_f\).</li>
+  <li>Montrer que \(g\) est minorée par \(2\) sur \(D_g\).</li>
+  <li>Montrer que la fonction \(h : x\mapsto\dfrac{1}{x}\) est bornée sur \([1;+\infty[\).</li>
+</ol>
+  </div>
+  <h3><span class="n">II.1</span>Extremums d'une fonction</h3>
+  <div class="bloc def"><div class="tag">Définitions — Valeur maximale, valeur minimale</div>
+<p>Soient \(f\) une fonction définie sur un intervalle \(I\) et \(a\in I\). On dit que :</p>
+<ul>
+  <li>\(f(a)\) est la <strong>valeur minimale</strong> (ou le minimum) de \(f\) sur \(I\) si \((\forall x\in I) : f(x)\ge f(a)\) ;</li>
+  <li>\(f(a)\) est la <strong>valeur maximale</strong> (ou le maximum) de \(f\) sur \(I\) si \((\forall x\in I) : f(x)\le f(a)\) ;</li>
+  <li>\(f(a)\) est un <strong>extremum</strong> de \(f\) sur \(I\) si c'est le maximum ou le minimum de \(f\) sur \(I\).</li>
+</ul>
+  </div>
+  <div class="bloc att"><div class="tag">Attention — erreurs fréquentes</div>
+<ul>
+  <li>Un majorant n'est pas forcément un maximum : \(M\) est le maximum de \(f\) seulement s'il est <strong>atteint</strong>, c'est-à-dire s'il existe \(a\in I\) tel que \(f(a)=M\).<br> Par exemple, \(x\mapsto 1-\frac1x\) est majorée par \(1\) sur \(]0;+\infty[\), mais \(1\) n'est pas un maximum.</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(-3\) est la valeur minimale de \(f : x\mapsto x^2-4x+1\) sur \(\mathbb{R}\). En effet, pour tout \(x\in\mathbb{R}\) : \(f(x)-(-3)=x^2-4x+4=(x-2)^2\ge0\), et \(f(2)=-3\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 2</div>
+<p>Soit \(f\) la fonction définie par \(f(x)=x+\dfrac4x\).</p>
+<ol>
+  <li>Déterminer \(D_f\).</li>
+  <li><ol class="alpha">
+  <li>Calculer \(f(2)\).</li>
+  <li>Montrer que \(f\) est minorée par \(4\) sur \(]0;+\infty[\). Que représente \(4\) pour \(f\) sur cet intervalle ?</li>
+</ol></li>
+  <li>Montrer que \(-4\) est la valeur maximale de \(f\) sur \(]-\infty;0[\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Fonctions périodiques">
+  <h2><span class="num">III</span><span class="titre">Fonctions périodiques</span></h2>
+  <div class="bloc act"><div class="tag">Activité 2</div>
+<div class="avec-fig">
+<div>
+<p>La figure ci-contre représente la courbe d'une fonction \(f\) définie sur \(\mathbb{R}\).</p>
+<ol>
+  <li>Vérifier que \(f(-2)=f(2)\), \(f(0)=f(4)\) et \(f(1)=f(5)\).</li>
+  <li>Soit \(x\in\mathbb{R}\). Quelle relation semble lier \(f(x+4)\) et \(f(x)\) ?</li>
+</ol>
+</div>
+<figure class="fig"><svg viewBox="-6.0 -14.2 300.0 164.2" role="img" aria-label="Figure"><defs><clipPath id="cg5"><rect x="-2" y="-2" width="292.0" height="148.0"/></clipPath><marker id="mg5-160" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fig-accent)"/></marker><marker id="mg5-53" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M11.1 0 V144.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M33.2 0 V144.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M55.4 0 V144.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M77.5 0 V144.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M99.7 0 V144.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M121.8 0 V144.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M144.0 0 V144.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M166.2 0 V144.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M188.3 0 V144.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M210.5 0 V144.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M232.6 0 V144.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M254.8 0 V144.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M276.9 0 V144.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 127.4 H288.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 99.7 H288.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 44.3 H288.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 16.6 H288.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 32.8 L1.9 38.5 L3.8 44.8 L5.8 51.6 L7.7 58.8 L9.6 66.2 L11.5 73.7 L13.4 81.2 L15.4 88.6 L17.3 95.6 L19.2 102.2 L21.1 108.2 L23.0 113.5 L25.0 118.1 L26.9 121.9 L28.8 124.7 L30.7 126.5 L32.6 127.3 L34.6 127.1 L36.5 125.9 L38.4 123.7 L40.3 120.5 L42.2 116.5 L44.2 111.6 L46.1 105.9 L48.0 99.7 L49.9 92.9 L51.8 85.8 L53.8 78.4 L55.7 70.8 L57.6 63.3 L59.5 56.0 L61.4 48.9 L63.4 42.3 L65.3 36.3 L67.2 30.8 L69.1 26.2 L71.0 22.4 L73.0 19.5 L74.9 17.6 L76.8 16.7 L78.7 16.8 L80.6 17.9 L82.6 20.1 L84.5 23.2 L86.4 27.2 L88.3 32.0 L90.2 37.6 L92.2 43.8 L94.1 50.5 L96.0 57.7 L97.9 65.1 L99.8 72.6 L101.8 80.1 L103.7 87.5 L105.6 94.5 L107.5 101.2 L109.4 107.3 L111.4 112.8 L113.3 117.5 L115.2 121.3 L117.1 124.3 L119.0 126.3 L121.0 127.3 L122.9 127.2 L124.8 126.2 L126.7 124.1 L128.6 121.1 L130.6 117.1 L132.5 112.4 L134.4 106.9 L136.3 100.7 L138.2 94.0 L140.2 86.9 L142.1 79.5 L144.0 72.0 L145.9 64.5 L147.8 57.1 L149.8 50.0 L151.7 43.3 L153.6 37.1 L155.5 31.6 L157.4 26.9 L159.4 22.9 L161.3 19.9 L163.2 17.8 L165.1 16.8 L167.0 16.7 L169.0 17.7 L170.9 19.7 L172.8 22.7 L174.7 26.5 L176.6 31.2 L178.6 36.7 L180.5 42.8 L182.4 49.5 L184.3 56.5 L186.2 63.9 L188.2 71.4 L190.1 78.9 L192.0 86.3 L193.9 93.5 L195.8 100.2 L197.8 106.4 L199.7 112.0 L201.6 116.8 L203.5 120.8 L205.4 123.9 L207.4 126.1 L209.3 127.2 L211.2 127.3 L213.1 126.4 L215.0 124.5 L217.0 121.6 L218.9 117.8 L220.8 113.2 L222.7 107.7 L224.6 101.7 L226.6 95.1 L228.5 88.0 L230.4 80.7 L232.3 73.2 L234.2 65.6 L236.2 58.2 L238.1 51.1 L240.0 44.3 L241.9 38.1 L243.8 32.4 L245.8 27.5 L247.7 23.5 L249.6 20.3 L251.5 18.1 L253.4 16.9 L255.4 16.7 L257.3 17.5 L259.2 19.3 L261.1 22.1 L263.0 25.9 L265.0 30.5 L266.9 35.8 L268.8 41.8 L270.7 48.4 L272.6 55.4 L274.6 62.8 L276.5 70.3 L278.4 77.8 L280.3 85.2 L282.2 92.4 L284.2 99.2 L286.1 105.5 L288.0 111.2" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg5)"/><path d="M0 72.0 H288.0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg5-53)"/><path d="M144.0 144.0 V0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg5-53)"/><text x="284.5" y="85.1" text-anchor="end" style="font-size:12.0px;fill:var(--doux)">x</text><text x="149.0" y="4.2" text-anchor="start" style="font-size:12.0px;fill:var(--doux)">y</text><text x="11.1" y="85.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−6</text><text x="33.2" y="85.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−5</text><text x="55.4" y="85.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−4</text><text x="77.5" y="85.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−3</text><text x="99.7" y="85.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−2</text><text x="121.8" y="85.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−1</text><text x="144.0" y="85.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">0</text><text x="166.2" y="85.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">1</text><text x="188.3" y="85.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">2</text><text x="210.5" y="85.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">3</text><text x="232.6" y="85.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">4</text><text x="254.8" y="85.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">5</text><text x="276.9" y="85.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">6</text><text x="139.0" y="131.2" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">−2</text><text x="139.0" y="103.5" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">−1</text><text x="139.0" y="48.2" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">1</text><text x="139.0" y="20.5" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">2</text><path d="M166.2 8.3 L254.8 8.3" fill="none" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg5-160)" marker-start="url(#mg5-160)"/><text x="210.5" y="3.3" text-anchor="middle" style="font-size:11.5px;fill:var(--fig-accent)">4</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soient \(f\) une fonction définie sur \(D\) et \(T\) un réel strictement positif. On dit que \(f\) est <strong>périodique de période \(T\)</strong> (ou \(T\)-périodique) si :</p>
+<ul>
+  <li>pour tout \(x\in D\) : \(x+T\in D\) et \(x-T\in D\) ;</li>
+  <li>pour tout \(x\in D\) : \(f(x+T)=f(x)\).</li>
+</ul>
+<p>La période de \(f\) est le plus petit réel \(T&gt;0\) qui vérifie ces conditions.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>Les fonctions \(x\mapsto\sin x\) et \(x\mapsto\cos x\) sont périodiques de période \(2\pi\).</li>
+  <li>La fonction \(x\mapsto\tan x\) est périodique de période \(\pi\).</li>
+  <li>Pour \(a\neq0\), les fonctions \(x\mapsto\sin(ax)\) et \(x\mapsto\cos(ax)\) sont périodiques de période \(\dfrac{2\pi}{|a|}\).<br> En effet : \(\sin\!\left(a\left(x+\frac{2\pi}{|a|}\right)\right)=\sin(ax\pm2\pi)=\sin(ax)\).</li>
+</ul>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<ul>
+  <li>Si \(f\) est \(T\)-périodique, alors \(f(x+kT)=f(x)\) pour tout \(x\in D\) et tout \(k\in\mathbb{Z}\).</li>
+  <li>Pour tracer la courbe d'une fonction \(T\)-périodique, on la trace sur un intervalle de longueur \(T\) (par exemple \([0;T]\)), puis on la reproduit par les translations de vecteurs \(kT\,\vec{i}\), \(k\in\mathbb{Z}\).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 3</div>
+<p>On considère les fonctions \(f\) et \(g\) définies sur \(\mathbb{R}\) par \(f(x)=\cos^2 x\) et \(g(x)=\sin(2\pi x)\).<br> Montrer que \(f\) est périodique de période \(\pi\) et que \(g\) est périodique de période \(1\).</p>
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Comparaison de deux fonctions – Interprétation graphique">
+  <h2><span class="num">IV</span><span class="titre">Comparaison de deux fonctions – Interprétation graphique</span></h2>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soient \(f\) et \(g\) deux fonctions définies sur un même ensemble \(D\).</p>
+<ul>
+  <li>\(f\) et \(g\) sont <strong>égales</strong> sur \(D\) si \((\forall x\in D) : f(x)=g(x)\) ; on écrit \(f=g\).</li>
+  <li>\(f\) est <strong>inférieure</strong> à \(g\) sur \(D\) si \((\forall x\in D) : f(x)\le g(x)\) ; on écrit \(f\le g\).</li>
+  <li>\(f\) est <strong>positive</strong> sur \(D\) si \((\forall x\in D) : f(x)\ge0\) ; on écrit \(f\ge0\).</li>
+</ul>
+  </div>
+  <div class="bloc prop"><div class="tag">Interprétation graphique</div>
+<ul>
+  <li>Si \(f\le g\) sur \(D\), alors \((\mathcal{C}_f)\) est <strong>au-dessous</strong> de \((\mathcal{C}_g)\) sur \(D\) ; si \(f&lt;g\), elle est strictement au-dessous.</li>
+  <li>Si \(f\ge0\) sur \(D\), alors \((\mathcal{C}_f)\) est au-dessus de l'axe des abscisses sur \(D\).</li>
+</ul>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Comparer \(f\) et \(g\)</div>
+<p>On étudie le <strong>signe de \(f(x)-g(x)\)</strong> sur \(D\) (tableau de signes si nécessaire), puis on conclut.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soient \(f(x)=x+1+\dfrac{1}{x^2+2}\) et \(g(x)=x+1\), définies sur \(\mathbb{R}\). Pour tout \(x\in\mathbb{R}\) : \(f(x)-g(x)=\dfrac{1}{x^2+2}&gt;0\). Donc \(f&gt;g\) sur \(\mathbb{R}\) : \((\mathcal{C}_f)\) est strictement au-dessus de \((\mathcal{C}_g)\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 4</div>
+<p>On considère les fonctions \(f\) et \(g\) définies sur \(\mathbb{R}\) par \(f(x)=x^2-2x+1\) et \(g(x)=-2x^2+4x+1\).</p>
+<ol>
+  <li>Étudier le signe de \(f(x)-g(x)\) sur \(\mathbb{R}\).</li>
+  <li>En déduire une comparaison de \(f\) et \(g\) sur chacun des intervalles \(]-\infty;0]\), \([0;2]\) et \([2;+\infty[\).</li>
+</ol>
+  </div>
+  <h3><span class="n">IV.1</span>Résolution graphique d'équations et d'inéquations</h3>
+  <div class="bloc meth"><div class="tag">Méthode — Lecture graphique</div>
+<ul>
+  <li>Les solutions de \(f(x)=k\) sont les abscisses des points d'intersection de \((\mathcal{C}_f)\) avec la droite d'équation \(y=k\).</li>
+  <li>Les solutions de \(f(x)=g(x)\) sont les abscisses des points d'intersection de \((\mathcal{C}_f)\) et \((\mathcal{C}_g)\).</li>
+  <li>Les solutions de \(f(x)&gt;g(x)\) sont les abscisses des points où \((\mathcal{C}_f)\) est strictement au-dessus de \((\mathcal{C}_g)\).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 5</div>
+<div class="avec-fig">
+<div>
+<p>Les fonctions \(f\) et \(g\) sont définies sur \(\mathbb{R}\) par leurs courbes ci-contre.</p>
+<ol>
+  <li>Résoudre graphiquement les équations :
+\[ f(x)=3 \ ;\quad f(x)=0 \ ;\quad f(x)=g(x). \]</li>
+  <li>Résoudre graphiquement les inéquations :
+\[ f(x)&lt;3 \ ;\quad g(x)\ge0 \ ;\quad f(x)&gt;g(x). \]</li>
+</ol>
+</div>
+<figure class="fig"><svg viewBox="-6.0 -13.8 264.0 250.2" role="img" aria-label="Figure"><defs><clipPath id="cg7"><rect x="-2" y="-2" width="256.0" height="234.4"/></clipPath><marker id="mg7-53" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M18.0 0 V230.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M54.0 0 V230.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M90.0 0 V230.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M126.0 0 V230.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M162.0 0 V230.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M198.0 0 V230.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M234.0 0 V230.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 216.0 H252.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 187.2 H252.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 158.4 H252.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 129.6 H252.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 100.8 H252.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 72.0 H252.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 43.2 H252.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 14.4 H252.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M10.8 -107.7 L12.7 -98.0 L14.6 -88.4 L16.6 -79.0 L18.5 -69.7 L20.4 -60.6 L22.3 -51.7 L24.2 -42.9 L26.2 -34.3 L28.1 -25.9 L30.0 -17.6 L31.9 -9.5 L33.8 -1.5 L35.8 6.2 L37.7 13.9 L39.6 21.3 L41.5 28.6 L43.4 35.7 L45.4 42.7 L47.3 49.5 L49.2 56.1 L51.1 62.6 L53.0 68.9 L55.0 75.1 L56.9 81.0 L58.8 86.8 L60.7 92.5 L62.6 98.0 L64.6 103.3 L66.5 108.5 L68.4 113.5 L70.3 118.3 L72.2 123.0 L74.2 127.5 L76.1 131.8 L78.0 136.0 L79.9 140.0 L81.8 143.9 L83.8 147.6 L85.7 151.1 L87.6 154.4 L89.5 157.6 L91.4 160.7 L93.4 163.5 L95.3 166.2 L97.2 168.8 L99.1 171.1 L101.0 173.4 L103.0 175.4 L104.9 177.3 L106.8 179.0 L108.7 180.6 L110.6 182.0 L112.6 183.2 L114.5 184.3 L116.4 185.2 L118.3 185.9 L120.2 186.5 L122.2 186.9 L124.1 187.1 L126.0 187.2 L127.9 187.1 L129.8 186.9 L131.8 186.5 L133.7 185.9 L135.6 185.2 L137.5 184.3 L139.4 183.2 L141.4 182.0 L143.3 180.6 L145.2 179.0 L147.1 177.3 L149.0 175.4 L151.0 173.4 L152.9 171.1 L154.8 168.8 L156.7 166.2 L158.6 163.5 L160.6 160.7 L162.5 157.6 L164.4 154.4 L166.3 151.1 L168.2 147.6 L170.2 143.9 L172.1 140.0 L174.0 136.0 L175.9 131.8 L177.8 127.5 L179.8 123.0 L181.7 118.3 L183.6 113.5 L185.5 108.5 L187.4 103.3 L189.4 98.0 L191.3 92.5 L193.2 86.8 L195.1 81.0 L197.0 75.1 L199.0 68.9 L200.9 62.6 L202.8 56.1 L204.7 49.5 L206.6 42.7 L208.6 35.7 L210.5 28.6 L212.4 21.3 L214.3 13.9 L216.2 6.2 L218.2 -1.5 L220.1 -9.5 L222.0 -17.6 L223.9 -25.9 L225.8 -34.3 L227.8 -42.9 L229.7 -51.7 L231.6 -60.6 L233.5 -69.7 L235.4 -79.0 L237.4 -88.4 L239.3 -98.0 L241.2 -107.7" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg7)"/><path d="M0.0 28.8 L2.1 30.5 L4.2 32.2 L6.3 33.8 L8.4 35.5 L10.5 37.2 L12.6 38.9 L14.7 40.6 L16.8 42.2 L18.9 43.9 L21.0 45.6 L23.1 47.3 L25.2 49.0 L27.3 50.6 L29.4 52.3 L31.5 54.0 L33.6 55.7 L35.7 57.4 L37.8 59.0 L39.9 60.7 L42.0 62.4 L44.1 64.1 L46.2 65.8 L48.3 67.4 L50.4 69.1 L52.5 70.8 L54.6 72.5 L56.7 74.2 L58.8 75.8 L60.9 77.5 L63.0 79.2 L65.1 80.9 L67.2 82.6 L69.3 84.2 L71.4 85.9 L73.5 87.6 L75.6 89.3 L77.7 91.0 L79.8 92.6 L81.9 94.3 L84.0 96.0 L86.1 97.7 L88.2 99.4 L90.3 101.0 L92.4 102.7 L94.5 104.4 L96.6 106.1 L98.7 107.8 L100.8 109.4 L102.9 111.1 L105.0 112.8 L107.1 114.5 L109.2 116.2 L111.3 117.8 L113.4 119.5 L115.5 121.2 L117.6 122.9 L119.7 124.6 L121.8 126.2 L123.9 127.9 L126.0 129.6 L128.1 131.3 L130.2 133.0 L132.3 134.6 L134.4 136.3 L136.5 138.0 L138.6 139.7 L140.7 141.4 L142.8 143.0 L144.9 144.7 L147.0 146.4 L149.1 148.1 L151.2 149.8 L153.3 151.4 L155.4 153.1 L157.5 154.8 L159.6 156.5 L161.7 158.2 L163.8 159.8 L165.9 161.5 L168.0 163.2 L170.1 164.9 L172.2 166.6 L174.3 168.2 L176.4 169.9 L178.5 171.6 L180.6 173.3 L182.7 175.0 L184.8 176.6 L186.9 178.3 L189.0 180.0 L191.1 181.7 L193.2 183.4 L195.3 185.0 L197.4 186.7 L199.5 188.4 L201.6 190.1 L203.7 191.8 L205.8 193.4 L207.9 195.1 L210.0 196.8 L212.1 198.5 L214.2 200.2 L216.3 201.8 L218.4 203.5 L220.5 205.2 L222.6 206.9 L224.7 208.6 L226.8 210.2 L228.9 211.9 L231.0 213.6 L233.1 215.3 L235.2 217.0 L237.3 218.6 L239.4 220.3 L241.5 222.0 L243.6 223.7 L245.7 225.4 L247.8 227.0 L249.9 228.7 L252.0 230.4" fill="none" stroke="var(--meth)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg7)"/><path d="M0 158.4 H252.0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg7-53)"/><path d="M90.0 230.4 V0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg7-53)"/><text x="248.5" y="171.5" text-anchor="end" style="font-size:12.0px;fill:var(--doux)">x</text><text x="95.0" y="4.2" text-anchor="start" style="font-size:12.0px;fill:var(--doux)">y</text><text x="18.0" y="172.2" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−2</text><text x="54.0" y="172.2" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−1</text><text x="90.0" y="172.2" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">0</text><text x="126.0" y="172.2" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">1</text><text x="162.0" y="172.2" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">2</text><text x="198.0" y="172.2" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">3</text><text x="234.0" y="172.2" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">4</text><text x="85.0" y="219.8" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">−2</text><text x="85.0" y="191.0" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">−1</text><text x="85.0" y="162.2" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">0</text><text x="85.0" y="133.5" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">1</text><text x="85.0" y="104.7" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">2</text><text x="85.0" y="75.8" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">3</text><text x="85.0" y="47.0" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">4</text><text x="85.0" y="18.3" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">5</text><text x="223.2" y="38.6" text-anchor="middle" style="font-size:11.5px;fill:var(--fig-trait)">(𝒞<tspan baseline-shift="sub" font-size="72%">f</tspan>)</text><text x="21.6" y="64.5" text-anchor="middle" style="font-size:11.5px;fill:var(--meth)">(𝒞<tspan baseline-shift="sub" font-size="72%">g</tspan>)</text></svg></figure>
+</div>
+  </div>
+</section>
+
+<!-- ============================ V ============================ -->
+<section class="chap" id="s5" data-toc="Image d'un intervalle par une fonction">
+  <h2><span class="num">V</span><span class="titre">Image d'un intervalle par une fonction</span></h2>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soit \(f\) une fonction définie sur un intervalle \(I\). L'ensemble des images \(f(x)\), lorsque \(x\) parcourt \(I\), s'appelle l'<strong>image de l'intervalle \(I\) par \(f\)</strong> ; on le note \(f(I)\) :</p>
+\[ f(I)=\{\,f(x)\ /\ x\in I\,\}. \]
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<div class="avec-fig">
+<div>
+<p>La courbe ci-contre représente une fonction \(f\) définie sur \([-2;4]\).<br> Lorsque \(x\) parcourt \([-2;0]\), \(f(x)\) parcourt \([0;2]\). Donc \(f([-2;0])=[0;2]\).<br> De même :</p>
+<ul>
+  <li>\(f([0;2])=[-1;2]\) ;</li>
+  <li>\(f([2;4])=[-1;1]\) ;</li>
+  <li>\(f([-1;0])=\left[\tfrac32;2\right]\) ;</li>
+  <li>\(f([0;3[)=[-1;2]\) ;</li>
+  <li>\(f(]-2;0[)=]0;2[\) ;</li>
+  <li>\(f([-2;4])=[-1;2]\).</li>
+</ul>
+</div>
+<figure class="fig"><svg viewBox="-6.0 -13.8 264.0 214.2" role="img" aria-label="Figure"><defs><clipPath id="cg10"><rect x="-2" y="-2" width="256.0" height="198.4"/></clipPath><marker id="mg10-53" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M21.0 0 V194.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M56.0 0 V194.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M91.0 0 V194.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M126.0 0 V194.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M161.0 0 V194.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M196.0 0 V194.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M231.0 0 V194.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 166.6 H252.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 74.1 H252.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 27.8 H252.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21.0 120.3 L24.6 111.0 L28.1 102.1 L31.7 93.5 L35.2 85.4 L38.8 77.8 L42.4 70.8 L45.9 64.5 L49.5 58.9 L53.0 54.2 L56.6 50.3 L60.2 46.8 L63.7 43.4 L67.3 40.1 L70.8 37.1 L74.4 34.3 L77.9 32.0 L81.5 30.1 L85.1 28.7 L88.6 27.9 L92.2 27.9 L95.8 30.1 L99.3 34.7 L102.9 41.0 L106.4 48.8 L110.0 57.5 L113.5 66.8 L117.1 76.2 L120.6 85.3 L124.2 93.5 L127.8 100.9 L131.4 109.1 L134.9 118.2 L138.5 127.6 L142.0 136.9 L145.6 145.6 L149.1 153.4 L152.7 159.7 L156.2 164.3 L159.8 166.5 L163.4 166.2 L166.9 164.2 L170.5 160.8 L174.1 156.2 L177.6 150.7 L181.2 144.7 L184.7 138.5 L188.3 132.3 L191.8 126.4 L195.4 121.1 L199.0 116.4 L202.5 111.7 L206.1 107.0 L209.7 102.3 L213.2 97.6 L216.8 92.9 L220.3 88.2 L223.9 83.5 L227.4 78.8 L231.0 74.1" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg10)"/><path d="M0 120.3 H252.0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg10-53)"/><path d="M91.0 194.4 V0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg10-53)"/><text x="248.5" y="133.4" text-anchor="end" style="font-size:12.0px;fill:var(--doux)">x</text><text x="96.0" y="4.2" text-anchor="start" style="font-size:12.0px;fill:var(--doux)">y</text><text x="21.0" y="134.1" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−2</text><text x="56.0" y="134.1" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−1</text><text x="91.0" y="134.1" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">0</text><text x="126.0" y="134.1" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">1</text><text x="161.0" y="134.1" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">2</text><text x="196.0" y="134.1" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">3</text><text x="231.0" y="134.1" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">4</text><text x="86.0" y="170.5" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">−1</text><text x="86.0" y="77.9" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">1</text><text x="86.0" y="31.6" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">2</text><circle cx="21.0" cy="120.3" r="1.8" fill="var(--fig-trait)" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="56.0" cy="50.9" r="1.8" fill="var(--fig-trait)" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="91.0" cy="27.8" r="1.8" fill="var(--fig-trait)" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="126.0" cy="97.2" r="1.8" fill="var(--fig-trait)" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="161.0" cy="166.6" r="1.8" fill="var(--fig-trait)" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="196.0" cy="120.3" r="1.8" fill="var(--fig-trait)" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="231.0" cy="74.1" r="1.8" fill="var(--fig-trait)" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M56.0 120.3 L56.0 50.9 L91.0 50.9" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M126.0 120.3 L126.0 97.2 L91.0 97.2" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="96.0" y="54.9" text-anchor="start" style="font-size:11.5px">3/2</text><text x="220.5" y="59.6" text-anchor="middle" style="font-size:11.5px;fill:var(--fig-trait)">(𝒞<tspan baseline-shift="sub" font-size="72%">f</tspan>)</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soit \(f\) une fonction définie sur un intervalle \([a;b]\) (et dont la courbe se trace sans lever le crayon).</p>
+<ul>
+  <li>Si \(f\) est croissante sur \([a;b]\), alors \(f([a;b])=[f(a);f(b)]\).</li>
+  <li>Si \(f\) est décroissante sur \([a;b]\), alors \(f([a;b])=[f(b);f(a)]\).</li>
+  <li>Si \(f\) change de monotonie sur \([a;b]\), alors \(f([a;b])=[m;M]\), où \(m\) est la valeur minimale et \(M\) la valeur maximale de \(f\) sur \([a;b]\).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 6</div>
+<div class="avec-fig">
+<div>
+<p>Soit \(f\) une fonction dont le tableau de variations est ci-contre.<br> Déterminer :</p>
+<ul>
+  <li>\(f([-4;0])\)</li>
+  <li>\(f([0;1])\)</li>
+  <li>\(f([0;2])\)</li>
+  <li>\(f([-4;1])\)</li>
+  <li>\(f([1;+\infty[)\)</li>
+</ul>
+</div>
+<figure class="fig tabvar"><svg viewBox="-6.0 -6.0 312.0 81.1" role="img" aria-label="Tableau"><defs><marker id="mg15-237" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fig-trait)"/></marker></defs><path d="M0 0 H300.0 V67.6 H0 Z" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M64 0 V67.6" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 20.8 H300.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><text x="32.0" y="14.9" text-anchor="middle" style="font-size:13.0px">x</text><text x="32.0" y="48.8" text-anchor="middle" style="font-size:13.0px">f(x)</text><text x="86.0" y="14.9" text-anchor="middle" style="font-size:13.0px">-4</text><text x="134.0" y="14.9" text-anchor="middle" style="font-size:13.0px">0</text><text x="182.0" y="14.9" text-anchor="middle" style="font-size:13.0px">1</text><text x="230.0" y="14.9" text-anchor="middle" style="font-size:13.0px">2</text><text x="278.0" y="14.9" text-anchor="middle" style="font-size:13.0px">+∞</text><text x="86.0" y="65.2" text-anchor="middle" style="font-size:13.0px">-3</text><text x="134.0" y="38.3" text-anchor="middle" style="font-size:13.0px">2</text><text x="182.0" y="65.2" text-anchor="middle" style="font-size:13.0px">0</text><text x="230.0" y="38.3" text-anchor="middle" style="font-size:13.0px">5/2</text><text x="278.0" y="65.2" text-anchor="middle" style="font-size:13.0px">1</text><path d="M98.0 50.6 L122.0 39.8" fill="none" stroke="var(--fig-trait)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg15-237)"/><path d="M146.0 39.8 L170.0 50.6" fill="none" stroke="var(--fig-trait)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg15-237)"/><path d="M194.0 50.6 L218.0 39.8" fill="none" stroke="var(--fig-trait)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg15-237)"/><path d="M242.0 39.8 L266.0 50.6" fill="none" stroke="var(--fig-trait)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg15-237)"/></svg><figcaption>La valeur \(1\) n'est pas atteinte : \(f(x)&gt;1\) pour tout \(x\ge2\).</figcaption></figure>
+</div>
+  </div>
+</section>
+
+<!-- ============================ VI ============================ -->
+<section class="chap" id="s6" data-toc="Monotonie des fonctions f+k et  f">
+  <h2><span class="num">VI</span><span class="titre">Monotonie des fonctions \(f+k\) et \(\lambda f\)</span></h2>
+  <div class="bloc act"><div class="tag">Activité 3</div>
+<p>On considère la fonction \(f\) définie par \(f(x)=\dfrac{1}{x^2+1}\).</p>
+<ol>
+  <li>Déterminer \(D_f\), étudier la parité de \(f\) puis interpréter graphiquement le résultat.</li>
+  <li>Étudier la monotonie de \(f\) sur \([0;+\infty[\), puis sur \(]-\infty;0]\).</li>
+  <li>Étudier la monotonie des fonctions \(3f\), \(-2f\) et \(f+3\) sur \([0;+\infty[\).</li>
+</ol>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(f\) une fonction définie sur un intervalle \(I\), et \(k\), \(\lambda\) deux réels.</p>
+<ul>
+  <li>Les fonctions \(f\) et \(f+k\) ont le <strong>même sens de variation</strong> sur \(I\).</li>
+  <li>Si \(\lambda&gt;0\), les fonctions \(f\) et \(\lambda f\) ont le <strong>même sens de variation</strong> sur \(I\).</li>
+  <li>Si \(\lambda&lt;0\), les fonctions \(f\) et \(\lambda f\) ont des <strong>sens de variation contraires</strong> sur \(I\).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 7</div>
+<div class="avec-fig">
+<div>
+<p>Soit \(f\) la fonction définie sur \([-3;3]\) par sa courbe ci-contre.</p>
+<ol>
+  <li>Dresser le tableau de variations de \(f\).</li>
+  <li>En déduire les tableaux de variations des fonctions \(f+2\) et \(-3f\).</li>
+</ol>
+</div>
+<figure class="fig"><svg viewBox="-6.0 -13.8 249.6 199.8" role="img" aria-label="Figure"><defs><clipPath id="cg16"><rect x="-2" y="-2" width="241.6" height="184.0"/></clipPath><marker id="mg16-53" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M17.0 0 V180.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M50.9 0 V180.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M84.9 0 V180.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M118.8 0 V180.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M152.7 0 V180.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M186.7 0 V180.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M220.6 0 V180.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 159.2 H237.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 124.6 H237.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 90.0 H237.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 55.4 H237.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 20.8 H237.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M17.0 124.6 L20.4 113.5 L23.9 103.2 L27.3 93.5 L30.8 84.4 L34.2 76.1 L37.7 68.4 L41.1 61.3 L44.6 54.8 L48.0 49.0 L51.5 43.7 L55.0 39.0 L58.4 35.0 L61.8 31.4 L65.3 28.4 L68.7 25.9 L72.2 23.9 L75.7 22.4 L79.1 21.4 L82.5 20.9 L86.0 20.9 L89.5 22.6 L92.9 26.2 L96.4 31.4 L99.8 38.0 L103.3 45.8 L106.7 54.6 L110.2 64.2 L113.6 74.3 L117.1 84.7 L120.5 95.3 L124.0 105.7 L127.4 115.8 L130.9 125.4 L134.3 134.2 L137.8 142.0 L141.2 148.6 L144.7 153.8 L148.1 157.4 L151.6 159.1 L155.1 159.1 L158.5 158.6 L161.9 157.6 L165.4 156.1 L168.9 154.1 L172.3 151.6 L175.8 148.6 L179.2 145.0 L182.6 141.0 L186.1 136.3 L189.6 131.0 L193.0 125.2 L196.5 118.7 L199.9 111.6 L203.4 103.9 L206.8 95.6 L210.3 86.5 L213.7 76.8 L217.2 66.5 L220.6 55.4" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg16)"/><path d="M0 90.0 H237.6" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg16-53)"/><path d="M118.8 180.0 V0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg16-53)"/><text x="234.1" y="103.1" text-anchor="end" style="font-size:12.0px;fill:var(--doux)">x</text><text x="123.8" y="4.2" text-anchor="start" style="font-size:12.0px;fill:var(--doux)">y</text><text x="17.0" y="103.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−3</text><text x="50.9" y="103.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−2</text><text x="84.9" y="103.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−1</text><text x="118.8" y="103.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">0</text><text x="152.7" y="103.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">1</text><text x="186.7" y="103.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">2</text><text x="220.6" y="103.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">3</text><text x="113.8" y="163.1" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">−2</text><text x="113.8" y="128.5" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">−1</text><text x="113.8" y="93.8" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">0</text><text x="113.8" y="59.2" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">1</text><text x="113.8" y="24.6" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">2</text><circle cx="17.0" cy="124.6" r="1.8" fill="var(--fig-trait)" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="84.9" cy="20.8" r="1.8" fill="var(--fig-trait)" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="152.7" cy="159.2" r="1.8" fill="var(--fig-trait)" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="220.6" cy="55.4" r="1.8" fill="var(--fig-trait)" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="207.1" y="38.6" text-anchor="middle" style="font-size:11.5px;fill:var(--fig-trait)">(𝒞<tspan baseline-shift="sub" font-size="72%">f</tspan>)</text></svg></figure>
+</div>
+  </div>
+</section>
+
+<!-- ============================ VII ============================ -->
+<section class="chap" id="s7" data-toc="Composée de deux fonctions">
+  <h2><span class="num">VII</span><span class="titre">Composée de deux fonctions</span></h2>
+  <div class="bloc act"><div class="tag">Activité 4</div>
+<p>On considère les fonctions \(f\) et \(g\) définies par \(f(x)=-x+5\) et \(g(x)=\sqrt{x}\).</p>
+<ol>
+  <li><ol class="alpha">
+  <li>Calculer \(f(1)\) puis \(g\big(f(1)\big)\).</li>
+  <li>Calculer \(f(-4)\) puis \(g\big(f(-4)\big)\).</li>
+  <li>Calculer \(f(8)\). Peut-on calculer \(g\big(f(8)\big)\) ?</li>
+</ol></li>
+  <li><ol class="alpha">
+  <li>Déterminer l'intervalle \(I\) des réels \(x\) pour lesquels \(g\big(f(x)\big)\) est calculable.</li>
+  <li>Déterminer l'expression de \(g\big(f(x)\big)\) pour tout \(x\in I\).</li>
+</ol></li>
+</ol>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<div class="avec-fig">
+<div>
+<p>Soient \(f\) une fonction définie sur \(I\) et \(g\) une fonction définie sur \(J\), telles que \(f(x)\in J\) pour tout \(x\in I\).<br> La <strong>composée de \(f\) suivie de \(g\)</strong>, notée \(g\circ f\) (on lit « \(g\) rond \(f\) »), est la fonction définie sur \(I\) par :</p>
+\[ (g\circ f)(x)=g\big(f(x)\big). \]
+</div>
+<figure class="fig">\[x\ \xrightarrow{\ f\ }\ f(x)\ \xrightarrow{\ g\ }\ g\big(f(x)\big)\]<figcaption>\(g\circ f\) : on applique \(f\), puis \(g\).</figcaption></figure>
+</div>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<ul>
+  <li>\(x\in D_{g\circ f}\iff\big(x\in D_f\) et \(f(x)\in D_g\big)\).</li>
+  <li>En général, \(g\circ f\neq f\circ g\) : l'ordre est important.</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soient \(f : x\mapsto x^2\), définie sur \(\mathbb{R}\), et \(g : x\mapsto\dfrac{2x}{x-4}\), définie sur \(\mathbb{R}\setminus\{4\}\).</p>
+<ul>
+  <li><strong>Domaine :</strong> \(x\in D_{g\circ f}\iff\big(x\in\mathbb{R}\) et \(x^2\neq4\big)\iff\big(x\neq-2\) et \(x\neq2\big)\).<br> Donc \(D_{g\circ f}=\mathbb{R}\setminus\{-2;2\}=\,]-\infty;-2[\,\cup\,]-2;2[\,\cup\,]2;+\infty[\).</li>
+  <li><strong>Expression :</strong> pour tout \(x\in D_{g\circ f}\) : \((g\circ f)(x)=g(x^2)=\dfrac{2x^2}{x^2-4}\).</li>
+  <li><strong>Non-commutativité :</strong> \((f\circ g)(x)=\left(\dfrac{2x}{x-4}\right)^2\), donc \(f\circ g\neq g\circ f\) (par exemple \((g\circ f)(1)=-\frac23\) et \((f\circ g)(1)=\frac49\)).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 8</div>
+<ol>
+  <li>Soient \(f\) et \(g\) les fonctions définies par \(f(x)=\dfrac1x\) et \(g(x)=\dfrac{2x+3}{3x-6}\).
+<ol class="alpha">
+  <li>Déterminer \(D_f\), \(D_g\) et \(D_{g\circ f}\).</li>
+  <li>Donner l'expression de \((g\circ f)(x)\).</li>
+</ol></li>
+  <li>Écrire la fonction \(h\) définie sur \(\mathbb{R}_+\) par \(h(x)=\dfrac{\sqrt{x}-2}{\sqrt{x}+5}\) comme la composée de deux fonctions usuelles.</li>
+</ol>
+  </div>
+  <h3><span class="n">VII.1</span>Monotonie d'une fonction composée</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(f\) une fonction définie sur un intervalle \(I\) et \(g\) une fonction définie sur un intervalle \(J\) tels que \(f(I)\subset J\).</p>
+<ul>
+  <li>Si \(f\) est monotone sur \(I\) et \(g\) monotone sur \(J\) <strong>dans le même sens</strong>, alors \(g\circ f\) est <strong>croissante</strong> sur \(I\).</li>
+  <li>Si \(f\) et \(g\) sont monotones <strong>de sens contraires</strong>, alors \(g\circ f\) est <strong>décroissante</strong> sur \(I\).</li>
+</ul>
+<div class="tableau"><table><thead><tr><th scope="col">\(f\) sur \(I\)</th><th scope="col">\(g\) sur \(J\supset f(I)\)</th><th scope="col">\(g\circ f\) sur \(I\)</th></tr></thead><tbody><tr><td>croissante</td><td>croissante</td><td>croissante</td></tr><tr><td>décroissante</td><td>décroissante</td><td>croissante</td></tr><tr><td>croissante</td><td>décroissante</td><td>décroissante</td></tr><tr><td>décroissante</td><td>croissante</td><td>décroissante</td></tr></tbody></table></div>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Variations de \(g\circ f\)</div>
+<ol>
+  <li>On découpe \(D_f\) en intervalles \(I\) sur lesquels \(f\) est monotone.</li>
+  <li>On détermine \(f(I)\) et on vérifie que \(g\) est monotone sur un intervalle \(J\) contenant \(f(I)\).</li>
+  <li>On applique la règle des signes : même sens \(\to\) croissante ; sens contraires \(\to\) décroissante.</li>
+</ol>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soit \(h\) la fonction définie sur \(\mathbb{R}\) par \(h(x)=\dfrac{1-x^2}{1+x^2}\). On a \(h=g\circ f\) avec</p>
+\[ f : x\mapsto x^2 \qquad\text{et}\qquad g : x\mapsto\dfrac{1-x}{1+x}. \]
+<p>La fonction homographique \(g\) est décroissante sur \([0;+\infty[\) (car \(ad-bc=-1-1=-2&lt;0\)).</p>
+<ul>
+  <li>\(f\) est décroissante sur \(]-\infty;0]\) et \(f(]-\infty;0])=[0;+\infty[\) ; donc \(h\) est <strong>croissante</strong> sur \(]-\infty;0]\).</li>
+  <li>\(f\) est croissante sur \([0;+\infty[\) et \(f([0;+\infty[)=[0;+\infty[\) ; donc \(h\) est <strong>décroissante</strong> sur \([0;+\infty[\).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 9</div>
+<p>On considère les fonctions \(f\) et \(g\) définies sur \(\mathbb{R}\) par \(f(x)=x^2-2x+1\) et \(g(x)=-2x+1\).</p>
+<ol>
+  <li>Dresser les tableaux de variations de \(f\) et de \(g\).</li>
+  <li>Déterminer \(f(]-\infty;1])\) et \(f([1;+\infty[)\).</li>
+  <li>Étudier les variations de la fonction \(g\circ f\) sur \(]-\infty;1]\) et sur \([1;+\infty[\).</li>
+</ol>
+  </div>
+  <div class="bloc app"><div class="tag">Application 10</div>
+<p>On considère les fonctions \(f\) et \(g\) définies par \(f(x)=x^2-2x-1\) et \(g(x)=\dfrac{x-2}{x+2}\).</p>
+<ol>
+  <li>Déterminer \(D_f\), \(D_g\) et \(D_{g\circ f}\).</li>
+  <li>Déterminer \((g\circ f)(x)\) pour tout \(x\in D_{g\circ f}\).</li>
+  <li>Dresser les tableaux de variations de \(f\) et de \(g\).</li>
+  <li>Déterminer \(f(]-\infty;1[)\) et \(f(]1;+\infty[)\).</li>
+  <li>Étudier les variations de \(g\circ f\) sur \(]-\infty;1[\) et sur \(]1;+\infty[\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ VIII ============================ -->
+<section class="chap" id="s8" data-toc="Étude des fonctions x↦ ax³ et x↦√(x+a)">
+  <h2><span class="num">VIII</span><span class="titre">Étude des fonctions \(x\mapsto ax^3\) et \(x\mapsto\sqrt{x+a}\)</span></h2>
+  <h3><span class="n">VIII.1</span>La fonction \(f : x\mapsto ax^3\) (\(a\neq0\))</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<div class="avec-fig">
+<div>
+<p>La fonction \(f : x\mapsto ax^3\) est définie sur \(\mathbb{R}\) et <strong>impaire</strong> ; sa courbe est symétrique par rapport à \(O\).</p>
+<ul>
+  <li>Si \(a&gt;0\), \(f\) est strictement croissante sur \(\mathbb{R}\).</li>
+  <li>Si \(a&lt;0\), \(f\) est strictement décroissante sur \(\mathbb{R}\).</li>
+</ul>
+</div>
+<figure class="fig"><svg viewBox="-6.0 -13.8 228.0 199.8" role="img" aria-label="Figure"><defs><clipPath id="cg18"><rect x="-2" y="-2" width="220.0" height="184.0"/></clipPath><marker id="mg18-53" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M9.8 0 V180.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M58.9 0 V180.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M157.1 0 V180.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M206.2 0 V180.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 150.0 H216.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 120.0 H216.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 90.0 H216.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 60.0 H216.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 30.0 H216.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19.6 177.5 L21.1 173.2 L22.6 169.0 L24.1 165.0 L25.5 161.1 L27.0 157.4 L28.5 153.8 L29.9 150.3 L31.4 146.9 L32.9 143.7 L34.4 140.6 L35.8 137.6 L37.3 134.8 L38.8 132.0 L40.3 129.4 L41.7 126.9 L43.2 124.5 L44.7 122.2 L46.1 120.0 L47.6 117.9 L49.1 115.9 L50.6 114.0 L52.0 112.2 L53.5 110.5 L55.0 108.9 L56.5 107.4 L57.9 105.9 L59.4 104.6 L60.9 103.3 L62.3 102.1 L63.8 100.9 L65.3 99.9 L66.8 98.9 L68.2 98.0 L69.7 97.1 L71.2 96.3 L72.7 95.6 L74.1 94.9 L75.6 94.3 L77.1 93.8 L78.5 93.2 L80.0 92.8 L81.5 92.4 L83.0 92.0 L84.4 91.7 L85.9 91.4 L87.4 91.1 L88.9 90.9 L90.3 90.7 L91.8 90.5 L93.3 90.4 L94.7 90.3 L96.2 90.2 L97.7 90.1 L99.2 90.1 L100.6 90.1 L102.1 90.0 L103.6 90.0 L105.1 90.0 L106.5 90.0 L108.0 90.0 L109.5 90.0 L110.9 90.0 L112.4 90.0 L113.9 90.0 L115.4 89.9 L116.8 89.9 L118.3 89.9 L119.8 89.8 L121.3 89.7 L122.7 89.6 L124.2 89.5 L125.7 89.3 L127.1 89.1 L128.6 88.9 L130.1 88.6 L131.6 88.3 L133.0 88.0 L134.5 87.6 L136.0 87.2 L137.5 86.8 L138.9 86.2 L140.4 85.7 L141.9 85.1 L143.3 84.4 L144.8 83.7 L146.3 82.9 L147.8 82.0 L149.2 81.1 L150.7 80.1 L152.2 79.1 L153.7 77.9 L155.1 76.7 L156.6 75.4 L158.1 74.1 L159.5 72.6 L161.0 71.1 L162.5 69.5 L164.0 67.8 L165.4 66.0 L166.9 64.1 L168.4 62.1 L169.9 60.0 L171.3 57.8 L172.8 55.5 L174.3 53.1 L175.7 50.6 L177.2 48.0 L178.7 45.2 L180.2 42.4 L181.6 39.4 L183.1 36.3 L184.6 33.1 L186.1 29.7 L187.5 26.2 L189.0 22.6 L190.5 18.9 L191.9 15.0 L193.4 11.0 L194.9 6.8 L196.4 2.5" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg18)"/><path d="M19.6 2.5 L21.1 6.8 L22.6 11.0 L24.1 15.0 L25.5 18.9 L27.0 22.6 L28.5 26.2 L29.9 29.7 L31.4 33.1 L32.9 36.3 L34.4 39.4 L35.8 42.4 L37.3 45.2 L38.8 48.0 L40.3 50.6 L41.7 53.1 L43.2 55.5 L44.7 57.8 L46.1 60.0 L47.6 62.1 L49.1 64.1 L50.6 66.0 L52.0 67.8 L53.5 69.5 L55.0 71.1 L56.5 72.6 L57.9 74.1 L59.4 75.4 L60.9 76.7 L62.3 77.9 L63.8 79.1 L65.3 80.1 L66.8 81.1 L68.2 82.0 L69.7 82.9 L71.2 83.7 L72.7 84.4 L74.1 85.1 L75.6 85.7 L77.1 86.2 L78.5 86.8 L80.0 87.2 L81.5 87.6 L83.0 88.0 L84.4 88.3 L85.9 88.6 L87.4 88.9 L88.9 89.1 L90.3 89.3 L91.8 89.5 L93.3 89.6 L94.7 89.7 L96.2 89.8 L97.7 89.9 L99.2 89.9 L100.6 89.9 L102.1 90.0 L103.6 90.0 L105.1 90.0 L106.5 90.0 L108.0 90.0 L109.5 90.0 L110.9 90.0 L112.4 90.0 L113.9 90.0 L115.4 90.1 L116.8 90.1 L118.3 90.1 L119.8 90.2 L121.3 90.3 L122.7 90.4 L124.2 90.5 L125.7 90.7 L127.1 90.9 L128.6 91.1 L130.1 91.4 L131.6 91.7 L133.0 92.0 L134.5 92.4 L136.0 92.8 L137.5 93.2 L138.9 93.8 L140.4 94.3 L141.9 94.9 L143.3 95.6 L144.8 96.3 L146.3 97.1 L147.8 98.0 L149.2 98.9 L150.7 99.9 L152.2 100.9 L153.7 102.1 L155.1 103.3 L156.6 104.6 L158.1 105.9 L159.5 107.4 L161.0 108.9 L162.5 110.5 L164.0 112.2 L165.4 114.0 L166.9 115.9 L168.4 117.9 L169.9 120.0 L171.3 122.2 L172.8 124.5 L174.3 126.9 L175.7 129.4 L177.2 132.0 L178.7 134.8 L180.2 137.6 L181.6 140.6 L183.1 143.7 L184.6 146.9 L186.1 150.3 L187.5 153.8 L189.0 157.4 L190.5 161.1 L191.9 165.0 L193.4 169.0 L194.9 173.2 L196.4 177.5" fill="none" stroke="var(--meth)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg18)"/><path d="M0 90.0 H216.0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg18-53)"/><path d="M108.0 180.0 V0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg18-53)"/><text x="212.5" y="103.1" text-anchor="end" style="font-size:12.0px;fill:var(--doux)">x</text><text x="113.0" y="4.2" text-anchor="start" style="font-size:12.0px;fill:var(--doux)">y</text><text x="9.8" y="103.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−2</text><text x="58.9" y="103.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−1</text><text x="157.1" y="103.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">1</text><text x="206.2" y="103.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">2</text><text x="103.0" y="153.8" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">−2</text><text x="103.0" y="123.8" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">−1</text><text x="103.0" y="93.8" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">0</text><text x="103.0" y="63.9" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">1</text><text x="103.0" y="33.9" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">2</text><text x="169.5" y="16.0" text-anchor="start" style="font-size:11.5px;fill:var(--fig-trait)">a&gt;0</text><text x="169.5" y="172.0" text-anchor="start" style="font-size:11.5px;fill:var(--meth)">a&lt;0</text></svg><figcaption>Courbes de \(x\mapsto\frac12x^3\) et \(x\mapsto-\frac12x^3\)</figcaption></figure>
+</div>
+  </div>
+  <div class="bloc ex"><div class="tag">Démonstration</div>
+<p>Pour tout \(x\in\mathbb{R}\) : \(-x\in\mathbb{R}\) et \(f(-x)=a(-x)^3=-ax^3=-f(x)\) ; donc \(f\) est impaire et on l'étudie sur \([0;+\infty[\).<br> Soient \(x,y\in[0;+\infty[\) tels que \(x&lt;y\). Comme \(x\) et \(y\) sont positifs, \(x^3&lt;y^3\).</p>
+<ul>
+  <li>Si \(a&gt;0\) : \(ax^3&lt;ay^3\), c'est-à-dire \(f(x)&lt;f(y)\). Donc \(f\) est strictement croissante sur \([0;+\infty[\), et, comme elle est impaire, aussi sur \(]-\infty;0]\) : elle est strictement croissante sur \(\mathbb{R}\).</li>
+  <li>Si \(a&lt;0\) : \(ax^3&gt;ay^3\), c'est-à-dire \(f(x)&gt;f(y)\). On obtient de même que \(f\) est strictement décroissante sur \(\mathbb{R}\).</li>
+</ul>
+  </div>
+  <h3><span class="n">VIII.2</span>La fonction \(f : x\mapsto\sqrt{x+a}\)</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<div class="avec-fig">
+<div>
+<p>La fonction \(f : x\mapsto\sqrt{x+a}\) est définie sur \(D_f=[-a;+\infty[\) et elle est <strong>strictement croissante</strong> sur \(D_f\).</p>
+<figure class="fig tabvar"><svg viewBox="-6.0 -6.0 198.0 62.8" role="img" aria-label="Tableau"><defs><marker id="mg22-237" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fig-trait)"/></marker></defs><path d="M0 0 H186.0 V49.4 H0 Z" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M64 0 V49.4" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 18.2 H186.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><text x="32.0" y="13.6" text-anchor="middle" style="font-size:13.0px">x</text><text x="32.0" y="38.3" text-anchor="middle" style="font-size:13.0px">f(x)</text><text x="86.0" y="13.6" text-anchor="middle" style="font-size:13.0px">-a</text><text x="164.0" y="13.6" text-anchor="middle" style="font-size:13.0px">+∞</text><text x="86.0" y="46.9" text-anchor="middle" style="font-size:13.0px">0</text><path d="M98.0 32.4 L152.0 31.2" fill="none" stroke="var(--fig-trait)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg22-237)"/></svg></figure>
+</div>
+<figure class="fig"><svg viewBox="-6.0 -13.8 228.0 171.0" role="img" aria-label="Figure"><defs><clipPath id="cg21"><rect x="-2" y="-2" width="220.0" height="155.2"/></clipPath><marker id="mg21-53" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M27.0 0 V151.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M54.0 0 V151.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M81.0 0 V151.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M108.0 0 V151.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M135.0 0 V151.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M162.0 0 V151.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M189.0 0 V151.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 84.0 H216.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 42.0 H216.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M27.0 126.0 L28.6 115.9 L30.2 111.7 L31.7 108.4 L33.3 105.7 L34.9 103.3 L36.5 101.2 L38.0 99.2 L39.6 97.3 L41.2 95.6 L42.8 93.9 L44.3 92.4 L45.9 90.9 L47.5 89.4 L49.0 88.0 L50.6 86.7 L52.2 85.4 L53.8 84.2 L55.3 83.0 L56.9 81.8 L58.5 80.6 L60.1 79.5 L61.6 78.4 L63.2 77.4 L64.8 76.3 L66.4 75.3 L68.0 74.3 L69.5 73.3 L71.1 72.3 L72.7 71.4 L74.2 70.4 L75.8 69.5 L77.4 68.6 L79.0 67.7 L80.5 66.9 L82.1 66.0 L83.7 65.1 L85.3 64.3 L86.9 63.5 L88.4 62.7 L90.0 61.8 L91.6 61.0 L93.2 60.3 L94.7 59.5 L96.3 58.7 L97.9 58.0 L99.4 57.2 L101.0 56.5 L102.6 55.7 L104.2 55.0 L105.8 54.3 L107.3 53.6 L108.9 52.9 L110.5 52.2 L112.1 51.5 L113.6 50.8 L115.2 50.1 L116.8 49.4 L118.3 48.7 L119.9 48.1 L121.5 47.4 L123.1 46.8 L124.7 46.1 L126.2 45.5 L127.8 44.8 L129.4 44.2 L130.9 43.6 L132.5 43.0 L134.1 42.4 L135.7 41.7 L137.2 41.1 L138.8 40.5 L140.4 39.9 L142.0 39.3 L143.5 38.7 L145.1 38.2 L146.7 37.6 L148.3 37.0 L149.8 36.4 L151.4 35.8 L153.0 35.3 L154.6 34.7 L156.2 34.1 L157.7 33.6 L159.3 33.0 L160.9 32.5 L162.4 31.9 L164.0 31.4 L165.6 30.8 L167.2 30.3 L168.8 29.8 L170.3 29.2 L171.9 28.7 L173.5 28.2 L175.1 27.7 L176.6 27.1 L178.2 26.6 L179.8 26.1 L181.3 25.6 L182.9 25.1 L184.5 24.6 L186.1 24.1 L187.7 23.6 L189.2 23.1 L190.8 22.6 L192.4 22.1 L194.0 21.6 L195.5 21.1 L197.1 20.6 L198.7 20.1 L200.2 19.6 L201.8 19.1 L203.4 18.6 L205.0 18.2 L206.6 17.7 L208.1 17.2 L209.7 16.7 L211.3 16.3 L212.9 15.8 L214.4 15.3 L216.0 14.9" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg21)"/><path d="M0 126.0 H216.0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg21-53)"/><path d="M81.0 151.2 V0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg21-53)"/><text x="212.5" y="139.1" text-anchor="end" style="font-size:12.0px;fill:var(--doux)">x</text><text x="86.0" y="4.2" text-anchor="start" style="font-size:12.0px;fill:var(--doux)">y</text><text x="27.0" y="139.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−2</text><text x="54.0" y="139.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−1</text><text x="81.0" y="139.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">0</text><text x="108.0" y="139.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">1</text><text x="135.0" y="139.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">2</text><text x="162.0" y="139.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">3</text><text x="189.0" y="139.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">4</text><text x="76.0" y="87.8" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">1</text><text x="76.0" y="45.9" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">2</text><circle cx="27.0" cy="126.0" r="1.8" fill="var(--fig-trait)" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><figcaption>Courbe de \(x\mapsto\sqrt{x+2}\) (\(a=2\))</figcaption></figure>
+</div>
+  </div>
+  <div class="bloc ex"><div class="tag">Démonstration</div>
+<p>Soient \(x,y\in[-a;+\infty[\) tels que \(x&lt;y\). Alors \(0\le x+a&lt;y+a\), donc \(\sqrt{x+a}&lt;\sqrt{y+a}\) (la fonction racine carrée est strictement croissante sur \(\mathbb{R}_+\)), c'est-à-dire \(f(x)&lt;f(y)\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 11</div>
+<p>On considère les fonctions \(f\) et \(g\) définies par \(f(x)=\sqrt{x+2}\) et \(g(x)=-x^3\) ; on note \((\mathcal{C}_f)\) et \((\mathcal{C}_g)\) leurs courbes dans un repère \((O;\vec i;\vec j)\).</p>
+<ol>
+  <li>Étudier les variations de \(f\) et de \(g\).</li>
+  <li>Construire \((\mathcal{C}_f)\) et \((\mathcal{C}_g)\) dans le même repère.</li>
+  <li>Résoudre graphiquement, sur \([-2;+\infty[\), l'inéquation \(\sqrt{x+2}+x^3&lt;0\).</li>
+</ol>
+  </div>
+  <div class="bloc app"><div class="tag">Application 12</div>
+<p>Soient \(f\) et \(g\) les fonctions définies par \(f(x)=x^2-x\) et \(g(x)=\sqrt{x+2}\), et \((\mathcal{C}_f)\), \((\mathcal{C}_g)\) leurs courbes dans un repère orthonormé.</p>
+<ol>
+  <li><ol class="alpha">
+  <li>Déterminer \(D_g\), puis vérifier que \(f(2)=g(2)\).</li>
+  <li>Représenter \((\mathcal{C}_f)\) et \((\mathcal{C}_g)\) dans le même repère.</li>
+  <li>Déterminer graphiquement \(f\!\left(\left]-\infty;\tfrac12\right]\right)\).</li>
+  <li>Résoudre graphiquement, sur \([-2;+\infty[\), l'inéquation \(x^2-x-\sqrt{x+2}\le0\).</li>
+</ol></li>
+  <li>On considère la fonction \(h\) définie sur \(\mathbb{R}\) par \(h(x)=\sqrt{x^2-x+2}\).
+<ol class="alpha">
+  <li>Vérifier que \((\forall x\in\mathbb{R}) : h(x)=(g\circ f)(x)\).</li>
+  <li>En utilisant les variations de \(f\) et de \(g\), déterminer les variations de \(h\) sur \(\left]-\infty;\tfrac12\right]\) et sur \(\left[\tfrac12;+\infty\right[\).</li>
+</ol></li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ IX ============================ -->
+<section class="chap" id="s9" data-toc="Synthèse">
+  <h2><span class="num">IX</span><span class="titre">Synthèse</span></h2>
+  <div class="bloc ret"><div class="tag">À retenir</div>
+<div class="tableau"><table><thead><tr><th scope="col">Pour montrer que…</th><th scope="col">On montre que…</th></tr></thead><tbody><tr><td>\(f\) est majorée par \(M\) sur \(I\)</td><td>\(f(x)-M\le0\) pour tout \(x\in I\)</td></tr><tr><td>\(f\) est minorée par \(m\) sur \(I\)</td><td>\(f(x)-m\ge0\) pour tout \(x\in I\)</td></tr><tr><td>\(f(a)\) est le maximum de \(f\) sur \(I\)</td><td>\(f(x)-f(a)\le0\) pour tout \(x\in I\) (avec \(a\in I\))</td></tr><tr><td>\(f\) est \(T\)-périodique</td><td>\(x\pm T\in D\) et \(f(x+T)=f(x)\) pour tout \(x\in D\)</td></tr><tr><td>\(f\le g\) sur \(D\)</td><td>\(f(x)-g(x)\le0\) pour tout \(x\in D\)</td></tr><tr><td>\(x\in D_{g\circ f}\)</td><td>\(x\in D_f\) et \(f(x)\in D_g\)</td></tr><tr><td>\(g\circ f\) est croissante sur \(I\)</td><td>\(f\) et \(g\) varient dans le même sens (sur \(I\) et sur \(J\supset f(I)\))</td></tr></tbody></table></div>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}

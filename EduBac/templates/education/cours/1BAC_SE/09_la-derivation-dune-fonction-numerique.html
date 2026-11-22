@@ -1,0 +1,288 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : 1ère Bac Sciences — La dérivation (chapitre 9, 14 heures).
+Généré depuis Derivation_1Bac_SE.tex (le PDF d'origine est dans le dossier Cours de la leçon, media/lessons/1BAC_SE/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < », « > » et « & » sont écrits &lt;, &gt; et &amp;.
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">1ère année Bac Sciences</span>
+        <span class="chip or">Chapitre 9</span>
+        <span class="chip">Semestre 2</span>
+      </div>
+      <h1 id="cours-titre">La dérivation</h1>
+      <p class="sous-titre">Volume horaire : 14 heures</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectif"><strong>Contenus</strong>
+<ul>
+  <li>Nombre dérivé ; tangente ; approximation affine.</li>
+  <li>Dérivabilité à droite, à gauche ; demi-tangentes.</li>
+  <li>Fonction dérivée ; dérivées usuelles ; opérations.</li>
+  <li>Dérivée seconde.</li>
+  <li>Dérivée et sens de variation ; extremums.</li>
+  <li>Équation différentielle \(y''+\omega^2y=0\).</li>
+</ul>
+  </div>
+  <div class="cadre objectif"><strong>Capacités attendues</strong>
+<ul>
+  <li>Étudier la dérivabilité d'une fonction en un point et interpréter graphiquement.</li>
+  <li>Déterminer l'équation d'une tangente.</li>
+  <li>Calculer la dérivée d'une fonction.</li>
+  <li>Étudier les variations et les extremums d'une fonction.</li>
+  <li>Résoudre un problème d'optimisation simple.</li>
+</ul>
+  </div>
+
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Dérivabilité en un point">
+  <h2><span class="num">I</span><span class="titre">Dérivabilité en un point</span></h2>
+  <div class="bloc act"><div class="tag">Activité 1 — Vitesse moyenne et vitesse instantanée</div>
+<p>Un mobile parcourt, en \(t\) secondes, la distance \(d(t)=2t^2+t\) (en mètres).</p>
+<ol>
+  <li>Calculer la vitesse moyenne \(V_m=\dfrac{d(4)-d(2)}{4-2}\) entre les instants \(t=2\) et \(t=4\).</li>
+  <li>Soit \(h\neq0\). Montrer que la vitesse moyenne entre les instants \(2\) et \(2+h\) est \(\dfrac{d(2+h)-d(2)}{h}=9+2h\).</li>
+  <li>Vers quelle valeur tend cette vitesse moyenne lorsque \(h\) tend vers \(0\) ?</li>
+</ol>
+<p>Cette limite est la <strong>vitesse instantanée</strong> du mobile à l'instant \(t=2\) ; on l'appelle le <strong>nombre dérivé</strong> de \(d\) en \(2\).</p>
+  </div>
+  <h3><span class="n">I.1</span>Nombre dérivé</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soient \(f\) une fonction définie sur un intervalle ouvert \(I\) et \(a\in I\).<br> On dit que \(f\) est <strong>dérivable en \(a\)</strong> si le taux de variation \(\dfrac{f(x)-f(a)}{x-a}\) admet une <strong>limite finie</strong> \(\ell\) quand \(x\) tend vers \(a\). Ce réel s'appelle le <strong>nombre dérivé</strong> de \(f\) en \(a\) et se note \(f'(a)\) :</p>
+\[ f'(a)=\lim\limits_{x\to a}\frac{f(x)-f(a)}{x-a}=\lim\limits_{h\to0}\frac{f(a+h)-f(a)}{h}. \]
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<p>Si cette limite est infinie ou n'existe pas, \(f\) n'est pas dérivable en \(a\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soit \(f(x)=x^2+3x\). Pour \(x\neq1\) :</p>
+\[ \frac{f(x)-f(1)}{x-1}=\frac{x^2+3x-4}{x-1}=\frac{(x-1)(x+4)}{x-1}=x+4\ \underset{x\to1}{\longrightarrow}\ 5. \]
+<p>Donc \(f\) est dérivable en \(1\) et \(f'(1)=5\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+<p>Étudier la dérivabilité de la fonction en \(a\) et calculer le nombre dérivé :</p>
+\[ \text{1) } f(x)=2x^2-x,\ a=1 \qquad \text{2) } g(x)=\frac{1}{x+1},\ a=0 \qquad \text{3) } h(x)=\sqrt{x},\ a=4. \]
+  </div>
+  <h3><span class="n">I.2</span>Interprétation géométrique – Tangente</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<div class="avec-fig">
+<div>
+<p>Si \(f\) est dérivable en \(a\), la courbe \((\mathcal{C}_f)\) admet au point \(A(a;f(a))\) une <strong>tangente</strong> \((T)\) de <strong>coefficient directeur \(f'(a)\)</strong> : c'est la position limite des sécantes \((AM)\) quand \(M\) se rapproche de \(A\) sur \((\mathcal{C}_f)\).<br> Une équation de la tangente est :</p>
+\[ (T) : \ y=f'(a)(x-a)+f(a). \]
+</div>
+<figure class="fig"><svg viewBox="-6.0 -13.8 235.2 199.8" role="img" aria-label="Figure"><defs><clipPath id="cg1"><rect x="-2" y="-2" width="227.2" height="184.0"/></clipPath><marker id="mg1-880" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M11.2 139.1 L12.8 139.4 L14.5 139.6 L16.2 139.8 L17.9 139.9 L19.5 140.1 L21.2 140.2 L22.9 140.3 L24.6 140.3 L26.2 140.4 L27.9 140.4 L29.6 140.4 L31.2 140.3 L32.9 140.3 L34.6 140.2 L36.3 140.1 L37.9 139.9 L39.6 139.8 L41.3 139.6 L43.0 139.4 L44.6 139.1 L46.3 138.8 L48.0 138.5 L49.7 138.2 L51.3 137.9 L53.0 137.5 L54.7 137.1 L56.4 136.7 L58.0 136.2 L59.7 135.7 L61.4 135.2 L63.1 134.7 L64.7 134.1 L66.4 133.5 L68.1 132.9 L69.8 132.3 L71.4 131.6 L73.1 131.0 L74.8 130.2 L76.4 129.5 L78.1 128.7 L79.8 127.9 L81.5 127.1 L83.1 126.3 L84.8 125.4 L86.5 124.5 L88.2 123.6 L89.8 122.7 L91.5 121.7 L93.2 120.7 L94.9 119.7 L96.5 118.6 L98.2 117.5 L99.9 116.4 L101.6 115.3 L103.2 114.2 L104.9 113.0 L106.6 111.8 L108.3 110.5 L109.9 109.3 L111.6 108.0 L113.3 106.7 L114.9 105.4 L116.6 104.0 L118.3 102.6 L120.0 101.2 L121.6 99.8 L123.3 98.3 L125.0 96.8 L126.7 95.3 L128.3 93.7 L130.0 92.2 L131.7 90.6 L133.4 89.0 L135.0 87.3 L136.7 85.6 L138.4 83.9 L140.1 82.2 L141.7 80.5 L143.4 78.7 L145.1 76.9 L146.8 75.1 L148.4 73.2 L150.1 71.3 L151.8 69.4 L153.4 67.5 L155.1 65.5 L156.8 63.6 L158.5 61.6 L160.1 59.5 L161.8 57.5 L163.5 55.4 L165.2 53.3 L166.8 51.1 L168.5 49.0 L170.2 46.8 L171.9 44.5 L173.5 42.3 L175.2 40.0 L176.9 37.7 L178.6 35.4 L180.2 33.1 L181.9 30.7 L183.6 28.3 L185.3 25.9 L186.9 23.4 L188.6 21.0 L190.3 18.5 L192.0 15.9 L193.6 13.4 L195.3 10.8 L197.0 8.2 L198.6 5.6 L200.3 2.9 L202.0 0.2 L203.7 -2.5 L205.3 -5.2 L207.0 -8.0 L208.7 -10.8 L210.4 -13.6 L212.0 -16.4" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg1)"/><path d="M11.2 163.4 L12.9 162.6 L14.6 161.7 L16.3 160.8 L18.0 159.9 L19.8 159.0 L21.5 158.1 L23.2 157.2 L24.9 156.3 L26.6 155.4 L28.4 154.6 L30.1 153.7 L31.8 152.8 L33.5 151.9 L35.2 151.0 L37.0 150.1 L38.7 149.2 L40.4 148.3 L42.1 147.5 L43.8 146.6 L45.6 145.7 L47.3 144.8 L49.0 143.9 L50.7 143.0 L52.5 142.1 L54.2 141.2 L55.9 140.4 L57.6 139.5 L59.3 138.6 L61.1 137.7 L62.8 136.8 L64.5 135.9 L66.2 135.0 L67.9 134.1 L69.7 133.2 L71.4 132.4 L73.1 131.5 L74.8 130.6 L76.5 129.7 L78.3 128.8 L80.0 127.9 L81.7 127.0 L83.4 126.1 L85.1 125.3 L86.9 124.4 L88.6 123.5 L90.3 122.6 L92.0 121.7 L93.7 120.8 L95.5 119.9 L97.2 119.0 L98.9 118.2 L100.6 117.3 L102.3 116.4 L104.1 115.5 L105.8 114.6 L107.5 113.7 L109.2 112.8 L110.9 111.9 L112.7 111.0 L114.4 110.2 L116.1 109.3 L117.8 108.4 L119.6 107.5 L121.3 106.6 L123.0 105.7 L124.7 104.8 L126.4 103.9 L128.2 103.1 L129.9 102.2 L131.6 101.3 L133.3 100.4 L135.0 99.5 L136.8 98.6 L138.5 97.7 L140.2 96.8 L141.9 96.0 L143.6 95.1 L145.4 94.2 L147.1 93.3 L148.8 92.4 L150.5 91.5 L152.2 90.6 L154.0 89.7 L155.7 88.8 L157.4 88.0 L159.1 87.1 L160.8 86.2 L162.6 85.3 L164.3 84.4 L166.0 83.5 L167.7 82.6 L169.4 81.7 L171.2 80.9 L172.9 80.0 L174.6 79.1 L176.3 78.2 L178.0 77.3 L179.8 76.4 L181.5 75.5 L183.2 74.6 L184.9 73.8 L186.7 72.9 L188.4 72.0 L190.1 71.1 L191.8 70.2 L193.5 69.3 L195.3 68.4 L197.0 67.5 L198.7 66.6 L200.4 65.8 L202.1 64.9 L203.9 64.0 L205.6 63.1 L207.3 62.2 L209.0 61.3 L210.7 60.4 L212.5 59.5 L214.2 58.7 L215.9 57.8 L217.6 56.9" fill="none" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg1)"/><path d="M39.1 172.1 L40.5 170.5 L42.0 169.0 L43.5 167.5 L45.0 165.9 L46.5 164.4 L48.0 162.9 L49.5 161.3 L51.0 159.8 L52.5 158.3 L53.9 156.7 L55.4 155.2 L56.9 153.6 L58.4 152.1 L59.9 150.6 L61.4 149.0 L62.9 147.5 L64.4 146.0 L65.8 144.4 L67.3 142.9 L68.8 141.4 L70.3 139.8 L71.8 138.3 L73.3 136.8 L74.8 135.2 L76.3 133.7 L77.7 132.1 L79.2 130.6 L80.7 129.1 L82.2 127.5 L83.7 126.0 L85.2 124.5 L86.7 122.9 L88.2 121.4 L89.7 119.9 L91.1 118.3 L92.6 116.8 L94.1 115.2 L95.6 113.7 L97.1 112.2 L98.6 110.6 L100.1 109.1 L101.6 107.6 L103.0 106.0 L104.5 104.5 L106.0 103.0 L107.5 101.4 L109.0 99.9 L110.5 98.4 L112.0 96.8 L113.5 95.3 L114.9 93.7 L116.4 92.2 L117.9 90.7 L119.4 89.1 L120.9 87.6 L122.4 86.1 L123.9 84.5 L125.4 83.0 L126.9 81.5 L128.3 79.9 L129.8 78.4 L131.3 76.8 L132.8 75.3 L134.3 73.8 L135.8 72.2 L137.3 70.7 L138.8 69.2 L140.2 67.6 L141.7 66.1 L143.2 64.6 L144.7 63.0 L146.2 61.5 L147.7 60.0 L149.2 58.4 L150.7 56.9 L152.1 55.3 L153.6 53.8 L155.1 52.3 L156.6 50.7 L158.1 49.2 L159.6 47.7 L161.1 46.1 L162.6 44.6 L164.1 43.1 L165.5 41.5 L167.0 40.0 L168.5 38.4 L170.0 36.9 L171.5 35.4 L173.0 33.8 L174.5 32.3 L176.0 30.8 L177.4 29.2 L178.9 27.7 L180.4 26.2 L181.9 24.6 L183.4 23.1 L184.9 21.6 L186.4 20.0 L187.9 18.5 L189.3 16.9 L190.8 15.4 L192.3 13.9 L193.8 12.3 L195.3 10.8 L196.8 9.3 L198.3 7.7 L199.8 6.2 L201.3 4.7 L202.7 3.1 L204.2 1.6 L205.7 0.0 L207.2 -1.5 L208.7 -3.0 L210.2 -4.6 L211.7 -6.1 L213.2 -7.6 L214.6 -9.2 L216.1 -10.7 L217.6 -12.2" fill="none" stroke="var(--meth)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4" clip-path="url(#cg1)"/><path d="M0 151.2 H223.2" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-880)"/><path d="M27.9 180.0 V0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-880)"/><text x="219.7" y="164.3" text-anchor="end" style="font-size:12.0px;fill:var(--doux)">x</text><text x="32.9" y="4.2" text-anchor="start" style="font-size:12.0px;fill:var(--doux)">y</text><circle cx="83.7" cy="126.0" r="2.1" fill="var(--fig-trait)" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="195.3" cy="10.8" r="2.1" fill="var(--fig-trait)" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="87.2" y="138.7" text-anchor="start" style="font-size:11.5px">A</text><text x="191.8" y="7.3" text-anchor="end" style="font-size:11.5px">M</text><text x="200.9" y="77.8" text-anchor="middle" style="font-size:11.5px;fill:var(--fig-accent)">(T)</text><text x="147.9" y="52.6" text-anchor="middle" style="font-size:11.5px;fill:var(--meth)">(AM)</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soit \(f(x)=x^2-x\) et \(a=2\). On a \(f(2)=2\) et \(\dfrac{f(x)-f(2)}{x-2}=\dfrac{x^2-x-2}{x-2}=x+1\to3\), donc \(f'(2)=3\).<br> La tangente à \((\mathcal{C}_f)\) au point \(A(2;2)\) a pour équation \(y=3(x-2)+2\), soit \(y=3x-4\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 2</div>
+<p>Déterminer l'équation de la tangente à la courbe de \(f\) au point d'abscisse \(a\) :</p>
+\[ \text{1) } f(x)=x^2-3x+1,\ a=1 \qquad \text{2) } f(x)=\frac{2}{x},\ a=-1 \qquad \text{3) } f(x)=\sqrt{x+1},\ a=3. \]
+  </div>
+  <h3><span class="n">I.3</span>Approximation affine</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Si \(f\) est dérivable en \(a\), alors pour \(h\) proche de \(0\) :</p>
+\[ f(a+h)\approx f(a)+h\,f'(a). \]
+<p>La fonction \(h\mapsto f(a)+hf'(a)\) s'appelle l'<strong>approximation affine</strong> de \(f\) au voisinage de \(a\) : on remplace la courbe par sa tangente.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>Avec \(f(x)=\sqrt x\) et \(a=4\) : \(f'(4)=\dfrac1{2\sqrt4}=\dfrac14\), donc \(\sqrt{4{,}01}\approx2+0{,}01\times\dfrac14=2{,}0025\) (la calculatrice donne \(2{,}002498\ldots\)).</li>
+  <li>Au voisinage de \(0\) : \((1+h)^2\approx1+2h\), \((1+h)^3\approx1+3h\), \(\sqrt{1+h}\approx1+\dfrac h2\), \(\dfrac1{1+h}\approx1-h\).</li>
+</ul>
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Dérivabilité à droite et à gauche">
+  <h2><span class="num">II</span><span class="titre">Dérivabilité à droite et à gauche</span></h2>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soient \(f\) une fonction et \(a\) un réel.</p>
+<ul>
+  <li>\(f\) est <strong>dérivable à droite</strong> en \(a\) si \(\lim\limits_{x\to a^+}\dfrac{f(x)-f(a)}{x-a}=\ell_d\) (réel) ; on note \(f'_d(a)=\ell_d\).</li>
+  <li>\(f\) est <strong>dérivable à gauche</strong> en \(a\) si \(\lim\limits_{x\to a^-}\dfrac{f(x)-f(a)}{x-a}=\ell_g\) (réel) ; on note \(f'_g(a)=\ell_g\).</li>
+</ul>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>\(f\) est dérivable en \(a\) si et seulement si \(f\) est dérivable à droite et à gauche en \(a\) <strong>et</strong> \(f'_d(a)=f'_g(a)\). Dans ce cas, \(f'(a)=f'_d(a)=f'_g(a)\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soit \(f(x)=|x|\). Pour \(x&gt;0\) : \(\dfrac{f(x)-f(0)}{x}=\dfrac xx=1\), donc \(f'_d(0)=1\). Pour \(x&lt;0\) : \(\dfrac{-x}{x}=-1\), donc \(f'_g(0)=-1\).<br> Comme \(f'_d(0)\neq f'_g(0)\), la fonction valeur absolue n'est <strong>pas dérivable</strong> en \(0\).</p>
+  </div>
+  <h3><span class="n">II.1</span>Interprétation géométrique – Demi-tangentes</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<ul>
+  <li>Si \(f'_d(a)\) existe, \((\mathcal{C}_f)\) admet au point \(A(a;f(a))\) une <strong>demi-tangente à droite</strong> d'équation \(y=f'_d(a)(x-a)+f(a)\), avec \(x\ge a\) (de même à gauche avec \(x\le a\)).</li>
+  <li>Si \(f'_d(a)\neq f'_g(a)\), le point \(A\) est un <strong>point anguleux</strong> : les deux demi-tangentes ne sont pas alignées.</li>
+  <li>Si \(\lim\limits_{x\to a^+}\dfrac{f(x)-f(a)}{x-a}=\pm\infty\) (ou à gauche), \((\mathcal{C}_f)\) admet en \(A\) une <strong>demi-tangente verticale</strong>.</li>
+</ul>
+<div class="figs" style="--n:2"><figure class="fig"><svg viewBox="-6.0 -13.8 213.6 171.3" role="img" aria-label="Figure"><defs><clipPath id="cg6"><rect x="-2" y="-2" width="205.6" height="155.2"/></clipPath><marker id="mg6-880" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M84.0 0 V151.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 100.8 H201.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 16.8 L0.7 17.5 L1.4 18.2 L2.1 18.9 L2.8 19.6 L3.5 20.3 L4.2 21.0 L4.9 21.7 L5.6 22.4 L6.3 23.1 L7.0 23.8 L7.7 24.5 L8.4 25.2 L9.1 25.9 L9.8 26.6 L10.5 27.3 L11.2 28.0 L11.9 28.7 L12.6 29.4 L13.3 30.1 L14.0 30.8 L14.7 31.5 L15.4 32.2 L16.1 32.9 L16.8 33.6 L17.5 34.3 L18.2 35.0 L18.9 35.7 L19.6 36.4 L20.3 37.1 L21.0 37.8 L21.7 38.5 L22.4 39.2 L23.1 39.9 L23.8 40.6 L24.5 41.3 L25.2 42.0 L25.9 42.7 L26.6 43.4 L27.3 44.1 L28.0 44.8 L28.7 45.5 L29.4 46.2 L30.1 46.9 L30.8 47.6 L31.5 48.3 L32.2 49.0 L32.9 49.7 L33.6 50.4 L34.3 51.1 L35.0 51.8 L35.7 52.5 L36.4 53.2 L37.1 53.9 L37.8 54.6 L38.5 55.3 L39.2 56.0 L39.9 56.7 L40.6 57.4 L41.3 58.1 L42.0 58.8 L42.7 59.5 L43.4 60.2 L44.1 60.9 L44.8 61.6 L45.5 62.3 L46.2 63.0 L46.9 63.7 L47.6 64.4 L48.3 65.1 L49.0 65.8 L49.7 66.5 L50.4 67.2 L51.1 67.9 L51.8 68.6 L52.5 69.3 L53.2 70.0 L53.9 70.7 L54.6 71.4 L55.3 72.1 L56.0 72.8 L56.7 73.5 L57.4 74.2 L58.1 74.9 L58.8 75.6 L59.5 76.3 L60.2 77.0 L60.9 77.7 L61.6 78.4 L62.3 79.1 L63.0 79.8 L63.7 80.5 L64.4 81.2 L65.1 81.9 L65.8 82.6 L66.5 83.3 L67.2 84.0 L67.9 84.7 L68.6 85.4 L69.3 86.1 L70.0 86.8 L70.7 87.5 L71.4 88.2 L72.1 88.9 L72.8 89.6 L73.5 90.3 L74.2 91.0 L74.9 91.7 L75.6 92.4 L76.3 93.1 L77.0 93.8 L77.7 94.5 L78.4 95.2 L79.1 95.9 L79.8 96.6 L80.5 97.3 L81.2 98.0 L81.9 98.7 L82.6 99.4 L83.3 100.1 L84.0 100.8" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg6)"/><path d="M84.0 100.8 L84.7 99.3 L85.5 97.9 L86.2 96.4 L86.9 95.0 L87.6 93.5 L88.4 92.1 L89.1 90.6 L89.8 89.2 L90.6 87.7 L91.3 86.2 L92.0 84.8 L92.7 83.3 L93.5 81.9 L94.2 80.4 L94.9 79.0 L95.6 77.5 L96.4 76.0 L97.1 74.6 L97.8 73.1 L98.6 71.7 L99.3 70.2 L100.0 68.8 L100.7 67.3 L101.5 65.9 L102.2 64.4 L102.9 62.9 L103.7 61.5 L104.4 60.0 L105.1 58.6 L105.8 57.1 L106.6 55.7 L107.3 54.2 L108.0 52.8 L108.8 51.3 L109.5 49.8 L110.2 48.4 L110.9 46.9 L111.7 45.5 L112.4 44.0 L113.1 42.6 L113.8 41.1 L114.6 39.6 L115.3 38.2 L116.0 36.7 L116.8 35.3 L117.5 33.8 L118.2 32.4 L118.9 30.9 L119.7 29.5 L120.4 28.0 L121.1 26.5 L121.9 25.1 L122.6 23.6 L123.3 22.2 L124.0 20.7 L124.8 19.3 L125.5 17.8 L126.2 16.4 L127.0 14.9 L127.7 13.4 L128.4 12.0 L129.1 10.5 L129.9 9.1 L130.6 7.6 L131.3 6.2 L132.0 4.7 L132.8 3.2 L133.5 1.8 L134.2 0.3 L135.0 -1.1 L135.7 -2.6 L136.4 -4.0 L137.1 -5.5 L137.9 -6.9 L138.6 -8.4 L139.3 -9.9 L140.1 -11.3 L140.8 -12.8 L141.5 -14.2 L142.2 -15.7 L143.0 -17.1 L143.7 -18.6 L144.4 -20.0 L145.2 -21.5 L145.9 -23.0 L146.6 -24.4 L147.3 -25.9 L148.1 -27.3 L148.8 -28.8 L149.5 -30.2 L150.2 -31.7 L151.0 -33.2 L151.7 -34.6 L152.4 -36.1 L153.2 -37.5 L153.9 -39.0 L154.6 -40.4 L155.3 -41.9 L156.1 -43.3 L156.8 -44.8 L157.5 -46.3 L158.3 -47.7 L159.0 -49.2 L159.7 -50.6 L160.4 -52.1 L161.2 -53.5 L161.9 -55.0 L162.6 -56.4 L163.4 -57.9 L164.1 -59.4 L164.8 -60.8 L165.5 -62.3 L166.3 -63.7 L167.0 -65.2 L167.7 -66.6 L168.4 -68.1 L169.2 -69.6 L169.9 -71.0 L170.6 -72.5 L171.4 -73.9" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg6)"/><path d="M0 134.4 H201.6" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg6-880)"/><path d="M50.4 151.2 V0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg6-880)"/><text x="198.1" y="147.5" text-anchor="end" style="font-size:12.0px;fill:var(--doux)">x</text><text x="55.4" y="4.2" text-anchor="start" style="font-size:12.0px;fill:var(--doux)">y</text><text x="84.0" y="148.2" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">1</text><text x="45.4" y="104.7" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">1</text><circle cx="84.0" cy="100.8" r="2.1" fill="var(--fig-accent)" stroke="var(--fig-accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="87.5" y="113.5" text-anchor="start" style="font-size:11.5px">A</text></svg><figcaption>Point anguleux : \(f'_g(1)=-1\), \(f'_d(1)=2\)</figcaption></figure><figure class="fig"><svg viewBox="-6.0 -13.8 213.6 171.0" role="img" aria-label="Figure"><defs><clipPath id="cg8"><rect x="-2" y="-2" width="205.6" height="155.2"/></clipPath><marker id="mg8-880" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker><marker id="mg8-984" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fig-accent)"/></marker></defs><path d="M21.6 126.8 L23.1 116.9 L24.6 112.7 L26.1 109.6 L27.6 106.9 L29.1 104.6 L30.6 102.4 L32.1 100.5 L33.6 98.7 L35.1 96.9 L36.6 95.3 L38.1 93.8 L39.6 92.3 L41.1 90.9 L42.6 89.6 L44.1 88.3 L45.6 87.0 L47.1 85.8 L48.6 84.6 L50.1 83.4 L51.6 82.3 L53.1 81.2 L54.6 80.1 L56.1 79.1 L57.6 78.0 L59.1 77.0 L60.6 76.0 L62.1 75.1 L63.6 74.1 L65.1 73.2 L66.6 72.3 L68.1 71.4 L69.6 70.5 L71.1 69.6 L72.6 68.8 L74.1 67.9 L75.6 67.1 L77.1 66.3 L78.6 65.4 L80.1 64.6 L81.6 63.8 L83.1 63.1 L84.6 62.3 L86.1 61.5 L87.6 60.8 L89.1 60.0 L90.6 59.3 L92.1 58.6 L93.6 57.8 L95.1 57.1 L96.6 56.4 L98.1 55.7 L99.6 55.0 L101.1 54.3 L102.6 53.7 L104.1 53.0 L105.6 52.3 L107.1 51.6 L108.6 51.0 L110.1 50.3 L111.6 49.7 L113.1 49.1 L114.6 48.4 L116.1 47.8 L117.6 47.2 L119.1 46.5 L120.6 45.9 L122.1 45.3 L123.6 44.7 L125.1 44.1 L126.6 43.5 L128.1 42.9 L129.6 42.3 L131.1 41.7 L132.6 41.2 L134.1 40.6 L135.6 40.0 L137.1 39.4 L138.6 38.9 L140.1 38.3 L141.6 37.8 L143.1 37.2 L144.6 36.7 L146.1 36.1 L147.6 35.6 L149.1 35.0 L150.6 34.5 L152.1 33.9 L153.6 33.4 L155.1 32.9 L156.6 32.4 L158.1 31.8 L159.6 31.3 L161.1 30.8 L162.6 30.3 L164.1 29.8 L165.6 29.3 L167.1 28.8 L168.6 28.3 L170.1 27.8 L171.6 27.3 L173.1 26.8 L174.6 26.3 L176.1 25.8 L177.6 25.3 L179.1 24.8 L180.6 24.3 L182.1 23.8 L183.6 23.3 L185.1 22.9 L186.6 22.4 L188.1 21.9 L189.6 21.4 L191.1 21.0 L192.6 20.5 L194.1 20.0 L195.6 19.6 L197.1 19.1 L198.6 18.7 L200.1 18.2 L201.6 17.8" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg8)"/><path d="M0 126.8 H201.6" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg8-880)"/><path d="M21.6 151.2 V0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg8-880)"/><text x="198.1" y="139.9" text-anchor="end" style="font-size:12.0px;fill:var(--doux)">x</text><text x="26.6" y="4.2" text-anchor="start" style="font-size:12.0px;fill:var(--doux)">y</text><path d="M21.6 126.8 L21.6 63.4" fill="none" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg8-984)"/><text x="25.1" y="139.5" text-anchor="start" style="font-size:11.5px">O</text></svg><figcaption>Demi-tangente verticale en \(O\) pour \(x\mapsto\sqrt x\)</figcaption></figure></div>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soit \(f(x)=\sqrt x\). Pour \(x&gt;0\) : \(\dfrac{\sqrt x-0}{x-0}=\dfrac{1}{\sqrt x}\underset{x\to0^+}{\longrightarrow}+\infty\). La fonction racine n'est pas dérivable à droite en \(0\) et sa courbe admet en \(O\) une demi-tangente verticale dirigée vers le haut.</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 3</div>
+<ol>
+  <li>Étudier la dérivabilité de \(f(x)=|x-3|\) en \(3\), puis interpréter graphiquement.</li>
+  <li>Soit \(g\) la fonction définie par \(g(x)=x^2+x\) si \(x\ge1\) et \(g(x)=3x-1\) si \(x&lt;1\).<br> Étudier la dérivabilité de \(g\) à droite et à gauche en \(1\). Conclure.</li>
+  <li>Soit \(k(x)=\sqrt{x-2}\). Étudier la dérivabilité de \(k\) à droite en \(2\) et interpréter graphiquement.</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Fonction dérivée">
+  <h2><span class="num">III</span><span class="titre">Fonction dérivée</span></h2>
+  <div class="bloc def"><div class="tag">Définition</div>
+<ul>
+  <li>\(f\) est <strong>dérivable sur un intervalle ouvert</strong> \(I\) si elle est dérivable en tout point de \(I\) ; elle est dérivable sur \([a;b[\) si elle est dérivable sur \(]a;b[\) et à droite en \(a\).</li>
+  <li>Si \(f\) est dérivable sur \(I\), la fonction \(f' : x\mapsto f'(x)\) s'appelle la <strong>fonction dérivée</strong> de \(f\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Pour \(f(x)=x^2\) et \(x_0\in\mathbb{R}\) : \(\dfrac{f(x)-f(x_0)}{x-x_0}=\dfrac{x^2-x_0^2}{x-x_0}=x+x_0\to2x_0\). Donc \(f\) est dérivable sur \(\mathbb{R}\) et \(f'(x)=2x\).</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Dérivées des fonctions usuelles</div>
+<div class="tableau"><table><thead><tr><th scope="col">\(f(x)\)</th><th scope="col">\(f'(x)\)</th><th scope="col">Intervalle</th><th scope="col">\(f(x)\)</th><th scope="col">\(f'(x)\)</th><th scope="col">Intervalle</th></tr></thead><tbody><tr><td>\(k\) (constante)</td><td>\(0\)</td><td>\(\mathbb{R}\)</td><td>\(\dfrac1x\)</td><td>\(-\dfrac{1}{x^2}\)</td><td>\(]-\infty;0[\) ou \(]0;+\infty[\)</td></tr><tr><td>\(ax+b\)</td><td>\(a\)</td><td>\(\mathbb{R}\)</td><td>\(\sqrt x\)</td><td>\(\dfrac{1}{2\sqrt x}\)</td><td>\(]0;+\infty[\)</td></tr><tr><td>\(x^n\) (\(n\in\mathbb{N}^*\))</td><td>\(nx^{n-1}\)</td><td>\(\mathbb{R}\)</td><td>\(\sin x\)</td><td>\(\cos x\)</td><td>\(\mathbb{R}\)</td></tr><tr><td>\(\dfrac{1}{x^n}\) (\(n\in\mathbb{N}^*\))</td><td>\(-\dfrac{n}{x^{n+1}}\)</td><td>\(\mathbb{R}^*\)</td><td>\(\cos x\)</td><td>\(-\sin x\)</td><td>\(\mathbb{R}\)</td></tr><tr><td></td><td></td><td></td><td>\(\tan x\)</td><td>\(1+\tan^2x=\dfrac{1}{\cos^2x}\)</td><td>\(x\neq\frac\pi2+k\pi\)</td></tr></tbody></table></div>
+  </div>
+  <div class="bloc prop"><div class="tag">Opérations sur les fonctions dérivables</div>
+<p>Soient \(u\) et \(v\) deux fonctions dérivables sur un intervalle \(I\), et \(k\) un réel.</p>
+<div class="tableau"><table><thead><tr><th scope="col">Fonction</th><th scope="col">Dérivée</th><th scope="col">Fonction</th><th scope="col">Dérivée</th></tr></thead><tbody><tr><td>\(u+v\)</td><td>\(u'+v'\)</td><td>\(\dfrac{u}{v}\) (\(v\neq0\))</td><td>\(\dfrac{u'v-uv'}{v^2}\)</td></tr><tr><td>\(ku\)</td><td>\(ku'\)</td><td>\(u^n\) (\(n\in\mathbb{N}^*\))</td><td>\(n\,u'\,u^{n-1}\)</td></tr><tr><td>\(u\times v\)</td><td>\(u'v+uv'\)</td><td>\(\sqrt u\) (\(u&gt;0\))</td><td>\(\dfrac{u'}{2\sqrt u}\)</td></tr><tr><td>\(\dfrac1v\) (\(v\neq0\))</td><td>\(-\dfrac{v'}{v^2}\)</td><td>\(x\mapsto f(ax+b)\)</td><td>\(x\mapsto a\,f'(ax+b)\)</td></tr></tbody></table></div>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<ul>
+  <li>Toute fonction polynôme est dérivable sur \(\mathbb{R}\) ; toute fonction rationnelle est dérivable sur son ensemble de définition.</li>
+  <li>\(\big(\sin(ax+b)\big)'=a\cos(ax+b)\), \(\big(\cos(ax+b)\big)'=-a\sin(ax+b)\), \(\big(\tan(ax+b)\big)'=a\big(1+\tan^2(ax+b)\big)\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>\(f(x)=(x^2+1)(3x-2)\) : \(f'(x)=2x(3x-2)+3(x^2+1)=9x^2-4x+3\).</li>
+  <li>\(g(x)=\dfrac{2x+1}{x-3}\) (\(x\neq3\)) : \(g'(x)=\dfrac{2(x-3)-(2x+1)\times1}{(x-3)^2}=\dfrac{-7}{(x-3)^2}\).</li>
+  <li>\(h(x)=\sqrt{5x^2+1}\) : \(h'(x)=\dfrac{10x}{2\sqrt{5x^2+1}}=\dfrac{5x}{\sqrt{5x^2+1}}\).</li>
+  <li>\(k(x)=\sin(5x+3)\) : \(k'(x)=5\cos(5x+3)\).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 4</div>
+<p>Calculer la dérivée de chacune des fonctions suivantes (en précisant l'intervalle) :</p>
+\[
+\text{1) } f(x)=x^4-3x^2+\frac1x \qquad \text{2) } f(x)=(2x-1)^5 \qquad \text{3) } f(x)=\frac{x^2-1}{x^2+1} \qquad \text{4) } f(x)=x\sqrt x
+\]
+\[
+\text{5) } f(x)=\sqrt{x^2-2x+5} \qquad \text{6) } f(x)=\cos(3x)-2\sin\left(2x-\frac\pi4\right) \qquad \text{7) } f(x)=\tan(2x-1)
+\]
+  </div>
+  <h3><span class="n">III.1</span>Dérivée seconde – Dérivées successives</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Si \(f'\) est dérivable sur \(I\), sa dérivée s'appelle la <strong>dérivée seconde</strong> de \(f\) et se note \(f''\). On définit de même \(f'''\), puis la dérivée d'ordre \(n\), notée \(f^{(n)}\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Pour \(f(x)=x^5\) : \(f'(x)=5x^4\), \(f''(x)=20x^3\), \(f'''(x)=60x^2\).</p>
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Applications de la dérivation">
+  <h2><span class="num">IV</span><span class="titre">Applications de la dérivation</span></h2>
+  <h3><span class="n">IV.1</span>Dérivée et sens de variation</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soit \(f\) une fonction dérivable sur un intervalle \(I\).</p>
+<ul>
+  <li>Si \(f'(x)&gt;0\) pour tout \(x\in I\) (sauf éventuellement en des points isolés où \(f'\) s'annule), alors \(f\) est <strong>strictement croissante</strong> sur \(I\).</li>
+  <li>Si \(f'(x)&lt;0\) pour tout \(x\in I\) (même remarque), alors \(f\) est <strong>strictement décroissante</strong> sur \(I\).</li>
+  <li>Si \(f'(x)=0\) pour tout \(x\in I\), alors \(f\) est <strong>constante</strong> sur \(I\).</li>
+</ul>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Étudier les variations d'une fonction</div>
+<ol>
+  <li>Déterminer le domaine et l'ensemble où \(f\) est dérivable ; calculer \(f'(x)\).</li>
+  <li>Factoriser \(f'(x)\) et étudier son <strong>signe</strong> (tableau de signes).</li>
+  <li>Dresser le <strong>tableau de variations</strong>, en complétant avec les limites et les valeurs des extremums.</li>
+</ol>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<div class="avec-fig">
+<div>
+<p>Soit \(f(x)=x^3-3x+1\) sur \(\mathbb{R}\). On a \(f'(x)=3x^2-3=3(x-1)(x+1)\).<br> \(f'(x)&gt;0\) sur \(]-\infty;-1[\,\cup\,]1;+\infty[\) et \(f'(x)&lt;0\) sur \(]-1;1[\).<br> \(f(-1)=3\) et \(f(1)=-1\).</p>
+</div>
+<figure class="fig tabvar"><svg viewBox="-6.0 -6.7 264.0 84.3" role="img" aria-label="Tableau"><defs><marker id="mg11-938" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fig-trait)"/></marker></defs><path d="M0 0 H252.0 V70.2 H0 Z" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M64 0 V70.2" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 15.6 H252.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 31.2 H252.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><text x="32.0" y="12.3" text-anchor="middle" style="font-size:13.0px">x</text><text x="32.0" y="27.9" text-anchor="middle" style="font-size:13.0px">f'(x)</text><text x="32.0" y="55.2" text-anchor="middle" style="font-size:13.0px">f(x)</text><text x="86.0" y="12.3" text-anchor="middle" style="font-size:13.0px">-∞</text><text x="134.0" y="12.3" text-anchor="middle" style="font-size:13.0px">-1</text><text x="182.0" y="12.3" text-anchor="middle" style="font-size:13.0px">1</text><text x="230.0" y="12.3" text-anchor="middle" style="font-size:13.0px">+∞</text><text x="110.0" y="28.3" text-anchor="middle" style="font-size:14.0px">+</text><text x="134.0" y="27.9" text-anchor="middle" style="font-size:13.0px">0</text><path d="M134.0 15.6 V19.0" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M134.0 27.8 V31.2" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="158.0" y="28.3" text-anchor="middle" style="font-size:14.0px">−</text><text x="182.0" y="27.9" text-anchor="middle" style="font-size:13.0px">0</text><path d="M182.0 15.6 V19.0" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M182.0 27.8 V31.2" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="206.0" y="28.3" text-anchor="middle" style="font-size:14.0px">+</text><text x="86.0" y="67.8" text-anchor="middle" style="font-size:13.0px">-∞</text><text x="134.0" y="48.8" text-anchor="middle" style="font-size:13.0px">3</text><text x="182.0" y="67.8" text-anchor="middle" style="font-size:13.0px">-1</text><text x="230.0" y="48.8" text-anchor="middle" style="font-size:13.0px">+∞</text><path d="M98.0 53.2 L122.0 50.2" fill="none" stroke="var(--fig-trait)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg11-938)"/><path d="M146.0 50.2 L170.0 53.2" fill="none" stroke="var(--fig-trait)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg11-938)"/><path d="M194.0 53.2 L218.0 50.2" fill="none" stroke="var(--fig-trait)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg11-938)"/></svg></figure>
+</div>
+  </div>
+  <h3><span class="n">IV.2</span>Extremums</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(f\) une fonction dérivable sur un intervalle ouvert \(I\) et \(a\in I\).</p>
+<ul>
+  <li>Si \(f\) admet un extremum en \(a\), alors \(f'(a)=0\) : la tangente en \(A(a;f(a))\) est <strong>horizontale</strong>.</li>
+  <li>Si \(f'\) s'annule en \(a\) <strong>en changeant de signe</strong>, alors \(f(a)\) est un <strong>extremum</strong> de \(f\).</li>
+</ul>
+  </div>
+  <div class="bloc att"><div class="tag">Attention — erreurs fréquentes</div>
+<ul>
+  <li>\(f'(a)=0\) ne suffit pas : pour \(f(x)=x^3\), on a \(f'(0)=0\), mais \(f'(x)=3x^2\ge0\) ne change pas de signe : \(f\) est croissante et \(f(0)\) n'est pas un extremum.</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 5</div>
+<ol>
+  <li>Soit \(f(x)=\dfrac{x}{x^2+1}\). Calculer \(f'(x)\), dresser le tableau de variations de \(f\) et déterminer ses extremums.</li>
+  <li>Soit \(g(x)=x^4-2x^3+1\). Montrer que \(g'(x)=2x^2(2x-3)\), puis étudier les extremums de \(g\).</li>
+</ol>
+  </div>
+  <div class="bloc app"><div class="tag">Application — Optimisation</div>
+<p>Un agriculteur veut clôturer un terrain rectangulaire le long d'un mur rectiligne : le côté contre le mur n'a pas besoin de clôture. Il dispose de \(40\) m de grillage. On note \(x\) la longueur (en m) des deux côtés perpendiculaires au mur.</p>
+<ol>
+  <li>Montrer que l'aire du terrain est \(A(x)=x(40-2x)\), avec \(x\in\,]0;20[\).</li>
+  <li>Étudier les variations de \(A\) sur \(]0;20[\).</li>
+  <li>En déduire les dimensions du terrain d'aire maximale, ainsi que cette aire.</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ V ============================ -->
+<section class="chap" id="s5" data-toc="L'équation différentielle y''+ω²y=0">
+  <h2><span class="num">V</span><span class="titre">L'équation différentielle \(y''+\omega^2y=0\)</span></h2>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soit \(\omega\) un réel non nul. On appelle <strong>équation différentielle</strong> \(y''+\omega^2y=0\) l'équation dont l'inconnue est une fonction \(y\) deux fois dérivable sur \(\mathbb{R}\) telle que, pour tout réel \(x\), \(y''(x)+\omega^2y(x)=0\).</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Les solutions de l'équation différentielle \(y''+\omega^2y=0\) sont les fonctions</p>
+\[ x\mapsto\alpha\cos(\omega x)+\beta\sin(\omega x), \qquad \alpha,\beta\in\mathbb{R}. \]
+<p>Si de plus on impose \(y(x_0)=y_0\) et \(y'(x_0)=y_1\), il existe une <strong>unique</strong> solution.</p>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<ul>
+  <li>On vérifie : si \(y=\alpha\cos(\omega x)+\beta\sin(\omega x)\), alors \(y''=-\omega^2\big(\alpha\cos(\omega x)+\beta\sin(\omega x)\big)=-\omega^2y\).</li>
+  <li>Cette équation modélise les <strong>oscillations</strong> en physique (ressort, pendule simple de faible amplitude, circuit LC).</li>
+  <li>Les solutions de \(y''=0\) sont les fonctions affines \(x\mapsto ax+b\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>L'équation \(y''+9y=0\) s'écrit \(y''+3^2y=0\) : ses solutions sont \(y(x)=\alpha\cos3x+\beta\sin3x\), \(\alpha,\beta\in\mathbb{R}\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 7</div>
+<ol>
+  <li>Résoudre les équations différentielles : \(y''+16y=0\) ; \(y''=-y\) ; \(4y''+y=0\).</li>
+  <li>Déterminer la solution \(f\) de l'équation \(y''+4y=0\) qui vérifie \(f(0)=1\) et \(f'(0)=2\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ VI ============================ -->
+<section class="chap" id="s6" data-toc="Synthèse">
+  <h2><span class="num">VI</span><span class="titre">Synthèse</span></h2>
+  <div class="bloc ret"><div class="tag">À retenir</div>
+<div class="tableau"><table><thead><tr><th scope="col">Notion</th><th scope="col">À retenir</th></tr></thead><tbody><tr><td>Nombre dérivé</td><td>\(f'(a)=\lim\limits_{x\to a}\dfrac{f(x)-f(a)}{x-a}\) (limite finie)</td></tr><tr><td>Tangente en \(A(a;f(a))\)</td><td>\(y=f'(a)(x-a)+f(a)\)</td></tr><tr><td>Approximation affine</td><td>\(f(a+h)\approx f(a)+hf'(a)\) pour \(h\) proche de \(0\)</td></tr><tr><td>Dérivabilité en \(a\)</td><td>\(f'_d(a)=f'_g(a)\) ; sinon point anguleux ; limite infinie : demi-tangente verticale</td></tr><tr><td>Opérations</td><td>\((uv)'=u'v+uv'\) ; \(\left(\dfrac uv\right)'=\dfrac{u'v-uv'}{v^2}\) ; \((\sqrt u)'=\dfrac{u'}{2\sqrt u}\)</td></tr><tr><td>Sens de variation</td><td>signe de \(f'\) : \(f'&gt;0\) croissante, \(f'&lt;0\) décroissante</td></tr><tr><td>Extremum en \(a\)</td><td>\(f'\) s'annule en \(a\) en changeant de signe</td></tr><tr><td>\(y''+\omega^2y=0\)</td><td>\(y=\alpha\cos(\omega x)+\beta\sin(\omega x)\)</td></tr></tbody></table></div>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}

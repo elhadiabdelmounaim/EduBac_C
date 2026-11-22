@@ -1,0 +1,249 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : 1ère Bac Sciences — Rotation dans le plan (chapitre 7, 10 heures).
+Généré depuis Rotation_1Bac_SE.tex (le PDF d'origine est dans le dossier Cours de la leçon, media/lessons/1BAC_SE/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < », « > » et « & » sont écrits &lt;, &gt; et &amp;.
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">1ère année Bac Sciences</span>
+        <span class="chip or">Chapitre 7</span>
+        <span class="chip">Semestre 2</span>
+      </div>
+      <h1 id="cours-titre">Rotation dans le plan</h1>
+      <p class="sous-titre">Volume horaire : 10 heures</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectif"><strong>Contenus</strong>
+<ul>
+  <li>Définition d'une rotation ; rotation réciproque.</li>
+  <li>Conservation des distances et des angles orientés.</li>
+  <li>Conservation du barycentre, du milieu, de l'alignement.</li>
+  <li>Images d'une droite, d'un segment, d'un cercle.</li>
+</ul>
+  </div>
+  <div class="cadre objectif"><strong>Capacités attendues</strong>
+<ul>
+  <li>Construire l'image d'une figure par une rotation.</li>
+  <li>Reconnaître une rotation et en déterminer les éléments.</li>
+  <li>Utiliser une rotation pour démontrer une égalité de distances, une orthogonalité, un alignement.</li>
+</ul>
+  </div>
+  <div class="cadre">Dans tout le chapitre, \((P)\) est le plan orienté dans le sens direct.</div>
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Rotation – Rotation réciproque">
+  <h2><span class="num">I</span><span class="titre">Rotation – Rotation réciproque</span></h2>
+  <h3><span class="n">I.1</span>Définition</h3>
+  <div class="bloc act"><div class="tag">Activité 1</div>
+<p>Soient \(\Omega\) et \(A\) deux points distincts du plan. Construire le point \(A'\) tel que</p>
+\[ \Omega A'=\Omega A \qquad\text{et}\qquad \big(\widehat{\overrightarrow{\Omega A},\overrightarrow{\Omega A'}}\big)\equiv\frac\pi4\ [2\pi]. \]
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<div class="avec-fig">
+<div>
+<p>Soient \(\Omega\) un point du plan et \(\alpha\) un réel. La <strong>rotation de centre \(\Omega\) et d'angle \(\alpha\)</strong>, notée \(\mathcal{R}(\Omega;\alpha)\), est la transformation du plan qui associe à tout point \(M\) le point \(M'\) défini par :</p>
+<ul>
+  <li>si \(M=\Omega\) : \(M'=\Omega\) ;</li>
+  <li>si \(M\neq\Omega\) : \(\begin{cases}\Omega M'=\Omega M\\ \big(\widehat{\overrightarrow{\Omega M},\overrightarrow{\Omega M'}}\big)\equiv\alpha\ [2\pi].\end{cases}\)</li>
+</ul>
+<p>On écrit \(\mathcal{R}(M)=M'\) : \(M'\) est l'<strong>image</strong> de \(M\).</p>
+</div>
+<figure class="fig"><svg viewBox="-16.9 -119.7 132.2 144.0" role="img" aria-label="Figure"><defs><marker id="mg1-132" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fig-accent)"/></marker></defs><path d="M0.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M96.8 -17.6" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M25.0 -95.2" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L96.8 -17.6" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L25.0 -95.2" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M35.2 -6.4 A36.1 36.1 0 0 0 8.9 -34.8" fill="none" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-132)"/><text x="35.4" y="-25.7" text-anchor="middle" style="font-size:11.5px;fill:var(--fig-accent)">α</text><path d="M96.8 -17.6 A98.4 98.4 0 0 0 25.0 -95.2" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><circle cx="0.0" cy="-0.0" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-3.5" y="14.3" text-anchor="end" style="font-size:13.5px">Ω</text><circle cx="96.8" cy="-17.6" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="101.8" y="-12.9" text-anchor="start" style="font-size:13.5px">M</text><circle cx="25.0" cy="-95.2" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="25.0" y="-100.2" text-anchor="middle" style="font-size:13.5px">M'</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<div class="avec-fig">
+<div>
+<p>Soit \(ABC\) un triangle équilatéral direct (\(\big(\widehat{\overrightarrow{AB},\overrightarrow{AC}}\big)\equiv\frac\pi3\ [2\pi]\)) et \(I\) le milieu de \([BC]\).</p>
+<ul>
+  <li>\(\mathcal{R}\left(A;\frac\pi3\right)(B)=C\) et \(\mathcal{R}\left(A;-\frac\pi3\right)(C)=B\).</li>
+  <li>\(\mathcal{R}\left(B;\frac\pi3\right)(C)=A\) et \(\mathcal{R}\left(C;\frac\pi3\right)(A)=B\).</li>
+  <li>\(\mathcal{R}(I;\pi)(B)=C\).</li>
+</ul>
+</div>
+<figure class="fig"><svg viewBox="-16.9 -111.1 133.8 135.4" role="img" aria-label="Figure"><defs><marker id="mg2-132" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fig-accent)"/></marker></defs><path d="M0.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M100.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M50.0 -86.6" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M75.0 -43.3" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L100.0 -0.0 L50.0 -86.6 Z" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><circle cx="0.0" cy="-0.0" r="2.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-3.5" y="14.3" text-anchor="end" style="font-size:13.5px">A</text><circle cx="100.0" cy="-0.0" r="2.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="103.5" y="14.3" text-anchor="start" style="font-size:13.5px">B</text><circle cx="50.0" cy="-86.6" r="2.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="50.0" y="-91.6" text-anchor="middle" style="font-size:13.5px">C</text><circle cx="75.0" cy="-43.3" r="2.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="80.0" y="-38.6" text-anchor="start" style="font-size:13.5px">I</text><path d="M27.5 -0.0 A27.5 27.5 0 0 0 13.8 -23.8" fill="none" stroke="var(--fig-accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg2-132)"/><text x="33.8" y="-16.0" text-anchor="middle" style="font-size:10.0px;fill:var(--fig-accent)">π/3</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc prop"><div class="tag">Conséquences</div>
+<p>Soient \(\mathcal{R}=\mathcal{R}(\Omega;\alpha)\) une rotation et \(M\), \(M'\) deux points tels que \(\mathcal{R}(M)=M'\).</p>
+<ul>
+  <li>Si \(M\neq\Omega\) et \(\alpha\not\equiv0\ [2\pi]\), le triangle \(M\Omega M'\) est <strong>isocèle</strong> en \(\Omega\) ; la médiatrice de \([MM']\) passe par \(\Omega\).</li>
+  <li>Si \(\alpha\equiv\pi\ [2\pi]\), la rotation \(\mathcal{R}(\Omega;\pi)\) est la <strong>symétrie centrale</strong> de centre \(\Omega\).</li>
+  <li>Si \(\alpha\equiv0\ [2\pi]\), alors \(\mathcal{R}(M)=M\) pour tout point \(M\) : tous les points du plan sont <strong>invariants</strong> ; c'est l'identité.</li>
+  <li>Si \(\alpha\not\equiv0\ [2\pi]\), le centre \(\Omega\) est le <strong>seul point invariant</strong> par \(\mathcal{R}\).</li>
+</ul>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Déterminer le centre d'une rotation</div>
+<p>Si une rotation d'angle non nul transforme \(A\) en \(A'\) et \(B\) en \(B'\) (avec \(A\neq A'\), \(B\neq B'\)), son centre \(\Omega\) est sur la médiatrice de \([AA']\) et sur celle de \([BB']\) : c'est en général leur <strong>point d'intersection</strong>.</p>
+  </div>
+  <h3><span class="n">I.2</span>Rotation réciproque</h3>
+  <div class="bloc act"><div class="tag">Activité 2</div>
+<p>Soit \(ABCD\) un carré de centre \(O\) tel que \(\big(\widehat{\overrightarrow{AB},\overrightarrow{AD}}\big)\equiv\frac\pi2\ [2\pi]\). On considère les rotations \(\mathcal{R}_1=\mathcal{R}\left(O;\frac\pi2\right)\) et \(\mathcal{R}_2=\mathcal{R}\left(O;-\frac\pi2\right)\).</p>
+<ol>
+  <li>Faire une figure.</li>
+  <li>Compléter :
+\[ \mathcal{R}_1(A)=\dots \qquad \mathcal{R}_1(B)=\dots \qquad \mathcal{R}_1(C)=\dots \qquad \mathcal{R}_1(D)=\dots \]
+\[ \mathcal{R}_2(B)=\dots \qquad \mathcal{R}_2(C)=\dots \qquad \mathcal{R}_2(D)=\dots \qquad \mathcal{R}_2(A)=\dots \]</li>
+  <li>Que remarque-t-on ?</li>
+</ol>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>La rotation \(\mathcal{R}(\Omega;-\alpha)\) s'appelle la <strong>rotation réciproque</strong> de la rotation \(\mathcal{R}(\Omega;\alpha)\) ; on la note \(\mathcal{R}^{-1}\).<br> Pour tous points \(M\) et \(M'\) du plan : \(\mathcal{R}(M)=M'\iff\mathcal{R}^{-1}(M')=M\).</p>
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Propriétés d'une rotation">
+  <h2><span class="num">II</span><span class="titre">Propriétés d'une rotation</span></h2>
+  <h3><span class="n">II.1</span>Rotation et distance</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Si \(A'\) et \(B'\) sont les images respectives de \(A\) et \(B\) par une rotation, alors \(A'B'=AB\).<br> On dit que la rotation <strong>conserve les distances</strong> (c'est une isométrie).</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Démontrer une égalité de longueurs avec une rotation</div>
+<p>Pour montrer que \(MN=PQ\), on cherche une rotation qui transforme \(M\) en \(P\) et \(N\) en \(Q\) (souvent à l'aide d'un triangle équilatéral ou d'un carré présent dans la figure).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+<div class="avec-fig">
+<div>
+<p>Soit \(ABC\) un triangle. On construit, à l'extérieur de ce triangle, deux triangles équilatéraux \(MAB\) et \(NAC\).<br> En utilisant une rotation de centre \(A\), montrer que \(MC=NB\).</p>
+</div>
+<figure class="fig"><svg viewBox="-68.0 -116.1 225.9 142.0" role="img" aria-label="Figure"><path d="M36.0 -78.0 L0.0 -0.0 L-49.5 -70.2 Z" fill="var(--def-bg)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M36.0 -78.0 L108.0 -0.0 L139.5 -101.4 Z" fill="var(--def-bg)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M36.0 -78.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M108.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-49.5 -70.2" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M139.5 -101.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M36.0 -78.0 L0.0 -0.0 L108.0 -0.0 Z" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M36.0 -78.0 L-49.5 -70.2 L0.0 -0.0 M36.0 -78.0 L139.5 -101.4 L108.0 -0.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-49.5 -70.2 L108.0 -0.0 M139.5 -101.4 L0.0 -0.0" fill="none" stroke="var(--meth)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><circle cx="36.0" cy="-78.0" r="2.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="36.0" y="-83.0" text-anchor="middle" style="font-size:13.5px">A</text><circle cx="0.0" cy="-0.0" r="2.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="0.0" y="15.8" text-anchor="middle" style="font-size:13.5px">B</text><circle cx="108.0" cy="-0.0" r="2.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="108.0" y="15.8" text-anchor="middle" style="font-size:13.5px">C</text><circle cx="-49.5" cy="-70.2" r="2.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-54.5" y="-65.5" text-anchor="end" style="font-size:13.5px">M</text><circle cx="139.5" cy="-101.4" r="2.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="144.5" y="-96.6" text-anchor="start" style="font-size:13.5px">N</text></svg></figure>
+</div>
+  </div>
+  <h3><span class="n">II.2</span>Rotation et angles orientés</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soit \(\mathcal{R}\) une rotation d'angle \(\alpha\). Si \(A'\) et \(B'\) sont les images respectives de deux points distincts \(A\) et \(B\), alors :</p>
+\[ \big(\widehat{\overrightarrow{AB},\overrightarrow{A'B'}}\big)\equiv\alpha\ [2\pi]. \]
+<p>Cette propriété permet de déterminer l'<strong>angle</strong> d'une rotation à partir de deux points et de leurs images.</p>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<p>En particulier, si \(\alpha\equiv\frac\pi2\ [2\pi]\) ou \(\alpha\equiv-\frac\pi2\ [2\pi]\), alors \((AB)\perp(A'B')\) : une rotation d'angle droit transforme une droite en une droite <strong>perpendiculaire</strong>.</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 2</div>
+<p>Soient \(OAB\) et \(OCD\) deux triangles rectangles isocèles de sommet commun \(O\) tels que \(\big(\widehat{\overrightarrow{OA},\overrightarrow{OB}}\big)\equiv\frac\pi2\ [2\pi]\) et \(\big(\widehat{\overrightarrow{OC},\overrightarrow{OD}}\big)\equiv\frac\pi2\ [2\pi]\).<br> Montrer que \(AC=BD\) et que \((AC)\perp(BD)\).</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété — Conservation des angles orientés</div>
+<p>Soient \(A\), \(B\), \(C\), \(D\) quatre points tels que \(A\neq B\) et \(C\neq D\), et \(A'\), \(B'\), \(C'\), \(D'\) leurs images par une rotation. Alors :</p>
+\[ \big(\widehat{\overrightarrow{AB},\overrightarrow{CD}}\big)\equiv\big(\widehat{\overrightarrow{A'B'},\overrightarrow{C'D'}}\big)\ [2\pi]. \]
+<p>On dit que la rotation <strong>conserve les mesures des angles orientés</strong>.</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 3</div>
+<p>Soit \(ABC\) un triangle équilatéral tel que \(\big(\widehat{\overrightarrow{AB},\overrightarrow{AC}}\big)\equiv\frac\pi3\ [2\pi]\). On construit, à l'extérieur de ce triangle, un parallélogramme \(BCDE\). Soit \(\mathcal{R}\) la rotation de centre \(A\) et d'angle \(\frac\pi3\).</p>
+<ol>
+  <li>Construire le point \(F=\mathcal{R}(E)\), puis montrer que \(CFD\) est un triangle équilatéral.</li>
+  <li>Montrer que \(\big(\widehat{\overrightarrow{BE},\overrightarrow{BA}}\big)\equiv\big(\widehat{\overrightarrow{CF},\overrightarrow{CA}}\big)\ [2\pi]\).</li>
+  <li>Que peut-on dire du point \(F\) si \(E\) appartient à la droite \((AB)\) ?</li>
+</ol>
+  </div>
+  <h3><span class="n">II.3</span>Rotation et barycentre</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soit \(G\) le barycentre des points pondérés \((A;a)\) et \((B;b)\). Si \(A'\), \(B'\) et \(G'\) sont les images respectives de \(A\), \(B\) et \(G\) par une rotation, alors \(G'\) est le barycentre de \((A';a)\) et \((B';b)\).<br> On dit que la rotation <strong>conserve le barycentre</strong>. Cette propriété s'étend au barycentre de trois ou de quatre points pondérés.</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Conséquences</div>
+<p>Soient \(A\), \(B\), \(C\) trois points et \(A'\), \(B'\), \(C'\) leurs images par une rotation.</p>
+<ul>
+  <li>Si \(I\) est le milieu de \([AB]\), alors son image \(I'\) est le milieu de \([A'B']\) : la rotation <strong>conserve le milieu</strong>.</li>
+  <li>Si \(\overrightarrow{AC}=k\overrightarrow{AB}\) (\(k\in\mathbb{R}\)), alors \(\overrightarrow{A'C'}=k\overrightarrow{A'B'}\) : la rotation <strong>conserve le coefficient de colinéarité</strong> de deux vecteurs, donc elle <strong>conserve l'alignement</strong> des points.</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 4</div>
+<ol>
+  <li>Soient \(ABC\) un triangle, \(D=\operatorname{bar}\{(B;1),(C;2)\}\) et \(\mathcal{R}\) la rotation de centre \(A\) et d'angle \(\frac\pi2\).
+<ol class="alpha">
+  <li>Construire les points \(B'\), \(C'\) et \(D'\), images respectives de \(B\), \(C\) et \(D\) par \(\mathcal{R}\).</li>
+  <li>Montrer que les points \(B'\), \(C'\) et \(D'\) sont alignés.</li>
+</ol></li>
+  <li>Soient \(ABC\) un triangle, \(M\) le point tel que \(\overrightarrow{AM}=\frac23\overrightarrow{AC}\), et \(\mathcal{R}\) la rotation de centre \(B\) et d'angle \(\frac\pi2\).
+<ol class="alpha">
+  <li>Construire les points \(A'\), \(C'\) et \(M'\), images respectives de \(A\), \(C\) et \(M\) par \(\mathcal{R}\).</li>
+  <li>Montrer que les points \(A'\), \(C'\) et \(M'\) sont alignés.</li>
+</ol></li>
+</ol>
+  </div>
+  <div class="bloc app"><div class="tag">Application 5</div>
+<p>Soit \(ABC\) un triangle rectangle isocèle en \(A\) tel que \(\big(\widehat{\overrightarrow{AB},\overrightarrow{AC}}\big)\equiv\frac\pi2\ [2\pi]\), et \(I\) le milieu de \([BC]\). Soient \(E\) et \(F\) les points tels que \(\overrightarrow{AE}=\frac23\overrightarrow{AC}\) et \(\overrightarrow{BF}=\frac23\overrightarrow{BA}\). On considère la rotation \(\mathcal{R}\) de centre \(I\) et d'angle \(\frac\pi2\).</p>
+<ol>
+  <li>Déterminer \(\mathcal{R}(C)\) et \(\mathcal{R}(A)\).</li>
+  <li>En déduire que \(\mathcal{R}(E)=F\), puis que le triangle \(EIF\) est rectangle isocèle en \(I\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Images de quelques figures par une rotation">
+  <h2><span class="num">III</span><span class="titre">Images de quelques figures par une rotation</span></h2>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(\mathcal{R}\) une rotation, et \(A\neq B\), \(O\) des points d'images respectives \(A'\), \(B'\), \(O'\).</p>
+<ul>
+  <li>L'image de la droite \((AB)\) est la droite \((A'B')\).</li>
+  <li>L'image du segment \([AB]\) est le segment \([A'B']\) ; l'image de la demi-droite \([AB)\) est la demi-droite \([A'B')\).</li>
+  <li>L'image du cercle \(\mathcal{C}(O;R)\) de centre \(O\) et de rayon \(R\) est le cercle \(\mathcal{C}'(O';R)\) de centre \(O'\) et de <strong>même rayon</strong> \(R\).</li>
+</ul>
+<div class="figs" style="--n:2"><figure class="fig"><svg viewBox="-56.7 -151.4 207.0 173.6" role="img" aria-label="Figure"><path d="M0.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M40.8 -6.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M102.0 -47.6" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.4 -41.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-29.2 -108.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.3 9.5 L120.4 -59.8" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><text x="125.4" y="-55.8" text-anchor="start" style="font-size:11.5px;fill:var(--fig-trait)">(D)</text><path d="M12.2 -14.4 L-38.0 -128.9" fill="none" stroke="var(--meth)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><text x="-38.0" y="-133.9" text-anchor="middle" style="font-size:11.5px;fill:var(--meth)">(D')</text><path d="M0.0 -0.0 L40.8 -6.8 M0.0 -0.0 L0.4 -41.4 M0.0 -0.0 L102.0 -47.6 M0.0 -0.0 L-29.2 -108.7" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><circle cx="0.0" cy="-0.0" r="1.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-3.5" y="12.7" text-anchor="end" style="font-size:11.5px">Ω</text><circle cx="40.8" cy="-6.8" r="1.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="40.8" y="7.4" text-anchor="middle" style="font-size:11.5px">A</text><circle cx="102.0" cy="-47.6" r="1.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="105.5" y="-34.9" text-anchor="start" style="font-size:11.5px">B</text><circle cx="0.4" cy="-41.4" r="1.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-4.6" y="-37.3" text-anchor="end" style="font-size:11.5px">A'</text><circle cx="-29.2" cy="-108.7" r="1.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-34.2" y="-104.7" text-anchor="end" style="font-size:11.5px">B'</text></svg><figcaption>Image d'une droite</figcaption></figure><figure class="fig"><svg viewBox="-29.1 -125.7 157.2 148.7" role="img" aria-label="Figure"><path d="M0.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M81.6 -10.2" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.1 -82.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="81.6" cy="-10.2" r="27.2" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M81.6 -10.2" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4.1" cy="-82.1" r="27.2" fill="none" stroke="var(--meth)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.1 -82.1" fill="none" stroke="var(--meth)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L81.6 -10.2 M0.0 -0.0 L4.1 -82.1" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><circle cx="0.0" cy="-0.0" r="1.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-3.5" y="12.7" text-anchor="end" style="font-size:11.5px">Ω</text><circle cx="81.6" cy="-10.2" r="1.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="81.6" y="4.0" text-anchor="middle" style="font-size:11.5px">O</text><circle cx="4.1" cy="-82.1" r="1.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-0.9" y="-78.1" text-anchor="end" style="font-size:11.5px">O'</text><text x="119.0" y="-26.6" text-anchor="middle" style="font-size:11.5px;fill:var(--fig-trait)">𝒞</text><text x="30.6" y="-108.2" text-anchor="middle" style="font-size:11.5px;fill:var(--meth)">𝒞'</text></svg><figcaption>Image d'un cercle</figcaption></figure></div>
+  </div>
+  <div class="bloc prop"><div class="tag">Conséquences</div>
+<ul>
+  <li>Les images de deux droites perpendiculaires sont deux droites perpendiculaires.</li>
+  <li>Les images de deux droites parallèles sont deux droites parallèles.</li>
+  <li>Si \(M\) est le point d'intersection de deux droites \((D)\) et \((\Delta)\), alors l'image de \(M\) est le point d'intersection des images de \((D)\) et de \((\Delta)\).</li>
+</ul>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Déterminer l'image d'une droite</div>
+<ul>
+  <li>On choisit deux points de la droite dont on connaît les images ; ou</li>
+  <li>on utilise un point \(A\) de la droite et son image \(A'\) : l'image de \((D)\) est la droite passant par \(A'\) qui fait l'angle \(\alpha\) avec \((D)\) (pour un angle de \(\pm\frac\pi2\), c'est la perpendiculaire à \((D)\) passant par \(A'\)).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 6</div>
+<p>Soient \(ABCD\) un carré tel que \(\big(\widehat{\overrightarrow{AB},\overrightarrow{AD}}\big)\equiv\frac\pi2\ [2\pi]\) et \(E\) un point du segment \([BC]\), distinct de \(B\) et de \(C\). Soit \(F\) le point d'intersection de la droite \((DC)\) avec la perpendiculaire à \((AE)\) passant par \(A\). Soit \(\mathcal{R}\) la rotation de centre \(A\) et d'angle \(\frac\pi2\).</p>
+<ol>
+  <li>Déterminer les images par \(\mathcal{R}\) des droites \((BC)\) et \((AE)\).</li>
+  <li>En déduire l'image du point \(E\) par \(\mathcal{R}\), puis que le triangle \(AEF\) est rectangle isocèle.</li>
+</ol>
+  </div>
+  <div class="bloc app"><div class="tag">Application 7</div>
+<p>Soient \(ABC\) un triangle rectangle isocèle en \(A\) tel que \(\big(\widehat{\overrightarrow{AB},\overrightarrow{AC}}\big)\equiv\frac\pi2\ [2\pi]\), \(I\) le milieu de \([BC]\), et \(\mathcal{R}\) la rotation de centre \(I\) et d'angle \(\frac\pi2\). Soit \((\mathcal{C})\) le cercle de centre \(C\) passant par \(I\).</p>
+<ol>
+  <li>Construire le cercle \((\mathcal{C}')\), image de \((\mathcal{C})\) par \(\mathcal{R}\).</li>
+  <li>Le cercle \((\mathcal{C})\) coupe le segment \([AC]\) en \(E\), et le cercle \((\mathcal{C}')\) coupe le segment \([AB]\) en \(F\). Montrer que \(\mathcal{R}(E)=F\).</li>
+</ol>
+  </div>
+  <div class="bloc app"><div class="tag">Exercice de synthèse</div>
+<p>Soit \(ABCD\) un carré de centre \(O\) tel que \(\big(\widehat{\overrightarrow{AB},\overrightarrow{AD}}\big)\equiv\frac\pi2\ [2\pi]\), et \(I\), \(J\) les points tels que \(\overrightarrow{AI}=\frac32\overrightarrow{AB}\) et \(\overrightarrow{BJ}=\frac32\overrightarrow{BC}\). Les droites \((IC)\) et \((JD)\) coupent respectivement \((BD)\) et \((AC)\) en \(M\) et \(N\). On considère la rotation \(\mathcal{R}\) de centre \(O\) et d'angle \(\frac\pi2\).</p>
+<ol>
+  <li>Déterminer \(\mathcal{R}(A)\), \(\mathcal{R}(B)\) et \(\mathcal{R}(C)\).</li>
+  <li><ol class="alpha">
+  <li>Montrer que \(I\) est le barycentre des points pondérés \((A;1)\) et \((B;-3)\).</li>
+  <li>Montrer que \(\mathcal{R}(I)=J\).</li>
+</ol></li>
+  <li><ol class="alpha">
+  <li>Déterminer l'image de chacune des droites \((BD)\) et \((IC)\).</li>
+  <li>En déduire que \(\mathcal{R}(M)=N\).</li>
+</ol></li>
+  <li><ol class="alpha">
+  <li>Montrer que \(IM=JN\).</li>
+  <li>Montrer que \((CM)\perp(DN)\).</li>
+</ol></li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Synthèse">
+  <h2><span class="num">IV</span><span class="titre">Synthèse</span></h2>
+  <div class="bloc ret"><div class="tag">À retenir</div>
+<div class="tableau"><table><thead><tr><th scope="col">La rotation \(\mathcal{R}(\Omega;\alpha)\)…</th><th scope="col">Traduction</th></tr></thead><tbody><tr><td>transforme \(M\) en \(M'\) (\(M\neq\Omega\))</td><td>\(\Omega M'=\Omega M\) et \(\big(\widehat{\overrightarrow{\Omega M},\overrightarrow{\Omega M'}}\big)\equiv\alpha\ [2\pi]\)</td></tr><tr><td>a pour réciproque</td><td>\(\mathcal{R}^{-1}=\mathcal{R}(\Omega;-\alpha)\)</td></tr><tr><td>conserve les distances</td><td>\(A'B'=AB\)</td></tr><tr><td>« tourne » les vecteurs de \(\alpha\)</td><td>\(\big(\widehat{\overrightarrow{AB},\overrightarrow{A'B'}}\big)\equiv\alpha\ [2\pi]\)</td></tr><tr><td>conserve les angles orientés</td><td>\(\big(\widehat{\overrightarrow{AB},\overrightarrow{CD}}\big)\equiv\big(\widehat{\overrightarrow{A'B'},\overrightarrow{C'D'}}\big)\ [2\pi]\)</td></tr><tr><td>conserve barycentre, milieu, alignement</td><td>\(G=\operatorname{bar}\{(A;a),(B;b)\}\Rightarrow G'=\operatorname{bar}\{(A';a),(B';b)\}\)</td></tr><tr><td>transforme droite, segment, cercle</td><td>en droite, segment, cercle de même rayon</td></tr><tr><td>d'angle \(\pm\frac\pi2\)</td><td>transforme toute droite en une droite perpendiculaire</td></tr></tbody></table></div>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}

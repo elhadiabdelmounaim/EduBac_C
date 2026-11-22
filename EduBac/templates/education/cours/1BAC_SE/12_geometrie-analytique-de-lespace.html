@@ -1,0 +1,317 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : 1ère Bac Sciences — Géométrie analytique de l'espace (chapitre 12, 7 heures).
+Généré depuis Geometrie_analytique_espace_1Bac_SE.tex (le PDF d'origine est dans le dossier Cours de la leçon, media/lessons/1BAC_SE/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < », « > » et « & » sont écrits &lt;, &gt; et &amp;.
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">1ère année Bac Sciences</span>
+        <span class="chip or">Chapitre 12</span>
+        <span class="chip">Semestre 2</span>
+      </div>
+      <h1 id="cours-titre">Géométrie analytique de l'espace</h1>
+      <p class="sous-titre">Volume horaire : 7 heures</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectif"><strong>Contenus</strong>
+<ul>
+  <li>Repère de l'espace, coordonnées d'un point et d'un vecteur.</li>
+  <li>Colinéarité de deux vecteurs ; déterminant de trois vecteurs ; coplanarité.</li>
+  <li>Représentation paramétrique et équations cartésiennes d'une droite.</li>
+  <li>Représentation paramétrique et équation cartésienne d'un plan.</li>
+  <li>Positions relatives de droites et de plans.</li>
+</ul>
+  </div>
+  <div class="cadre objectif"><strong>Capacités attendues</strong>
+<ul>
+  <li>Calculer des coordonnées, un déterminant.</li>
+  <li>Reconnaître des vecteurs colinéaires, coplanaires ; des points alignés, coplanaires.</li>
+  <li>Passer d'une représentation paramétrique à une équation cartésienne et inversement.</li>
+  <li>Étudier la position relative de deux droites, de deux plans, d'une droite et d'un plan.</li>
+</ul>
+  </div>
+
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Repère de l'espace – Coordonnées">
+  <h2><span class="num">I</span><span class="titre">Repère de l'espace – Coordonnées</span></h2>
+  <div class="bloc def"><div class="tag">Définition</div>
+<div class="avec-fig">
+<div>
+<p>Soient \(O\), \(I\), \(J\), \(K\) quatre points <strong>non coplanaires</strong>. On pose \(\vec i=\overrightarrow{OI}\), \(\vec j=\overrightarrow{OJ}\) et \(\vec k=\overrightarrow{OK}\).<br> Pour tout point \(M\) de l'espace, il existe un unique triplet de réels \((x;y;z)\) tel que</p>
+\[ \overrightarrow{OM}=x\vec i+y\vec j+z\vec k. \]
+<ul>
+  <li>\((\vec i;\vec j;\vec k)\) est une <strong>base</strong> de l'espace et \((O;\vec i;\vec j;\vec k)\) un <strong>repère</strong> de l'espace.</li>
+  <li>\((x;y;z)\) sont les <strong>coordonnées</strong> de \(M\) : on écrit \(M(x;y;z)\) ; \(x\) est l'abscisse, \(y\) l'ordonnée et \(z\) la <strong>cote</strong>.</li>
+  <li>\((x;y;z)\) sont aussi les coordonnées du vecteur \(\overrightarrow{OM}\) : on écrit \(\overrightarrow{OM}(x;y;z)\).</li>
+</ul>
+</div>
+<figure class="fig"><svg viewBox="-23.6 -132.4 183.7 156.1" role="img" aria-label="Figure"><defs><marker id="mg1-517" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fig-accent)"/></marker><marker id="mg1-585" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker><marker id="mg1-92" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fig-trait)"/></marker></defs><path d="M137.9 -109.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M137.9 -37.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L122.4 -0.0" fill="none" stroke="var(--doux)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-585)"/><text x="127.4" y="4.0" text-anchor="start" style="font-size:11.5px;fill:var(--doux)">x</text><path d="M0.0 -0.0 L71.3 -51.8" fill="none" stroke="var(--doux)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-585)"/><text x="74.8" y="-55.3" text-anchor="start" style="font-size:11.5px;fill:var(--doux)">y</text><path d="M0.0 -0.0 L0.0 -108.0" fill="none" stroke="var(--doux)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-585)"/><text x="0.0" y="-113.0" text-anchor="middle" style="font-size:11.5px;fill:var(--doux)">z</text><path d="M0.0 -0.0 L36.0 -0.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-92)"/><text x="36.0" y="14.2" text-anchor="middle" style="font-size:11.5px;fill:var(--fig-trait)">i⃗</text><path d="M0.0 -0.0 L19.8 -14.4" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-92)"/><text x="16.3" y="-17.9" text-anchor="end" style="font-size:11.5px;fill:var(--fig-trait)">j⃗</text><path d="M0.0 -0.0 L0.0 -36.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-92)"/><text x="-5.0" y="-32.0" text-anchor="end" style="font-size:11.5px;fill:var(--fig-trait)">k⃗</text><path d="M86.4 -0.0 L137.9 -37.4 L51.5 -37.4" fill="none" stroke="var(--meth)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M137.9 -37.4 L137.9 -109.4" fill="none" stroke="var(--meth)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M0.0 -72.0 L137.9 -109.4" fill="none" stroke="var(--meth)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M0.0 -0.0 L137.9 -109.4" fill="none" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-517)"/><circle cx="137.9" cy="-109.4" r="2.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="141.4" y="-112.9" text-anchor="start" style="font-size:13.5px">M</text><circle cx="137.9" cy="-37.4" r="1.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="141.4" y="-24.7" text-anchor="start" style="font-size:11.5px">M₁</text><text x="-3.5" y="12.7" text-anchor="end" style="font-size:11.5px">O</text></svg><figcaption>\(\overrightarrow{OM}=\underbrace{x\vec i+y\vec j}_{\overrightarrow{OM_1}}+z\vec k\)</figcaption></figure>
+</div>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(\vec{u}(x;y;z)\), \(\vec{v}(x';y';z')\) deux vecteurs, \(\lambda\) un réel, et \(A(x_A;y_A;z_A)\), \(B(x_B;y_B;z_B)\) deux points.</p>
+<ul>
+  <li>\(\vec{u}=\vec{v}\iff x=x'\), \(y=y'\) et \(z=z'\) ; \(\vec{u}+\vec{v}\,(x+x';y+y';z+z')\) ; \(\lambda\vec{u}\,(\lambda x;\lambda y;\lambda z)\).</li>
+  <li>\(\overrightarrow{AB}\,(x_B-x_A;\,y_B-y_A;\,z_B-z_A)\), et le milieu \(I\) de \([AB]\) a pour coordonnées \(\left(\dfrac{x_A+x_B}2;\dfrac{y_A+y_B}2;\dfrac{z_A+z_B}2\right)\).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+<p>Dans un repère \((O;\vec i;\vec j;\vec k)\), on considère le point \(M(1;-2;3)\) et les points \(K\), \(M'\) tels que \(\overrightarrow{OK}=3\vec k\) et \(\overrightarrow{OM'}=\vec i-2\vec j\). Soit \(A\) le milieu de \([KM]\).</p>
+<ol>
+  <li>Déterminer les coordonnées des points \(O\), \(K\), \(M'\) et \(A\).</li>
+  <li>Donner les coordonnées du vecteur \(-2\overrightarrow{KM}\).</li>
+  <li>Montrer que \(OKMM'\) est un parallélogramme.</li>
+</ol>
+  </div>
+<div class="cadre">Dans toute la suite, l'espace est rapporté à un repère \((O;\vec i;\vec j;\vec k)\).</div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Colinéarité – Déterminant – Coplanarité">
+  <h2><span class="num">II</span><span class="titre">Colinéarité – Déterminant – Coplanarité</span></h2>
+  <h3><span class="n">II.1</span>Colinéarité de deux vecteurs</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(\vec{u}(a;b;c)\) et \(\vec{v}(a';b';c')\) deux vecteurs non nuls.</p>
+<ul>
+  <li>\(\vec{u}\) et \(\vec{v}\) sont colinéaires si et seulement s'il existe un réel \(k\) tel que \(a'=ka\), \(b'=kb\) et \(c'=kc\).</li>
+  <li>\(\vec{u}\) et \(\vec{v}\) sont colinéaires si et seulement si les trois déterminants extraits sont nuls :
+\[ \begin{vmatrix} a &amp; a'\\ b &amp; b'\end{vmatrix}=0, \qquad \begin{vmatrix} a &amp; a'\\ c &amp; c'\end{vmatrix}=0 \qquad\text{et}\qquad \begin{vmatrix} b &amp; b'\\ c &amp; c'\end{vmatrix}=0. \]</li>
+  <li>Ils <strong>ne sont pas colinéaires</strong> dès qu'<strong>un seul</strong> de ces trois déterminants est non nul.</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>\(\vec{u}(-2;8;6)\) et \(\vec{v}\left(\frac14;-1;-\frac34\right)\) sont colinéaires : \(\vec{u}=-8\vec{v}\).</li>
+  <li>\(\vec{u}(0;-3;6)\) et \(\vec{v}(0;1;-2)\) sont colinéaires : \(\begin{vmatrix} 0 &amp; 0\\ -3 &amp; 1\end{vmatrix}=0\), \(\begin{vmatrix} 0 &amp; 0\\ 6 &amp; -2\end{vmatrix}=0\) et \(\begin{vmatrix} -3 &amp; 1\\ 6 &amp; -2\end{vmatrix}=6-6=0\).</li>
+  <li>\(\vec{u}(1;1;2)\) et \(\vec{v}(1;0;1)\) ne sont pas colinéaires : \(\begin{vmatrix} 1 &amp; 1\\ 1 &amp; 0\end{vmatrix}=-1\neq0\).</li>
+</ul>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Points alignés</div>
+<p>Trois points \(A\), \(B\), \(C\) sont alignés si et seulement si les vecteurs \(\overrightarrow{AB}\) et \(\overrightarrow{AC}\) sont colinéaires.</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 2</div>
+<ol>
+  <li>Étudier la colinéarité des vecteurs \(\vec{u}\) et \(\vec{v}\) dans chacun des cas :
+\[ \text{a) } \vec{u}(2;\sqrt2;\sqrt8) \text{ et } \vec{v}(\sqrt2;1;2) \qquad\qquad \text{b) } \vec{u}=\vec i+\vec j+2\vec k \text{ et } \vec{v}=2\vec i-\vec j+3\vec k. \]</li>
+  <li>Les points \(A(1;2;3)\), \(B(-1;3;2)\) et \(C(3;-2;1)\) sont-ils alignés ?</li>
+</ol>
+  </div>
+  <h3><span class="n">II.2</span>Déterminant de trois vecteurs</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soient \(\vec{u}(a;b;c)\), \(\vec{v}(a';b';c')\) et \(\vec{w}(a'';b'';c'')\) trois vecteurs. Le <strong>déterminant</strong> de \(\vec{u}\), \(\vec{v}\), \(\vec{w}\) est le réel</p>
+\[ \det(\vec{u};\vec{v};\vec{w})=\begin{vmatrix} a &amp; a' &amp; a''\\ b &amp; b' &amp; b''\\ c &amp; c' &amp; c''\end{vmatrix}
+= a\begin{vmatrix} b' &amp; b''\\ c' &amp; c''\end{vmatrix}-b\begin{vmatrix} a' &amp; a''\\ c' &amp; c''\end{vmatrix}+c\begin{vmatrix} a' &amp; a''\\ b' &amp; b''\end{vmatrix}. \]
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Développer un déterminant</div>
+<p>On développe suivant la première colonne en respectant l'alternance des signes \(+\,-\,+\) : chaque coefficient est multiplié par le déterminant \(2\times2\) obtenu en <strong>supprimant sa ligne et sa colonne</strong>.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Pour \(\vec{u}(-1;2;1)\), \(\vec{v}(1;-3;2)\) et \(\vec{w}(-1;1;4)\) :</p>
+\[ \det(\vec{u};\vec{v};\vec{w})=-1\begin{vmatrix} -3 &amp; 1\\ 2 &amp; 4\end{vmatrix}-2\begin{vmatrix} 1 &amp; -1\\ 2 &amp; 4\end{vmatrix}+1\begin{vmatrix} 1 &amp; -1\\ -3 &amp; 1\end{vmatrix}=-1\times(-14)-2\times6+1\times(-2)=0. \]
+  </div>
+  <h3><span class="n">II.3</span>Vecteurs coplanaires – Points coplanaires</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<ul>
+  <li>Trois vecteurs \(\vec{u}\), \(\vec{v}\) et \(\vec{w}\) sont <strong>coplanaires</strong> si et seulement si \(\det(\vec{u};\vec{v};\vec{w})=0\).</li>
+  <li>Quatre points \(A\), \(B\), \(C\) et \(D\) sont <strong>coplanaires</strong> si et seulement si \(\det\big(\overrightarrow{AB};\overrightarrow{AC};\overrightarrow{AD}\big)=0\).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 3</div>
+<ol>
+  <li>Les vecteurs \(\vec{u}(1;2;3)\), \(\vec{v}(-2;1;-3)\) et \(\vec{w}(1;2;-1)\) sont-ils coplanaires ?</li>
+  <li>Soient \(A(2;3;4)\), \(B(3;4;5)\), \(C(4;2;5)\) et \(D(2;6;5)\). Montrer que les points \(A\), \(B\), \(C\) et \(D\) sont coplanaires.</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Représentation paramétrique d'une droite">
+  <h2><span class="num">III</span><span class="titre">Représentation paramétrique d'une droite</span></h2>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soient \(A(x_A;y_A;z_A)\) un point et \(\vec{u}(a;b;c)\) un vecteur non nul. La droite \(D(A;\vec{u})\) passant par \(A\) et de vecteur directeur \(\vec{u}\) est l'ensemble des points \(M\) tels que \(\overrightarrow{AM}=t\,\vec{u}\) (\(t\in\mathbb{R}\)). Le système</p>
+\[ \begin{cases} x=x_A+at\\ y=y_A+bt\\ z=z_A+ct \end{cases}\qquad (t\in\mathbb{R}) \]
+<p>s'appelle une <strong>représentation paramétrique</strong> de la droite \(D(A;\vec{u})\).</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Un point appartient-il à une droite ?</div>
+<p>On remplace \(x\), \(y\), \(z\) par les coordonnées du point : le point appartient à la droite si et seulement si les trois équations donnent la <strong>même valeur</strong> du paramètre \(t\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>La droite \((AB)\), avec \(A(1;2;-1)\) et \(B(-1;3;1)\), admet \(\overrightarrow{AB}(-2;1;2)\) comme vecteur directeur : \((AB) : \begin{cases} x=1-2t\\ y=2+t\\ z=-1+2t \end{cases}\) \((t\in\mathbb{R})\). Le point \(C(5;0;-5)\) appartient à \((AB)\) (pour \(t=-2\)), mais \(E(1;3;0)\) n'y appartient pas.</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 4</div>
+<ol>
+  <li>Donner une représentation paramétrique de la droite \((D)\) dans chacun des cas :
+<ol class="alpha">
+  <li>\((D)=D(A;\vec{u})\) avec \(A(1;-1;1)\) et \(\vec{u}(1;3;-2)\).</li>
+  <li>\((D)\) passe par les points \(A(1;2;-1)\) et \(B(-1;1;2)\).</li>
+  <li>\((D)\) passe par \(A(-2;1;3)\) et est parallèle à la droite \((\Delta) : \begin{cases} x=3\\ y=1+2t\\ z=5-3t \end{cases}\) \((t\in\mathbb{R})\).</li>
+</ol></li>
+  <li>Soit \((L) : \begin{cases} x=t\\ y=3-t\\ z=1+2t \end{cases}\) \((t\in\mathbb{R})\).
+<ol class="alpha">
+  <li>Donner trois points de \((L)\).</li>
+  <li>Le point \(M(3;0;1)\) appartient-il à \((L)\) ?</li>
+</ol></li>
+</ol>
+  </div>
+  <h3><span class="n">III.1</span>Position relative de deux droites</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \((D)=D(A;\vec{u})\) et \((\Delta)=D(B;\vec{v})\) deux droites.</p>
+<ul>
+  <li>Si \(\vec{u}\) et \(\vec{v}\) sont colinéaires et \(A\in(\Delta)\) : \((D)\) et \((\Delta)\) sont <strong>confondues</strong>.</li>
+  <li>Si \(\vec{u}\) et \(\vec{v}\) sont colinéaires et \(A\notin(\Delta)\) : elles sont <strong>strictement parallèles</strong>.</li>
+  <li>Si \(\vec{u}\) et \(\vec{v}\) ne sont pas colinéaires et \(\det(\overrightarrow{AB};\vec{u};\vec{v})=0\) : elles sont <strong>sécantes</strong> en un point.</li>
+  <li>Si \(\vec{u}\) et \(\vec{v}\) ne sont pas colinéaires et \(\det(\overrightarrow{AB};\vec{u};\vec{v})\neq0\) : elles sont <strong>non coplanaires</strong>.</li>
+</ul>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Point d'intersection de deux droites sécantes</div>
+<p>On écrit les deux représentations paramétriques avec des paramètres <strong>différents</strong> (\(t\) et \(t'\)), on résout le système de trois équations à deux inconnues formé par l'égalité des coordonnées, puis on reporte \(t\) dans la représentation de \((D)\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 5</div>
+<p>Étudier la position relative des droites \((D)\) et \((\Delta)\) dans chacun des cas ; préciser le point d'intersection s'il existe :</p>
+<ol>
+  <li>\((D)=D(A;\vec{u})\) avec \(A(1;0;0)\), \(\vec{u}(1;2;-1)\), et \((\Delta)=D(B;\vec{v})\) avec \(B(0;-4;-3)\), \(\vec{v}(1;3;1)\).</li>
+  <li>\((D) : \begin{cases} x=1+t\\ y=1-t\\ z=1+t \end{cases}\) et \((\Delta) : \begin{cases} x=3+t'\\ y=-1+2t'\\ z=3-t' \end{cases}\)</li>
+  <li>\((D) : \begin{cases} x=1-t\\ y=1+2t\\ z=-2+t \end{cases}\) et \((\Delta) : \begin{cases} x=1-t'\\ y=1+t'\\ z=6+t' \end{cases}\)</li>
+</ol>
+  </div>
+  <h3><span class="n">III.2</span>Équations cartésiennes d'une droite</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soit \((D)\) la droite passant par \(A(x_A;y_A;z_A)\) et de vecteur directeur \(\vec{u}(a;b;c)\).</p>
+<ul>
+  <li>Si \(a\neq0\), \(b\neq0\) et \(c\neq0\) : \(\dfrac{x-x_A}{a}=\dfrac{y-y_A}{b}=\dfrac{z-z_A}{c}\).</li>
+  <li>Si un seul des nombres est nul, par exemple \(a=0\) : \(\begin{cases} x=x_A\\ \dfrac{y-y_A}{b}=\dfrac{z-z_A}{c}. \end{cases}\)</li>
+  <li>Si deux des nombres sont nuls, par exemple \(a=b=0\) : \(\begin{cases} x=x_A\\ y=y_A. \end{cases}\)</li>
+</ul>
+<p>Ces systèmes s'appellent des <strong>équations cartésiennes</strong> de la droite \((D)\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 6</div>
+<ol>
+  <li>Déterminer des équations cartésiennes de la droite passant par \(A(1;-2;3)\) et \(B(-2;-1;4)\).</li>
+  <li>Déterminer des équations cartésiennes de la droite \((D') : \begin{cases} x=1+t\\ y=1\\ z=-3t \end{cases}\) \((t\in\mathbb{R})\).</li>
+  <li>Donner une représentation paramétrique de la droite \((\Delta)\) d'équations \(\dfrac{x-2}{3}=y+4=\dfrac{1-z}{2}\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Plans de l'espace">
+  <h2><span class="num">IV</span><span class="titre">Plans de l'espace</span></h2>
+  <h3><span class="n">IV.1</span>Représentation paramétrique d'un plan</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soient \(A(x_A;y_A;z_A)\) un point et \(\vec{u}(a;b;c)\), \(\vec{v}(a';b';c')\) deux vecteurs <strong>non colinéaires</strong>. Le plan \(P(A;\vec{u};\vec{v})\) passant par \(A\) et de vecteurs directeurs \(\vec{u}\) et \(\vec{v}\) est l'ensemble des points \(M\) tels que \(\overrightarrow{AM}=t\vec{u}+t'\vec{v}\) :</p>
+\[ M(x;y;z)\in P(A;\vec{u};\vec{v})\iff\begin{cases} x=x_A+at+a't'\\ y=y_A+bt+b't'\\ z=z_A+ct+c't' \end{cases}\qquad\big((t;t')\in\mathbb{R}^2\big). \]
+<p>Ce système s'appelle une <strong>représentation paramétrique</strong> du plan.</p>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<p>Le plan \((ABC)\), où \(A\), \(B\), \(C\) sont non alignés, est le plan \(P\big(A;\overrightarrow{AB};\overrightarrow{AC}\big)\).</p>
+  </div>
+  <h3><span class="n">IV.2</span>Équation cartésienne d'un plan</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<ul>
+  <li>Le plan \(P(A;\vec{u};\vec{v})\) est l'ensemble des points \(M\) tels que \(\det\big(\overrightarrow{AM};\vec{u};\vec{v}\big)=0\).</li>
+  <li>En développant ce déterminant, on obtient une équation de la forme \(ax+by+cz+d=0\), avec \((a;b;c)\neq(0;0;0)\) : c'est une <strong>équation cartésienne</strong> du plan.</li>
+  <li>Réciproquement, tout ensemble de points d'équation \(ax+by+cz+d=0\) avec \((a;b;c)\neq(0;0;0)\) est un plan.</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Équation du plan passant par \(A(1;-2;1)\) et de vecteurs directeurs \(\vec{u}(1;-2;1)\) et \(\vec{v}(1;1;3)\) :</p>
+\[ \det\big(\overrightarrow{AM};\vec{u};\vec{v}\big)=\begin{vmatrix} x-1 &amp; 1 &amp; 1\\ y+2 &amp; -2 &amp; 1\\ z-1 &amp; 1 &amp; 3\end{vmatrix}=(x-1)(-7)-(y+2)(2)+(z-1)(3)=-7x-2y+3z=0. \]
+<p>Une équation du plan est \(7x+2y-3z=0\).</p>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<p>Le vecteur \(\vec w(\alpha;\beta;\gamma)\) est un vecteur directeur du plan d'équation \(ax+by+cz+d=0\) si et seulement si \(a\alpha+b\beta+c\gamma=0\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 7</div>
+<p>Donner une représentation paramétrique, puis une équation cartésienne, du plan \((P)\) dans chacun des cas :</p>
+<ol>
+  <li>\((P)\) passe par \(A(1;2;3)\) et a pour vecteurs directeurs \(\vec{u}(1;-1;2)\) et \(\vec{v}(-3;2;1)\).</li>
+  <li>\((P)\) passe par les points \(A(1;2;3)\), \(B(-1;0;1)\) et \(C(3;2;-1)\).</li>
+</ol>
+  </div>
+  <h3><span class="n">IV.3</span>Position relative de deux plans</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \((P) : ax+by+cz+d=0\) et \((Q) : a'x+b'y+c'z+d'=0\).</p>
+<ul>
+  <li>\((P)\) et \((Q)\) sont <strong>sécants suivant une droite</strong> si et seulement si \((a;b;c)\) et \((a';b';c')\) ne sont pas proportionnels, c'est-à-dire \(ab'-ba'\neq0\) ou \(ac'-ca'\neq0\) ou \(bc'-cb'\neq0\).</li>
+  <li>\((P)\) et \((Q)\) sont <strong>confondus</strong> si et seulement s'il existe \(k\neq0\) tel que \(a'=ka\), \(b'=kb\), \(c'=kc\) et \(d'=kd\).</li>
+  <li>\((P)\) et \((Q)\) sont <strong>strictement parallèles</strong> si et seulement s'il existe \(k\neq0\) tel que \(a'=ka\), \(b'=kb\), \(c'=kc\) et \(d'\neq kd\).</li>
+</ul>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Droite d'intersection de deux plans sécants</div>
+<p>On résout le système des deux équations en prenant l'une des inconnues comme paramètre (par exemple \(z=t\)) : on obtient une représentation paramétrique de la droite d'intersection.</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 8</div>
+<p>Étudier la position relative des plans \((P)\) et \((Q)\) dans chacun des cas :</p>
+<ol>
+  <li>\((P) : 2x+3y-z+1=0\) et \((Q) : -x+2y+z-2=0\).</li>
+  <li>\((P) : 2x-y+z-1=0\) et \((Q) : 6x-3y+3z-3=0\).</li>
+</ol>
+  </div>
+  <h3><span class="n">IV.4</span>Position relative d'une droite et d'un plan</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \((D)=D(A;\vec{w})\) une droite et \((P)=P(B;\vec{u};\vec{v})\) un plan.</p>
+<ul>
+  <li>Si \(\det(\vec{u};\vec{v};\vec{w})\neq0\) : la droite \((D)\) <strong>coupe</strong> (perce) le plan \((P)\) en un seul point.</li>
+  <li>Si \(\det(\vec{u};\vec{v};\vec{w})=0\) et \(A\in(P)\) : la droite \((D)\) est <strong>incluse</strong> dans \((P)\).</li>
+  <li>Si \(\det(\vec{u};\vec{v};\vec{w})=0\) et \(A\notin(P)\) : la droite \((D)\) est <strong>strictement parallèle</strong> à \((P)\).</li>
+</ul>
+<p>Si \((P)\) a pour équation \(ax+by+cz+d=0\) et \(\vec{w}(\alpha;\beta;\gamma)\), la condition \(\det(\vec{u};\vec{v};\vec{w})=0\) équivaut à \(a\alpha+b\beta+c\gamma=0\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soient \((P) : x+y-z+1=0\) et \((D) : x=1+t,\ y=1-t,\ z=1+2t\) (\(t\in\mathbb{R}\)). On remplace dans l'équation de \((P)\) : \((1+t)+(1-t)-(1+2t)+1=0\iff2-2t=0\iff t=1\). La droite \((D)\) coupe \((P)\) au point \(M(2;0;3)\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 9</div>
+<p>Étudier la position relative du plan \((P)\) et de la droite \((D)\) dans chacun des cas :</p>
+<ol>
+  <li>\((P) : x+y-z+1=0\) et \((D) : \begin{cases} x=1+t\\ y=1-t\\ z=1+2t \end{cases}\) \((t\in\mathbb{R})\).</li>
+  <li>\((P) : 5x+2y-3z-10=0\) et \((D) : \begin{cases} x=1+2t\\ y=-1+t\\ z=-2+4t \end{cases}\) \((t\in\mathbb{R})\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ V ============================ -->
+<section class="chap" id="s5" data-toc="Exercice de synthèse">
+  <h2><span class="num">V</span><span class="titre">Exercice de synthèse</span></h2>
+  <div class="bloc app"><div class="tag">Exercice de synthèse</div>
+<p>On considère les points \(A(2;1;-1)\), \(B(1;0;0)\), \(C(-1;1;0)\) et \(E(0;2;-1)\).</p>
+<ol>
+  <li><ol class="alpha">
+  <li>Étudier la colinéarité des vecteurs \(\overrightarrow{AB}\) et \(\overrightarrow{AC}\).</li>
+  <li>Donner une équation cartésienne du plan \((ABC)\).</li>
+  <li>Vérifier que les points \(A\), \(B\), \(C\) et \(E\) sont coplanaires.</li>
+</ol></li>
+  <li>Soit \((\Delta)\) la droite passant par \(O\) et de vecteur directeur \(\vec{u}=\frac13\vec i+\frac16\vec j+\frac19\vec k\).
+<ol class="alpha">
+  <li>Donner une représentation paramétrique et des équations cartésiennes de \((\Delta)\).</li>
+  <li>Montrer que \((\Delta)\) coupe le plan \((ABC)\), puis déterminer les coordonnées de leur point d'intersection \(\Omega\).</li>
+</ol></li>
+  <li>Soit \((P)\) le plan d'équation \(x+y+2z=0\).
+<ol class="alpha">
+  <li>Montrer que \((ABC)\) et \((P)\) se coupent suivant une droite \((\Delta')\).</li>
+  <li>Déterminer une représentation paramétrique de \((\Delta')\).</li>
+</ol></li>
+  <li>Étudier la position relative des droites \((\Delta)\) et \((\Delta')\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ VI ============================ -->
+<section class="chap" id="s6" data-toc="Synthèse">
+  <h2><span class="num">VI</span><span class="titre">Synthèse</span></h2>
+  <div class="bloc ret"><div class="tag">À retenir</div>
+<div class="tableau"><table><thead><tr><th scope="col">Pour montrer que…</th><th scope="col">On vérifie que…</th></tr></thead><tbody><tr><td>\(\vec{u}\) et \(\vec{v}\) sont colinéaires</td><td>les trois déterminants \(2\times2\) extraits sont nuls</td></tr><tr><td>\(A\), \(B\), \(C\) sont alignés</td><td>\(\overrightarrow{AB}\) et \(\overrightarrow{AC}\) sont colinéaires</td></tr><tr><td>\(\vec{u}\), \(\vec{v}\), \(\vec{w}\) sont coplanaires</td><td>\(\det(\vec{u};\vec{v};\vec{w})=0\)</td></tr><tr><td>\(A\), \(B\), \(C\), \(D\) sont coplanaires</td><td>\(\det(\overrightarrow{AB};\overrightarrow{AC};\overrightarrow{AD})=0\)</td></tr><tr><td>\(M\) appartient à \(D(A;\vec{u})\)</td><td>une même valeur de \(t\) dans les trois équations</td></tr><tr><td>\(M\) appartient à \(P(A;\vec{u};\vec{v})\)</td><td>\(\det(\overrightarrow{AM};\vec{u};\vec{v})=0\)</td></tr><tr><td>deux droites sont sécantes</td><td>directions non colinéaires et \(\det(\overrightarrow{AB};\vec{u};\vec{v})=0\)</td></tr><tr><td>une droite coupe un plan</td><td>\(\det(\vec{u};\vec{v};\vec{w})\neq0\) (ou \(a\alpha+b\beta+c\gamma\neq0\))</td></tr><tr><td>deux plans sont parallèles</td><td>coefficients \((a;b;c)\) et \((a';b';c')\) proportionnels</td></tr></tbody></table></div>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}

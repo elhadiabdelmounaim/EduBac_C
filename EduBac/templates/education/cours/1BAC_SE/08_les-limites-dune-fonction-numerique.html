@@ -1,0 +1,369 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : 1ère Bac Sciences — Limites d'une fonction numérique (chapitre 8, 10 heures).
+Généré depuis Limites_1Bac_SE.tex (le PDF d'origine est dans le dossier Cours de la leçon, media/lessons/1BAC_SE/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < », « > » et « & » sont écrits &lt;, &gt; et &amp;.
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">1ère année Bac Sciences</span>
+        <span class="chip or">Chapitre 8</span>
+        <span class="chip">Semestre 2</span>
+      </div>
+      <h1 id="cours-titre">Limites d'une fonction numérique</h1>
+      <p class="sous-titre">Volume horaire : 10 heures</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectif"><strong>Contenus</strong>
+<ul>
+  <li>Limite finie ou infinie en un point ; limite à droite, à gauche.</li>
+  <li>Limites en \(+\infty\) et en \(-\infty\).</li>
+  <li>Limites des polynômes, des fractions rationnelles, de \(\sqrt{f}\).</li>
+  <li>Opérations sur les limites ; formes indéterminées.</li>
+  <li>Limites trigonométriques ; limites et ordre.</li>
+</ul>
+  </div>
+  <div class="cadre objectif"><strong>Capacités attendues</strong>
+<ul>
+  <li>Calculer des limites à l'aide des limites usuelles et des opérations.</li>
+  <li>Lever une indétermination (factorisation, conjugué, terme de plus haut degré).</li>
+  <li>Utiliser les limites trigonométriques usuelles.</li>
+  <li>Utiliser la comparaison pour calculer une limite.</li>
+</ul>
+  </div>
+
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Limite d'une fonction en un point">
+  <h2><span class="num">I</span><span class="titre">Limite d'une fonction en un point</span></h2>
+  <h3><span class="n">I.1</span>Limite finie en un point</h3>
+  <div class="bloc act"><div class="tag">Activité 1</div>
+<div class="avec-fig">
+<div>
+<p>Sur la figure, \(OAB\) est un triangle d'aire \(8\ \text{cm}^2\), avec \(OB=4\), et \(M\) est un point mobile d'abscisse \(x\) sur le segment \([OB]\). On note \(f(x)\) l'aire du triangle \(OAM\).</p>
+<ol>
+  <li>Montrer que \(f(x)=2x\).</li>
+  <li>Que deviennent les valeurs de \(f(x)\) lorsque \(x\) se rapproche de \(4\) ? de \(0\) ?</li>
+</ol>
+<p>On dit que \(f(x)\) <strong>tend vers \(8\)</strong> quand \(x\) tend vers \(4\) et on écrit \(\lim\limits_{x\to4}f(x)=8\) ; de même \(\lim\limits_{x\to0}f(x)=0\).</p>
+</div>
+<figure class="fig"><svg viewBox="-9.7 -160.5 155.4 202.9" role="img" aria-label="Figure"><defs><marker id="mg1-488" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fig-accent)"/></marker></defs><path d="M0.0 -0.0 L44.2 -136.0 L88.4 -0.0 Z" fill="var(--def-bg)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M136.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M44.2 -136.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M88.4 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L44.2 -136.0 L136.0 -0.0 Z" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M44.2 -136.0 L88.4 -0.0" fill="none" stroke="var(--meth)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M44.2 -136.0 L44.2 -0.0" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><circle cx="0.0" cy="-0.0" r="2.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="0.0" y="15.8" text-anchor="middle" style="font-size:13.5px">O</text><circle cx="136.0" cy="-0.0" r="2.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="136.0" y="15.8" text-anchor="middle" style="font-size:13.5px">B</text><circle cx="44.2" cy="-136.0" r="2.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="44.2" y="-141.0" text-anchor="middle" style="font-size:13.5px">A</text><circle cx="88.4" cy="-0.0" r="2.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="88.4" y="15.8" text-anchor="middle" style="font-size:13.5px">M</text><path d="M0.0 18.7 L88.4 18.7" fill="none" stroke="var(--fig-accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-488)" marker-start="url(#mg1-488)"/><text x="44.2" y="32.9" text-anchor="middle" style="font-size:11.5px;fill:var(--fig-accent)">x</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soient \(a\) et \(\ell\) deux réels, et \(f\) une fonction définie sur un intervalle \(]a-\alpha;a+\alpha[\) ou sur \(]a-\alpha;a+\alpha[\setminus\{a\}\), avec \(\alpha&gt;0\).<br> Si \(f(x)\) se rapproche autant qu'on veut de \(\ell\) lorsque \(x\) se rapproche de \(a\), on dit que \(f\) a pour limite \(\ell\) en \(a\) et on écrit \(\lim\limits_{x\to a}f(x)=\ell\).</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<ul>
+  <li>Si \(f\) admet une limite en \(a\), cette limite est <strong>unique</strong>.</li>
+  <li>Si \(P\) est un polynôme, alors \(\lim\limits_{x\to a}P(x)=P(a)\) ; si \(Q(a)\neq0\), alors \(\lim\limits_{x\to a}\dfrac{P(x)}{Q(x)}=\dfrac{P(a)}{Q(a)}\).</li>
+  <li>Pour \(a\ge0\) : \(\lim\limits_{x\to a}\sqrt{x}=\sqrt{a}\).</li>
+</ul>
+  </div>
+  <div class="bloc rem"><div class="tag">Formes indéterminées</div>
+<p>Le calcul direct d'une limite conduit parfois à une écriture qui ne permet pas de conclure. Les <strong>formes indéterminées</strong> (F.I.) sont :</p>
+\[ \text{« } \frac00 \text{ »}, \qquad \text{« } \frac{\infty}{\infty} \text{ »}, \qquad \text{« } +\infty-\infty \text{ »}, \qquad \text{« } 0\times\infty \text{ »}. \]
+<p>Il faut alors transformer l'écriture de la fonction pour « lever l'indétermination ».</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Lever une indétermination « \(\frac00\) » en un réel \(a\)</div>
+<ul>
+  <li><strong>Fraction rationnelle :</strong> on factorise le numérateur et le dénominateur par \((x-a)\) (division euclidienne ou identités remarquables), puis on simplifie.</li>
+  <li><strong>Expression avec une racine carrée :</strong> on multiplie par l'<strong>expression conjuguée</strong> (par exemple \(\sqrt{x+1}+2\) pour \(\sqrt{x+1}-2\)).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>\(\lim\limits_{x\to3}\dfrac{\sqrt{x+1}-2}{x-3}\) : forme « \(\frac00\) ». On multiplie par le conjugué :
+\[\begin{aligned}
+  \frac{\sqrt{x+1}-2}{x-3}&amp;=\frac{(\sqrt{x+1}-2)(\sqrt{x+1}+2)}{(x-3)(\sqrt{x+1}+2)}=\frac{x-3}{(x-3)(\sqrt{x+1}+2)}\\
+  &amp;=\frac{1}{\sqrt{x+1}+2}\ \underset{x\to3}{\longrightarrow}\ \frac{1}{\sqrt4+2}=\frac14.
+  \end{aligned}\]</li>
+  <li>\(\lim\limits_{x\to-1}\dfrac{2x^3+2x^2+x+1}{x^2+3x+2}\) : forme « \(\frac00\) ». On a \(2x^3+2x^2+x+1=(x+1)(2x^2+1)\) et \(x^2+3x+2=(x+1)(x+2)\), donc
+\[ \lim\limits_{x\to-1}\frac{2x^3+2x^2+x+1}{x^2+3x+2}=\lim\limits_{x\to-1}\frac{2x^2+1}{x+2}=\frac{2+1}{-1+2}=3. \]</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+<p>Calculer les limites suivantes :</p>
+\[
+\text{1) }\lim\limits_{x\to1}\frac{x+4}{x+5} \qquad
+\text{2) }\lim\limits_{x\to2}\frac{x-2}{x^2-4} \qquad
+\text{3) }\lim\limits_{x\to0}\frac{x^2+3x}{x^2-4x} \qquad
+\text{4) }\lim\limits_{x\to4}\frac{\sqrt{x}-2}{x-4}
+\]
+\[
+\text{5) }\lim\limits_{x\to2}\frac{x^2-x-2}{x^2-3x+2} \qquad
+\text{6) }\lim\limits_{x\to1}\frac{3x^3-4x+1}{x^2-4x+3} \qquad
+\text{7) }\lim\limits_{x\to1}\frac{3x^2-5x+2}{\sqrt{x}-1} \qquad
+\text{8) }\lim\limits_{x\to5}\frac{\sqrt{x-1}-2}{3-\sqrt{x+4}}
+\]
+  </div>
+  <h3><span class="n">I.2</span>Limite infinie en un point – Limite à droite et à gauche</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+<ul>
+  <li>Si \(f(x)\) devient aussi grand que l'on veut lorsque \(x\) se rapproche de \(a\), on écrit \(\lim\limits_{x\to a}f(x)=+\infty\) ; on définit de même \(\lim\limits_{x\to a}f(x)=-\infty\).</li>
+  <li>La <strong>limite à droite</strong> de \(f\) en \(a\), notée \(\lim\limits_{x\to a^+}f(x)\) ou \(\lim\limits_{\substack{x\to a\\ x&gt;a}}f(x)\), est la limite de \(f(x)\) lorsque \(x\) se rapproche de \(a\) en restant <strong>supérieur</strong> à \(a\).</li>
+  <li>La <strong>limite à gauche</strong> de \(f\) en \(a\), notée \(\lim\limits_{x\to a^-}f(x)\) ou \(\lim\limits_{\substack{x\to a\\ x&lt;a}}f(x)\), est la limite lorsque \(x\) se rapproche de \(a\) en restant <strong>inférieur</strong> à \(a\).</li>
+</ul>
+  </div>
+  <div class="bloc prop"><div class="tag">Limites usuelles en \(0\)</div>
+<p>Pour tout \(n\in\mathbb{N}^*\) :</p>
+\[
+\lim\limits_{x\to0^+}\frac1x=+\infty \qquad \lim\limits_{x\to0^-}\frac1x=-\infty \qquad \lim\limits_{x\to0^+}\frac{1}{\sqrt x}=+\infty \qquad \lim\limits_{x\to0^+}\frac{1}{x^n}=+\infty
+\]
+\[
+\lim\limits_{x\to0^-}\frac{1}{x^n}=\begin{cases}+\infty &amp; \text{si } n \text{ est pair}\\ -\infty &amp; \text{si } n \text{ est impair}\end{cases}
+\]
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Limite d'un quotient dont le dénominateur tend vers 0</div>
+<p>Si le numérateur tend vers \(\ell\neq0\) et le dénominateur vers \(0\), la limite est infinie : on détermine son <strong>signe</strong> à l'aide d'un <strong>tableau de signes</strong> du dénominateur (on note \(0^+\) ou \(0^-\)).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<div class="avec-fig">
+<div>
+<p>Calculons \(\lim\limits_{x\to3^+}\dfrac{x+2}{3x-x^2}\) et \(\lim\limits_{x\to3^-}\dfrac{x+2}{3x-x^2}\).<br> On a \(\lim\limits_{x\to3}(x+2)=5\), et d'après le tableau de signes ci-contre :</p>
+<ul>
+  <li>\(\lim\limits_{x\to3^+}(3x-x^2)=0^-\), donc \(\lim\limits_{x\to3^+}\dfrac{x+2}{3x-x^2}=-\infty\) ;</li>
+  <li>\(\lim\limits_{x\to3^-}(3x-x^2)=0^+\), donc \(\lim\limits_{x\to3^-}\dfrac{x+2}{3x-x^2}=+\infty\).</li>
+</ul>
+</div>
+<figure class="fig tabvar"><svg viewBox="-6.0 -6.0 219.0 51.0" role="img" aria-label="Tableau"><path d="M0 0 H207.0 V39.0 H0 Z" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M64 0 V39.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 18.2 H207.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><text x="32.0" y="13.6" text-anchor="middle" style="font-size:13.0px">x</text><text x="32.0" y="33.1" text-anchor="middle" style="font-size:13.0px">3x-x²</text><text x="86.0" y="13.6" text-anchor="middle" style="font-size:13.0px">-∞</text><text x="119.0" y="13.6" text-anchor="middle" style="font-size:13.0px">0</text><text x="152.0" y="13.6" text-anchor="middle" style="font-size:13.0px">3</text><text x="185.0" y="13.6" text-anchor="middle" style="font-size:13.0px">+∞</text><text x="102.5" y="33.5" text-anchor="middle" style="font-size:14.0px">−</text><text x="119.0" y="33.1" text-anchor="middle" style="font-size:13.0px">0</text><path d="M119.0 18.2 V22.8" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M119.0 34.4 V39.0" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="135.5" y="33.5" text-anchor="middle" style="font-size:14.0px">+</text><text x="152.0" y="33.1" text-anchor="middle" style="font-size:13.0px">0</text><path d="M152.0 18.2 V22.8" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M152.0 34.4 V39.0" fill="none" stroke="var(--doux)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="168.5" y="33.5" text-anchor="middle" style="font-size:14.0px">−</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc app"><div class="tag">Application 2</div>
+<p>Calculer les limites suivantes :</p>
+\[
+\text{1) }\lim\limits_{x\to2^+}\frac{x+3}{x-2} \quad
+\text{2) }\lim\limits_{x\to2^-}\frac{x+3}{x-2} \quad
+\text{3) }\lim\limits_{x\to0^+}\frac{x^3-1}{x^2-x} \quad
+\text{4) }\lim\limits_{x\to2^-}\frac{4x^2-x+5}{x-4}
+\]
+\[
+\text{5) }\lim\limits_{x\to-1^+}\frac{3x-2x^2}{x-x^3} \quad
+\text{6) }\lim\limits_{x\to1^-}\frac{2x+3}{1-x^2} \quad
+\text{7) }\lim\limits_{x\to1^-}\frac{x^2-1}{|x-1|} \quad
+\text{8) }\lim\limits_{x\to\frac12^+}\frac{3x^2-x-1}{1-2x}
+\]
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(f\) une fonction, \(a\) un réel et \(\ell\) un réel ou \(\pm\infty\).</p>
+\[ \lim\limits_{x\to a}f(x)=\ell\iff\lim\limits_{x\to a^-}f(x)=\ell \ \text{ et } \ \lim\limits_{x\to a^+}f(x)=\ell. \]
+<p>Si les limites à gauche et à droite en \(a\) sont différentes, \(f\) <strong>n'a pas de limite</strong> en \(a\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soit \(f\) définie par \(f(x)=-x+1\) si \(x\ge3\) et \(f(x)=x^2-4x+1\) si \(x&lt;3\).<br> \(\lim\limits_{x\to3^+}f(x)=-3+1=-2\) et \(\lim\limits_{x\to3^-}f(x)=9-12+1=-2\). Les deux limites sont égales, donc \(\lim\limits_{x\to3}f(x)=-2\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 3</div>
+<ol>
+  <li>Soit \(f\) définie par \(f(x)=\dfrac{x^2-3x+2}{x-1}\) si \(x&lt;1\) et \(f(x)=\dfrac{\sqrt{x}-1}{x-1}\) si \(x&gt;1\).<br> Calculer \(\lim\limits_{x\to1^-}f(x)\) et \(\lim\limits_{x\to1^+}f(x)\). Conclure.</li>
+  <li>Soit \(g\) définie par \(g(x)=\dfrac{x^2+1}{-x+3}\) si \(x\le2\) et \(g(x)=1-ax^2\) si \(x&gt;2\), où \(a\) est un réel.<br> Déterminer \(a\) pour que \(g\) admette une limite en \(2\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Limites en +∞ et en -∞">
+  <h2><span class="num">II</span><span class="titre">Limites en \(+\infty\) et en \(-\infty\)</span></h2>
+  <h3><span class="n">II.1</span>Limite infinie à l'infini</h3>
+  <div class="bloc act"><div class="tag">Activité 2</div>
+<div class="avec-fig">
+<div>
+<p>La figure ci-contre représente la courbe de \(f : x\mapsto x^3\).</p>
+<ol>
+  <li>Que deviennent les valeurs de \(f(x)\) quand \(x\) prend des valeurs de plus en plus grandes ? de plus en plus petites (négatives) ?</li>
+  <li>Traduire ces remarques à l'aide du symbole \(\lim\).</li>
+</ol>
+</div>
+<figure class="fig"><svg viewBox="-6.0 -13.8 213.6 199.8" role="img" aria-label="Figure"><defs><clipPath id="cg3"><rect x="-2" y="-2" width="205.6" height="184.0"/></clipPath><marker id="mg3-894" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M13.1 0 V180.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M57.0 0 V180.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M144.6 0 V180.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M188.5 0 V180.0" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 162.0 H201.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 126.0 H201.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 54.0 H201.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 18.0 H201.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M26.3 178.4 L27.5 174.1 L28.8 169.9 L30.0 165.8 L31.3 161.9 L32.5 158.1 L33.7 154.5 L35.0 151.0 L36.2 147.6 L37.5 144.3 L38.7 141.2 L40.0 138.2 L41.2 135.3 L42.4 132.5 L43.7 129.9 L44.9 127.3 L46.2 124.9 L47.4 122.6 L48.6 120.3 L49.9 118.2 L51.1 116.2 L52.4 114.3 L53.6 112.5 L54.9 110.7 L56.1 109.1 L57.3 107.6 L58.6 106.1 L59.8 104.7 L61.1 103.4 L62.3 102.2 L63.5 101.1 L64.8 100.0 L66.0 99.0 L67.3 98.1 L68.5 97.2 L69.8 96.4 L71.0 95.7 L72.2 95.0 L73.5 94.4 L74.7 93.8 L76.0 93.3 L77.2 92.8 L78.4 92.4 L79.7 92.0 L80.9 91.7 L82.2 91.4 L83.4 91.1 L84.7 90.9 L85.9 90.7 L87.1 90.5 L88.4 90.4 L89.6 90.3 L90.9 90.2 L92.1 90.1 L93.3 90.1 L94.6 90.1 L95.8 90.0 L97.1 90.0 L98.3 90.0 L99.6 90.0 L100.8 90.0 L102.0 90.0 L103.3 90.0 L104.5 90.0 L105.8 90.0 L107.0 89.9 L108.3 89.9 L109.5 89.9 L110.7 89.8 L112.0 89.7 L113.2 89.6 L114.5 89.5 L115.7 89.3 L116.9 89.1 L118.2 88.9 L119.4 88.6 L120.7 88.3 L121.9 88.0 L123.2 87.6 L124.4 87.2 L125.6 86.7 L126.9 86.2 L128.1 85.6 L129.4 85.0 L130.6 84.3 L131.8 83.6 L133.1 82.8 L134.3 81.9 L135.6 81.0 L136.8 80.0 L138.1 78.9 L139.3 77.8 L140.5 76.6 L141.8 75.3 L143.0 73.9 L144.3 72.4 L145.5 70.9 L146.7 69.3 L148.0 67.5 L149.2 65.7 L150.5 63.8 L151.7 61.8 L153.0 59.7 L154.2 57.4 L155.4 55.1 L156.7 52.7 L157.9 50.1 L159.2 47.5 L160.4 44.7 L161.6 41.8 L162.9 38.8 L164.1 35.7 L165.4 32.4 L166.6 29.0 L167.9 25.5 L169.1 21.9 L170.3 18.1 L171.6 14.2 L172.8 10.1 L174.1 5.9 L175.3 1.6" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg3)"/><path d="M0 90.0 H201.6" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg3-894)"/><path d="M100.8 180.0 V0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg3-894)"/><text x="198.1" y="103.1" text-anchor="end" style="font-size:12.0px;fill:var(--doux)">x</text><text x="105.8" y="4.2" text-anchor="start" style="font-size:12.0px;fill:var(--doux)">y</text><text x="13.1" y="103.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−2</text><text x="57.0" y="103.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−1</text><text x="144.6" y="103.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">1</text><text x="188.5" y="103.8" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">2</text><text x="95.8" y="165.8" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">−4</text><text x="95.8" y="129.8" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">−2</text><text x="95.8" y="57.9" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">2</text><text x="95.8" y="21.9" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">4</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(n\in\mathbb{N}^*\) et \(k\in\mathbb{R}^*\).</p>
+\[
+\lim\limits_{x\to+\infty}x^n=+\infty \qquad
+\lim\limits_{x\to-\infty}x^n=\begin{cases}+\infty &amp; n \text{ pair}\\ -\infty &amp; n \text{ impair}\end{cases} \qquad
+\lim\limits_{x\to+\infty}\sqrt{x}=+\infty .
+\]
+<p>La limite de \(kx^n\) s'obtient avec la <strong>règle des signes</strong> : par exemple \(\lim\limits_{x\to-\infty}-2x^3=+\infty\) et \(\lim\limits_{x\to+\infty}-5x^2=-\infty\).</p>
+  </div>
+  <h3><span class="n">II.2</span>Limite finie à l'infini</h3>
+  <div class="bloc act"><div class="tag">Activité 3</div>
+<div class="avec-fig">
+<div>
+<p>La figure ci-contre représente la courbe de \(f : x\mapsto\dfrac{1}{x^2}\).</p>
+<ol>
+  <li>Que deviennent les valeurs de \(f(x)\) quand \(x\) prend des valeurs de plus en plus grandes ? de plus en plus petites ?</li>
+  <li>Traduire ces remarques à l'aide du symbole \(\lim\).</li>
+</ol>
+</div>
+<figure class="fig"><svg viewBox="-7.2 -13.8 214.8 178.2" role="img" aria-label="Figure"><defs><clipPath id="cg4"><rect x="-2" y="-2" width="205.6" height="162.4"/></clipPath><marker id="mg4-894" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M4.8 0 V158.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M52.8 0 V158.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M148.8 0 V158.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M196.8 0 V158.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 96.8 H201.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 52.8 H201.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 8.8 H201.6" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M114.5 5.4 L115.2 18.7 L115.9 30.1 L116.7 40.0 L117.4 48.6 L118.1 56.2 L118.8 62.9 L119.6 68.8 L120.3 74.1 L121.0 78.8 L121.7 83.0 L122.5 86.8 L123.2 90.3 L123.9 93.4 L124.6 96.2 L125.4 98.8 L126.1 101.2 L126.8 103.4 L127.5 105.4 L128.3 107.2 L129.0 108.9 L129.7 110.5 L130.5 112.0 L131.2 113.3 L131.9 114.6 L132.6 115.8 L133.4 116.9 L134.1 117.9 L134.8 118.9 L135.5 119.8 L136.3 120.6 L137.0 121.4 L137.7 122.2 L138.4 122.9 L139.2 123.6 L139.9 124.2 L140.6 124.8 L141.3 125.4 L142.1 125.9 L142.8 126.4 L143.5 126.9 L144.2 127.4 L145.0 127.8 L145.7 128.2 L146.4 128.6 L147.2 129.0 L147.9 129.4 L148.6 129.7 L149.3 130.0 L150.1 130.4 L150.8 130.7 L151.5 130.9 L152.2 131.2 L153.0 131.5 L153.7 131.7 L154.4 132.0 L155.1 132.2 L155.9 132.4 L156.6 132.7 L157.3 132.9 L158.0 133.1 L158.8 133.3 L159.5 133.4 L160.2 133.6 L160.9 133.8 L161.7 134.0 L162.4 134.1 L163.1 134.3 L163.8 134.4 L164.6 134.6 L165.3 134.7 L166.0 134.8 L166.8 135.0 L167.5 135.1 L168.2 135.2 L168.9 135.3 L169.7 135.5 L170.4 135.6 L171.1 135.7 L171.8 135.8 L172.6 135.9 L173.3 136.0 L174.0 136.1 L174.7 136.2 L175.5 136.3 L176.2 136.3 L176.9 136.4 L177.6 136.5 L178.4 136.6 L179.1 136.7 L179.8 136.7 L180.5 136.8 L181.3 136.9 L182.0 137.0 L182.7 137.0 L183.5 137.1 L184.2 137.2 L184.9 137.2 L185.6 137.3 L186.4 137.3 L187.1 137.4 L187.8 137.5 L188.5 137.5 L189.3 137.6 L190.0 137.6 L190.7 137.7 L191.4 137.7 L192.2 137.8 L192.9 137.8 L193.6 137.9 L194.3 137.9 L195.1 137.9 L195.8 138.0 L196.5 138.0 L197.2 138.1 L198.0 138.1 L198.7 138.2 L199.4 138.2 L200.1 138.2 L200.9 138.3 L201.6 138.3" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg4)"/><path d="M0.0 138.3 L0.7 138.3 L1.5 138.2 L2.2 138.2 L2.9 138.2 L3.6 138.1 L4.4 138.1 L5.1 138.0 L5.8 138.0 L6.5 137.9 L7.3 137.9 L8.0 137.9 L8.7 137.8 L9.4 137.8 L10.2 137.7 L10.9 137.7 L11.6 137.6 L12.3 137.6 L13.1 137.5 L13.8 137.5 L14.5 137.4 L15.2 137.3 L16.0 137.3 L16.7 137.2 L17.4 137.2 L18.2 137.1 L18.9 137.0 L19.6 137.0 L20.3 136.9 L21.1 136.8 L21.8 136.7 L22.5 136.7 L23.2 136.6 L24.0 136.5 L24.7 136.4 L25.4 136.3 L26.1 136.3 L26.9 136.2 L27.6 136.1 L28.3 136.0 L29.0 135.9 L29.8 135.8 L30.5 135.7 L31.2 135.6 L31.9 135.5 L32.7 135.3 L33.4 135.2 L34.1 135.1 L34.8 135.0 L35.6 134.8 L36.3 134.7 L37.0 134.6 L37.8 134.4 L38.5 134.3 L39.2 134.1 L39.9 134.0 L40.7 133.8 L41.4 133.6 L42.1 133.4 L42.8 133.3 L43.6 133.1 L44.3 132.9 L45.0 132.7 L45.7 132.4 L46.5 132.2 L47.2 132.0 L47.9 131.7 L48.6 131.5 L49.4 131.2 L50.1 130.9 L50.8 130.7 L51.5 130.4 L52.3 130.0 L53.0 129.7 L53.7 129.4 L54.4 129.0 L55.2 128.6 L55.9 128.2 L56.6 127.8 L57.4 127.4 L58.1 126.9 L58.8 126.4 L59.5 125.9 L60.3 125.4 L61.0 124.8 L61.7 124.2 L62.4 123.6 L63.2 122.9 L63.9 122.2 L64.6 121.4 L65.3 120.6 L66.1 119.8 L66.8 118.9 L67.5 117.9 L68.2 116.9 L69.0 115.8 L69.7 114.6 L70.4 113.3 L71.1 112.0 L71.9 110.5 L72.6 108.9 L73.3 107.2 L74.1 105.4 L74.8 103.4 L75.5 101.2 L76.2 98.8 L77.0 96.2 L77.7 93.4 L78.4 90.3 L79.1 86.8 L79.9 83.0 L80.6 78.8 L81.3 74.1 L82.0 68.8 L82.8 62.9 L83.5 56.2 L84.2 48.6 L84.9 40.0 L85.7 30.1 L86.4 18.7 L87.1 5.4" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg4)"/><path d="M0 140.8 H201.6" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg4-894)"/><path d="M100.8 158.4 V0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg4-894)"/><text x="198.1" y="153.9" text-anchor="end" style="font-size:12.0px;fill:var(--doux)">x</text><text x="105.8" y="4.2" text-anchor="start" style="font-size:12.0px;fill:var(--doux)">y</text><text x="4.8" y="154.6" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−4</text><text x="52.8" y="154.6" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−2</text><text x="148.8" y="154.6" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">2</text><text x="196.8" y="154.6" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">4</text><text x="95.8" y="100.7" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">1</text><text x="95.8" y="56.7" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">2</text><text x="95.8" y="12.7" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">3</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Pour tous \(n\in\mathbb{N}^*\) et \(k\in\mathbb{R}\) : \(\lim\limits_{x\to+\infty}\dfrac{k}{x^n}=0\), \(\lim\limits_{x\to-\infty}\dfrac{k}{x^n}=0\) et \(\lim\limits_{x\to+\infty}\dfrac{k}{\sqrt x}=0\).<br> De plus : \(\lim\limits_{x\to\pm\infty}f(x)=\ell\iff\lim\limits_{x\to\pm\infty}\big(f(x)-\ell\big)=0\).</p>
+  </div>
+  <h3><span class="n">II.3</span>Polynômes et fractions rationnelles à l'infini</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(P\) et \(Q\) deux polynômes de termes de plus haut degré respectifs \(ax^n\) et \(bx^m\). En \(+\infty\) comme en \(-\infty\) :</p>
+\[ \lim P(x)=\lim ax^n \qquad\text{et}\qquad \lim\frac{P(x)}{Q(x)}=\lim\frac{ax^n}{bx^m}. \]
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(\lim\limits_{x\to+\infty}\dfrac{2x^2+5}{4x^2}=\lim\limits_{x\to+\infty}\dfrac{2x^2}{4x^2}=\dfrac12\) et \(\lim\limits_{x\to-\infty}\dfrac{-3x^3+x}{x^3}=\lim\limits_{x\to-\infty}\dfrac{-3x^3}{x^3}=-3\).</p>
+  </div>
+  <div class="bloc att"><div class="tag">Attention — erreurs fréquentes</div>
+<ul>
+  <li>Cette règle du terme de plus haut degré ne s'applique <strong>qu'en \(\pm\infty\)</strong>, jamais en un réel \(a\).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 4</div>
+<p>Calculer les limites suivantes :</p>
+\[
+\text{1) }\lim\limits_{x\to+\infty}(1+5x^2+8x) \qquad
+\text{2) }\lim\limits_{x\to-\infty}(-5x^3+1) \qquad
+\text{3) }\lim\limits_{x\to-\infty}\big(x+(1-\sqrt2)x^2+4\big)
+\]
+\[
+\text{4) }\lim\limits_{x\to+\infty}\frac{4+2x^3}{3x^3+5x^2+1} \qquad
+\text{5) }\lim\limits_{x\to-\infty}\frac{(2-\sqrt3)x^3-x^2}{2x^2-3} \qquad
+\text{6) }\lim\limits_{x\to+\infty}\frac{|x|-3x}{|x+5|} \ \text{ et } \ \lim\limits_{x\to-\infty}\frac{|x|-3x}{|x+5|}
+\]
+  </div>
+  <h3><span class="n">II.4</span>Limite de \(\sqrt{f}\)</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soit \(f\) une fonction positive au voisinage de \(a\) (\(a\) réel ou \(\pm\infty\)).</p>
+<ul>
+  <li>Si \(\lim f(x)=\ell\) avec \(\ell\ge0\), alors \(\lim\sqrt{f(x)}=\sqrt{\ell}\).</li>
+  <li>Si \(\lim f(x)=+\infty\), alors \(\lim\sqrt{f(x)}=+\infty\).</li>
+</ul>
+<p>Cette propriété reste valable à droite et à gauche en \(a\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 5</div>
+<p>Calculer les limites suivantes :</p>
+\[ \text{1) }\lim\limits_{x\to+\infty}\sqrt{x^2+2x+5} \qquad \text{2) }\lim\limits_{x\to-\infty}\sqrt{3x^2-5x+1} \qquad \text{3) }\lim\limits_{x\to+\infty}\sqrt{\frac{x+1}{x-4}} \]
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Opérations sur les limites">
+  <h2><span class="num">III</span><span class="titre">Opérations sur les limites</span></h2>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Dans ce tableau, \(a\) est un réel ou \(\pm\infty\), et \(\ell\), \(\ell'\) sont des réels. Les résultats restent valables à droite et à gauche en \(a\).</p>
+<div class="tableau"><table><thead><tr><th scope="col">\(\lim f\)</th><th scope="col">\(\lim g\)</th><th scope="col">\(\lim(f+g)\)</th><th scope="col">\(\lim(f\times g)\)</th><th scope="col">\(\lim\frac fg\)</th></tr></thead><tbody><tr><td>\(\ell\)</td><td>\(\ell'\neq0\)</td><td>\(\ell+\ell'\)</td><td>\(\ell\ell'\)</td><td>\(\ell/\ell'\)</td></tr><tr><td>\(\ell&gt;0\)</td><td>\(-\infty\)</td><td>\(-\infty\)</td><td>\(-\infty\)</td><td>\(0\)</td></tr><tr><td>\(\ell&lt;0\)</td><td>\(+\infty\)</td><td>\(+\infty\)</td><td>\(-\infty\)</td><td>\(0\)</td></tr><tr><td>\(+\infty\)</td><td>\(+\infty\)</td><td>\(+\infty\)</td><td>\(+\infty\)</td><td><strong>F.I.</strong></td></tr><tr><td>\(-\infty\)</td><td>\(-\infty\)</td><td>\(-\infty\)</td><td>\(+\infty\)</td><td><strong>F.I.</strong></td></tr><tr><td>\(+\infty\)</td><td>\(-\infty\)</td><td><strong>F.I.</strong></td><td>\(-\infty\)</td><td><strong>F.I.</strong></td></tr><tr><td>\(0\)</td><td>\(\pm\infty\)</td><td>\(\pm\infty\)</td><td><strong>F.I.</strong></td><td>\(0\)</td></tr><tr><td>\(\pm\infty\)</td><td>\(0\)</td><td>\(\pm\infty\)</td><td><strong>F.I.</strong></td><td>\(\pm\infty\) (signe)</td></tr><tr><td>\(0\)</td><td>\(0\)</td><td>\(0\)</td><td>\(0\)</td><td><strong>F.I.</strong></td></tr><tr><td>\(\ell\neq0\)</td><td>\(0\)</td><td>\(\ell\)</td><td>\(0\)</td><td>\(\pm\infty\) (signe)</td></tr></tbody></table></div>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Lever une indétermination à l'infini</div>
+<ul>
+  <li><strong>Polynôme ou fraction rationnelle :</strong> on garde les termes de plus haut degré.</li>
+  <li><strong>Racine carrée :</strong> on met en facteur \(x^2\) sous la racine, en utilisant \(\sqrt{x^2}=|x|\) (donc \(=x\) en \(+\infty\) et \(=-x\) en \(-\infty\)).</li>
+  <li><strong>Forme « \(+\infty-\infty\) » avec une racine :</strong> on multiplie par l'expression conjuguée.</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(\lim\limits_{x\to-\infty}\big(\sqrt{x^2+x}+x\big)\) : forme « \(+\infty-\infty\) ». On multiplie par le conjugué :</p>
+\[ \sqrt{x^2+x}+x=\frac{(x^2+x)-x^2}{\sqrt{x^2+x}-x}=\frac{x}{|x|\sqrt{1+\frac1x}-x}=\frac{x}{-x\sqrt{1+\frac1x}-x}=\frac{-1}{\sqrt{1+\frac1x}+1}\ \underset{x\to-\infty}{\longrightarrow}\ -\frac12 . \]
+  </div>
+  <div class="bloc app"><div class="tag">Application 6</div>
+<p>Calculer les limites suivantes :</p>
+\[
+\text{1) }\lim\limits_{x\to0^+}\Big(3x+7+\frac{1}{\sqrt x}\Big) \qquad
+\text{2) }\lim\limits_{x\to-\infty}\Big(-3+\frac1x\Big)\Big(1+\frac2x\Big) \qquad
+\text{3) }\lim\limits_{x\to-\infty}\frac{1+\frac{4}{x^3}}{2-x^5}
+\]
+\[
+\text{4) }\lim\limits_{x\to+\infty}\frac{\sqrt{x^2+5x-3}}{x} \qquad
+\text{5) }\lim\limits_{x\to+\infty}\big(\sqrt{4x^2-x+3}-2x+1\big)
+\]
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Limites des fonctions trigonométriques">
+  <h2><span class="num">IV</span><span class="titre">Limites des fonctions trigonométriques</span></h2>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Pour tout réel \(a\) : \(\lim\limits_{x\to a}\cos x=\cos a\), \(\lim\limits_{x\to a}\sin x=\sin a\), et, si \(a\neq\frac\pi2+k\pi\), \(\lim\limits_{x\to a}\tan x=\tan a\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(\lim\limits_{x\to\frac\pi6}\sin x=\dfrac12\) ; \(\lim\limits_{x\to-\frac\pi4}\cos x=\dfrac{\sqrt2}2\) ; \(\lim\limits_{x\to\pi}\tan x=0\) ; \(\lim\limits_{x\to\frac\pi3}\tan x=\sqrt3\).</p>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<ul>
+  <li>Les fonctions \(\sin\), \(\cos\) et \(\tan\) n'ont pas de limite en \(+\infty\) ni en \(-\infty\).</li>
+  <li>\(\lim\limits_{x\to\frac\pi2^-}\tan x=+\infty\) et \(\lim\limits_{x\to\frac\pi2^+}\tan x=-\infty\).</li>
+</ul>
+  </div>
+  <div class="bloc prop"><div class="tag">Limites trigonométriques usuelles</div>
+<div class="avec-fig">
+<div>
+\[ \lim\limits_{x\to0}\frac{\sin x}{x}=1 \qquad \lim\limits_{x\to0}\frac{\tan x}{x}=1 \qquad \lim\limits_{x\to0}\frac{1-\cos x}{x^2}=\frac12 \]
+<p>Plus généralement, pour tout réel \(a\neq0\) :</p>
+\[ \lim\limits_{x\to0}\frac{\sin(ax)}{ax}=1 \quad\ \lim\limits_{x\to0}\frac{\tan(ax)}{ax}=1 \quad\ \lim\limits_{x\to0}\frac{1-\cos(ax)}{(ax)^2}=\frac12 \]
+</div>
+<figure class="fig"><svg viewBox="-14.0 -90.0 132.5 104.0" role="img" aria-label="Figure"><defs><marker id="mg5-894" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M-8.0 -0.0 L104.0 -0.0" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg5-894)"/><path d="M0.0 8.0 L0.0 -84.0" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg5-894)"/><path d="M80.0 -0.0 A80.0 80.0 0 0 0 0.0 -80.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L80.0 -56.0" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M65.5 -0.0 L65.5 -45.9" fill="none" stroke="var(--meth)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M80.0 -0.0 A80.0 80.0 0 0 0 65.5 -45.9" fill="none" stroke="var(--fig-accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M80.0 -0.0 L80.0 -56.0" fill="none" stroke="var(--att)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><text x="60.6" y="-16.5" text-anchor="end" style="font-size:10.0px;fill:var(--meth)">sin x</text><text x="87.2" y="-20.5" text-anchor="middle" style="font-size:10.0px;fill:var(--fig-accent)">x</text><text x="85.0" y="-36.5" text-anchor="start" style="font-size:10.0px;fill:var(--att)">tan x</text></svg><figcaption>Pour \(0&lt;x&lt;\frac\pi2\) : \(\sin x\le x\le\tan x\)</figcaption></figure>
+</div>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>\(\lim\limits_{x\to0}\dfrac{\sin5x}{x}=\lim\limits_{x\to0}5\times\dfrac{\sin5x}{5x}=5\times1=5\).</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Limite en un réel \(a\neq0\)</div>
+<p>On se ramène en \(0\) par le changement de variable \(h=x-a\) : par exemple \(\lim\limits_{x\to2}\dfrac{\sin(x-2)}{x-2}=\lim\limits_{h\to0}\dfrac{\sin h}{h}=1\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 7</div>
+<p>Calculer les limites suivantes :</p>
+\[
+\text{1) }\lim\limits_{x\to0}\frac{\sin4x}{\tan5x} \quad
+\text{2) }\lim\limits_{x\to0}\frac{\tan2x}{x} \quad
+\text{3) }\lim\limits_{x\to0}\frac{\sin3x}{4x} \quad
+\text{4) }\lim\limits_{x\to2}\frac{\sin(x-2)}{x-2}
+\]
+\[
+\text{5) }\lim\limits_{x\to0^+}\frac{1-\cos\sqrt x}{x} \quad
+\text{6) }\lim\limits_{x\to1}\frac{\tan\pi x}{x-1} \quad
+\text{7) }\lim\limits_{x\to\frac\pi4}\frac{\sin x-\cos x}{x-\frac\pi4} \quad
+\text{8) }\lim\limits_{x\to\frac\pi2}\frac{\cos x}{x-\frac\pi2}
+\]
+  </div>
+</section>
+
+<!-- ============================ V ============================ -->
+<section class="chap" id="s5" data-toc="Limites et ordre">
+  <h2><span class="num">V</span><span class="titre">Limites et ordre</span></h2>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(f\), \(g\), \(h\) trois fonctions définies sur un intervalle \(I=[a;+\infty[\) et \(\ell\) un réel.</p>
+<ul>
+  <li>Si \(g(x)\le f(x)\) sur \(I\) et \(\lim\limits_{x\to+\infty}g(x)=+\infty\), alors \(\lim\limits_{x\to+\infty}f(x)=+\infty\).</li>
+  <li>Si \(f(x)\le g(x)\) sur \(I\) et \(\lim\limits_{x\to+\infty}g(x)=-\infty\), alors \(\lim\limits_{x\to+\infty}f(x)=-\infty\).</li>
+  <li>Si \(|f(x)-\ell|\le g(x)\) sur \(I\) et \(\lim\limits_{x\to+\infty}g(x)=0\), alors \(\lim\limits_{x\to+\infty}f(x)=\ell\).</li>
+  <li><strong>(Théorème des gendarmes)</strong> Si \(g(x)\le f(x)\le h(x)\) sur \(I\) et \(\lim\limits_{x\to+\infty}g(x)=\lim\limits_{x\to+\infty}h(x)=\ell\), alors \(\lim\limits_{x\to+\infty}f(x)=\ell\).</li>
+</ul>
+<p>Ces propriétés restent valables en \(-\infty\), en un réel \(a\), à droite et à gauche en \(a\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Pour tout réel \(x\) : \(\cos x\ge-1\), donc \(x^2+\cos x\ge x^2-1\). Comme \(\lim\limits_{x\to+\infty}(x^2-1)=+\infty\), on a \(\lim\limits_{x\to+\infty}(x^2+\cos x)=+\infty\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 8</div>
+<ol>
+  <li><ol class="alpha">
+  <li>Montrer que \((\forall x\in\mathbb{R}) : \dfrac13\le\dfrac{1}{2-\cos x}\le1\).</li>
+  <li>En déduire les limites \(\lim\limits_{x\to+\infty}\dfrac{x}{2-\cos x}\) et \(\lim\limits_{x\to-\infty}\dfrac{x^3}{2-\cos x}\).</li>
+</ol></li>
+  <li>Soit \(f\) la fonction définie sur \(\mathbb{R}^*\) par \(f(x)=x\sin\left(\dfrac1x\right)+2\).<br> Vérifier que \((\forall x\in\mathbb{R}^*) : |f(x)-2|\le|x|\), puis en déduire \(\lim\limits_{x\to0}f(x)\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ VI ============================ -->
+<section class="chap" id="s6" data-toc="Synthèse">
+  <h2><span class="num">VI</span><span class="titre">Synthèse</span></h2>
+  <div class="bloc ret"><div class="tag">À retenir — Comment lever une indétermination ?</div>
+<div class="tableau"><table><thead><tr><th scope="col">Situation</th><th scope="col">Technique</th></tr></thead><tbody><tr><td>« \(\frac00\) » en \(a\), fraction rationnelle</td><td>factoriser par \((x-a)\) puis simplifier</td></tr><tr><td>« \(\frac00\) » avec une racine</td><td>multiplier par l'expression conjuguée</td></tr><tr><td>Polynôme, fraction en \(\pm\infty\)</td><td>ne garder que les termes de plus haut degré</td></tr><tr><td>Racine en \(\pm\infty\)</td><td>factoriser \(x^2\) sous la racine : \(\sqrt{x^2}=|x|\)</td></tr><tr><td>« \(+\infty-\infty\) » avec une racine</td><td>multiplier par l'expression conjuguée</td></tr><tr><td>« \(\ell/0\) » (\(\ell\neq0\))</td><td>limite infinie : signe par tableau de signes</td></tr><tr><td>Trigonométrie en \(0\)</td><td>\(\frac{\sin x}{x}\to1\), \(\frac{\tan x}{x}\to1\), \(\frac{1-\cos x}{x^2}\to\frac12\)</td></tr><tr><td>\(\sin\), \(\cos\) en \(\pm\infty\)</td><td>encadrer (\(-1\le\cos x\le1\)) puis comparer</td></tr></tbody></table></div>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}

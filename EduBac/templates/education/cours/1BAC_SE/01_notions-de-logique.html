@@ -1,0 +1,492 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : 1ère Bac Sciences — Notions de logique mathématique (chapitre 1, 5 heures).
+Généré depuis Logique_1Bac_SE.tex (le PDF d'origine est dans le dossier Cours de la leçon, media/lessons/1BAC_SE/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < », « > » et « & » sont écrits &lt;, &gt; et &amp;.
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">1ère année Bac Sciences</span>
+        <span class="chip or">Chapitre 1</span>
+        <span class="chip">Semestre 1</span>
+      </div>
+      <h1 id="cours-titre">Notions de logique mathématique</h1>
+      <p class="sous-titre">Volume horaire : 5 heures</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectif"><strong>Contenus</strong>
+<ul>
+  <li>Proposition, fonction propositionnelle.</li>
+  <li>Quantificateurs \(\forall\), \(\exists\), \(\exists!\).</li>
+  <li>Connecteurs : négation, « et », « ou », implication, équivalence.</li>
+  <li>Lois logiques.</li>
+  <li>Types de raisonnement.</li>
+</ul>
+  </div>
+  <div class="cadre objectif"><strong>Capacités attendues</strong>
+<ul>
+  <li>Écrire un énoncé avec des quantificateurs et le nier.</li>
+  <li>Déterminer la valeur de vérité d'une proposition.</li>
+  <li>Choisir le raisonnement adapté à une situation.</li>
+  <li>Rédiger une démonstration correctement.</li>
+</ul>
+  </div>
+  <div class="cadre"><strong>Pourquoi la logique ?</strong> Dans la langue courante, « ou » est ambigu. Au restaurant, « fromage <em>ou</em> dessert » veut dire l'un ou l'autre, mais pas les deux. Dans la phrase « pour réussir, il faut travailler <em>ou</em> être aidé », on peut avoir les deux à la fois. En mathématiques, chaque mot doit avoir un seul sens : c'est le rôle de la logique, qui fixe aussi les règles d'une démonstration correcte.</div>
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Proposition – Fonction propositionnelle">
+  <h2><span class="num">I</span><span class="titre">Proposition – Fonction propositionnelle</span></h2>
+  <div class="bloc act"><div class="tag">Activité 1</div>
+<p>Mettre une croix (×) dans la case qui convient.</p>
+<div class="tableau"><table><thead><tr><th scope="col">Texte mathématique</th><th scope="col">Vrai</th><th scope="col">Faux</th><th scope="col">Vérité non décidable</th><th scope="col">Sans sens</th></tr></thead><tbody><tr><td>\(15\times 2\)</td><td></td><td></td><td></td><td></td></tr><tr><td>\(12\times 3+4=20\)</td><td></td><td></td><td></td><td></td></tr><tr><td>\(-6\notin\mathbb{N}\)</td><td></td><td></td><td></td><td></td></tr><tr><td>\(2\) est une racine du polynôme \(P(x)=x^2-x-2\).</td><td></td><td></td><td></td><td></td></tr><tr><td>Chaque nombre impair est un nombre premier.</td><td></td><td></td><td></td><td></td></tr><tr><td>\((x\in\mathbb{Z}) : x+5\ge 0\)</td><td></td><td></td><td></td><td></td></tr><tr><td>Soient \(x,y\in\mathbb{Z}\) ; on a \(2x-y=1\).</td><td></td><td></td><td></td><td></td></tr></tbody></table></div>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<ul>
+  <li>Une <strong>proposition</strong> (ou <strong>assertion</strong>) est un énoncé mathématique qui a un sens et qui est <strong>soit vrai, soit faux</strong>, mais pas les deux à la fois. On la note souvent \(P\), \(Q\), \(R\), …</li>
+  <li>Une <strong>fonction propositionnelle</strong> est un énoncé qui contient une ou plusieurs <strong>variables</strong> prises dans un ensemble donné. Elle devient une proposition chaque fois qu'on remplace les variables par des éléments de cet ensemble. On la note \(P(x)\), \(P(x,y)\), …</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>« Le nombre \(2022\) est pair » est une proposition <strong>vraie</strong>.</li>
+  <li>« Tout carré est un parallélogramme » est une proposition <strong>vraie</strong>.</li>
+  <li>« Tout nombre pair est divisible par \(4\) » est une proposition <strong>fausse</strong> (\(6\) est pair mais n'est pas divisible par \(4\)).</li>
+  <li>« \(x+y=z\) » n'est pas une proposition : on ne connaît ni \(x\), ni \(y\), ni \(z\).</li>
+  <li>\(P(x)\) : « \(x\in\mathbb{R}\), \(x^2-x&lt;0\) » est une fonction propositionnelle.<br> \(P(0)\) est fausse car \(0^2-0=0\), et \(P\!\left(\tfrac12\right)\) est vraie car \(\tfrac14-\tfrac12=-\tfrac14&lt;0\).</li>
+  <li>\(P(n,m)\) : « \(n+m=10\) avec \(n,m\in\mathbb{N}\) » est une fonction propositionnelle à deux variables.<br> \(P(4,6)\) est vraie et \(P(2,7)\) est fausse.</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+<p>Déterminer la valeur de vérité de chacune des propositions suivantes :</p>
+<ul>
+  <li>\(P\) : « \(\left(\dfrac{\sqrt7}{\sqrt3}\right)^{2}=\dfrac73\) ».</li>
+  <li>\(Q\) : « \(\sqrt{3+\sqrt5}\times\sqrt{3-\sqrt5}\in\mathbb{N}\) ».</li>
+</ul>
+<ul>
+  <li>\(R\) : « L'équation \(x^2-3x+5=0\) admet deux solutions dans \(\mathbb{R}\) ».</li>
+</ul>
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Les quantificateurs">
+  <h2><span class="num">II</span><span class="titre">Les quantificateurs</span></h2>
+  <div class="bloc act"><div class="tag">Activité 2</div>
+<ol>
+  <li><p>Mettre une croix dans la case qui convient.</p>
+<div class="tableau"><table><thead><tr><th scope="col">Proposition</th><th scope="col">Vrai</th><th scope="col">Faux</th></tr></thead><tbody><tr><td>Le carré de tout nombre réel est positif.</td><td></td><td></td></tr><tr><td>Il existe un nombre réel strictement inférieur à \(1\).</td><td></td><td></td></tr><tr><td>Tout nombre réel est décimal.</td><td></td><td></td></tr><tr><td>L'équation \(x^2=0\) admet une unique solution réelle.</td><td></td><td></td></tr></tbody></table></div>
+<p>On symbolise « pour tout » (ou « quel que soit ») par \(\forall\) et « il existe au moins » par \(\exists\). La première proposition s'écrit alors \((\forall x\in\mathbb{R}) : x^2\ge 0\) et la deuxième \((\exists x\in\mathbb{R}) : x&lt;1\).</p></li>
+  <li><p>Compléter le tableau en utilisant les symboles \(\forall\) et \(\exists\).</p>
+<div class="tableau"><table><thead><tr><th scope="col">Proposition en français</th><th scope="col">Proposition avec des quantificateurs</th></tr></thead><tbody><tr><td>Tous les entiers naturels sont positifs.</td><td></td></tr><tr><td></td><td>\((\exists x\in\mathbb{R}) : x^2=-1\)</td></tr><tr><td>L'équation \(3x-2=0\) admet une solution réelle.</td><td></td></tr><tr><td></td><td>\((\forall x\in\mathbb{R}) : x^2-x+1&gt;0\)</td></tr><tr><td>Pour tout réel \(x\), il existe au moins un entier naturel \(n\) tel que \(x&lt;n+1\).</td><td></td></tr><tr><td></td><td>\((\forall m\in\mathbb{N})(\exists n\in\mathbb{N}) : m=2n\)</td></tr></tbody></table></div></li>
+</ol>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soit \(P(x)\) une fonction propositionnelle où \(x\) est un élément d'un ensemble \(E\).</p>
+<ul>
+  <li>Si \(P(x)\) est vraie pour <strong>tous</strong> les éléments de \(E\), on écrit : \((\forall x\in E) : P(x)\).<br> Le symbole \(\forall\) s'appelle le <strong>quantificateur universel</strong> ; il se lit « <em>pour tout</em> » ou « <em>quel que soit</em> ».</li>
+  <li>S'il existe <strong>au moins un</strong> élément de \(E\) pour lequel \(P(x)\) est vraie, on écrit : \((\exists x\in E) : P(x)\).<br> Le symbole \(\exists\) s'appelle le <strong>quantificateur existentiel</strong> ; il se lit « <em>il existe au moins un</em> ».</li>
+  <li>S'il existe <strong>un unique</strong> élément de \(E\) pour lequel \(P(x)\) est vraie, on écrit : \((\exists!\, x\in E) : P(x)\).<br> Le symbole \(\exists!\) se lit « <em>il existe un unique</em> ».</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>\(P\) : « \((\forall x\in\mathbb{R}) : 2x+1=0\) » est <strong>fausse</strong> : pour \(x=0\), on a \(2\times0+1=1\neq0\).</li>
+  <li>\(Q\) : « \((\exists n\in\mathbb{N}) : 2n-4=0\) » est <strong>vraie</strong> : l'entier \(n=2\) convient.</li>
+  <li>\(R\) : « \((\exists!\, x\in\mathbb{R}) : x^2-2x+1=0\) » est <strong>vraie</strong> : \(x^2-2x+1=(x-1)^2\), donc \(1\) est la seule solution.</li>
+</ul>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Prouver une proposition quantifiée</div>
+<ul>
+  <li>Pour prouver \((\exists x\in E) : P(x)\), il suffit de <strong>trouver un exemple</strong> \(x_0\in E\) qui vérifie \(P(x_0)\).</li>
+  <li>Pour prouver \((\forall x\in E) : P(x)\), on prend un \(x\) <strong>quelconque</strong> de \(E\) (« Soit \(x\in E\) ») et on démontre \(P(x)\) : un exemple ne suffit pas.</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 2</div>
+<p>Réécrire les propositions suivantes à l'aide des quantificateurs.</p>
+<ul>
+  <li>\(P_1\) : « La valeur absolue de tout nombre réel non nul est strictement positive ».</li>
+  <li>\(P_2\) : « Il existe au moins un nombre réel \(x\) tel que \(2x^2-3x=0\) ».</li>
+  <li>\(P_3\) : « L'équation \(x-2\sqrt{x}+1=0\) admet une unique solution réelle ».</li>
+  <li>\(P_4\) : « Le polynôme \(P(x)=x^3+2x^2-3x+1\) admet au moins une racine réelle ».</li>
+  <li>\(P_5\) : « Pour tout nombre réel \(x\), il existe un unique entier \(N\) tel que \(N\le x&lt;N+1\) ».</li>
+  <li>\(P_6\) : « Il existe un entier naturel multiple de tous les entiers naturels ».</li>
+</ul>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété — Ordre des quantificateurs</div>
+<ul>
+  <li>On peut <strong>permuter deux quantificateurs de même nature</strong> (\(\forall\forall\) ou \(\exists\exists\)) sans changer le sens.</li>
+</ul>
+<ul>
+  <li>On ne peut <strong>pas</strong>, en général, permuter un quantificateur \(\forall\) et un quantificateur \(\exists\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>« \((\forall x\in\mathbb{R})(\forall y\in\mathbb{R}) : x+y=2\) » et « \((\forall y\in\mathbb{R})(\forall x\in\mathbb{R}) : x+y=2\) » ont la même valeur de vérité (toutes deux fausses).</li>
+  <li>« \((\forall y\in\mathbb{R})(\exists x\in\mathbb{R}) : x+y=2\) » est <strong>vraie</strong> : pour chaque \(y\), le réel \(x=2-y\) convient.<br> « \((\exists x\in\mathbb{R})(\forall y\in\mathbb{R}) : x+y=2\) » est <strong>fausse</strong> : un même \(x\) ne peut pas convenir pour \(y=0\) et pour \(y=1\).</li>
+</ul>
+  </div>
+  <div class="bloc rem"><div class="tag">Pour comprendre</div>
+<p>Comparer les deux phrases : « <em>Pour tout élève, il existe une chaise</em> sur laquelle il est assis » : chaque élève a sa chaise (\(\forall\,\exists\)).<br> « <em>Il existe une chaise sur laquelle tous les élèves</em> sont assis » : une seule chaise pour toute la classe (\(\exists\,\forall\)).<br> Dans \(\forall\,\exists\), l'objet choisi par \(\exists\) <strong>peut dépendre</strong> de celui donné par \(\forall\) ; dans \(\exists\,\forall\), il <strong>est le même pour tous</strong>.</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 3</div>
+<p>Déterminer la valeur de vérité de chacune des propositions suivantes.</p>
+<ul>
+  <li>\(P_1\) : « \((\exists x\in\mathbb{R}) : x^2+x-1=0\) ».</li>
+  <li>\(P_2\) : « \((\forall x\in\mathbb{R}) : x^2+3x+7&lt;0\) ».</li>
+  <li>\(P_3\) : « \((\forall x\in\mathbb{R})(\exists y\in\mathbb{R}) : x\le y\) ».</li>
+  <li>\(P_4\) : « \((\exists y\in\mathbb{R})(\forall x\in\mathbb{R}) : x\le y\) ».</li>
+  <li>\(P_5\) : « \((\forall y\in\mathbb{R})(\forall x\in\mathbb{R}) : x\le y\) ».</li>
+  <li>\(P_6\) : « \((\exists x\in\mathbb{R})(\exists y\in\mathbb{R}) : x\le y\) ».</li>
+</ul>
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Les opérations sur les propositions">
+  <h2><span class="num">III</span><span class="titre">Les opérations sur les propositions</span></h2>
+  <h3><span class="n">III.1</span>La négation</h3>
+  <div class="bloc def"><div class="tag">Définition — Négation</div>
+<p>La <strong>négation</strong> d'une proposition \(P\), notée \(\overline{P}\) ou « non \(P\) » (ou encore \(\rceil P\)), est la proposition qui est <strong>vraie si \(P\) est fausse</strong> et <strong>fausse si \(P\) est vraie</strong>.</p>
+<div class="tableau"><table><thead><tr><th scope="col">\(P\)</th><th scope="col">\(\overline{P}\)</th></tr></thead><tbody><tr><td><strong>V</strong></td><td><strong>F</strong></td></tr><tr><td><strong>F</strong></td><td><strong>V</strong></td></tr></tbody></table></div>
+<p>Tableau de vérité</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>La négation de « \(3&gt;2\) » est « \(3\le 2\) ».</li>
+  <li>La négation de « \((-2)^2=-4\) » est « \((-2)^2\neq-4\) ».</li>
+  <li>La négation de « \(-3\in\mathbb{N}\) » est « \(-3\notin\mathbb{N}\) ».</li>
+</ul>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété — Négation d'une proposition quantifiée</div>
+<ul>
+  <li>La négation de « \((\forall x\in E) : P(x)\) » est « \((\exists x\in E) : \overline{P(x)}\) ».</li>
+  <li>La négation de « \((\exists x\in E) : P(x)\) » est « \((\forall x\in E) : \overline{P(x)}\) ».</li>
+  <li>La négation de « \((\forall x\in E)(\exists y\in E) : P(x,y)\) » est « \((\exists x\in E)(\forall y\in E) : \overline{P(x,y)}\) ».</li>
+  <li>La négation de « \((\exists x\in E)(\forall y\in E) : P(x,y)\) » est « \((\forall x\in E)(\exists y\in E) : \overline{P(x,y)}\) ».</li>
+</ul>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Écrire une négation (procédé mécanique)</div>
+<ol>
+  <li>On remplace chaque \(\forall\) par \(\exists\) et chaque \(\exists\) par \(\forall\), <strong>sans changer l'ordre</strong> ni les ensembles.</li>
+  <li>On remplace la propriété finale par sa négation, à l'aide du tableau :</li>
+</ol>
+<div class="tableau"><table><thead><tr><th scope="col">Symbole</th><th scope="col">\(&gt;\)</th><th scope="col">\(&lt;\)</th><th scope="col">\(\ge\)</th><th scope="col">\(\le\)</th><th scope="col">\(=\)</th><th scope="col">\(\in\)</th><th scope="col">et</th></tr></thead><tbody><tr><td><strong>Négation</strong></td><td>\(\le\)</td><td>\(\ge\)</td><td>\(&lt;\)</td><td>\(&gt;\)</td><td>\(\neq\)</td><td>\(\notin\)</td><td>ou</td></tr></tbody></table></div>
+<p>On n'a pas besoin de savoir si la proposition est vraie pour écrire sa négation.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<div class="tableau"><table><thead><tr><th scope="col">La proposition \(P\)</th><th scope="col">Sa négation \(\overline{P}\)</th></tr></thead><tbody><tr><td>\((\forall x\in\mathbb{R}) : x\ge 1\)</td><td>\((\exists x\in\mathbb{R}) : x&lt;1\)</td></tr><tr><td>\((\exists n\in\mathbb{N}) : \sqrt{n}\in\mathbb{N}\)</td><td>\((\forall n\in\mathbb{N}) : \sqrt{n}\notin\mathbb{N}\)</td></tr><tr><td>\((\forall x\in\mathbb{R}) : x^2+x+1\ge0\)</td><td>\((\exists x\in\mathbb{R}) : x^2+x+1&lt;0\)</td></tr><tr><td>\((\forall n\in\mathbb{N})(\exists m\in\mathbb{N}) : m\ge n\)</td><td>\((\exists n\in\mathbb{N})(\forall m\in\mathbb{N}) : m&lt;n\)</td></tr></tbody></table></div>
+  </div>
+  <div class="bloc att"><div class="tag">Attention — erreurs fréquentes</div>
+<ul>
+  <li>La négation de « \(x&gt;0\) » est « \(x\le 0\) », et <strong>non</strong> « \(x&lt;0\) ».</li>
+  <li>On ne change <strong>pas</strong> l'ensemble : la négation de « \((\forall x\in\mathbb{R}_+) : \dots\) » commence par « \((\exists x\in\mathbb{R}_+)\) », et non par « \((\exists x\in\mathbb{R}_-)\) ».</li>
+  <li>Les symboles « \(\nexists\) » et « \(\not\Rightarrow\) » ne s'utilisent pas en logique : on écrit toujours la négation complète.</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 4</div>
+<p>Compléter le tableau suivant.</p>
+<div class="tableau"><table><thead><tr><th scope="col">La proposition \(P\)</th><th scope="col">Sa négation \(\overline{P}\)</th></tr></thead><tbody><tr><td>\((\forall x\in\mathbb{R}) : x^2+2x+1\ge0\)</td><td></td></tr><tr><td>\((\forall x\in\mathbb{N}) : x^2-2x&lt;0\)</td><td></td></tr><tr><td>\((\forall x\in\mathbb{Q}) : \sqrt{x}\notin\mathbb{Q}\)</td><td></td></tr><tr><td>\((\exists x\in\mathbb{R}) : x\in\mathbb{Q}\)</td><td></td></tr><tr><td>\((\exists x\in\mathbb{N}) : x\) est pair</td><td></td></tr><tr><td>\((\exists x\in\mathbb{N})(\forall y\in\mathbb{N}) : x&lt;y\)</td><td></td></tr><tr><td>\((\forall x\in\mathbb{Z})(\exists y\in\mathbb{Z}) : x-y=3\)</td><td></td></tr><tr><td>Tout triangle est rectangle.</td><td></td></tr><tr><td>\((\forall x\in\mathbb{Q})(\forall y\in\mathbb{Z}) : x\times y\in\mathbb{Z}\)</td><td></td></tr></tbody></table></div>
+  </div>
+  <h3><span class="n">III.2</span>La disjonction « ou » et la conjonction « et »</h3>
+  <div class="bloc def"><div class="tag">Définitions — « ou » et « et »</div>
+<p>Soient \(P\) et \(Q\) deux propositions.</p>
+<ul>
+  <li>La <strong>disjonction</strong> « \(P\) ou \(Q\) », notée aussi \(P\vee Q\), est vraie lorsque <strong>au moins une</strong> des deux propositions est vraie.</li>
+  <li>La <strong>conjonction</strong> « \(P\) et \(Q\) », notée aussi \(P\wedge Q\), est vraie <strong>uniquement</strong> lorsque \(P\) et \(Q\) sont vraies en même temps.</li>
+</ul>
+<div class="tableau"><table><thead><tr><th scope="col">\(P\)</th><th scope="col">\(Q\)</th><th scope="col">\(P\) ou \(Q\)</th><th scope="col">\(P\) et \(Q\)</th></tr></thead><tbody><tr><td><strong>V</strong></td><td><strong>V</strong></td><td><strong>V</strong></td><td><strong>V</strong></td></tr><tr><td><strong>V</strong></td><td><strong>F</strong></td><td><strong>V</strong></td><td><strong>F</strong></td></tr><tr><td><strong>F</strong></td><td><strong>V</strong></td><td><strong>V</strong></td><td><strong>F</strong></td></tr><tr><td><strong>F</strong></td><td><strong>F</strong></td><td><strong>F</strong></td><td><strong>F</strong></td></tr></tbody></table></div>
+<p>Le « ou » mathématique est <strong>inclusif</strong> : « \(P\) ou \(Q\) » est vraie aussi quand \(P\) et \(Q\) sont vraies toutes les deux.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>« \((-5\ge2)\) ou \((5\ge2)\) » est vraie, mais « \((-5\ge2)\) et \((5\ge2)\) » est fausse.</li>
+  <li>« \((3+2=6)\) ou \((-3\ge1)\) » est fausse ; « \((3+2=6)\) et \((-3\ge1)\) » est fausse aussi.</li>
+  <li>« \((-5\in\mathbb{R})\) ou (\(3\) divise \(12\)) » est vraie ; « \((-5\in\mathbb{R})\) et (\(3\) divise \(12\)) » est vraie.</li>
+  <li>« \(\big((\exists x\in\mathbb{R}) : x^2=-1\big)\) ou \((\sqrt2\in\mathbb{Q})\) » est fausse : les deux propositions sont fausses.</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 5</div>
+<p>Déterminer la valeur de vérité de chacune des propositions suivantes :</p>
+<ul>
+  <li>\(P_1\) : (\(3\) est impair) et \((3=5)\).</li>
+  <li>\(P_2\) : \((4\times8=20)\) ou (\(10\) est pair).</li>
+  <li>\(P_3\) : \((9-3=6)\) et \((-1\in\mathbb{Z})\).</li>
+  <li>\(P_4\) : \((-4\in\mathbb{N})\) ou \(\big((\forall x\in\mathbb{R}) : x^2+1&gt;0\big)\).</li>
+</ul>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété — Lois de Morgan</div>
+<p>Soient \(P\) et \(Q\) deux propositions.</p>
+<ul>
+  <li>La négation de « \(P\) et \(Q\) » est « \(\overline{P}\) ou \(\overline{Q}\) ».</li>
+  <li>La négation de « \(P\) ou \(Q\) » est « \(\overline{P}\) et \(\overline{Q}\) ».</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>La négation de « \((0\ge2)\) et \((1+5=3)\) » est « \((0&lt;2)\) ou \((1+5\neq3)\) ».</li>
+  <li>La négation de « \((5\in\mathbb{N})\) ou \(\big((\forall x\in\mathbb{R}) : x^2&gt;0\big)\) » est « \((5\notin\mathbb{N})\) et \(\big((\exists x\in\mathbb{R}) : x^2\le0\big)\) ».</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 6</div>
+<p>Écrire la négation de chacune des propositions suivantes :</p>
+<ul>
+  <li>\(P\) : « \((\forall x\in\mathbb{R})(\exists y\in\mathbb{R}) : x\le y\) ou \(x\ge y\) ».</li>
+  <li>\(Q\) : « \((\exists x\in\mathbb{R})(\forall y\in\mathbb{R}) : y^2=x\) et \(x&gt;0\) ».</li>
+</ul>
+  </div>
+  <h3><span class="n">III.3</span>L'implication</h3>
+  <div class="bloc def"><div class="tag">Définition — Implication</div>
+<p>L'<strong>implication</strong> de \(P\) vers \(Q\), notée \(P\Rightarrow Q\), est la proposition qui est <strong>fausse seulement</strong> lorsque \(P\) est vraie et \(Q\) est fausse.<br> On lit : « \(P\) implique \(Q\) » ou « si \(P\), alors \(Q\) ».<br> \(P\) s'appelle l'<strong>hypothèse</strong> et \(Q\) la <strong>conclusion</strong>.</p>
+<div class="tableau"><table><thead><tr><th scope="col">\(P\)</th><th scope="col">\(Q\)</th><th scope="col">\(P\Rightarrow Q\)</th></tr></thead><tbody><tr><td><strong>V</strong></td><td><strong>V</strong></td><td><strong>V</strong></td></tr><tr><td><strong>V</strong></td><td><strong>F</strong></td><td><strong>F</strong></td></tr><tr><td><strong>F</strong></td><td><strong>V</strong></td><td><strong>V</strong></td></tr><tr><td><strong>F</strong></td><td><strong>F</strong></td><td><strong>V</strong></td></tr></tbody></table></div>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>« \((2&gt;1)\Rightarrow(2+3=-1)\) » est fausse : l'hypothèse est vraie et la conclusion est fausse.</li>
+  <li>« \((3\times2=9)\Rightarrow(5-1=20)\) » est vraie : l'hypothèse est fausse.</li>
+  <li>« \((3^2=9)\Rightarrow(4-1=3)\) » est vraie.</li>
+  <li>« \((2&lt;0)\Rightarrow(2+3=5)\) » est vraie.</li>
+</ul>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<ul>
+  <li>L'implication \(Q\Rightarrow P\) s'appelle l'<strong>implication réciproque</strong> de \(P\Rightarrow Q\).<br> Par exemple, « \(x=2\Rightarrow x^2=4\) » est vraie, alors que sa réciproque « \(x^2=4\Rightarrow x=2\) » est fausse (\(x=-2\)).</li>
+  <li>L'implication \(\overline{Q}\Rightarrow\overline{P}\) s'appelle la <strong>contraposée</strong> de \(P\Rightarrow Q\) ; elles ont la même valeur de vérité.</li>
+  <li>Les propositions « \(P\Rightarrow Q\) » et « \(\overline{P}\) ou \(Q\) » ont la même valeur de vérité.</li>
+  <li>Dans une démonstration, on écrit « <em>donc</em> » ou « <em>alors</em> » entre deux étapes ; le symbole \(\Rightarrow\) n'est pas une abréviation de « donc ».</li>
+</ul>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Démontrer une implication (raisonnement direct)</div>
+<p>Pour montrer que \(P\Rightarrow Q\) est vraie, on <strong>suppose que \(P\) est vraie</strong> et on démontre que \(Q\) est vraie.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemple rédigé</div>
+<p>Soit \(x\in\mathbb{R}\). Montrons que : \(|x|\le3\Rightarrow|2x-4|\le10\).<br> Supposons \(|x|\le 3\). Alors :</p>
+\[
+-3\le x\le 3 \;\Longrightarrow\; -6\le 2x\le 6 \;\Longrightarrow\; -10\le 2x-4\le 2 .
+\]
+<p>Comme \(2\le 10\), on a \(-10\le 2x-4\le 10\), c'est-à-dire \(|2x-4|\le10\).<br> <strong>Conclusion :</strong> \(|x|\le3\Rightarrow|2x-4|\le10\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 7</div>
+<ol>
+  <li>Soit \(n\in\mathbb{N}\). Montrer que : \(n\) pair \(\Rightarrow\) \(n^2\) pair.</li>
+  <li>Montrer que : \((\forall x\in\mathbb{R}_+) : \dfrac{1}{1+\sqrt{x}}=1-\sqrt{x}\Rightarrow x=0\).</li>
+  <li>Soient \(x,y\in\mathbb{R}\). Montrer que : \(1+xy=x+y\Rightarrow (x=1 \text{ ou } y=1)\).</li>
+  <li>Montrer que : \((\forall x\in\mathbb{R}) : 3\le x\le5\Rightarrow \dfrac14\le\dfrac{1}{x-1}\le\dfrac12\).</li>
+  <li><ol class="alpha">
+  <li>Montrer que : \((\forall a\in\mathbb{R})(\forall b\in\mathbb{R}) : a^2+b^2=0\Rightarrow a=b=0\).</li>
+  <li>En déduire que : \((\forall x\in\mathbb{R}_+)(\forall y\in\mathbb{R}_+) : x+y+2=2\sqrt{x}+2\sqrt{y}\Rightarrow x=y=1\).</li>
+</ol></li>
+</ol>
+  </div>
+  <h3><span class="n">III.4</span>L'équivalence</h3>
+  <div class="bloc def"><div class="tag">Définition — Équivalence</div>
+<p>L'<strong>équivalence</strong> de \(P\) et \(Q\) est la proposition « \((P\Rightarrow Q)\) et \((Q\Rightarrow P)\) ». On la note \(P\Leftrightarrow Q\) et on lit « \(P\) est équivalente à \(Q\) » ou « \(P\) si et seulement si \(Q\) ».<br> \(P\Leftrightarrow Q\) est vraie <strong>seulement si \(P\) et \(Q\) ont la même valeur de vérité</strong>.</p>
+<div class="tableau"><table><thead><tr><th scope="col">\(P\)</th><th scope="col">\(Q\)</th><th scope="col">\(P\Leftrightarrow Q\)</th></tr></thead><tbody><tr><td><strong>V</strong></td><td><strong>V</strong></td><td><strong>V</strong></td></tr><tr><td><strong>V</strong></td><td><strong>F</strong></td><td><strong>F</strong></td></tr><tr><td><strong>F</strong></td><td><strong>V</strong></td><td><strong>F</strong></td></tr><tr><td><strong>F</strong></td><td><strong>F</strong></td><td><strong>V</strong></td></tr></tbody></table></div>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soient \(a\) et \(b\) deux réels. Si \(ab=0\), alors \(a=0\) ou \(b=0\) ; inversement, si \(a=0\) ou \(b=0\), alors \(ab=0\).<br> On a donc l'équivalence : \(ab=0\Leftrightarrow(a=0 \text{ ou } b=0)\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 8</div>
+<p>Déterminer la valeur de vérité de chacune des propositions suivantes :</p>
+<ul>
+  <li>\(P_1\) : (\(3\) est impair) \(\Leftrightarrow(3=5)\).</li>
+  <li>\(P_2\) : \((4\times8=20)\Leftrightarrow\) (\(10\) est pair).</li>
+  <li>\(P_3\) : \((-1\in\mathbb{Z})\Leftrightarrow(9-3=6)\).</li>
+  <li>\(P_4\) : \((-4\in\mathbb{N})\Leftrightarrow\big((\forall x\in\mathbb{R}) : x^2+1&gt;0\big)\).</li>
+</ul>
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Les lois logiques">
+  <h2><span class="num">IV</span><span class="titre">Les lois logiques</span></h2>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Une <strong>loi logique</strong> (ou <strong>tautologie</strong>) est une proposition qui est <strong>toujours vraie</strong>, quelles que soient les valeurs de vérité des propositions qui la composent.</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Montrer qu'une proposition est une loi logique</div>
+<p>On dresse son tableau de vérité (une ligne par cas possible) et on vérifie que la dernière colonne ne contient que des <strong>V</strong>.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soient \(P\) et \(Q\) deux propositions. Montrons que \(\overline{(P\Leftrightarrow Q)}\Leftrightarrow(\overline{P}\Leftrightarrow Q)\) est une loi logique.</p>
+<div class="tableau"><table><thead><tr><th scope="col">\(P\)</th><th scope="col">\(Q\)</th><th scope="col">\(P\Leftrightarrow Q\)</th><th scope="col">\(\overline{(P\Leftrightarrow Q)}\)</th><th scope="col">\(\overline{P}\Leftrightarrow Q\)</th><th scope="col">\(\overline{(P\Leftrightarrow Q)}\Leftrightarrow(\overline{P}\Leftrightarrow Q)\)</th></tr></thead><tbody><tr><td><strong>V</strong></td><td><strong>V</strong></td><td><strong>V</strong></td><td><strong>F</strong></td><td><strong>F</strong></td><td><strong>V</strong></td></tr><tr><td><strong>V</strong></td><td><strong>F</strong></td><td><strong>F</strong></td><td><strong>V</strong></td><td><strong>V</strong></td><td><strong>V</strong></td></tr><tr><td><strong>F</strong></td><td><strong>V</strong></td><td><strong>F</strong></td><td><strong>V</strong></td><td><strong>V</strong></td><td><strong>V</strong></td></tr><tr><td><strong>F</strong></td><td><strong>F</strong></td><td><strong>V</strong></td><td><strong>F</strong></td><td><strong>F</strong></td><td><strong>V</strong></td></tr></tbody></table></div>
+<p>La dernière colonne ne contient que des <strong>V</strong> : c'est une loi logique.</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Lois logiques usuelles (à connaître)</div>
+<p>Soient \(P\), \(Q\) et \(R\) trois propositions.</p>
+<ul>
+  <li>\(\overline{\overline{P}}\Leftrightarrow P\) (double négation)</li>
+  <li>\(\overline{(P\ \text{et}\ Q)}\Leftrightarrow(\overline{P}\ \text{ou}\ \overline{Q})\)</li>
+  <li>\(\overline{(P\ \text{ou}\ Q)}\Leftrightarrow(\overline{P}\ \text{et}\ \overline{Q})\)</li>
+  <li>\((P\Rightarrow Q)\Leftrightarrow(\overline{Q}\Rightarrow\overline{P})\)</li>
+  <li>\(\overline{(P\Rightarrow Q)}\Leftrightarrow(P\ \text{et}\ \overline{Q})\)</li>
+  <li>\([(P\Rightarrow Q)\ \text{et}\ (Q\Rightarrow R)]\Rightarrow(P\Rightarrow R)\)</li>
+</ul>
+<ul>
+  <li>\([P\ \text{et}\ (Q\ \text{ou}\ R)]\Leftrightarrow[(P\ \text{et}\ Q)\ \text{ou}\ (P\ \text{et}\ R)]\) (distributivité)</li>
+  <li>\([P\ \text{ou}\ (Q\ \text{et}\ R)]\Leftrightarrow[(P\ \text{ou}\ Q)\ \text{et}\ (P\ \text{ou}\ R)]\)</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 9</div>
+<p>Montrer, à l'aide d'un tableau de vérité, que les propositions suivantes sont des lois logiques :</p>
+<ul>
+  <li>\(P\Leftrightarrow\overline{\overline{P}}\)</li>
+  <li>\((P\Rightarrow Q)\Leftrightarrow(\overline{Q}\Rightarrow\overline{P})\)</li>
+  <li>\(\overline{(P\Rightarrow Q)}\Leftrightarrow(P\ \text{et}\ \overline{Q})\)</li>
+  <li>\([(P\Rightarrow Q)\ \text{et}\ (Q\Rightarrow R)]\Rightarrow(P\Rightarrow R)\)</li>
+</ul>
+  </div>
+</section>
+
+<!-- ============================ V ============================ -->
+<section class="chap" id="s5" data-toc="Les types de raisonnement">
+  <h2><span class="num">V</span><span class="titre">Les types de raisonnement</span></h2>
+<p>Chaque raisonnement repose sur une loi logique. Le tableau de la fin du cours résume quand utiliser chacun d'eux.</p>
+  <h3><span class="n">V.1</span>Le raisonnement direct</h3>
+  <div class="bloc meth"><div class="tag">Méthode</div>
+<p>Pour montrer \(P\Rightarrow Q\), on suppose \(P\) vraie et on enchaîne des déductions jusqu'à obtenir \(Q\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Montrons que la somme de deux nombres rationnels est un nombre rationnel.<br> Soient \(r,r'\in\mathbb{Q}\). Il existe \(a,a'\in\mathbb{Z}\) et \(b,b'\in\mathbb{N}^*\) tels que \(r=\dfrac ab\) et \(r'=\dfrac{a'}{b'}\). Alors</p>
+\[ r+r'=\frac{ab'+a'b}{bb'} \quad\text{avec}\quad ab'+a'b\in\mathbb{Z} \ \text{ et } \ bb'\in\mathbb{N}^* .\]
+<p><strong>Conclusion :</strong> \(r+r'\in\mathbb{Q}\).</p>
+  </div>
+  <h3><span class="n">V.2</span>Le raisonnement par contre-exemple</h3>
+  <div class="bloc meth"><div class="tag">Méthode</div>
+<p>Pour montrer que « \((\forall x\in E) : P(x)\) » est <strong>fausse</strong>, il suffit de montrer que sa négation « \((\exists x\in E) : \overline{P(x)}\) » est vraie, c'est-à-dire de <strong>trouver un élément</strong> \(x_0\in E\) qui ne vérifie pas \(P\). Cet élément s'appelle un <strong>contre-exemple</strong>.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>« \((\forall x\in\mathbb{R}) : 2x-1=0\) » est fausse : pour \(x=0\), on a \(2\times0-1=-1\neq0\).</li>
+  <li>« La somme de deux irrationnels est irrationnelle » est fausse : \(\sqrt2\notin\mathbb{Q}\) et \(-\sqrt2\notin\mathbb{Q}\), mais \(\sqrt2+(-\sqrt2)=0\in\mathbb{Q}\).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 10</div>
+<p>Montrer que les propositions suivantes sont fausses :</p>
+<ul>
+  <li>\(P_1\) : \((\forall x\in\mathbb{R}) : x+1=2\).</li>
+  <li>\(P_2\) : \((\forall x\in\mathbb{R}^*) : x+\dfrac1x\ge2\).</li>
+  <li>\(P_3\) : \((\forall a\in\mathbb{R}_+)(\forall b\in\mathbb{R}_+) : \sqrt{a+b}=\sqrt a+\sqrt b\).</li>
+</ul>
+  </div>
+  <h3><span class="n">V.3</span>Le raisonnement par contraposée</h3>
+  <div class="bloc meth"><div class="tag">Méthode</div>
+<p>D'après la loi logique \((P\Rightarrow Q)\Leftrightarrow(\overline{Q}\Rightarrow\overline{P})\), pour démontrer \(P\Rightarrow Q\), on peut démontrer sa contraposée \(\overline{Q}\Rightarrow\overline{P}\), qui est parfois plus simple.<br> On l'utilise surtout quand la conclusion \(Q\) contient « \(\neq\) » ou une négation.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Montrons que \((\forall x\in\mathbb{R}_+)(\forall y\in\mathbb{R}_+) : x\neq y\Rightarrow x^3+4x\neq y^3+4y\).<br> Par contraposée, montrons que : \(x^3+4x=y^3+4y\Rightarrow x=y\). Supposons \(x^3+4x=y^3+4y\). Alors</p>
+\[\begin{aligned}
+x^3-y^3+4(x-y)=0 &amp;\;\Longrightarrow\;(x-y)(x^2+xy+y^2)+4(x-y)=0\\
+&amp;\;\Longrightarrow\;(x-y)(x^2+xy+y^2+4)=0 .
+\end{aligned}\]
+<p>Or \(x^2+xy+y^2+4\ge 4&gt;0\) car \(x,y\ge0\). Donc \(x-y=0\), c'est-à-dire \(x=y\).<br> <strong>Conclusion :</strong> \(x\neq y\Rightarrow x^3+4x\neq y^3+4y\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 11</div>
+<ol>
+  <li>Montrer que : \((\forall a\in\mathbb{R})(\forall b\in\mathbb{R}) : a+b&gt;1\Rightarrow\left(a&gt;\dfrac12 \text{ ou } b&gt;\dfrac12\right)\).</li>
+  <li>Montrer que : \((\forall x&gt;1)(\forall y&gt;1) : x\neq y\Rightarrow\dfrac{x}{1+x^2}\neq\dfrac{y}{1+y^2}\).</li>
+</ol>
+  </div>
+  <h3><span class="n">V.4</span>Le raisonnement par équivalences successives</h3>
+  <div class="bloc meth"><div class="tag">Méthode</div>
+<p>Ce raisonnement repose sur la loi logique \([(P\Leftrightarrow R)\ \text{et}\ (R\Leftrightarrow Q)]\Rightarrow(P\Leftrightarrow Q)\).<br> On transforme \(P\) par une suite d'équivalences jusqu'à obtenir \(Q\). À chaque étape, on vérifie que le passage est réversible (attention au passage au carré, à la division, …).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Montrons que \((\forall a\in\mathbb{R})(\forall b\in\mathbb{R}) : a^2+b^2=2ab\Leftrightarrow a=b\).</p>
+\[
+a^2+b^2=2ab \iff a^2-2ab+b^2=0 \iff (a-b)^2=0 \iff a-b=0 \iff a=b .
+\]
+  </div>
+  <div class="bloc app"><div class="tag">Application 12</div>
+<ol>
+  <li>Montrer que : \((\forall x\neq-1)(\forall y\neq-1) : \dfrac{x}{1+x}=\dfrac{y}{1+y}\Leftrightarrow x=y\).</li>
+  <li>Montrer que, pour tout \(x\in\mathbb{R}_+\) : \(\sqrt{2x+2}=1+\sqrt{x}\Leftrightarrow x=1\).</li>
+  <li>Montrer que, pour tout \(x\in[1;+\infty[\) : \(\dfrac{\sqrt{x-1}}{x}\le\dfrac12\).</li>
+  <li>Soit \(x\in\mathbb{R}\). Montrer que : \(\dfrac{2}{\sqrt{1+x^2}}=1\Leftrightarrow(x=\sqrt3 \text{ ou } x=-\sqrt3)\).</li>
+  <li>Montrer que, pour tout \(x\in\mathbb{R}\) : \(|x-1|&lt;\dfrac12\Leftrightarrow\dfrac25&lt;\dfrac{1}{x+1}&lt;\dfrac23\).</li>
+  <li>Soient \(a\in[1;+\infty[\) et \(b\in[4;+\infty[\). Montrer que : \(\sqrt{a-1}+2\sqrt{b-4}=\dfrac{a+b}{2}\Leftrightarrow(a=2 \text{ et } b=8)\).</li>
+</ol>
+  </div>
+  <h3><span class="n">V.5</span>Le raisonnement par disjonction des cas</h3>
+  <div class="bloc meth"><div class="tag">Méthode</div>
+<p>Ce raisonnement repose sur la loi logique \([(P\Rightarrow R)\ \text{et}\ (Q\Rightarrow R)]\Rightarrow[(P\ \text{ou}\ Q)\Rightarrow R]\).<br> Pour démontrer un résultat, on sépare la situation en <strong>plusieurs cas qui couvrent toutes les possibilités</strong> (par exemple \(x\ge0\) et \(x&lt;0\), ou \(n\) pair et \(n\) impair), puis on traite chaque cas et on conclut « dans tous les cas ».</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Montrons que \((\forall x\in\mathbb{R}) : \sqrt{1+x^2}+x&gt;0\).</p>
+<ul>
+  <li><strong>1<sup>er</sup> cas : \(x\ge0\).</strong> On a \(\sqrt{1+x^2}&gt;0\) et \(x\ge0\), donc \(\sqrt{1+x^2}+x&gt;0\).</li>
+  <li><strong>2<sup>e</sup> cas : \(x&lt;0\).</strong> On a \(1+x^2&gt;x^2\), donc \(\sqrt{1+x^2}&gt;\sqrt{x^2}=|x|=-x\), d'où \(\sqrt{1+x^2}+x&gt;0\).</li>
+</ul>
+<p><strong>Conclusion :</strong> dans tous les cas, \(\sqrt{1+x^2}+x&gt;0\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 13</div>
+<ol>
+  <li>Soit \(n\in\mathbb{N}\). Montrer que \(n^2+n\) est pair (distinguer \(n\) pair et \(n\) impair).</li>
+  <li>Montrer que : \((\forall x\in\mathbb{R}) : |x-1|\le x^2-x+1\).</li>
+  <li>Soit \(n\in\mathbb{N}\). Montrer que \(n(n+1)(n+2)\) est un multiple de \(3\) (distinguer les cas \(n=3k\), \(n=3k+1\) et \(n=3k+2\)).</li>
+</ol>
+  </div>
+  <h3><span class="n">V.6</span>Le raisonnement par l'absurde</h3>
+  <div class="bloc meth"><div class="tag">Méthode</div>
+<p>Ce raisonnement repose sur la loi logique \([\overline{P}\Rightarrow(Q\ \text{et}\ \overline{Q})]\Rightarrow P\).<br> Pour démontrer que \(P\) est vraie, on <strong>suppose que \(P\) est fausse</strong> et on aboutit à une <strong>contradiction</strong> (une proposition à la fois vraie et fausse). On conclut alors que \(P\) est vraie.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soit \(n\in\mathbb{N}\) tel que \(n^2\) est pair. Montrons que \(n\) est pair.<br> Supposons par l'absurde que \(n\) est impair : il existe \(k\in\mathbb{N}\) tel que \(n=2k+1\). Alors</p>
+\[ n^2=4k^2+4k+1=2(2k^2+2k)+1 \]
+<p>est impair, ce qui contredit l'hypothèse « \(n^2\) est pair ».<br> <strong>Conclusion :</strong> \(n\) est pair.</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 14</div>
+<ol>
+  <li>Soient \(r\in\mathbb{Q}\) et \(x\notin\mathbb{Q}\). Montrer par l'absurde que \(r+x\notin\mathbb{Q}\).</li>
+  <li>Soient \(x,y,z\in\mathbb{R}_+^*\) tels que \(x+y+z&lt;\dfrac1x+\dfrac1y+\dfrac1z\) et \(xyz&gt;1\).<br> Montrer que \(x\neq1\), \(y\neq1\) et \(z\neq1\).</li>
+</ol>
+  </div>
+  <h3><span class="n">V.7</span>Le raisonnement par récurrence</h3>
+  <div class="bloc prop"><div class="tag">Principe de récurrence</div>
+<p>Soient \(n_0\in\mathbb{N}\) et \(P(n)\) une fonction propositionnelle de la variable \(n\in\mathbb{N}\).<br> Si \(P(n_0)\) est vraie, et si, pour tout \(n\ge n_0\), \(P(n)\Rightarrow P(n+1)\), alors \(P(n)\) est vraie pour tout entier \(n\ge n_0\).</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Rédiger une récurrence en trois étapes</div>
+<ol>
+  <li><strong>Initialisation :</strong> on vérifie que \(P(n_0)\) est vraie.</li>
+  <li><strong>Hérédité :</strong> « Soit \(n\ge n_0\). Supposons que \(P(n)\) est vraie » (hypothèse de récurrence), et on démontre que \(P(n+1)\) est vraie.</li>
+  <li><strong>Conclusion :</strong> « D'après le principe de récurrence, \(P(n)\) est vraie pour tout \(n\ge n_0\) ».</li>
+</ol>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Montrons que, pour tout \(n\in\mathbb{N}\), \(3\) divise \(4^n-1\).</p>
+<ul>
+  <li><strong>Initialisation :</strong> pour \(n=0\), \(4^0-1=0\) et \(3\) divise \(0\). La propriété est vraie pour \(n=0\).</li>
+  <li><strong>Hérédité :</strong> soit \(n\in\mathbb{N}\). Supposons que \(3\) divise \(4^n-1\) : il existe \(k\in\mathbb{N}\) tel que \(4^n-1=3k\). Alors
+\[ 4^{n+1}-1=4\times4^n-1=3\times4^n+(4^n-1)=3\times4^n+3k=3\,(4^n+k), \]
+avec \(4^n+k\in\mathbb{N}\). Donc \(3\) divise \(4^{n+1}-1\).</li>
+  <li><strong>Conclusion :</strong> d'après le principe de récurrence, \(3\) divise \(4^n-1\) pour tout \(n\in\mathbb{N}\).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 15</div>
+<p>Montrer par récurrence que, pour tout \(n\in\mathbb{N}\) :</p>
+<ol>
+  <li>\(2\) divise \(5^n-3^n\).</li>
+  <li>\(3\) divise \(n^3+2n\).</li>
+  <li>\(1+2+3+\dots+n=\dfrac{n(n+1)}{2}\).</li>
+  <li>\(1+2+2^2+\dots+2^n=2^{n+1}-1\).</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ VI ============================ -->
+<section class="chap" id="s6" data-toc="Synthèse : quel raisonnement choisir ?">
+  <h2><span class="num">VI</span><span class="titre">Synthèse : quel raisonnement choisir ?</span></h2>
+  <div class="bloc ret"><div class="tag">À retenir — Choisir et rédiger un raisonnement</div>
+<div class="tableau"><table><thead><tr><th scope="col">Raisonnement</th><th scope="col">On l'utilise pour…</th><th scope="col">Rédaction type</th></tr></thead><tbody><tr><td><strong>Direct</strong></td><td>montrer \(P\Rightarrow Q\) par calculs successifs</td><td>« Supposons \(P\). Alors … donc \(Q\). »</td></tr><tr><td><strong>Contre-exemple</strong></td><td>montrer qu'un énoncé « \(\forall\) » est faux</td><td>« Pour \(x=\dots\), on a …, donc l'énoncé est faux. »</td></tr><tr><td><strong>Contraposée</strong></td><td>montrer \(P\Rightarrow Q\) quand \(Q\) contient « \(\neq\) » ou une négation</td><td>« Montrons plutôt \(\overline{Q}\Rightarrow\overline{P}\). »</td></tr><tr><td><strong>Équivalences successives</strong></td><td>montrer \(P\Leftrightarrow Q\), résoudre, comparer</td><td>\(P\iff\dots\iff\dots\iff Q\)</td></tr><tr><td><strong>Disjonction des cas</strong></td><td>une valeur absolue, la parité, le signe…</td><td>« 1<sup>er</sup> cas : … ; 2<sup>e</sup> cas : … ; dans tous les cas … »</td></tr><tr><td><strong>Absurde</strong></td><td>montrer qu'un nombre est irrationnel, qu'un objet n'existe pas…</td><td>« Supposons que … est faux. … Contradiction. »</td></tr><tr><td><strong>Récurrence</strong></td><td>une propriété \(P(n)\) pour tout entier \(n\ge n_0\)</td><td>Initialisation – Hérédité – Conclusion</td></tr></tbody></table></div>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}

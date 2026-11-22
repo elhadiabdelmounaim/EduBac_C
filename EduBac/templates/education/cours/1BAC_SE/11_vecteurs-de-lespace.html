@@ -1,0 +1,217 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : 1ère Bac Sciences — Vecteurs de l'espace (chapitre 11, 7 heures).
+Généré depuis Vecteurs_espace_1Bac_SE.tex (le PDF d'origine est dans le dossier Cours de la leçon, media/lessons/1BAC_SE/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < », « > » et « & » sont écrits &lt;, &gt; et &amp;.
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">1ère année Bac Sciences</span>
+        <span class="chip or">Chapitre 11</span>
+        <span class="chip">Semestre 2</span>
+      </div>
+      <h1 id="cours-titre">Vecteurs de l'espace</h1>
+      <p class="sous-titre">Volume horaire : 7 heures</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectif"><strong>Contenus</strong>
+<ul>
+  <li>Vecteur de l'espace ; égalité ; somme ; produit par un réel.</li>
+  <li>Vecteurs colinéaires ; points alignés ; droite \(D(A;\vec{u})\).</li>
+  <li>Vecteurs coplanaires ; points coplanaires ; plan \(P(A;\vec{u};\vec{v})\).</li>
+  <li>Parallélisme de droites et de plans.</li>
+</ul>
+  </div>
+  <div class="cadre objectif"><strong>Capacités attendues</strong>
+<ul>
+  <li>Calculer avec des vecteurs dans un solide (cube, tétraèdre, pavé).</li>
+  <li>Montrer que des points sont alignés ou coplanaires.</li>
+  <li>Montrer qu'une droite est parallèle à une droite ou à un plan, qu'un plan est parallèle à un plan.</li>
+</ul>
+  </div>
+  <div class="cadre">Dans tout le chapitre, \(ABCDEFGH\) désigne un cube ; les faces \(ABCD\) et \(EFGH\) sont opposées, et \(E\), \(F\), \(G\), \(H\) sont respectivement « au-dessus » de \(A\), \(B\), \(C\), \(D\).</div>
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Vecteurs de l'espace – Opérations">
+  <h2><span class="num">I</span><span class="titre">Vecteurs de l'espace – Opérations</span></h2>
+  <div class="bloc def"><div class="tag">Définition</div>
+<div class="avec-fig">
+<div>
+<p>Les notions de vecteur du plan s'étendent à l'espace. Soient \(A\) et \(B\) deux points distincts.</p>
+<ul>
+  <li>Le vecteur \(\overrightarrow{AB}\) est défini par sa <strong>direction</strong> (celle de la droite \((AB)\)), son <strong>sens</strong> (de \(A\) vers \(B\)) et sa <strong>norme</strong> \(\|\overrightarrow{AB}\|=AB\).</li>
+  <li>Le vecteur \(\overrightarrow{AA}\) est le <strong>vecteur nul</strong> \(\vec0\).</li>
+  <li>\(\overrightarrow{AB}=\overrightarrow{CD}\iff ABDC\) est un <strong>parallélogramme</strong> (éventuellement aplati).</li>
+  <li>Pour tout point \(O\) et tout vecteur \(\vec{u}\), il existe un unique point \(M\) tel que \(\overrightarrow{OM}=\vec{u}\).</li>
+</ul>
+<p>Toutes les règles de calcul vectoriel du plan restent valables dans chaque plan de l'espace.</p>
+</div>
+<figure class="fig"><svg viewBox="-18.4 -113.3 135.6 137.7" role="img" aria-label="Figure"><path d="M0.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M67.2 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M98.7 -23.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M31.5 -23.1" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -67.2" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M67.2 -67.2" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M98.7 -90.3" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M31.5 -90.3" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L67.2 -0.0 L98.7 -23.1 M0.0 -0.0 L0.0 -67.2 M67.2 -0.0 L67.2 -67.2 M98.7 -23.1 L98.7 -90.3 M0.0 -67.2 L67.2 -67.2 L98.7 -90.3 L31.5 -90.3 Z" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L31.5 -23.1 L98.7 -23.1 M31.5 -23.1 L31.5 -90.3" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><circle cx="0.0" cy="-0.0" r="1.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-3.5" y="14.3" text-anchor="end" style="font-size:13.5px">A</text><circle cx="67.2" cy="-0.0" r="1.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="70.7" y="14.3" text-anchor="start" style="font-size:13.5px">B</text><circle cx="98.7" cy="-23.1" r="1.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="103.7" y="-18.4" text-anchor="start" style="font-size:13.5px">C</text><circle cx="31.5" cy="-23.1" r="1.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="28.0" y="-26.6" text-anchor="end" style="font-size:13.5px">D</text><circle cx="0.0" cy="-67.2" r="1.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-5.0" y="-62.5" text-anchor="end" style="font-size:13.5px">E</text><circle cx="67.2" cy="-67.2" r="1.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="70.7" y="-52.9" text-anchor="start" style="font-size:13.5px">F</text><circle cx="98.7" cy="-90.3" r="1.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="102.2" y="-93.8" text-anchor="start" style="font-size:13.5px">G</text><circle cx="31.5" cy="-90.3" r="1.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="28.0" y="-93.8" text-anchor="end" style="font-size:13.5px">H</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc prop"><div class="tag">Règles de calcul</div>
+<p>Pour tous points \(A\), \(B\), \(C\), tous vecteurs \(\vec{u}\), \(\vec{v}\) et tous réels \(k\), \(k'\) :</p>
+<ul>
+  <li>\(\overrightarrow{AB}+\overrightarrow{BC}=\overrightarrow{AC}\) (relation de Chasles)</li>
+  <li>\(\overrightarrow{AB}=-\overrightarrow{BA}\) et \(\overrightarrow{AB}+\overrightarrow{BA}=\vec0\)</li>
+  <li>\(k(\vec{u}+\vec{v})=k\vec{u}+k\vec{v}\)</li>
+  <li>\((k+k')\vec{u}=k\vec{u}+k'\vec{u}\)</li>
+  <li>\(k(k'\vec{u})=(kk')\vec{u}\)</li>
+  <li>\(k\vec{u}=\vec0\iff k=0\) ou \(\vec{u}=\vec0\)</li>
+</ul>
+<p>Si \(\vec{u}\neq\vec0\) et \(k\neq0\), le vecteur \(k\vec{u}\) a la même direction que \(\vec{u}\), le même sens si \(k&gt;0\), le sens contraire si \(k&lt;0\), et \(\|k\vec{u}\|=|k|\,\|\vec{u}\|\).</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Dans le cube \(ABCDEFGH\), on a \(\overrightarrow{EF}=\overrightarrow{DC}\), \(\overrightarrow{CG}=\overrightarrow{DH}\) et \(\overrightarrow{DA}=\overrightarrow{HE}\). Donc :</p>
+\[ \overrightarrow{EF}+\overrightarrow{CG}+\overrightarrow{DA}=\overrightarrow{DA}+\overrightarrow{AB}+\overrightarrow{BF}\,=\overrightarrow{DF} \qquad(\text{car } \overrightarrow{EF}=\overrightarrow{AB} \text{ et } \overrightarrow{CG}=\overrightarrow{BF}). \]
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+<p>Dans le cube \(ABCDEFGH\), simplifier les sommes suivantes :</p>
+\[ \text{1) } \overrightarrow{AB}+\overrightarrow{FG}+\overrightarrow{CG} \qquad \text{2) } \overrightarrow{EH}+\overrightarrow{BA}+\overrightarrow{GC} \qquad \text{3) } \overrightarrow{AE}+\overrightarrow{HG}-\overrightarrow{BC}. \]
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Vecteurs colinéaires – Droites">
+  <h2><span class="num">II</span><span class="titre">Vecteurs colinéaires – Droites</span></h2>
+  <div class="bloc def"><div class="tag">Définition</div>
+<ul>
+  <li>Deux vecteurs \(\vec{u}\) et \(\vec{v}\) sont <strong>colinéaires</strong> s'il existe un réel \(k\) tel que \(\vec{v}=k\vec{u}\) ou \(\vec{u}=k\vec{v}\). Le vecteur nul est colinéaire à tout vecteur.</li>
+  <li>Trois points \(A\), \(B\), \(C\) sont <strong>alignés</strong> si et seulement si \(\overrightarrow{AB}\) et \(\overrightarrow{AC}\) sont colinéaires.</li>
+</ul>
+  </div>
+  <div class="bloc def"><div class="tag">Définition vectorielle d'une droite</div>
+<p>Soient \(A\) un point et \(\vec{u}\) un vecteur non nul. La droite \(D(A;\vec{u})\) passant par \(A\) et de <strong>vecteur directeur</strong> \(\vec{u}\) est l'ensemble des points \(M\) tels que \(\overrightarrow{AM}=k\vec{u}\), \(k\in\mathbb{R}\).<br> Tout vecteur non nul colinéaire à \(\vec{u}\) est aussi un vecteur directeur de cette droite ; pour \(A\neq B\), \(\overrightarrow{AB}\) est un vecteur directeur de \((AB)\).</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Montrer que trois points sont alignés</div>
+<p>On exprime les vecteurs \(\overrightarrow{AB}\) et \(\overrightarrow{AC}\) en fonction de vecteurs de référence (par exemple \(\overrightarrow{AB}\), \(\overrightarrow{AD}\), \(\overrightarrow{AE}\) dans un cube) à l'aide de la relation de Chasles, puis on montre que l'un est un multiple de l'autre.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Dans le cube \(ABCDEFGH\), soient \(K\) le milieu de \([EF]\), \(L\) le milieu de \([CF]\) et \(M\) le point de \([CD]\) tel que \(\overrightarrow{CM}=\frac14\overrightarrow{CD}\).</p>
+<ul>
+  <li>\(\overrightarrow{ML}=\overrightarrow{MC}+\overrightarrow{CL}=-\dfrac14\overrightarrow{CD}+\dfrac12\overrightarrow{CF}\).</li>
+  <li>\(\overrightarrow{DK}=\overrightarrow{DC}+\overrightarrow{CF}+\overrightarrow{FK}=-\overrightarrow{CD}+\overrightarrow{CF}+\dfrac12\overrightarrow{CD}=-\dfrac12\overrightarrow{CD}+\overrightarrow{CF}\) (car \(\overrightarrow{FK}=\frac12\overrightarrow{FE}=\frac12\overrightarrow{CD}\)).</li>
+</ul>
+<p>Donc \(\overrightarrow{ML}=\dfrac12\overrightarrow{DK}\) : les vecteurs sont colinéaires et les droites \((ML)\) et \((DK)\) sont parallèles.</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 2</div>
+<p>Soient \(ABCDEFGH\) un cube, \(I\) le milieu de \([AH]\) et \(J\) le point de \([FI]\) tel que \(\overrightarrow{FJ}=\dfrac23\overrightarrow{FI}\).</p>
+<ol>
+  <li>Faire une figure.</li>
+  <li>Montrer que \(\overrightarrow{EC}=\overrightarrow{AB}+\overrightarrow{AD}-\overrightarrow{AE}\).</li>
+  <li>Exprimer \(\overrightarrow{AI}\), puis \(\overrightarrow{EJ}\), en fonction de \(\overrightarrow{AB}\), \(\overrightarrow{AD}\) et \(\overrightarrow{AE}\).</li>
+  <li>En déduire que \(\overrightarrow{EJ}=\dfrac13\overrightarrow{EC}\). Que peut-on dire des points \(E\), \(J\) et \(C\) ?</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Vecteurs coplanaires – Plans">
+  <h2><span class="num">III</span><span class="titre">Vecteurs coplanaires – Plans</span></h2>
+  <div class="bloc def"><div class="tag">Définition</div>
+<ul>
+  <li>Quatre points sont <strong>coplanaires</strong> s'ils appartiennent à un même plan.</li>
+  <li>Soient \(\vec{u}=\overrightarrow{AB}\), \(\vec{v}=\overrightarrow{AC}\) et \(\vec{w}=\overrightarrow{AD}\). Les vecteurs \(\vec{u}\), \(\vec{v}\), \(\vec{w}\) sont <strong>coplanaires</strong> si et seulement si les points \(A\), \(B\), \(C\), \(D\) sont coplanaires.</li>
+</ul>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(\vec{u}\) et \(\vec{v}\) deux vecteurs <strong>non colinéaires</strong>. Les vecteurs \(\vec{u}\), \(\vec{v}\), \(\vec{w}\) sont coplanaires si et seulement s'il existe deux réels \(x\) et \(y\) tels que</p>
+\[ \vec{w}=x\vec{u}+y\vec{v}. \]
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<ul>
+  <li>Si deux des trois vecteurs sont colinéaires, les trois vecteurs sont coplanaires.</li>
+  <li>Attention : des vecteurs coplanaires peuvent être construits à partir de points non coplanaires. Dans le cube, \(\overrightarrow{AB}\), \(\overrightarrow{AD}\) et \(\overrightarrow{EF}\) sont coplanaires (car \(\overrightarrow{EF}=\overrightarrow{AB}\)), mais les points \(A\), \(B\), \(D\), \(E\), \(F\) ne le sont pas.</li>
+</ul>
+  </div>
+  <div class="bloc def"><div class="tag">Définition vectorielle d'un plan</div>
+<p>Soient \(A\) un point et \(\vec{u}\), \(\vec{v}\) deux vecteurs non colinéaires. Le plan \(P(A;\vec{u};\vec{v})\) passant par \(A\) et de <strong>vecteurs directeurs</strong> \(\vec{u}\) et \(\vec{v}\) est l'ensemble des points \(M\) tels que</p>
+\[ \overrightarrow{AM}=x\vec{u}+y\vec{v}, \qquad (x;y)\in\mathbb{R}^2. \]
+<p>Si \(A\), \(B\), \(C\) ne sont pas alignés, le plan \((ABC)\) est le plan \(P\big(A;\overrightarrow{AB};\overrightarrow{AC}\big)\).</p>
+  </div>
+  <div class="bloc meth"><div class="tag">Méthode — Montrer que des vecteurs (ou des points) sont coplanaires</div>
+<ul>
+  <li>Écrire l'un des vecteurs comme combinaison des deux autres : \(\vec{w}=x\vec{u}+y\vec{v}\) ; ou</li>
+  <li>remarquer que deux d'entre eux sont colinéaires ; ou</li>
+  <li>remplacer les vecteurs par des vecteurs égaux tracés dans un même plan.</li>
+</ul>
+<p>Pour quatre points, on montre que \(\overrightarrow{AB}\), \(\overrightarrow{AC}\) et \(\overrightarrow{AD}\) sont coplanaires.</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>Dans le cube, \(\overrightarrow{AB}\), \(\overrightarrow{DG}\) et \(\overrightarrow{DH}\) sont coplanaires : \(\overrightarrow{AB}=\overrightarrow{DC}\), et \(\overrightarrow{DC}\), \(\overrightarrow{DG}\), \(\overrightarrow{DH}\) sont dans le plan \((DCG)\). En revanche, \(\overrightarrow{AB}\), \(\overrightarrow{AD}\) et \(\overrightarrow{AE}\) ne sont pas coplanaires.</li>
+  <li>Soient \(M\) et \(N\) les milieux de \([HE]\) et \([HG]\). Dans le triangle \(HEG\), \(\overrightarrow{MN}=\frac12\overrightarrow{EG}=\frac12\overrightarrow{AC}\) : \(\overrightarrow{MN}\) et \(\overrightarrow{AC}\) sont colinéaires, donc \(\overrightarrow{MN}\), \(\overrightarrow{CH}\) et \(\overrightarrow{AC}\) sont coplanaires.</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 3</div>
+<p>Soient \(A\), \(B\), \(C\), \(D\), \(E\) des points de l'espace tels que \(2\overrightarrow{EA}+4\overrightarrow{EB}-5\overrightarrow{EC}-\overrightarrow{ED}=\vec0\).</p>
+<ol>
+  <li>En écrivant \(\overrightarrow{EB}=\overrightarrow{EA}+\overrightarrow{AB}\), puis de même pour \(\overrightarrow{EC}\) et \(\overrightarrow{ED}\), montrer que \(\overrightarrow{AD}=4\overrightarrow{AB}-5\overrightarrow{AC}\).</li>
+  <li>En déduire que les points \(A\), \(B\), \(C\) et \(D\) sont coplanaires.</li>
+</ol>
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Parallélisme dans l'espace">
+  <h2><span class="num">IV</span><span class="titre">Parallélisme dans l'espace</span></h2>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<ul>
+  <li><strong>Deux droites</strong> \(D(A;\vec{u})\) et \(D'(B;\vec{v})\) sont parallèles si et seulement si \(\vec{u}\) et \(\vec{v}\) sont colinéaires.</li>
+  <li><strong>Une droite</strong> \(D(A;\vec{w})\) est parallèle au <strong>plan</strong> \(P(B;\vec{u};\vec{v})\) si et seulement si \(\vec{u}\), \(\vec{v}\) et \(\vec{w}\) sont coplanaires, c'est-à-dire \(\vec{w}=x\vec{u}+y\vec{v}\).</li>
+  <li><strong>Deux plans</strong> \(P(A;\vec{u};\vec{v})\) et \(Q(B;\vec{u}';\vec{v}')\) sont parallèles si et seulement si \(\vec{u}\), \(\vec{v}\), \(\vec{u}'\) sont coplanaires <strong>et</strong> \(\vec{u}\), \(\vec{v}\), \(\vec{v}'\) sont coplanaires.</li>
+</ul>
+  </div>
+  <div class="bloc att"><div class="tag">Attention — erreurs fréquentes</div>
+<ul>
+  <li>Pour deux plans, une seule des deux conditions de coplanarité ne suffit pas : il faut que les <strong>deux</strong> vecteurs directeurs de \(Q\) s'écrivent avec ceux de \(P\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<div class="avec-fig">
+<div>
+<p>Dans le cube \(ABCDEFGH\), soit \(K\) le symétrique de \(D\) par rapport à \(H\). Montrons que \((AK)\parallel(BCG)\).<br> \(\overrightarrow{AK}=\overrightarrow{AD}+\overrightarrow{DK}=\overrightarrow{AD}+2\overrightarrow{DH}=-\overrightarrow{CB}+2\overrightarrow{CG}\) (car \(\overrightarrow{AD}=\overrightarrow{BC}=-\overrightarrow{CB}\) et \(\overrightarrow{DH}=\overrightarrow{CG}\)).<br> Donc \(\overrightarrow{AK}\), \(\overrightarrow{CB}\) et \(\overrightarrow{CG}\) sont coplanaires : la droite \((AK)\) est parallèle au plan \((BCG)\).</p>
+</div>
+<figure class="fig"><svg viewBox="-18.4 -148.5 122.8 172.8" role="img" aria-label="Figure"><path d="M58.0 -0.0 L86.0 -20.0 L86.0 -72.0 L58.0 -52.0 Z" fill="var(--meth-bg)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M58.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M86.0 -20.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M28.0 -20.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -52.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M58.0 -52.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M86.0 -72.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M28.0 -72.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M28.0 -124.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L58.0 -0.0 L86.0 -20.0 M0.0 -0.0 L0.0 -52.0 M58.0 -0.0 L58.0 -52.0 M86.0 -20.0 L86.0 -72.0 M0.0 -52.0 L58.0 -52.0 L86.0 -72.0 L28.0 -72.0 Z" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L28.0 -20.0 L86.0 -20.0 M28.0 -20.0 L28.0 -72.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M28.0 -72.0 L28.0 -124.0" fill="none" stroke="var(--doux)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M0.0 -0.0 L28.0 -124.0" fill="none" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><circle cx="0.0" cy="-0.0" r="1.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-3.5" y="14.3" text-anchor="end" style="font-size:13.5px">A</text><circle cx="58.0" cy="-0.0" r="1.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="61.5" y="14.3" text-anchor="start" style="font-size:13.5px">B</text><circle cx="86.0" cy="-20.0" r="1.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="91.0" y="-15.3" text-anchor="start" style="font-size:13.5px">C</text><circle cx="28.0" cy="-20.0" r="1.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="23.0" y="-15.3" text-anchor="end" style="font-size:13.5px">D</text><circle cx="0.0" cy="-52.0" r="1.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-5.0" y="-47.3" text-anchor="end" style="font-size:13.5px">E</text><circle cx="58.0" cy="-52.0" r="1.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="61.5" y="-37.7" text-anchor="start" style="font-size:13.5px">F</text><circle cx="86.0" cy="-72.0" r="1.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="89.5" y="-75.5" text-anchor="start" style="font-size:13.5px">G</text><circle cx="28.0" cy="-72.0" r="1.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="23.0" y="-67.3" text-anchor="end" style="font-size:13.5px">H</text><circle cx="28.0" cy="-124.0" r="1.7" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="28.0" y="-129.0" text-anchor="middle" style="font-size:13.5px">K</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc app"><div class="tag">Application 4</div>
+<p>Dans le cube \(ABCDEFGH\) :</p>
+<ol>
+  <li>Exprimer \(\overrightarrow{BD}\) et \(\overrightarrow{BG}\) en fonction de \(\overrightarrow{AF}\) et \(\overrightarrow{AH}\).</li>
+  <li>En déduire que les plans \((AFH)\) et \((BDG)\) sont parallèles.</li>
+</ol>
+  </div>
+  <div class="bloc app"><div class="tag">Application 5</div>
+<div class="avec-fig">
+<div>
+<p>Soit \(ABCD\) un tétraèdre. On note \(I\), \(J\), \(K\) les milieux respectifs de \([AB]\), \([AC]\) et \([CD]\).</p>
+<ol>
+  <li>Montrer que \(\overrightarrow{IJ}=\frac12\overrightarrow{BC}\). En déduire que la droite \((IJ)\) est parallèle au plan \((BCD)\).</li>
+  <li>Montrer que \(\overrightarrow{IK}=\frac12\big(\overrightarrow{AD}+\overrightarrow{BC}\big)\).</li>
+  <li>En déduire que la droite \((IK)\) est parallèle au plan passant par \(J\) et dirigé par \(\overrightarrow{AD}\) et \(\overrightarrow{BC}\).</li>
+</ol>
+</div>
+<figure class="fig"><svg viewBox="-16.9 -147.7 174.7 172.0" role="img" aria-label="Figure"><path d="M61.6 -123.2" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M140.8 -8.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M88.0 -44.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M30.8 -61.6" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M101.2 -66.0" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M114.4 -26.4" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M61.6 -123.2 L0.0 -0.0 L140.8 -8.8 Z L61.6 -123.2 L88.0 -44.0 L140.8 -8.8" fill="none" stroke="var(--fig-trait)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 -0.0 L88.0 -44.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><path d="M30.8 -61.6 L101.2 -66.0" fill="none" stroke="var(--meth)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M30.8 -61.6 L114.4 -26.4" fill="none" stroke="var(--fig-accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><circle cx="61.6" cy="-123.2" r="1.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="61.6" y="-128.2" text-anchor="middle" style="font-size:13.5px">A</text><circle cx="0.0" cy="-0.0" r="1.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="-3.5" y="14.3" text-anchor="end" style="font-size:13.5px">B</text><circle cx="140.8" cy="-8.8" r="1.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="144.3" y="5.5" text-anchor="start" style="font-size:13.5px">C</text><circle cx="88.0" cy="-44.0" r="1.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="93.0" y="-39.3" text-anchor="start" style="font-size:13.5px">D</text><circle cx="30.8" cy="-61.6" r="1.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="25.8" y="-56.9" text-anchor="end" style="font-size:13.5px">I</text><circle cx="101.2" cy="-66.0" r="1.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="106.2" y="-61.3" text-anchor="start" style="font-size:13.5px">J</text><circle cx="114.4" cy="-26.4" r="1.8" fill="var(--texte)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="114.4" y="-10.6" text-anchor="middle" style="font-size:13.5px">K</text></svg></figure>
+</div>
+  </div>
+</section>
+
+<!-- ============================ V ============================ -->
+<section class="chap" id="s5" data-toc="Synthèse">
+  <h2><span class="num">V</span><span class="titre">Synthèse</span></h2>
+  <div class="bloc ret"><div class="tag">À retenir</div>
+<div class="tableau"><table><thead><tr><th scope="col">Pour montrer que…</th><th scope="col">On montre que…</th></tr></thead><tbody><tr><td>\(A\), \(B\), \(C\) sont alignés</td><td>\(\overrightarrow{AC}=k\overrightarrow{AB}\)</td></tr><tr><td>\((AB)\parallel(CD)\)</td><td>\(\overrightarrow{CD}=k\overrightarrow{AB}\)</td></tr><tr><td>\(\vec{u}\), \(\vec{v}\), \(\vec{w}\) sont coplanaires</td><td>\(\vec{w}=x\vec{u}+y\vec{v}\) (ou deux d'entre eux sont colinéaires)</td></tr><tr><td>\(A\), \(B\), \(C\), \(D\) sont coplanaires</td><td>\(\overrightarrow{AD}=x\overrightarrow{AB}+y\overrightarrow{AC}\)</td></tr><tr><td>\(D(A;\vec{w})\parallel P(B;\vec{u};\vec{v})\)</td><td>\(\vec{w}=x\vec{u}+y\vec{v}\)</td></tr><tr><td>\(P(A;\vec{u};\vec{v})\parallel Q(B;\vec{u}';\vec{v}')\)</td><td>\(\vec{u}'\) <strong>et</strong> \(\vec{v}'\) s'écrivent comme combinaisons de \(\vec{u}\) et \(\vec{v}\)</td></tr></tbody></table></div>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}

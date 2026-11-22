@@ -12,6 +12,25 @@ from education.media_library import course_html_template
 _cache = {}
 
 
+_SYMB = {'alpha': 'α', 'beta': 'β', 'pi': 'π', 'infty': '∞', 'le': '≤', 'ge': '≥', 'neq': '≠',
+         'times': '×', 'cdot': '·', 'circ': '∘', 'mapsto': '↦', 'to': '→', 'Omega': 'Ω', 'omega': 'ω',
+         'lambda': 'λ', 'theta': 'θ', 'Delta': 'Δ', 'sqrt': '√', 'cos': 'cos', 'sin': 'sin', 'tan': 'tan',
+         'pm': '±', 'det': 'det', 'lim': 'lim'}
+
+
+def _sans_tex(texte):
+    """« Écrire \\(a\\cos x\\) » → « Écrire a cos x » : titres lisibles dans le cahier de textes."""
+    if '\\' not in texte:
+        return texte
+    t = re.sub(r'\\[()\[\]]', ' ', texte)
+    t = re.sub(r'\\[dt]?frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}', r'\1/\2', t)
+    t = re.sub(r'\\[dt]?frac\s*(\w)\s*(\w)', r' \1/\2', t)
+    t = re.sub(r'\\([A-Za-z]+)', lambda m: ' ' + _SYMB.get(m.group(1), '') + ' ', t)
+    t = t.replace('{', '').replace('}', '')
+    t = re.sub(r'\s+([),;.])', r'\1', re.sub(r'([(])\s+', r'\1', t))
+    return re.sub(r'\s+', ' ', t)
+
+
 class _Lecteur(HTMLParser):
     VIDES = {'br', 'img', 'hr', 'input', 'meta', 'link', 'path', 'line', 'circle', 'rect',
              'polygon', 'polyline', 'ellipse', 'use', 'source', 'wbr'}
@@ -66,6 +85,8 @@ class _Lecteur(HTMLParser):
                 break
 
     def fermer(self, role):
+        if self.capture is not None:
+            self.capture[1] = _sans_tex(self.capture[1])
         if not role or not self.parties:
             return
         partie = self.parties[-1]

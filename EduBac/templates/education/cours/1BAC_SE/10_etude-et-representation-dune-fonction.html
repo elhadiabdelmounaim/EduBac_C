@@ -1,0 +1,272 @@
+{% extends "education/cours/_base.html" %}
+{% comment %}
+Cours en ligne : 1ère Bac Sciences — Étude des fonctions et représentation graphique (chapitre 10, 14 heures).
+Généré depuis Etude_fonctions_1Bac_SE.tex (le PDF d'origine est dans le dossier Cours de la leçon, media/lessons/1BAC_SE/).
+Le contenu est entre « verbatim » : les accolades du LaTeX ne sont pas interprétées par Django.
+Dans les formules, « < », « > » et « & » sont écrits &lt;, &gt; et &amp;.
+{% endcomment %}
+
+{% block hero %}{% verbatim %}
+<div class="hero">
+  <div class="hero-card">
+    <div>
+      <div class="chips">
+        <span class="chip">1ère année Bac Sciences</span>
+        <span class="chip or">Chapitre 10</span>
+        <span class="chip">Semestre 2</span>
+      </div>
+      <h1 id="cours-titre">Étude des fonctions et représentation graphique</h1>
+      <p class="sous-titre">Volume horaire : 14 heures</p>
+      <div class="auteur">Elhadi Abdelmounaim</div>
+    </div>
+    <div class="stats" data-stats></div>
+  </div>
+  <div class="cadre objectif"><strong>Contenus</strong>
+<ul>
+  <li>Branches infinies : asymptotes verticale, horizontale, oblique ; branches paraboliques.</li>
+  <li>Position d'une courbe par rapport à une asymptote.</li>
+  <li>Concavité, points d'inflexion.</li>
+  <li>Axe de symétrie, centre de symétrie.</li>
+  <li>Plan d'étude d'une fonction.</li>
+</ul>
+  </div>
+  <div class="cadre objectif"><strong>Capacités attendues</strong>
+<ul>
+  <li>Déterminer les branches infinies d'une courbe.</li>
+  <li>Étudier la concavité d'une courbe à l'aide de \(f''\).</li>
+  <li>Montrer qu'une droite est un axe de symétrie ou qu'un point est un centre de symétrie.</li>
+  <li>Étudier complètement une fonction et tracer sa courbe.</li>
+</ul>
+  </div>
+  <div class="cadre">Dans tout le chapitre, le plan est muni d'un repère orthogonal \((O;\vec i;\vec j)\) (orthonormé pour les parties II et III). Ce chapitre utilise les limites (leçon 7) et la dérivation.</div>
+</div>
+{% endverbatim %}{% endblock %}
+
+{% block cours %}{% verbatim %}
+<!-- ============================ I ============================ -->
+<section class="chap" id="s1" data-toc="Branches infinies">
+  <h2><span class="num">I</span><span class="titre">Branches infinies</span></h2>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soit \(f\) une fonction de courbe \((\mathcal{C}_f)\). On dit que \((\mathcal{C}_f)\) admet une <strong>branche infinie</strong> lorsque l'une au moins des coordonnées d'un point \(M(x;f(x))\) de \((\mathcal{C}_f)\) tend vers l'infini.</p>
+  </div>
+  <h3><span class="n">I.1</span>Asymptote verticale – Asymptote horizontale</h3>
+  <div class="bloc act"><div class="tag">Activité 1</div>
+<div class="avec-fig">
+<div>
+<p>Soit \(f\) la fonction définie sur \(\mathbb{R}\setminus\{2\}\) par \(f(x)=\dfrac{x}{x-2}\).</p>
+<ol>
+  <li><ol class="alpha">
+  <li>Calculer les limites de \(f\) en \(-\infty\) et en \(+\infty\).</li>
+  <li>Que peut-on dire de \((\mathcal{C}_f)\) au voisinage de \(-\infty\) et de \(+\infty\) ?</li>
+</ol></li>
+  <li><ol class="alpha">
+  <li>Calculer \(\lim\limits_{x\to2^-}f(x)\) et \(\lim\limits_{x\to2^+}f(x)\).</li>
+  <li>Que peut-on dire de \((\mathcal{C}_f)\) au voisinage de \(2\) ?</li>
+</ol></li>
+</ol>
+</div>
+<figure class="fig"><svg viewBox="-6.0 -13.8 242.4 214.2" role="img" aria-label="Figure"><defs><clipPath id="cg1"><rect x="-2" y="-2" width="234.4" height="198.4"/></clipPath><marker id="mg1-235" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M31.4 0 V194.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M115.2 0 V194.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M157.1 0 V194.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M199.0 0 V194.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 150.2 H230.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 97.2 H230.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 79.5 H230.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 44.2 H230.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 8.8 H230.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.0 103.6 L0.9 103.7 L1.8 103.7 L2.7 103.8 L3.6 103.8 L4.5 103.9 L5.3 103.9 L6.2 104.0 L7.1 104.0 L8.0 104.1 L8.9 104.2 L9.8 104.2 L10.7 104.3 L11.6 104.3 L12.5 104.4 L13.4 104.5 L14.2 104.5 L15.1 104.6 L16.0 104.7 L16.9 104.7 L17.8 104.8 L18.7 104.9 L19.6 104.9 L20.5 105.0 L21.4 105.1 L22.3 105.2 L23.1 105.2 L24.0 105.3 L24.9 105.4 L25.8 105.5 L26.7 105.6 L27.6 105.7 L28.5 105.7 L29.4 105.8 L30.3 105.9 L31.2 106.0 L32.0 106.1 L32.9 106.2 L33.8 106.3 L34.7 106.4 L35.6 106.5 L36.5 106.6 L37.4 106.7 L38.3 106.8 L39.2 106.9 L40.1 107.1 L40.9 107.2 L41.8 107.3 L42.7 107.4 L43.6 107.5 L44.5 107.7 L45.4 107.8 L46.3 107.9 L47.2 108.1 L48.1 108.2 L49.0 108.4 L49.9 108.5 L50.7 108.7 L51.6 108.8 L52.5 109.0 L53.4 109.2 L54.3 109.4 L55.2 109.5 L56.1 109.7 L57.0 109.9 L57.9 110.1 L58.8 110.3 L59.6 110.5 L60.5 110.7 L61.4 111.0 L62.3 111.2 L63.2 111.4 L64.1 111.7 L65.0 111.9 L65.9 112.2 L66.8 112.5 L67.7 112.8 L68.5 113.1 L69.4 113.4 L70.3 113.7 L71.2 114.0 L72.1 114.4 L73.0 114.7 L73.9 115.1 L74.8 115.5 L75.7 115.9 L76.6 116.4 L77.4 116.8 L78.3 117.3 L79.2 117.8 L80.1 118.3 L81.0 118.9 L81.9 119.4 L82.8 120.0 L83.7 120.7 L84.6 121.4 L85.5 122.1 L86.3 122.9 L87.2 123.7 L88.1 124.5 L89.0 125.5 L89.9 126.5 L90.8 127.5 L91.7 128.7 L92.6 129.9 L93.5 131.3 L94.4 132.7 L95.2 134.3 L96.1 136.0 L97.0 137.9 L97.9 140.0 L98.8 142.4 L99.7 145.0 L100.6 147.9 L101.5 151.2 L102.4 154.9 L103.3 159.2 L104.2 164.2 L105.0 170.1 L105.9 177.1 L106.8 185.6" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg1)"/><path d="M121.9 -13.3 L122.8 -0.1 L123.7 10.2 L124.6 18.6 L125.5 25.5 L126.4 31.2 L127.3 36.2 L128.2 40.4 L129.1 44.1 L130.0 47.3 L130.9 50.2 L131.8 52.7 L132.8 55.0 L133.7 57.1 L134.6 59.0 L135.5 60.7 L136.4 62.2 L137.3 63.7 L138.2 65.0 L139.1 66.2 L140.0 67.3 L140.9 68.4 L141.8 69.4 L142.7 70.3 L143.6 71.1 L144.5 71.9 L145.4 72.7 L146.3 73.4 L147.2 74.1 L148.1 74.7 L149.0 75.3 L149.9 75.9 L150.8 76.4 L151.7 76.9 L152.6 77.4 L153.5 77.9 L154.5 78.3 L155.4 78.8 L156.3 79.2 L157.2 79.6 L158.1 79.9 L159.0 80.3 L159.9 80.6 L160.8 81.0 L161.7 81.3 L162.6 81.6 L163.5 81.9 L164.4 82.2 L165.3 82.4 L166.2 82.7 L167.1 82.9 L168.0 83.2 L168.9 83.4 L169.8 83.6 L170.7 83.9 L171.6 84.1 L172.5 84.3 L173.4 84.5 L174.3 84.7 L175.2 84.9 L176.2 85.1 L177.1 85.2 L178.0 85.4 L178.9 85.6 L179.8 85.7 L180.7 85.9 L181.6 86.0 L182.5 86.2 L183.4 86.3 L184.3 86.5 L185.2 86.6 L186.1 86.8 L187.0 86.9 L187.9 87.0 L188.8 87.1 L189.7 87.3 L190.6 87.4 L191.5 87.5 L192.4 87.6 L193.3 87.7 L194.2 87.8 L195.1 87.9 L196.0 88.0 L196.9 88.1 L197.9 88.2 L198.8 88.3 L199.7 88.4 L200.6 88.5 L201.5 88.6 L202.4 88.7 L203.3 88.8 L204.2 88.9 L205.1 89.0 L206.0 89.0 L206.9 89.1 L207.8 89.2 L208.7 89.3 L209.6 89.4 L210.5 89.4 L211.4 89.5 L212.3 89.6 L213.2 89.6 L214.1 89.7 L215.0 89.8 L215.9 89.9 L216.8 89.9 L217.7 90.0 L218.6 90.0 L219.6 90.1 L220.5 90.2 L221.4 90.2 L222.3 90.3 L223.2 90.3 L224.1 90.4 L225.0 90.5 L225.9 90.5 L226.8 90.6 L227.7 90.6 L228.6 90.7 L229.5 90.7 L230.4 90.8" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg1)"/><path d="M0.0 97.2 L1.9 97.2 L3.8 97.2 L5.8 97.2 L7.7 97.2 L9.6 97.2 L11.5 97.2 L13.4 97.2 L15.4 97.2 L17.3 97.2 L19.2 97.2 L21.1 97.2 L23.0 97.2 L25.0 97.2 L26.9 97.2 L28.8 97.2 L30.7 97.2 L32.6 97.2 L34.6 97.2 L36.5 97.2 L38.4 97.2 L40.3 97.2 L42.2 97.2 L44.2 97.2 L46.1 97.2 L48.0 97.2 L49.9 97.2 L51.8 97.2 L53.8 97.2 L55.7 97.2 L57.6 97.2 L59.5 97.2 L61.4 97.2 L63.4 97.2 L65.3 97.2 L67.2 97.2 L69.1 97.2 L71.0 97.2 L73.0 97.2 L74.9 97.2 L76.8 97.2 L78.7 97.2 L80.6 97.2 L82.6 97.2 L84.5 97.2 L86.4 97.2 L88.3 97.2 L90.2 97.2 L92.2 97.2 L94.1 97.2 L96.0 97.2 L97.9 97.2 L99.8 97.2 L101.8 97.2 L103.7 97.2 L105.6 97.2 L107.5 97.2 L109.4 97.2 L111.4 97.2 L113.3 97.2 L115.2 97.2 L117.1 97.2 L119.0 97.2 L121.0 97.2 L122.9 97.2 L124.8 97.2 L126.7 97.2 L128.6 97.2 L130.6 97.2 L132.5 97.2 L134.4 97.2 L136.3 97.2 L138.2 97.2 L140.2 97.2 L142.1 97.2 L144.0 97.2 L145.9 97.2 L147.8 97.2 L149.8 97.2 L151.7 97.2 L153.6 97.2 L155.5 97.2 L157.4 97.2 L159.4 97.2 L161.3 97.2 L163.2 97.2 L165.1 97.2 L167.0 97.2 L169.0 97.2 L170.9 97.2 L172.8 97.2 L174.7 97.2 L176.6 97.2 L178.6 97.2 L180.5 97.2 L182.4 97.2 L184.3 97.2 L186.2 97.2 L188.2 97.2 L190.1 97.2 L192.0 97.2 L193.9 97.2 L195.8 97.2 L197.8 97.2 L199.7 97.2 L201.6 97.2 L203.5 97.2 L205.4 97.2 L207.4 97.2 L209.3 97.2 L211.2 97.2 L213.1 97.2 L215.0 97.2 L217.0 97.2 L218.9 97.2 L220.8 97.2 L222.7 97.2 L224.6 97.2 L226.6 97.2 L228.5 97.2 L230.4 97.2" fill="none" stroke="var(--meth)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4" clip-path="url(#cg1)"/><path d="M0 114.9 H230.4" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-235)"/><path d="M73.3 194.4 V0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg1-235)"/><text x="226.9" y="128.0" text-anchor="end" style="font-size:12.0px;fill:var(--doux)">x</text><text x="78.3" y="4.2" text-anchor="start" style="font-size:12.0px;fill:var(--doux)">y</text><text x="31.4" y="128.7" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−2</text><text x="115.2" y="128.7" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">2</text><text x="157.1" y="128.7" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">4</text><text x="199.0" y="128.7" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">6</text><text x="68.3" y="154.1" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">−2</text><text x="68.3" y="101.0" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">1</text><text x="68.3" y="83.4" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">2</text><text x="68.3" y="48.0" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">4</text><text x="68.3" y="12.7" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">6</text><path d="M115.2 194.4 L115.2 0.0" fill="none" stroke="var(--meth)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="224.8" y="93.7" text-anchor="end" style="font-size:11.5px;fill:var(--meth)">y=1</text><text x="120.2" y="12.9" text-anchor="start" style="font-size:11.5px;fill:var(--meth)">x=2</text><text x="161.3" y="55.3" text-anchor="middle" style="font-size:11.5px;fill:var(--fig-trait)">(𝒞<tspan baseline-shift="sub" font-size="72%">f</tspan>)</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soient \(f\) une fonction et \(a\), \(b\) deux réels.</p>
+<ul>
+  <li>Si \(\lim\limits_{x\to a^+}f(x)=\pm\infty\) ou \(\lim\limits_{x\to a^-}f(x)=\pm\infty\), la droite d'équation \(x=a\) est une <strong>asymptote verticale</strong> à \((\mathcal{C}_f)\).</li>
+  <li>Si \(\lim\limits_{x\to+\infty}f(x)=b\) (resp. \(\lim\limits_{x\to-\infty}f(x)=b\)), la droite d'équation \(y=b\) est une <strong>asymptote horizontale</strong> à \((\mathcal{C}_f)\) au voisinage de \(+\infty\) (resp. \(-\infty\)).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soit \(f(x)=\dfrac{3x^2+x-2}{x^2-4}\).</p>
+<ul>
+  <li>\(\lim\limits_{x\to2^+}(3x^2+x-2)=12\) et \(\lim\limits_{x\to2^+}(x^2-4)=0^+\), donc \(\lim\limits_{x\to2^+}f(x)=+\infty\) : la droite \(x=2\) est une asymptote verticale à \((\mathcal{C}_f)\).</li>
+  <li>\(\lim\limits_{x\to+\infty}f(x)=\lim\limits_{x\to+\infty}\dfrac{3x^2}{x^2}=3\) : la droite \(y=3\) est une asymptote horizontale à \((\mathcal{C}_f)\) au voisinage de \(+\infty\).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 1</div>
+<ol>
+  <li>Soit \(f(x)=5+\dfrac{x}{x^2+3}\). Calculer les limites de \(f\) en \(-\infty\) et en \(+\infty\), puis interpréter graphiquement.</li>
+  <li>Soit \(g(x)=\dfrac{x+1}{(x-4)^2}\). Montrer que la droite d'équation \(x=4\) est une asymptote verticale à la courbe de \(g\).</li>
+</ol>
+  </div>
+  <div class="bloc app"><div class="tag">Application 2</div>
+<div class="avec-fig">
+<div>
+<p>Une fonction \(f\) est définie par son tableau de variations ci-contre.<br> Déterminer son ensemble de définition et les éventuelles asymptotes à sa courbe.</p>
+</div>
+<figure class="fig tabvar"><svg viewBox="-6.0 -6.0 300.0 75.8" role="img" aria-label="Tableau"><defs><marker id="mg6-553" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fig-trait)"/></marker></defs><path d="M0 0 H288.0 V62.4 H0 Z" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M64 0 V62.4" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 18.2 H288.0" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><text x="32.0" y="13.6" text-anchor="middle" style="font-size:13.0px">x</text><text x="32.0" y="44.8" text-anchor="middle" style="font-size:13.0px">f(x)</text><text x="86.0" y="13.6" text-anchor="middle" style="font-size:13.0px">-∞</text><text x="146.0" y="13.6" text-anchor="middle" style="font-size:13.0px">0</text><text x="206.0" y="13.6" text-anchor="middle" style="font-size:13.0px">2</text><text x="266.0" y="13.6" text-anchor="middle" style="font-size:13.0px">+∞</text><text x="86.0" y="59.9" text-anchor="middle" style="font-size:13.0px">1</text><path d="M144.0 18.2 V62.4 M148.0 18.2 V62.4" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><text x="138.0" y="31.2" text-anchor="end" style="font-size:13.0px">+∞</text><text x="154.0" y="31.2" text-anchor="start" style="font-size:13.0px">+∞</text><path d="M204.0 18.2 V62.4 M208.0 18.2 V62.4" fill="none" stroke="var(--fig-trait)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><text x="198.0" y="55.4" text-anchor="end" style="font-size:13.0px">-∞</text><text x="214.0" y="31.2" text-anchor="start" style="font-size:13.0px">+∞</text><text x="266.0" y="59.9" text-anchor="middle" style="font-size:13.0px">1</text><path d="M98.0 45.4 L132.0 37.2" fill="none" stroke="var(--fig-trait)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg6-553)"/><path d="M160.0 37.2 L192.0 45.4" fill="none" stroke="var(--fig-trait)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg6-553)"/><path d="M220.0 37.2 L254.0 45.4" fill="none" stroke="var(--fig-trait)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg6-553)"/></svg></figure>
+</div>
+  </div>
+  <h3><span class="n">I.2</span>Asymptote oblique</h3>
+  <div class="bloc act"><div class="tag">Activité 2</div>
+<p>Soit \(f\) la fonction définie sur \(\mathbb{R}\setminus\left\{-\frac32\right\}\) par \(f(x)=\dfrac{x^2}{2x+3}\), et \((D)\) la droite d'équation \(y=\dfrac12x-\dfrac34\).</p>
+<ol>
+  <li>Calculer les limites de \(f\) en \(-\infty\) et en \(+\infty\).</li>
+  <li>Calculer \(\lim\limits_{x\to\pm\infty}\left[f(x)-\left(\dfrac12x-\dfrac34\right)\right]\). Que peut-on dire de \((\mathcal{C}_f)\) et de \((D)\) ?</li>
+</ol>
+  </div>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soient \(a\neq0\) et \(b\) deux réels. Si \(\lim\limits_{x\to+\infty}\big[f(x)-(ax+b)\big]=0\) (resp. en \(-\infty\)), la droite d'équation \(y=ax+b\) est une <strong>asymptote oblique</strong> à \((\mathcal{C}_f)\) au voisinage de \(+\infty\) (resp. de \(-\infty\)).</p>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<ul>
+  <li>La droite \(y=ax+b\) est asymptote oblique à \((\mathcal{C}_f)\) en \(+\infty\) si et seulement s'il existe une fonction \(h\) telle que \(f(x)=ax+b+h(x)\) et \(\lim\limits_{x\to+\infty}h(x)=0\).</li>
+  <li>La droite \(y=ax+b\) est asymptote oblique à \((\mathcal{C}_f)\) en \(+\infty\) si et seulement si
+\[ \lim\limits_{x\to+\infty}\frac{f(x)}{x}=a \qquad\text{et}\qquad \lim\limits_{x\to+\infty}\big(f(x)-ax\big)=b. \]</li>
+</ul>
+<p>(Mêmes résultats en \(-\infty\).)</p>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soit \(f(x)=2x-3+\dfrac{x}{2x^2+1}\). On a \(\lim\limits_{x\to+\infty}\big[f(x)-(2x-3)\big]=\lim\limits_{x\to+\infty}\dfrac{x}{2x^2+1}=\lim\limits_{x\to+\infty}\dfrac{1}{2x}=0\).<br> Donc la droite d'équation \(y=2x-3\) est une asymptote oblique à \((\mathcal{C}_f)\) au voisinage de \(+\infty\).</p>
+  </div>
+  <h3><span class="n">I.3</span>Position relative d'une courbe et d'une asymptote</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Pour étudier la position de \((\mathcal{C}_f)\) par rapport à la droite \((D) : y=ax+b\), on étudie le <strong>signe de \(f(x)-(ax+b)\)</strong> :</p>
+<ul>
+  <li>si \(f(x)-(ax+b)&gt;0\), \((\mathcal{C}_f)\) est <strong>au-dessus</strong> de \((D)\) ;</li>
+  <li>si \(f(x)-(ax+b)&lt;0\), \((\mathcal{C}_f)\) est <strong>au-dessous</strong> de \((D)\) ;</li>
+  <li>si \(f(x)-(ax+b)=0\), \((\mathcal{C}_f)\) et \((D)\) se coupent au point d'abscisse \(x\).</li>
+</ul>
+<p>(Pour une asymptote horizontale, on prend \(a=0\).)</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 3</div>
+<p>Soit \(f\) la fonction définie sur \(\mathbb{R}\setminus\{3\}\) par \(f(x)=\dfrac{2x^2-7x+8}{x-3}\).</p>
+<ol>
+  <li>Vérifier que \(f(x)=2x-1+\dfrac{5}{x-3}\) pour tout \(x\neq3\).</li>
+  <li>Montrer que la droite \((D) : y=2x-1\) est une asymptote oblique à \((\mathcal{C}_f)\) au voisinage de \(+\infty\) et de \(-\infty\).</li>
+  <li>Étudier la position relative de \((\mathcal{C}_f)\) et de \((D)\).</li>
+</ol>
+  </div>
+  <div class="bloc app"><div class="tag">Application 4</div>
+<p>Déterminer l'équation de l'asymptote oblique à \((\mathcal{C}_f)\) au voisinage de \(+\infty\) dans chacun des cas :</p>
+\[ \text{1) } f(x)=\frac{3x^3+x^2-1}{x^2} \qquad\qquad \text{2) } f(x)=x+\frac{\sin x}{2x}. \]
+  </div>
+  <h3><span class="n">I.4</span>Branches paraboliques</h3>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soit \(f\) une fonction telle que \(\lim\limits_{x\to+\infty}f(x)=\pm\infty\) (on a les mêmes définitions en \(-\infty\)).</p>
+<ul>
+  <li>Si \(\lim\limits_{x\to+\infty}\dfrac{f(x)}{x}=0\) : \((\mathcal{C}_f)\) admet une <strong>branche parabolique de direction l'axe des abscisses</strong>.</li>
+  <li>Si \(\lim\limits_{x\to+\infty}\dfrac{f(x)}{x}=\pm\infty\) : \((\mathcal{C}_f)\) admet une <strong>branche parabolique de direction l'axe des ordonnées</strong>.</li>
+  <li>Si \(\lim\limits_{x\to+\infty}\dfrac{f(x)}{x}=a\) (\(a\neq0\)) et \(\lim\limits_{x\to+\infty}\big(f(x)-ax\big)=\pm\infty\) : \((\mathcal{C}_f)\) admet une <strong>branche parabolique de direction la droite \(y=ax\)</strong>.</li>
+</ul>
+<div class="figs" style="--n:3"><figure class="fig"><svg viewBox="-6.0 -13.8 184.8 157.1" role="img" aria-label="Figure"><defs><clipPath id="cg7"><rect x="-2" y="-2" width="176.8" height="133.6"/></clipPath><marker id="mg7-235" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M5.6 120.6 L7.0 110.7 L8.4 106.6 L9.8 103.4 L11.1 100.7 L12.5 98.4 L13.9 96.3 L15.3 94.4 L16.7 92.5 L18.1 90.8 L19.5 89.2 L20.9 87.7 L22.3 86.2 L23.7 84.8 L25.1 83.5 L26.5 82.2 L27.9 80.9 L29.3 79.7 L30.7 78.5 L32.1 77.4 L33.4 76.3 L34.8 75.2 L36.2 74.1 L37.6 73.1 L39.0 72.0 L40.4 71.0 L41.8 70.1 L43.2 69.1 L44.6 68.1 L46.0 67.2 L47.4 66.3 L48.8 65.4 L50.2 64.5 L51.6 63.7 L53.0 62.8 L54.3 62.0 L55.7 61.1 L57.1 60.3 L58.5 59.5 L59.9 58.7 L61.3 57.9 L62.7 57.1 L64.1 56.4 L65.5 55.6 L66.9 54.9 L68.3 54.1 L69.7 53.4 L71.1 52.7 L72.5 51.9 L73.9 51.2 L75.3 50.5 L76.6 49.8 L78.0 49.1 L79.4 48.4 L80.8 47.8 L82.2 47.1 L83.6 46.4 L85.0 45.8 L86.4 45.1 L87.8 44.5 L89.2 43.8 L90.6 43.2 L92.0 42.6 L93.4 41.9 L94.8 41.3 L96.2 40.7 L97.5 40.1 L98.9 39.5 L100.3 38.9 L101.7 38.3 L103.1 37.7 L104.5 37.1 L105.9 36.5 L107.3 35.9 L108.7 35.4 L110.1 34.8 L111.5 34.2 L112.9 33.6 L114.3 33.1 L115.7 32.5 L117.1 32.0 L118.5 31.4 L119.8 30.9 L121.2 30.3 L122.6 29.8 L124.0 29.2 L125.4 28.7 L126.8 28.2 L128.2 27.6 L129.6 27.1 L131.0 26.6 L132.4 26.1 L133.8 25.6 L135.2 25.0 L136.6 24.5 L138.0 24.0 L139.4 23.5 L140.7 23.0 L142.1 22.5 L143.5 22.0 L144.9 21.5 L146.3 21.0 L147.7 20.5 L149.1 20.0 L150.5 19.5 L151.9 19.1 L153.3 18.6 L154.7 18.1 L156.1 17.6 L157.5 17.1 L158.9 16.7 L160.3 16.2 L161.7 15.7 L163.0 15.3 L164.4 14.8 L165.8 14.3 L167.2 13.9 L168.6 13.4 L170.0 13.0 L171.4 12.5 L172.8 12.1" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg7)"/><path d="M0 120.6 H172.8" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg7-235)"/><path d="M5.6 129.6 V0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg7-235)"/><text x="169.3" y="133.7" text-anchor="end" style="font-size:12.0px;fill:var(--doux)">x</text><text x="10.6" y="4.2" text-anchor="start" style="font-size:12.0px;fill:var(--doux)">y</text></svg><figcaption>direction \((Ox)\)</figcaption></figure><figure class="fig"><svg viewBox="-6.0 -13.8 184.8 159.9" role="img" aria-label="Figure"><defs><clipPath id="cg8"><rect x="-2" y="-2" width="176.8" height="133.6"/></clipPath><marker id="mg8-235" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M15.7 123.4 L16.8 123.4 L17.8 123.4 L18.9 123.4 L19.9 123.3 L20.9 123.2 L22.0 123.1 L23.0 123.0 L24.1 122.9 L25.1 122.8 L26.2 122.6 L27.2 122.4 L28.3 122.2 L29.3 122.0 L30.4 121.8 L31.4 121.6 L32.5 121.3 L33.5 121.1 L34.6 120.8 L35.6 120.5 L36.7 120.1 L37.7 119.8 L38.7 119.4 L39.8 119.1 L40.8 118.7 L41.9 118.3 L42.9 117.9 L44.0 117.4 L45.0 117.0 L46.1 116.5 L47.1 116.0 L48.2 115.5 L49.2 115.0 L50.3 114.5 L51.3 113.9 L52.4 113.3 L53.4 112.8 L54.5 112.2 L55.5 111.5 L56.6 110.9 L57.6 110.3 L58.6 109.6 L59.7 108.9 L60.7 108.2 L61.8 107.5 L62.8 106.8 L63.9 106.0 L64.9 105.3 L66.0 104.5 L67.0 103.7 L68.1 102.9 L69.1 102.0 L70.2 101.2 L71.2 100.3 L72.3 99.4 L73.3 98.5 L74.4 97.6 L75.4 96.7 L76.5 95.7 L77.5 94.8 L78.5 93.8 L79.6 92.8 L80.6 91.8 L81.7 90.8 L82.7 89.7 L83.8 88.7 L84.8 87.6 L85.9 86.5 L86.9 85.4 L88.0 84.3 L89.0 83.1 L90.1 81.9 L91.1 80.8 L92.2 79.6 L93.2 78.4 L94.3 77.1 L95.3 75.9 L96.3 74.6 L97.4 73.4 L98.4 72.1 L99.5 70.8 L100.5 69.4 L101.6 68.1 L102.6 66.7 L103.7 65.4 L104.7 64.0 L105.8 62.6 L106.8 61.1 L107.9 59.7 L108.9 58.3 L110.0 56.8 L111.0 55.3 L112.1 53.8 L113.1 52.3 L114.2 50.7 L115.2 49.2 L116.2 47.6 L117.3 46.0 L118.3 44.4 L119.4 42.8 L120.4 41.1 L121.5 39.5 L122.5 37.8 L123.6 36.1 L124.6 34.4 L125.7 32.7 L126.7 31.0 L127.8 29.2 L128.8 27.5 L129.9 25.7 L130.9 23.9 L132.0 22.0 L133.0 20.2 L134.1 18.4 L135.1 16.5 L136.1 14.6 L137.2 12.7 L138.2 10.8 L139.3 8.9 L140.3 6.9 L141.4 4.9" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg8)"/><path d="M0 123.4 H172.8" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg8-235)"/><path d="M15.7 129.6 V0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg8-235)"/><text x="169.3" y="136.5" text-anchor="end" style="font-size:12.0px;fill:var(--doux)">x</text><text x="20.7" y="4.2" text-anchor="start" style="font-size:12.0px;fill:var(--doux)">y</text></svg><figcaption>direction \((Oy)\)</figcaption></figure><figure class="fig"><svg viewBox="-6.0 -13.8 184.8 161.4" role="img" aria-label="Figure"><defs><clipPath id="cg9"><rect x="-2" y="-2" width="176.8" height="133.6"/></clipPath><marker id="mg9-235" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M8.2 124.9 L9.6 120.6 L11.0 118.4 L12.3 116.5 L13.7 114.8 L15.1 113.2 L16.5 111.7 L17.8 110.2 L19.2 108.8 L20.6 107.4 L21.9 106.1 L23.3 104.7 L24.7 103.5 L26.1 102.2 L27.4 100.9 L28.8 99.7 L30.2 98.5 L31.5 97.2 L32.9 96.0 L34.3 94.9 L35.7 93.7 L37.0 92.5 L38.4 91.4 L39.8 90.2 L41.1 89.1 L42.5 87.9 L43.9 86.8 L45.3 85.7 L46.6 84.6 L48.0 83.5 L49.4 82.4 L50.7 81.3 L52.1 80.2 L53.5 79.1 L54.9 78.0 L56.2 76.9 L57.6 75.9 L59.0 74.8 L60.3 73.7 L61.7 72.7 L63.1 71.6 L64.5 70.5 L65.8 69.5 L67.2 68.4 L68.6 67.4 L69.9 66.4 L71.3 65.3 L72.7 64.3 L74.1 63.3 L75.4 62.2 L76.8 61.2 L78.2 60.2 L79.5 59.1 L80.9 58.1 L82.3 57.1 L83.7 56.1 L85.0 55.1 L86.4 54.1 L87.8 53.0 L89.1 52.0 L90.5 51.0 L91.9 50.0 L93.3 49.0 L94.6 48.0 L96.0 47.0 L97.4 46.0 L98.7 45.0 L100.1 44.0 L101.5 43.0 L102.9 42.0 L104.2 41.1 L105.6 40.1 L107.0 39.1 L108.3 38.1 L109.7 37.1 L111.1 36.1 L112.5 35.1 L113.8 34.2 L115.2 33.2 L116.6 32.2 L117.9 31.2 L119.3 30.3 L120.7 29.3 L122.1 28.3 L123.4 27.3 L124.8 26.4 L126.2 25.4 L127.5 24.4 L128.9 23.5 L130.3 22.5 L131.7 21.5 L133.0 20.6 L134.4 19.6 L135.8 18.6 L137.1 17.7 L138.5 16.7 L139.9 15.8 L141.3 14.8 L142.6 13.8 L144.0 12.9 L145.4 11.9 L146.7 11.0 L148.1 10.0 L149.5 9.1 L150.9 8.1 L152.2 7.2 L153.6 6.2 L155.0 5.3 L156.3 4.3 L157.7 3.4 L159.1 2.4 L160.5 1.5 L161.8 0.5 L163.2 -0.4 L164.6 -1.4 L165.9 -2.3 L167.3 -3.3 L168.7 -4.2 L170.1 -5.1 L171.4 -6.1 L172.8 -7.0" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg9)"/><path d="M8.2 124.9 L9.6 124.1 L11.0 123.4 L12.3 122.6 L13.7 121.8 L15.1 121.0 L16.5 120.2 L17.8 119.5 L19.2 118.7 L20.6 117.9 L21.9 117.1 L23.3 116.3 L24.7 115.5 L26.1 114.8 L27.4 114.0 L28.8 113.2 L30.2 112.4 L31.5 111.6 L32.9 110.9 L34.3 110.1 L35.7 109.3 L37.0 108.5 L38.4 107.7 L39.8 107.0 L41.1 106.2 L42.5 105.4 L43.9 104.6 L45.3 103.8 L46.6 103.1 L48.0 102.3 L49.4 101.5 L50.7 100.7 L52.1 99.9 L53.5 99.2 L54.9 98.4 L56.2 97.6 L57.6 96.8 L59.0 96.0 L60.3 95.2 L61.7 94.5 L63.1 93.7 L64.5 92.9 L65.8 92.1 L67.2 91.3 L68.6 90.6 L69.9 89.8 L71.3 89.0 L72.7 88.2 L74.1 87.4 L75.4 86.7 L76.8 85.9 L78.2 85.1 L79.5 84.3 L80.9 83.5 L82.3 82.8 L83.7 82.0 L85.0 81.2 L86.4 80.4 L87.8 79.6 L89.1 78.9 L90.5 78.1 L91.9 77.3 L93.3 76.5 L94.6 75.7 L96.0 74.9 L97.4 74.2 L98.7 73.4 L100.1 72.6 L101.5 71.8 L102.9 71.0 L104.2 70.3 L105.6 69.5 L107.0 68.7 L108.3 67.9 L109.7 67.1 L111.1 66.4 L112.5 65.6 L113.8 64.8 L115.2 64.0 L116.6 63.2 L117.9 62.5 L119.3 61.7 L120.7 60.9 L122.1 60.1 L123.4 59.3 L124.8 58.6 L126.2 57.8 L127.5 57.0 L128.9 56.2 L130.3 55.4 L131.7 54.7 L133.0 53.9 L134.4 53.1 L135.8 52.3 L137.1 51.5 L138.5 50.7 L139.9 50.0 L141.3 49.2 L142.6 48.4 L144.0 47.6 L145.4 46.8 L146.7 46.1 L148.1 45.3 L149.5 44.5 L150.9 43.7 L152.2 42.9 L153.6 42.2 L155.0 41.4 L156.3 40.6 L157.7 39.8 L159.1 39.0 L160.5 38.3 L161.8 37.5 L163.2 36.7 L164.6 35.9 L165.9 35.1 L167.3 34.4 L168.7 33.6 L170.1 32.8 L171.4 32.0 L172.8 31.2" fill="none" stroke="var(--meth)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4" clip-path="url(#cg9)"/><path d="M0 124.9 H172.8" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg9-235)"/><path d="M8.2 129.6 V0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg9-235)"/><text x="169.3" y="138.0" text-anchor="end" style="font-size:12.0px;fill:var(--doux)">x</text><text x="13.2" y="4.2" text-anchor="start" style="font-size:12.0px;fill:var(--doux)">y</text><text x="150.9" y="67.5" text-anchor="middle" style="font-size:10.0px;fill:var(--meth)">y=ax</text></svg><figcaption>direction \(y=ax\)</figcaption></figure></div>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<ul>
+  <li>\(f(x)=3x^2-2x+1\) : \(\lim\limits_{x\to+\infty}f(x)=+\infty\) et \(\lim\limits_{x\to+\infty}\dfrac{f(x)}{x}=\lim\limits_{x\to+\infty}(3x-2+\frac1x)=+\infty\) : branche parabolique de direction \((Oy)\).</li>
+  <li>\(g(x)=\sqrt{3x-2}\) : \(\lim\limits_{x\to+\infty}g(x)=+\infty\) et \(\dfrac{g(x)}{x}=\sqrt{\dfrac{3x-2}{x^2}}\underset{x\to+\infty}{\longrightarrow}0\) : branche parabolique de direction \((Ox)\).</li>
+  <li>\(h(x)=2x+\sqrt{x}\) : \(\dfrac{h(x)}{x}=2+\dfrac{1}{\sqrt x}\to2\) et \(h(x)-2x=\sqrt{x}\to+\infty\) : branche parabolique de direction la droite \(y=2x\).</li>
+</ul>
+  </div>
+  <div class="bloc app"><div class="tag">Application 5</div>
+<p>Déterminer la nature de la branche infinie de \((\mathcal{C}_f)\) au voisinage de \(+\infty\) dans chacun des cas :</p>
+\[ \text{1) } f(x)=x^3-4x^2-1 \qquad \text{2) } f(x)=\sqrt{x+1}-2x \qquad \text{3) } f(x)=\frac{2x-5}{\sqrt{x+3}}. \]
+  </div>
+  <div class="bloc ret"><div class="tag">Résumé — Branches infinies</div>
+<div class="tableau"><table><thead><tr><th scope="col">Limite de \(f\)</th><th scope="col">\(\lim\frac{f(x)}{x}\)</th><th scope="col">\(\lim\big(f(x)-ax\big)\)</th><th scope="col">Conclusion</th></tr></thead><tbody><tr><td>\(\lim\limits_{x\to a}f(x)=\pm\infty\)</td><td>–</td><td>–</td><td>asymptote verticale \(x=a\)</td></tr><tr><td>\(\lim\limits_{x\to\pm\infty}f(x)=b\)</td><td>–</td><td>–</td><td>asymptote horizontale \(y=b\)</td></tr><tr><td></td><td>\(0\)</td><td>–</td><td>branche parabolique de direction \((Ox)\)</td></tr><tr><td>\(\lim\limits_{x\to\pm\infty}f(x)=\pm\infty\)</td><td>\(\pm\infty\)</td><td>–</td><td>branche parabolique de direction \((Oy)\)</td></tr><tr><td></td><td>\(a\neq0\)</td><td>\(b\)</td><td>asymptote oblique \(y=ax+b\)</td></tr><tr><td></td><td></td><td>\(\pm\infty\)</td><td>branche parabolique de direction \(y=ax\)</td></tr></tbody></table></div>
+  </div>
+</section>
+
+<!-- ============================ II ============================ -->
+<section class="chap" id="s2" data-toc="Concavité d'une courbe – Points d'inflexion">
+  <h2><span class="num">II</span><span class="titre">Concavité d'une courbe – Points d'inflexion</span></h2>
+  <div class="bloc def"><div class="tag">Définition</div>
+<p>Soient \(f\) une fonction dérivable sur un intervalle \(I\) et \((\mathcal{C}_f)\) sa courbe dans un repère orthonormé.</p>
+<ul>
+  <li>\((\mathcal{C}_f)\) est <strong>convexe</strong> sur \(I\) (concavité tournée vers les ordonnées positives) si elle est entièrement située <strong>au-dessus</strong> de chacune de ses tangentes.</li>
+  <li>\((\mathcal{C}_f)\) est <strong>concave</strong> sur \(I\) (concavité tournée vers les ordonnées négatives) si elle est entièrement située <strong>au-dessous</strong> de chacune de ses tangentes.</li>
+  <li>\(A(a;f(a))\) est un <strong>point d'inflexion</strong> de \((\mathcal{C}_f)\) si la courbe <strong>traverse sa tangente</strong> en \(A\) : la concavité change en \(A\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<div class="avec-fig">
+<div>
+<p>La courbe de la fonction cosinus sur \(\left[-\frac\pi2;\frac{3\pi}2\right]\) est concave sur \(\left[-\frac\pi2;\frac\pi2\right]\) et convexe sur \(\left[\frac\pi2;\frac{3\pi}2\right]\).<br> Le point \(A\left(\frac\pi2;0\right)\) est un point d'inflexion : la courbe y traverse sa tangente.</p>
+</div>
+<figure class="fig"><svg viewBox="-9.1 -13.8 282.4 156.6" role="img" aria-label="Figure"><defs><clipPath id="cg11"><rect x="-2" y="-2" width="270.4" height="140.8"/></clipPath><marker id="mg11-235" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M9.0 0 V136.8" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M132.1 0 V136.8" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M193.6 0 V136.8" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M255.1 0 V136.8" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 117.9 H266.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 23.6 H266.4" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.0 136.8 L132.1 136.8 L132.1 0.0 L9.0 0.0 Z" fill="var(--meth-bg)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M132.1 136.8 L255.1 136.8 L255.1 0.0 L132.1 0.0 Z" fill="var(--app-bg)" stroke="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.0 70.8 L11.0 68.3 L13.1 65.8 L15.1 63.4 L17.2 61.0 L19.2 58.5 L21.3 56.2 L23.3 53.9 L25.4 51.6 L27.4 49.3 L29.5 47.2 L31.5 45.1 L33.6 43.0 L35.6 41.1 L37.7 39.2 L39.7 37.4 L41.8 35.7 L43.9 34.1 L45.9 32.6 L48.0 31.2 L50.0 29.9 L52.1 28.7 L54.1 27.7 L56.2 26.7 L58.2 25.9 L60.3 25.2 L62.3 24.6 L64.4 24.2 L66.4 23.8 L68.5 23.7 L70.5 23.6 L72.6 23.7 L74.6 23.8 L76.7 24.2 L78.7 24.6 L80.8 25.2 L82.8 25.9 L84.9 26.7 L86.9 27.7 L89.0 28.7 L91.0 29.9 L93.1 31.2 L95.1 32.6 L97.2 34.1 L99.2 35.7 L101.3 37.4 L103.3 39.2 L105.4 41.1 L107.4 43.0 L109.5 45.1 L111.5 47.2 L113.6 49.3 L115.6 51.6 L117.7 53.9 L119.7 56.2 L121.8 58.5 L123.9 61.0 L125.9 63.4 L128.0 65.8 L130.0 68.3 L132.1 70.8 L134.1 73.2 L136.2 75.7 L138.2 78.1 L140.3 80.6 L142.3 83.0 L144.4 85.3 L146.4 87.7 L148.5 89.9 L150.5 92.2 L152.6 94.3 L154.6 96.5 L156.7 98.5 L158.7 100.4 L160.8 102.3 L162.8 104.1 L164.9 105.8 L166.9 107.4 L169.0 108.9 L171.0 110.3 L173.1 111.6 L175.1 112.8 L177.2 113.9 L179.2 114.8 L181.3 115.6 L183.3 116.3 L185.4 116.9 L187.4 117.4 L189.5 117.7 L191.5 117.9 L193.6 117.9 L195.6 117.9 L197.7 117.7 L199.7 117.4 L201.8 116.9 L203.9 116.3 L205.9 115.6 L208.0 114.8 L210.0 113.9 L212.1 112.8 L214.1 111.6 L216.2 110.3 L218.2 108.9 L220.3 107.4 L222.3 105.8 L224.4 104.1 L226.4 102.3 L228.5 100.4 L230.5 98.5 L232.6 96.5 L234.6 94.3 L236.7 92.2 L238.7 89.9 L240.8 87.7 L242.8 85.3 L244.9 83.0 L246.9 80.6 L249.0 78.1 L251.0 75.7 L253.1 73.2 L255.1 70.8" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg11)"/><path d="M94.0 25.0 L94.6 25.7 L95.3 26.5 L95.9 27.2 L96.5 28.0 L97.1 28.7 L97.7 29.4 L98.4 30.2 L99.0 30.9 L99.6 31.7 L100.2 32.4 L100.8 33.2 L101.5 33.9 L102.1 34.7 L102.7 35.4 L103.3 36.2 L103.9 36.9 L104.6 37.7 L105.2 38.4 L105.8 39.2 L106.4 39.9 L107.0 40.6 L107.7 41.4 L108.3 42.1 L108.9 42.9 L109.5 43.6 L110.2 44.4 L110.8 45.1 L111.4 45.9 L112.0 46.6 L112.6 47.4 L113.3 48.1 L113.9 48.9 L114.5 49.6 L115.1 50.4 L115.7 51.1 L116.4 51.9 L117.0 52.6 L117.6 53.3 L118.2 54.1 L118.8 54.8 L119.5 55.6 L120.1 56.3 L120.7 57.1 L121.3 57.8 L121.9 58.6 L122.6 59.3 L123.2 60.1 L123.8 60.8 L124.4 61.6 L125.0 62.3 L125.7 63.1 L126.3 63.8 L126.9 64.5 L127.5 65.3 L128.1 66.0 L128.8 66.8 L129.4 67.5 L130.0 68.3 L130.6 69.0 L131.2 69.8 L131.9 70.5 L132.5 71.3 L133.1 72.0 L133.7 72.8 L134.3 73.5 L135.0 74.3 L135.6 75.0 L136.2 75.8 L136.8 76.5 L137.4 77.2 L138.1 78.0 L138.7 78.7 L139.3 79.5 L139.9 80.2 L140.5 81.0 L141.2 81.7 L141.8 82.5 L142.4 83.2 L143.0 84.0 L143.6 84.7 L144.3 85.5 L144.9 86.2 L145.5 87.0 L146.1 87.7 L146.7 88.4 L147.4 89.2 L148.0 89.9 L148.6 90.7 L149.2 91.4 L149.9 92.2 L150.5 92.9 L151.1 93.7 L151.7 94.4 L152.3 95.2 L153.0 95.9 L153.6 96.7 L154.2 97.4 L154.8 98.2 L155.4 98.9 L156.1 99.7 L156.7 100.4 L157.3 101.1 L157.9 101.9 L158.5 102.6 L159.2 103.4 L159.8 104.1 L160.4 104.9 L161.0 105.6 L161.6 106.4 L162.3 107.1 L162.9 107.9 L163.5 108.6 L164.1 109.4 L164.7 110.1 L165.4 110.9 L166.0 111.6 L166.6 112.4 L167.2 113.1 L167.8 113.8 L168.5 114.6" fill="none" stroke="var(--fig-accent)" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg11)"/><path d="M0 70.8 H266.4" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg11-235)"/><path d="M70.5 136.8 V0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg11-235)"/><text x="262.9" y="83.9" text-anchor="end" style="font-size:12.0px;fill:var(--doux)">x</text><text x="75.5" y="4.2" text-anchor="start" style="font-size:12.0px;fill:var(--doux)">y</text><text x="9.0" y="84.6" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">-π/2</text><text x="132.1" y="84.6" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">π/2</text><text x="193.6" y="84.6" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">π</text><text x="255.1" y="84.6" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">3π/2</text><text x="65.5" y="121.8" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">−1</text><text x="65.5" y="27.4" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">1</text><circle cx="132.1" cy="70.8" r="2.1" fill="var(--fig-accent)" stroke="var(--fig-accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><text x="47.0" y="124.3" text-anchor="middle" style="font-size:11.5px;fill:var(--meth)">concave</text><text x="223.3" y="20.5" text-anchor="middle" style="font-size:11.5px;fill:var(--app)">convexe</text><text x="136.7" y="64.9" text-anchor="start" style="font-size:11.5px">A</text></svg></figure>
+</div>
+  </div>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soient \(f\) une fonction deux fois dérivable sur un intervalle \(I\) et \(a\in I\).</p>
+<ul>
+  <li>Si \(f''\ge0\) sur \(I\), alors \((\mathcal{C}_f)\) est convexe sur \(I\).</li>
+  <li>Si \(f''\le0\) sur \(I\), alors \((\mathcal{C}_f)\) est concave sur \(I\).</li>
+  <li>Si \(f''\) s'annule en \(a\) <strong>en changeant de signe</strong>, alors \(A(a;f(a))\) est un point d'inflexion de \((\mathcal{C}_f)\).</li>
+</ul>
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Soit \(f(x)=x^3-2x^2+x-1\) sur \(\mathbb{R}\). On a \(f'(x)=3x^2-4x+1\) et \(f''(x)=6x-4\).<br> \(f''(x)\le0\) sur \(\left]-\infty;\frac23\right]\) et \(f''(x)\ge0\) sur \(\left[\frac23;+\infty\right[\) : \((\mathcal{C}_f)\) est concave puis convexe, et \(f''\) s'annule en \(\frac23\) en changeant de signe.<br> Donc \(A\left(\frac23;f\left(\frac23\right)\right)=A\left(\frac23;-\frac{25}{27}\right)\) est un point d'inflexion de \((\mathcal{C}_f)\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 6</div>
+<p>Étudier la concavité de la courbe de \(f\) et préciser ses éventuels points d'inflexion :</p>
+\[ \text{1) } f(x)=\frac{1}{12}x^4-2x^2+3x+5 \qquad\qquad \text{2) } f(x)=x+\frac{1}{x-1}. \]
+  </div>
+  <div class="bloc app"><div class="tag">Application 7</div>
+<div class="avec-fig">
+<div>
+<p>La figure ci-contre représente la courbe d'une fonction \(f\) définie sur \([-4;4]\).<br> Étudier graphiquement la concavité de \((\mathcal{C}_f)\) et donner des valeurs approchées des coordonnées de ses points d'inflexion.</p>
+</div>
+<figure class="fig"><svg viewBox="-6.0 -13.8 271.2 207.0" role="img" aria-label="Figure"><defs><clipPath id="cg17"><rect x="-2" y="-2" width="263.2" height="191.2"/></clipPath><marker id="mg17-235" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--doux)"/></marker></defs><path d="M11.8 0 V187.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M41.2 0 V187.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M70.7 0 V187.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M100.1 0 V187.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M129.6 0 V187.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M159.1 0 V187.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M188.5 0 V187.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M218.0 0 V187.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M247.4 0 V187.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 166.4 H259.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 140.4 H259.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 114.4 H259.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 88.4 H259.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 62.4 H259.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 36.4 H259.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 10.4 H259.2" fill="none" stroke="var(--trait)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M11.8 10.4 L13.7 27.1 L15.7 42.7 L17.7 57.1 L19.6 70.5 L21.6 82.8 L23.6 94.2 L25.5 104.6 L27.5 114.1 L29.5 122.7 L31.4 130.4 L33.4 137.4 L35.3 143.7 L37.3 149.2 L39.3 154.1 L41.2 158.3 L43.2 161.9 L45.2 164.9 L47.1 167.4 L49.1 169.4 L51.1 170.9 L53.0 172.0 L55.0 172.6 L56.9 172.9 L58.9 172.8 L60.9 172.4 L62.8 171.7 L64.8 170.7 L66.8 169.5 L68.7 168.0 L70.7 166.4 L72.7 164.6 L74.6 162.6 L76.6 160.5 L78.5 158.3 L80.5 156.0 L82.5 153.7 L84.4 151.3 L86.4 148.8 L88.4 146.4 L90.3 143.9 L92.3 141.5 L94.3 139.1 L96.2 136.8 L98.2 134.5 L100.1 132.3 L102.1 130.2 L104.1 128.1 L106.0 126.2 L108.0 124.4 L110.0 122.7 L111.9 121.2 L113.9 119.8 L115.9 118.6 L117.8 117.5 L119.8 116.5 L121.7 115.8 L123.7 115.2 L125.7 114.7 L127.6 114.5 L129.6 114.4 L131.6 114.5 L133.5 114.7 L135.5 115.2 L137.5 115.8 L139.4 116.5 L141.4 117.5 L143.3 118.6 L145.3 119.8 L147.3 121.2 L149.2 122.7 L151.2 124.4 L153.2 126.2 L155.1 128.1 L157.1 130.2 L159.1 132.3 L161.0 134.5 L163.0 136.8 L164.9 139.1 L166.9 141.5 L168.9 143.9 L170.8 146.4 L172.8 148.8 L174.8 151.3 L176.7 153.7 L178.7 156.0 L180.7 158.3 L182.6 160.5 L184.6 162.6 L186.5 164.6 L188.5 166.4 L190.5 168.0 L192.4 169.5 L194.4 170.7 L196.4 171.7 L198.3 172.4 L200.3 172.8 L202.3 172.9 L204.2 172.6 L206.2 172.0 L208.1 170.9 L210.1 169.4 L212.1 167.4 L214.0 164.9 L216.0 161.9 L218.0 158.3 L219.9 154.1 L221.9 149.2 L223.9 143.7 L225.8 137.4 L227.8 130.4 L229.7 122.7 L231.7 114.1 L233.7 104.6 L235.6 94.2 L237.6 82.8 L239.6 70.5 L241.5 57.1 L243.5 42.7 L245.5 27.1 L247.4 10.4" fill="none" stroke="var(--fig-trait)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cg17)"/><path d="M0 114.4 H259.2" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg17-235)"/><path d="M129.6 187.2 V0" fill="none" stroke="var(--doux)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mg17-235)"/><text x="255.7" y="127.5" text-anchor="end" style="font-size:12.0px;fill:var(--doux)">x</text><text x="134.6" y="4.2" text-anchor="start" style="font-size:12.0px;fill:var(--doux)">y</text><text x="11.8" y="128.2" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−4</text><text x="41.2" y="128.2" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−3</text><text x="70.7" y="128.2" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−2</text><text x="100.1" y="128.2" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">−1</text><text x="129.6" y="128.2" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">0</text><text x="159.1" y="128.2" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">1</text><text x="188.5" y="128.2" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">2</text><text x="218.0" y="128.2" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">3</text><text x="247.4" y="128.2" text-anchor="middle" style="font-size:11.0px;fill:var(--doux)">4</text><text x="124.6" y="170.3" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">−2</text><text x="124.6" y="144.3" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">−1</text><text x="124.6" y="118.3" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">0</text><text x="124.6" y="92.2" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">1</text><text x="124.6" y="66.2" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">2</text><text x="124.6" y="40.3" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">3</text><text x="124.6" y="14.3" text-anchor="end" style="font-size:11.0px;fill:var(--doux)">4</text></svg></figure>
+</div>
+  </div>
+</section>
+
+<!-- ============================ III ============================ -->
+<section class="chap" id="s3" data-toc="Éléments de symétrie d'une courbe">
+  <h2><span class="num">III</span><span class="titre">Éléments de symétrie d'une courbe</span></h2>
+  <h3><span class="n">III.1</span>Axe de symétrie</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soit \(f\) une fonction définie sur \(D\). La droite \((\Delta)\) d'équation \(x=a\) est un <strong>axe de symétrie</strong> de \((\mathcal{C}_f)\) (dans un repère orthogonal) si et seulement si :</p>
+\[ \text{pour tout } x\in D : \quad 2a-x\in D \quad\text{et}\quad f(2a-x)=f(x). \]
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Montrons que \((\Delta) : x=-\frac12\) est un axe de symétrie de la courbe de \(f(x)=x^2+x+1\).<br> \(D_f=\mathbb{R}\), donc pour tout \(x\in\mathbb{R}\), \(-1-x\in\mathbb{R}\), et \(f(-1-x)=(-1-x)^2+(-1-x)+1=x^2+2x+1-1-x+1=x^2+x+1=f(x)\).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 8</div>
+<p>Montrer que la droite \((D)\) est un axe de symétrie de \((\mathcal{C}_f)\) dans chacun des cas :</p>
+\[ \text{1) } f(x)=\frac{-3}{x^2-4x+7} \ \text{ et } \ (D) : x=2 \qquad\qquad \text{2) } f(x)=\sqrt{x^2-4x+5} \ \text{ et } \ (D) : x=2. \]
+  </div>
+  <h3><span class="n">III.2</span>Centre de symétrie</h3>
+  <div class="bloc prop"><div class="tag">Propriété</div>
+<p>Soit \(f\) une fonction définie sur \(D\). Le point \(\Omega(a;b)\) est un <strong>centre de symétrie</strong> de \((\mathcal{C}_f)\) si et seulement si :</p>
+\[ \text{pour tout } x\in D : \quad 2a-x\in D \quad\text{et}\quad f(2a-x)+f(x)=2b. \]
+  </div>
+  <div class="bloc ex"><div class="tag">Exemples</div>
+<p>Montrons que \(\Omega(1;1)\) est un centre de symétrie de la courbe de \(f(x)=\dfrac{x}{x-1}\).<br> \(D_f=\mathbb{R}\setminus\{1\}\) : si \(x\neq1\), alors \(2-x\neq1\). Et \(f(2-x)+f(x)=\dfrac{2-x}{1-x}+\dfrac{x}{x-1}=\dfrac{x-2+x}{x-1}=\dfrac{2(x-1)}{x-1}=2=2\times1\).</p>
+  </div>
+  <div class="bloc rem"><div class="tag">Remarques</div>
+<p>Si \((\mathcal{C}_f)\) admet un axe ou un centre de symétrie, on peut <strong>réduire le domaine d'étude</strong> de \(f\) à une moitié de \(D_f\), puis compléter la courbe par symétrie (comme pour une fonction paire, impaire ou périodique).</p>
+  </div>
+  <div class="bloc app"><div class="tag">Application 9</div>
+<p>Montrer que le point \(\Omega\) est un centre de symétrie de \((\mathcal{C}_f)\) dans chacun des cas :</p>
+\[ \text{1) } f(x)=\frac{-2x^2+7x-5}{2x-1} \ \text{ et } \ \Omega\left(\frac12;\frac52\right) \qquad\qquad \text{2) } f(x)=2x^3+6x^2+3x+3 \ \text{ et } \ \Omega(-1;4). \]
+  </div>
+</section>
+
+<!-- ============================ IV ============================ -->
+<section class="chap" id="s4" data-toc="Plan d'étude d'une fonction">
+  <h2><span class="num">IV</span><span class="titre">Plan d'étude d'une fonction</span></h2>
+  <div class="bloc meth"><div class="tag">Méthode — Étudier une fonction et tracer sa courbe</div>
+<ol>
+  <li><strong>Domaine :</strong> déterminer \(D_f\) ; éventuellement réduire le domaine d'étude (parité, périodicité, symétrie).</li>
+  <li><strong>Limites :</strong> calculer les limites aux bornes de \(D_f\).</li>
+  <li><strong>Branches infinies :</strong> asymptotes (verticales, horizontales, obliques) et branches paraboliques ; position par rapport aux asymptotes.</li>
+  <li><strong>Variations :</strong> calculer \(f'(x)\), étudier son signe, dresser le tableau de variations (extremums).</li>
+  <li><strong>Concavité :</strong> étudier le signe de \(f''(x)\) ; points d'inflexion.</li>
+  <li><strong>Points particuliers :</strong> intersections avec les axes, tangentes remarquables, quelques valeurs.</li>
+  <li><strong>Tracé :</strong> tracer d'abord les asymptotes et les tangentes, placer les points, puis la courbe.</li>
+</ol>
+  </div>
+  <div class="bloc app"><div class="tag">Exercice de synthèse</div>
+<p>Soit \(f\) la fonction définie sur \(\mathbb{R}\setminus\{1\}\) par \(f(x)=\dfrac{x^2-3x+1}{x-1}\).</p>
+<ol>
+  <li>Vérifier que \(f(x)=x-2-\dfrac{1}{x-1}\) pour tout \(x\neq1\).</li>
+  <li>Calculer les limites de \(f\) aux bornes de son domaine ; en déduire une asymptote verticale.</li>
+  <li>Montrer que la droite \((D) : y=x-2\) est une asymptote oblique à \((\mathcal{C}_f)\) en \(\pm\infty\), puis étudier la position relative de \((\mathcal{C}_f)\) et de \((D)\).</li>
+  <li>Calculer \(f'(x)\) et dresser le tableau de variations de \(f\).</li>
+  <li>Montrer que le point \(\Omega(1;-1)\) est un centre de symétrie de \((\mathcal{C}_f)\).</li>
+  <li>Étudier la concavité de \((\mathcal{C}_f)\).</li>
+  <li>Tracer \((D)\), l'asymptote verticale et \((\mathcal{C}_f)\) dans un repère orthonormé.</li>
+</ol>
+  </div>
+</section>
+{% endverbatim %}{% endblock %}
