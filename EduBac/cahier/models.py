@@ -13,6 +13,7 @@ class Seance(models.Model):
     lesson = models.ForeignKey('education.Lesson', on_delete=models.CASCADE,
                                related_name='seances_cahier', verbose_name='Leçon')
     date = models.DateField(verbose_name='Date')
+    observations = models.TextField(blank=True, verbose_name='Observations')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

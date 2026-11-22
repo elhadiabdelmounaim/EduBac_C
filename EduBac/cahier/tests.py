@@ -144,7 +144,7 @@ class CahierTests(CahierBase):
         self.post({'classe': self.classe.pk, 'date': '2026-11-21', 'cles': ['s1-b1', 's1-b4', 's1-b5']})
         Seance.objects.create(teacher=self.autre_prof, classroom=self.autre_classe, lesson=self.lesson,
                               date=datetime.date(2026, 11, 20))
-        page = self.client.get(reverse('cahier:index')).content.decode()
+        page = self.client.get(reverse('cahier:niveau', args=['1ere_bac_sc'])).content.decode()
         self.assertIn('Samedi 21 novembre 2026', page)
         self.assertIn('1BAC SE 2', page)
         self.assertIn('I. Étude analytique du produit scalaire', page)
@@ -208,7 +208,7 @@ class MinutageTests(CahierBase):
         self.post({'classe': self.classe.pk, 'date': '2026-11-21', 'cles': ['s1-b2', 's1-b3']})
         seance = Seance.objects.get(date='2026-11-21')
         self.assertEqual([e.minutes for e in seance.elements.all()], [minutes['s1-b2'], minutes['s1-b3']])
-        page = self.client.get(reverse('cahier:index')).content.decode()
+        page = self.client.get(reverse('cahier:niveau', args=['1ere_bac_sc'])).content.decode()
         from .views import duree
         cumul = minutes['s1-b1'] + minutes['s1-b2'] + minutes['s1-b3']
         self.assertIn(f'Durée prévue : {duree(minutes["s1-b2"] + minutes["s1-b3"])}', page)
@@ -227,3 +227,168 @@ class MinutageTests(CahierBase):
         page = self.client.get(url).content.decode()
         self.assertIn('id="cours-minutage"', page)
         self.assertIn('id="minuteur"', page)
+
+
+class JournalNiveauTests(CahierBase):
+    """Cartes des niveaux, séances d'un niveau, recherche, PDF (une, sélection, toutes), droits."""
+
+    def setUp(self):
+        super().setUp()
+        self.directeur = User.objects.create_user(username='dir', email='dir@example.test', is_staff=True)
+        tc = Course.objects.create(name='Maths TC', niveau='tronc_commun')
+        self.lecon_tc = Lesson.objects.create(title='Les ensembles', content='', course=tc, order=1)
+        self.classe_tc = Classroom.objects.create(name='TC 3', niveau='tronc_commun', teacher=self.prof)
+        self.s1 = self.seance(self.prof, self.classe, '2026-11-02', [('Définition', 'I. Partie', ''),
+                                                                     ('Application 1', 'I. Partie', '')])
+        self.s2 = self.seance(self.prof, self.classe, '2026-11-09', [('Exemples', 'II. Cercle', 'II.1 Équation')],
+                              observations='Devoir n° 2 donné.')
+        self.s3 = self.seance(self.autre_prof, self.autre_classe, '2026-11-05', [('Propriété', 'I. Partie', '')])
+        self.s4 = self.seance(self.prof, self.classe_tc, '2026-11-03', [('Définition', 'I. Ensembles', '')],
+                              lecon=self.lecon_tc)
+        self.url = reverse('cahier:niveau', args=['1ere_bac_sc'])
+        self.pdf_url = reverse('cahier:niveau_pdf', args=['1ere_bac_sc'])
+
+    def seance(self, prof, classe, jour, elements_, observations='', lecon=None):
+        s = Seance.objects.create(teacher=prof, classroom=classe, lesson=lecon or self.lesson,
+                                  date=datetime.date.fromisoformat(jour), observations=observations)
+        for k, (titre, partie, sous_titre) in enumerate(elements_):
+            SeanceElement.objects.create(seance=s, key=f's1-b{k + 1}', title=titre, partie=partie,
+                                         sous_titre=sous_titre, order=k, minutes=20)
+        return s
+
+    def texte_pdf(self, response):
+        import io
+        from pypdf import PdfReader
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        lecteur = PdfReader(io.BytesIO(b''.join(response.streaming_content) if response.streaming else response.content))
+        return lecteur, '\n'.join(page.extract_text() for page in lecteur.pages)
+
+    def test_level_cards_count_own_sessions(self):
+        self.login_as(self.prof)
+        page = self.client.get(reverse('cahier:index')).content.decode()
+        self.assertIn('1ère Bac Sciences', page)
+        self.assertIn('Tronc Commun', page)
+        self.assertNotIn('2ème Bac SVT', page)        # aucun cours de ce niveau
+        self.assertIn(self.url, page)
+        self.assertIn('<strong>2</strong> séances', page)
+        self.assertIn('<strong>1</strong> séance<', page)
+        self.assertIn('3 séances au total', page)
+
+    def test_director_sees_every_teacher(self):
+        self.login_as(self.directeur)
+        self.assertIn('<strong>3</strong> séances', self.client.get(reverse('cahier:index')).content.decode())
+        page = self.client.get(self.url).content.decode()
+        self.assertIn('1BAC SE 5', page)
+        self.assertIn('prof2', page)                  # nom de l'enseignant affiché
+        self.assertNotIn('cahier:observations', page)
+        self.assertNotIn(reverse('cahier:observations', args=[self.s3.pk]), page)   # pas d'écriture chez les autres
+        self.assertEqual(self.client.get(reverse('cahier:seance_pdf', args=[self.s3.pk])).status_code, 200)
+
+    def test_level_page_lists_numbered_sessions_newest_first(self):
+        self.login_as(self.prof)
+        page = self.client.get(self.url).content.decode()
+        self.assertLess(page.index('id="seance-%d"' % self.s2.pk), page.index('id="seance-%d"' % self.s1.pk))
+        self.assertIn('Séance n° 1', page)
+        self.assertIn('Séance n° 2', page)
+        self.assertIn('Lundi 9 novembre 2026', page)
+        self.assertIn('Le produit scalaire dans le plan', page)
+        self.assertIn('II.1 Équation', page)
+        self.assertIn('Devoir n° 2 donné.', page)
+        self.assertIn('Activités et exercices effectués', page)
+        self.assertNotIn('1BAC SE 5', page)          # séance d'un autre enseignant
+        self.assertNotIn('Les ensembles', page)       # autre niveau
+        self.assertEqual(self.client.get(reverse('cahier:niveau', args=['inconnu'])).status_code, 404)
+
+    def test_search_and_period_filters(self):
+        self.login_as(self.prof)
+        page = self.client.get(self.url, {'q': 'devoir'}).content.decode()
+        self.assertIn('id="seance-%d"' % self.s2.pk, page)
+        self.assertNotIn('id="seance-%d"' % self.s1.pk, page)
+        page = self.client.get(self.url, {'q': 'Application'}).content.decode()
+        self.assertIn('id="seance-%d"' % self.s1.pk, page)
+        self.assertNotIn('id="seance-%d"' % self.s2.pk, page)
+        page = self.client.get(self.url, {'du': '2026-11-05', 'au': '2026-11-30'}).content.decode()
+        self.assertIn('id="seance-%d"' % self.s2.pk, page)
+        self.assertNotIn('id="seance-%d"' % self.s1.pk, page)
+        self.assertIn('Séance n° 2', page)           # le numéro ne dépend pas du filtre
+
+    def test_pagination(self):
+        self.login_as(self.prof)
+        for k in range(20):
+            self.seance(self.prof, self.classe, (datetime.date(2026, 9, 1) + datetime.timedelta(days=k)).isoformat(),
+                        [('Exemples', 'I. Partie', '')])
+        page = self.client.get(self.url).content.decode()
+        self.assertEqual(page.count('class="cahier-seance"'), 15)
+        self.assertIn('Page 1 / 2', page)
+        page2 = self.client.get(self.url, {'page': 2, 'q': 'Exemples'}).content.decode()
+        self.assertIn('Page 2 / 2', page2)
+
+    def test_single_session_pdf(self):
+        self.login_as(self.prof)
+        response = self.client.get(reverse('cahier:seance_pdf', args=[self.s2.pk]))
+        self.assertIn('attachment', response['Content-Disposition'])
+        _, texte = self.texte_pdf(response)
+        for attendu in ('EduBac', '1ère Bac Sciences', 'Lundi 9 novembre 2026', 'Séance n° 2',
+                        'Le produit scalaire dans le plan', 'II. Cercle', 'II.1 Équation', 'Exemples',
+                        'Observations', 'Devoir n° 2 donné.'):
+            self.assertIn(attendu, texte)
+        # Séance d'un autre enseignant : introuvable.
+        self.assertEqual(self.client.get(reverse('cahier:seance_pdf', args=[self.s3.pk])).status_code, 404)
+
+    def test_selection_pdf_in_chronological_order(self):
+        self.login_as(self.prof)
+        response = self.client.get(self.pdf_url + f'?ids={self.s2.pk}&ids={self.s1.pk}&ids={self.s3.pk}')
+        _, texte = self.texte_pdf(response)
+        self.assertLess(texte.index('2 novembre 2026'), texte.index('9 novembre 2026'))
+        self.assertNotIn('Sommaire', texte)
+        self.assertNotIn('1BAC SE 5', texte)         # la séance d'un autre est ignorée
+        self.assertEqual(self.client.get(self.pdf_url + f'?ids={self.s3.pk}').status_code, 404)
+
+    def test_full_level_pdf_with_cover_and_summary(self):
+        self.login_as(self.prof)
+        for k in range(60):
+            self.seance(self.prof, self.classe, (datetime.date(2026, 9, 1) + datetime.timedelta(days=k)).isoformat(),
+                        [('Exemples', 'I. Partie', ''), ('Application 2', 'I. Partie', '')])
+        response = self.client.get(self.pdf_url)
+        self.assertIn('cahier-de-textes-1ere_bac_sc-complet.pdf', response['Content-Disposition'])
+        lecteur, texte = self.texte_pdf(response)
+        self.assertGreater(len(lecteur.pages), 5)
+        premiere = lecteur.pages[0].extract_text()
+        self.assertIn('Cahier de textes', premiere)
+        self.assertIn('1ère Bac Sciences', premiere)
+        self.assertIn('Période : du', premiere)
+        self.assertIn('62 séances', premiere)
+        self.assertIn('Sommaire', texte)
+        self.assertNotIn('Les ensembles', texte)
+
+    def test_observations_only_by_owner(self):
+        self.login_as(self.autre_prof)
+        url = reverse('cahier:observations', args=[self.s1.pk])
+        self.assertEqual(self.client.post(url, {'observations': 'piraté'}).status_code, 404)
+        self.login_as(self.prof)
+        self.assertRedirects(self.client.post(url, {'observations': '  Bonne participation.  '}),
+                             self.url + f'#seance-{self.s1.pk}', fetch_redirect_response=False)
+        self.s1.refresh_from_db()
+        self.assertEqual(self.s1.observations, 'Bonne participation.')
+
+    def test_panel_saves_and_returns_observations(self):
+        self.login_as(self.prof)
+        r = self.post({'classe': self.classe.pk, 'date': '2026-11-21', 'cles': ['s1-b1'],
+                       'observations': 'Contrôle annoncé.'}).json()
+        self.assertTrue(r['ok'])
+        self.assertIn(self.url, r['url'])
+        data = self.client.get(self.etat_url, {'classe': self.classe.pk, 'date': '2026-11-21'}).json()
+        self.assertEqual(data['observations'], 'Contrôle annoncé.')
+        # Sans le champ, les observations existantes sont conservées.
+        self.post({'classe': self.classe.pk, 'date': '2026-11-21', 'cles': ['s1-b2']})
+        self.assertEqual(Seance.objects.get(date='2026-11-21').observations, 'Contrôle annoncé.')
+
+    def test_old_class_links_redirect_to_level(self):
+        self.login_as(self.prof)
+        self.assertRedirects(self.client.get(reverse('cahier:index'), {'classe': self.classe.pk}),
+                             self.url + f'?classe={self.classe.pk}', fetch_redirect_response=False)
+
+    def test_students_cannot_access(self):
+        self.login_as(self.eleve)
+        for url in (self.url, self.pdf_url, reverse('cahier:seance_pdf', args=[self.s1.pk])):
+            self.assertRedirects(self.client.get(url), reverse('education:home'), fetch_redirect_response=False)

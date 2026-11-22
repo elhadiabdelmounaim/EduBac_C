@@ -103,6 +103,9 @@ d.className+=' pagine';setTimeout(function(){if(!/\bpagine-pret\b/.test(d.classN
   <p class="seance-lecon" id="seanceLecon" hidden></p>
   <p class="seance-aide">Cochez les parties, sous-titres et blocs traités. ✓ = déjà vu lors d'une autre séance.</p>
   <div class="seance-arbre" id="seanceArbre" aria-live="polite"><p class="seance-info">Chargement…</p></div>
+  <label class="seance-obs">Observations <span>(facultatif)</span>
+    <textarea id="seanceObservations" rows="2" maxlength="4000" placeholder="Devoir donné, difficultés, absences…"></textarea>
+  </label>
   <footer class="seance-pied">
     <span class="seance-compte" id="seanceCompte"></span>
     <button type="button" class="seance-enregistrer" id="seanceEnregistrer" disabled>Enregistrer</button>

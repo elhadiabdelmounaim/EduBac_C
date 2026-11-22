@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% load edubac_assets %}
+{% block extra_css %}<link rel="stylesheet" href="{% asset 'css/cahier.css' %}">{% endblock %}
+{% block content %}
+<div class="cahier-page" id="cahierNiveau" data-niveau="{{ niveau }}" data-pdf="{% url 'cahier:niveau_pdf' niveau %}">
+  <nav class="cahier-fil" aria-label="Fil d’Ariane">
+    <a href="{% url 'cahier:index' %}"><i class="bi bi-journal-bookmark" aria-hidden="true"></i> Cahier de textes</a>
+    <span aria-hidden="true">›</span> <span>{{ nom }}</span>
+  </nav>
+
+  <header class="cahier-entete cahier-entete-niveau">
+    <div>
+      <h1>{{ nom }}</h1>
+      <p><span class="cahier-total">{{ total }} séance{{ total|pluralize }}</span>
+        {% if filtre_actif %} · {{ trouvees }} correspond{{ trouvees|pluralize:"ent" }} à la recherche{% endif %}</p>
+    </div>
+    {% if total %}
+    <a class="btn btn-edubac" href="{% url 'cahier:niveau_pdf' niveau %}"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i> Télécharger toutes les séances</a>
+    {% endif %}
+  </header>
+
+  {% if total %}
+  <form method="get" class="cahier-filtres" role="search">
+    <label class="cahier-recherche">
+      <span class="visually-hidden">Rechercher</span>
+      <i class="bi bi-search" aria-hidden="true"></i>
+      <input type="search" name="q" value="{{ filtres.q }}" placeholder="Titre, contenu, observation…">
+    </label>
+    <label>Du <input type="date" name="du" value="{{ filtres.du|date:'Y-m-d' }}"></label>
+    <label>Au <input type="date" name="au" value="{{ filtres.au|date:'Y-m-d' }}"></label>
+    {% if classes|length > 1 %}
+    <label>Classe
+      <select name="classe">
+        <option value="">Toutes</option>
+        {% for c in classes %}<option value="{{ c.pk }}" {% if filtres.classe == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+      </select>
+    </label>
+    {% endif %}
+    <button type="submit" class="btn btn-outline-primary">Filtrer</button>
+    {% if filtre_actif %}<a class="btn btn-link" href="{% url 'cahier:niveau' niveau %}">Réinitialiser</a>{% endif %}
+  </form>
+  {% endif %}
+
+  {% for s in page %}
+  <article class="cahier-seance" id="seance-{{ s.pk }}">
+    <div class="cahier-seance-tete">
+      <label class="cahier-choix" title="Sélectionner cette séance">
+        <input type="checkbox" class="cahier-coche" value="{{ s.pk }}" aria-label="Sélectionner la séance {{ s.numero }} du {{ s.date|date:'j F Y' }}">
+      </label>
+      <div class="cahier-seance-infos">
+        <p class="cahier-numero">Séance n° {{ s.numero }}</p>
+        <h2 class="cahier-date">{{ s.date|date:"l j F Y"|capfirst }}</h2>
+        <p class="cahier-meta"><span class="cahier-classe">{{ s.classroom.name }}</span>
+          {% if directeur %}<span class="cahier-prof"><i class="bi bi-person" aria-hidden="true"></i> {{ s.teacher.get_full_name }}</span>{% endif %}</p>
+        <p class="cahier-theme">{{ s.lesson.title }}</p>
+        <p class="cahier-duree">
+          {% if s.minutes %}<span><i class="bi bi-clock" aria-hidden="true"></i> Durée prévue : {{ s.minutes_texte }}</span>{% endif %}
+          {% if s.progression %}<span class="cahier-progression" title="Temps prévu de tout ce qui a été traité dans cette leçon avec cette classe">
+            Leçon : {{ s.progression.fait }} / {{ s.progression.prevu }}
+            <span class="cahier-barre" aria-hidden="true"><span style="width: {{ s.progression.pourcent }}%"></span></span>
+            {{ s.progression.pourcent }} %</span>{% endif %}
+        </p>
+      </div>
+      <div class="cahier-actions">
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'cahier:seance_pdf' s.pk %}" title="Télécharger en PDF"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i> PDF</a>
+        {% if s.teacher_id == moi %}
+        <a class="btn btn-sm btn-outline-primary" href="{% url 'education:lesson_course_html' s.lesson.pk %}" title="Ouvrir le cours pour compléter cette séance"><i class="bi bi-pencil" aria-hidden="true"></i> Compléter</a>
+        <form method="post" action="{% url 'cahier:supprimer' s.pk %}" onsubmit="return confirm('Supprimer cette séance du cahier de textes ?');">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Supprimer la séance du {{ s.date|date:'j F Y' }}"><i class="bi bi-trash"></i></button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+
+    <details class="cahier-contenu" open>
+      <summary>Contenu pédagogique réalisé</summary>
+      <ol class="cahier-parties">
+        {% for partie in s.parties %}
+        <li>
+          <strong class="cahier-partie">{{ partie.titre }}</strong>
+          {% for g in partie.groupes %}
+            {% if g.titre %}<div class="cahier-sous-titre">{{ g.titre }}</div>{% endif %}
+            <ul class="cahier-elements{% if g.titre %} indente{% endif %}">
+              {% for e in g.elements %}<li>{{ e }}</li>{% endfor %}
+            </ul>
+          {% endfor %}
+        </li>
+        {% endfor %}
+      </ol>
+    </details>
+
+    {% if s.activites %}
+    <div class="cahier-rubrique">
+      <h3>Activités et exercices effectués</h3>
+      <p class="cahier-pastilles">{% for a in s.activites %}<span>{{ a }}</span>{% endfor %}</p>
+    </div>
+    {% endif %}
+
+    <div class="cahier-rubrique cahier-observations">
+      <h3>Observations</h3>
+      {% if s.observations %}<p class="cahier-obs-texte">{{ s.observations|linebreaksbr }}</p>{% elif s.teacher_id != moi %}<p class="cahier-obs-vide">—</p>{% endif %}
+      {% if s.teacher_id == moi %}
+      <details>
+        <summary>{% if s.observations %}Modifier{% else %}Ajouter une observation{% endif %}</summary>
+        <form method="post" action="{% url 'cahier:observations' s.pk %}">
+          {% csrf_token %}
+          <textarea name="observations" rows="3" maxlength="4000" placeholder="Difficultés, travail à la maison, devoir, absences…">{{ s.observations }}</textarea>
+          <button type="submit" class="btn btn-sm btn-edubac">Enregistrer</button>
+        </form>
+      </details>
+      {% endif %}
+    </div>
+  </article>
+  {% empty %}
+  <div class="cahier-vide">
+    <i class="bi bi-journal" aria-hidden="true"></i>
+    {% if filtre_actif %}
+    <p><strong>Aucune séance ne correspond à la recherche.</strong></p>
+    <p><a href="{% url 'cahier:niveau' niveau %}">Afficher toutes les séances</a></p>
+    {% else %}
+    <p><strong>Aucune séance enregistrée pour ce niveau.</strong></p>
+    <p>Ouvrez un cours en ligne, cliquez sur « Séance », cochez ce que vous avez traité puis « Enregistrer ».</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+
+  {% if page.has_other_pages %}
+  <nav class="cahier-pagination" aria-label="Pages du cahier">
+    {% if page.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?{% if params %}{{ params }}&amp;{% endif %}page={{ page.previous_page_number }}">‹ Plus récentes</a>{% endif %}
+    <span>Page {{ page.number }} / {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?{% if params %}{{ params }}&amp;{% endif %}page={{ page.next_page_number }}">Plus anciennes ›</a>{% endif %}
+  </nav>
+  {% endif %}
+
+  {# Barre de sélection : visible dès qu'une séance est cochée (la sélection suit les pages). #}
+  <div class="cahier-barre-selection" id="cahierSelection" hidden role="region" aria-label="Séances sélectionnées">
+    <span class="cahier-selection-compte" id="cahierCompte" aria-live="polite"></span>
+    <button type="button" class="btn btn-sm btn-outline-light" id="cahierTout">Tout sélectionner</button>
+    <button type="button" class="btn btn-sm btn-outline-light" id="cahierAucun">Désélectionner</button>
+    <a class="btn btn-sm btn-warning" id="cahierPdfSelection" href="#"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i> Télécharger la sélection en PDF</a>
+  </div>
+</div>
+<script src="{% asset 'js/cahier.js' %}" defer></script>
+{% endblock %}

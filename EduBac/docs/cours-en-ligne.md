@@ -89,3 +89,17 @@ Ces minutes apparaissent dans le panneau « Séance », dans le cahier de textes
 séance, progression de la leçon) et, en présentation, dans le **minuteur** en haut à droite :
 il décompte le temps du paragraphe en cours jusqu'à zéro (clic : pause / reprise,
 double-clic : recommencer ; revenir à un paragraphe reprend son temps restant).
+
+## Cahier de textes : niveaux et PDF
+
+`/cahier-de-textes/` affiche une carte par niveau (niveaux des cours enregistrés, `Course.NIVEAU_CHOICES`)
+avec le nombre de séances. Chaque carte ouvre `/cahier-de-textes/niveau/<niveau>/` : séances de la plus
+récente à la plus ancienne, numérotées par classe (rang chronologique), recherche (titre, contenu,
+observations), filtre par période et par classe, pagination (15 par page), observations modifiables.
+
+PDF générés sur le serveur avec reportlab (`cahier/pdf.py`, polices DejaVu dans `cahier/fonts`) :
+une séance (`seance/<pk>/pdf/`), une sélection (`niveau/<niveau>/pdf/?ids=…`, ordre chronologique) ou
+tout le niveau (`niveau/<niveau>/pdf/`, avec couverture, période et sommaire).
+
+Droits : un enseignant ne voit que ses séances ; un compte « staff » ou superutilisateur voit celles de
+tous les enseignants (lecture et PDF), mais seul l'auteur d'une séance la modifie ou la supprime.

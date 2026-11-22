@@ -10,6 +10,7 @@ openpyxl>=3.1
 Markdown>=3.8.1
 pylatexenc>=2.10,<3
 pypdf>=6.21.4
+reportlab>=4.4
 channels>=4.0
 requests>=2.34.2
 # API du tableau mathématique collaboratif (application mathboard)

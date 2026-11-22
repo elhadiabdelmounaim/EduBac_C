@@ -7,72 +7,29 @@
     <div class="cahier-entete-icone" aria-hidden="true"><i class="bi bi-journal-bookmark"></i></div>
     <div>
       <h1>Cahier de textes</h1>
-      <p>Les séances enregistrées depuis vos cours, avec ce qui a été traité.</p>
+      <p>{% if directeur %}Les séances de tous les enseignants, par niveau scolaire.{% else %}Vos séances, classées par niveau scolaire.{% endif %}
+        <span class="cahier-total">{{ total }} séance{{ total|pluralize }} au total</span></p>
     </div>
   </header>
 
-  {% if classes %}
-  <form method="get" class="cahier-filtre">
-    <label for="cahierClasse">Classe</label>
-    <select id="cahierClasse" name="classe" onchange="this.form.submit()">
-      <option value="">Toutes mes classes</option>
-      {% for c in classes %}<option value="{{ c.pk }}" {% if classe and classe.pk == c.pk %}selected{% endif %}>{{ c.name }} — {{ c.get_niveau_display }}</option>{% endfor %}
-    </select>
-    <noscript><button type="submit" class="btn btn-sm btn-edubac">Afficher</button></noscript>
-  </form>
-  {% endif %}
-
-  {% for s in page %}
-  <article class="cahier-seance" id="seance-{{ s.pk }}">
-    <div class="cahier-seance-tete">
-      <div>
-        <h2 class="cahier-date">{{ s.date|date:"l j F Y"|capfirst }}</h2>
-        <p class="cahier-meta"><span class="cahier-classe">{{ s.classroom.name }}</span> · {{ s.lesson.title }}</p>
-        <p class="cahier-duree">
-          {% if s.minutes %}<span><i class="bi bi-clock" aria-hidden="true"></i> Durée prévue : {{ s.minutes_texte }}</span>{% endif %}
-          {% if s.progression %}<span class="cahier-progression" title="Temps prévu de tout ce qui a été traité dans cette leçon avec cette classe">
-            Leçon : {{ s.progression.fait }} / {{ s.progression.prevu }}
-            <span class="cahier-barre" aria-hidden="true"><span style="width: {{ s.progression.pourcent }}%"></span></span>
-            {{ s.progression.pourcent }} %</span>{% endif %}
-        </p>
-      </div>
-      <div class="cahier-actions">
-        <a class="btn btn-sm btn-outline-primary" href="{% url 'education:lesson_course_html' s.lesson.pk %}" title="Ouvrir le cours pour compléter cette séance"><i class="bi bi-pencil"></i> Compléter</a>
-        <form method="post" action="{% url 'cahier:supprimer' s.pk %}" onsubmit="return confirm('Supprimer cette séance du cahier de textes ?');">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Supprimer la séance du {{ s.date|date:'j F Y' }}"><i class="bi bi-trash"></i></button>
-        </form>
-      </div>
+  <div class="cahier-niveaux">
+    {% for n in niveaux %}
+    <a class="cahier-niveau{% if not n.nombre %} vide{% endif %}" href="{% url 'cahier:niveau' n.code %}">
+      <span class="cahier-niveau-icone" aria-hidden="true"><i class="bi {{ n.icone }}"></i></span>
+      <span class="cahier-niveau-nom">{{ n.nom }}</span>
+      <span class="cahier-niveau-nombre"><strong>{{ n.nombre }}</strong> séance{{ n.nombre|pluralize }}</span>
+      <i class="bi bi-chevron-right cahier-niveau-fleche" aria-hidden="true"></i>
+    </a>
+    {% empty %}
+    <div class="cahier-vide">
+      <i class="bi bi-journal" aria-hidden="true"></i>
+      <p><strong>Aucun niveau pour le moment.</strong></p>
     </div>
-    <ol class="cahier-parties">
-      {% for partie in s.parties %}
-      <li>
-        <strong class="cahier-partie">{{ partie.titre }}</strong>
-        {% for g in partie.groupes %}
-          {% if g.titre %}<div class="cahier-sous-titre">{{ g.titre }}</div>{% endif %}
-          <ul class="cahier-elements{% if g.titre %} indente{% endif %}">
-            {% for e in g.elements %}<li>{{ e }}</li>{% endfor %}
-          </ul>
-        {% endfor %}
-      </li>
-      {% endfor %}
-    </ol>
-  </article>
-  {% empty %}
-  <div class="cahier-vide">
-    <i class="bi bi-journal" aria-hidden="true"></i>
-    <p><strong>Aucune séance enregistrée{% if classe %} pour cette classe{% endif %}.</strong></p>
-    <p>Ouvrez un cours en ligne, cliquez sur « Séance », cochez ce que vous avez traité puis « Enregistrer ».</p>
-    {% if not classes %}<p>Vous devez d'abord <a href="{% url 'classrooms:create' %}">créer une classe</a>.</p>{% endif %}
+    {% endfor %}
   </div>
-  {% endfor %}
 
-  {% if page.has_other_pages %}
-  <nav class="cahier-pagination" aria-label="Pages du cahier">
-    {% if page.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?{% if classe %}classe={{ classe.pk }}&amp;{% endif %}page={{ page.previous_page_number }}">‹ Plus récentes</a>{% endif %}
-    <span>Page {{ page.number }} / {{ page.paginator.num_pages }}</span>
-    {% if page.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?{% if classe %}classe={{ classe.pk }}&amp;{% endif %}page={{ page.next_page_number }}">Plus anciennes ›</a>{% endif %}
-  </nav>
+  {% if not total %}
+  <p class="cahier-aide">Pour remplir le cahier : ouvrez un cours en ligne, cliquez sur « Séance », cochez ce que vous avez traité puis « Enregistrer ».</p>
   {% endif %}
 </div>
 {% endblock %}

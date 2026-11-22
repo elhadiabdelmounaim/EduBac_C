@@ -16,6 +16,7 @@
   var bouton = document.getElementById('seanceEnregistrer');
   var message = document.getElementById('seanceMessage');
   var lienCahier = document.getElementById('seanceCahier');
+  var champObs = document.getElementById('seanceObservations');
   var ouvreurs = document.querySelectorAll('[data-seance-ouvrir]');
   var lecon = panneau.getAttribute('data-lecon');
   var infoLecon = document.getElementById('seanceLecon');
@@ -139,6 +140,7 @@
         var brouillon = lire(cleBrouillon());
         var selection = data.existe ? data.selection : (brouillon ? brouillon.split(',') : courantes());
         cocher(selection, data.deja || {});
+        if (champObs) champObs.value = data.observations || '';
         if (data.existe) dire('Une séance est déjà enregistrée à cette date : elle sera mise à jour.', 'info');
       })
       .catch(function () { if (numero === requete) dire('Connexion impossible.', 'erreur'); });
@@ -271,7 +273,8 @@
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json',
                  'X-CSRFToken': panneau.getAttribute('data-csrf') },
-      body: JSON.stringify({ classe: champClasse.value, date: champDate.value, cles: cles })
+      body: JSON.stringify({ classe: champClasse.value, date: champDate.value, cles: cles,
+                             observations: champObs ? champObs.value : undefined })
     }).then(function (r) {
       return r.json().catch(function () { return { ok: false, message: 'Erreur ' + r.status + '.' }; });
     }).then(function (data) {

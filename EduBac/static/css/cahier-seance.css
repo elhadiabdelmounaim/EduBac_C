@@ -48,6 +48,11 @@
 .seance-lecon[hidden] { display: none; }
 .seance-part { flex: none; min-width: 2.6em; text-align: right; font-size: 12px; color: var(--doux); font-variant-numeric: tabular-nums; }
 
+.seance-obs { display: flex; flex-direction: column; gap: 4px; padding: 8px 16px 0; border-top: 1px solid var(--trait);
+  font-size: 13px; font-weight: 600; color: var(--doux); }
+.seance-obs span { font-weight: 400; }
+.seance-obs textarea { padding: 6px 10px; border: 1px solid var(--trait); border-radius: 10px; background: var(--surface);
+  color: var(--texte); font: inherit; font-size: 14px; resize: vertical; }
 .seance-pied { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px 12px; padding: 12px 16px 14px;
   border-top: 1px solid var(--trait); background: color-mix(in srgb, var(--surface) 92%, var(--trait)); }
 .seance-compte { font-size: 13px; color: var(--doux); }

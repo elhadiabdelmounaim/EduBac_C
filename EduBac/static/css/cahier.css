@@ -37,3 +37,69 @@
 .cahier-progression { display: inline-flex; align-items: center; gap: 8px; }
 .cahier-barre { display: inline-block; width: 110px; height: 8px; border-radius: 999px; background: var(--nb-line, #d9e0ec); overflow: hidden; }
 .cahier-barre > span { display: block; height: 100%; background: var(--nb-orange, #f39c12); border-radius: inherit; }
+
+/* Cartes des niveaux */
+.cahier-total { display: inline-block; margin-left: 6px; padding: 1px 10px; border-radius: var(--radius-pill, 999px);
+  background: var(--nb-teal-soft, #e6eefb); color: var(--nb-navy, #12306b); font-weight: 600; font-size: .9rem; }
+.cahier-niveaux { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+.cahier-niveau { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 20px 20px 18px;
+  border-radius: var(--radius-lg, 20px); background: var(--nb-surface, #fff); border: 1px solid var(--nb-line, #d9e0ec);
+  box-shadow: var(--nb-shadow); color: inherit; text-decoration: none;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.cahier-niveau:hover, .cahier-niveau:focus-visible { transform: translateY(-3px); border-color: var(--nb-orange, #f39c12);
+  box-shadow: 0 12px 28px rgba(18, 48, 107, .14); outline: none; }
+.cahier-niveau.vide { opacity: .78; }
+.cahier-niveau-icone { width: 46px; height: 46px; border-radius: var(--radius-md, 16px); display: grid; place-items: center;
+  background: var(--nb-teal-soft, #e6eefb); color: var(--nb-navy, #12306b); font-size: 22px; }
+.cahier-niveau-nom { font-weight: 700; font-size: 1.05rem; color: var(--edubac-navy, #263449); padding-right: 18px; }
+.cahier-niveau-nombre { color: var(--nb-muted, #56627a); }
+.cahier-niveau-nombre strong { color: var(--edubac-orange, #b45309); font-size: 1.15rem; }
+.cahier-niveau-fleche { position: absolute; right: 16px; top: 22px; color: var(--nb-muted, #56627a); }
+.cahier-aide { margin-top: 18px; color: var(--nb-muted, #56627a); }
+
+/* Page d'un niveau */
+.cahier-fil { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; font-size: .95rem; }
+.cahier-fil a { text-decoration: none; }
+.cahier-entete-niveau { justify-content: space-between; flex-wrap: wrap; }
+.cahier-filtres { display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: flex-end; margin-bottom: 18px; padding: 12px 14px;
+  background: var(--nb-surface, #fff); border: 1px solid var(--nb-line, #d9e0ec); border-radius: var(--radius-md, 16px); }
+.cahier-filtres label { display: flex; flex-direction: column; gap: 3px; font-size: .85rem; font-weight: 600; color: var(--nb-muted, #56627a); }
+.cahier-filtres input, .cahier-filtres select { min-height: 40px; padding: 6px 10px; border-radius: var(--radius-sm, 12px);
+  border: 1px solid var(--nb-line, #d9e0ec); background: var(--nb-surface, #fff); font-weight: 400; max-width: 100%; }
+.cahier-recherche { flex: 1 1 220px; position: relative; }
+.cahier-recherche i { position: absolute; left: 11px; bottom: 11px; color: var(--nb-muted, #56627a); }
+.cahier-recherche input { padding-left: 32px; width: 100%; }
+.cahier-choix { flex: none; display: grid; place-items: center; width: 34px; height: 34px; margin: 2px 0 0; cursor: pointer; }
+.cahier-choix input { width: 20px; height: 20px; accent-color: var(--nb-orange, #f39c12); cursor: pointer; }
+.cahier-seance-infos { flex: 1; min-width: 200px; }
+.cahier-seance.choisie { box-shadow: 0 0 0 2px var(--nb-orange, #f39c12); }
+.cahier-numero { margin: 0; font-size: .8rem; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--edubac-orange, #b45309); }
+.cahier-theme { margin: 4px 0 0; font-weight: 600; color: var(--edubac-navy, #263449); }
+.cahier-prof { margin-left: 8px; }
+.cahier-contenu > summary { cursor: pointer; font-weight: 600; color: var(--nb-navy, #12306b); margin-bottom: 4px; }
+.cahier-rubrique { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--nb-line, #d9e0ec); }
+.cahier-rubrique h3 { margin: 0 0 6px; font-size: .95rem; font-weight: 700; color: var(--nb-navy, #12306b); }
+.cahier-pastilles { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+.cahier-pastilles span { padding: 2px 10px; border-radius: var(--radius-pill, 999px); background: color-mix(in srgb, var(--nb-orange, #f39c12) 16%, transparent); font-size: .88rem; }
+.cahier-obs-texte { margin: 0 0 6px; white-space: normal; }
+.cahier-obs-vide { margin: 0; color: var(--nb-muted, #56627a); }
+.cahier-observations summary { cursor: pointer; color: var(--edubac-blue, #1d4fa3); font-size: .92rem; }
+.cahier-observations form { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; margin-top: 6px; }
+.cahier-observations textarea { width: 100%; padding: 8px 10px; border-radius: var(--radius-sm, 12px); border: 1px solid var(--nb-line, #d9e0ec);
+  background: var(--nb-surface, #fff); color: inherit; }
+
+/* Barre de sélection */
+.cahier-barre-selection { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 1040;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 10px; width: max-content; max-width: calc(100vw - 32px);
+  padding: 10px 14px; border-radius: var(--radius-lg, 20px); background: var(--nb-navy, #12306b); color: #fff;
+  box-shadow: 0 14px 34px rgba(10, 25, 40, .3); }
+.cahier-barre-selection[hidden] { display: none; }
+.cahier-selection-compte { font-weight: 700; margin-right: 4px; }
+body.cahier-avec-selection .cahier-page { padding-bottom: 90px; }
+@media (max-width: 575px) {
+  .cahier-niveaux { grid-template-columns: 1fr; }
+  .cahier-entete-niveau .btn { width: 100%; }
+  .cahier-barre-selection { bottom: 10px; width: calc(100vw - 20px); }
+  .cahier-actions { width: 100%; }
+}
+@media print { .cahier-barre-selection, .cahier-filtres, .cahier-choix { display: none !important; } }

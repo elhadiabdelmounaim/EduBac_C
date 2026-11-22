@@ -1,22 +1,25 @@
 """Cahier de textes : enregistrement depuis le cours (panneau « Séance ») et consultation."""
 import datetime
 import json
+import re
 
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.http import Http404, JsonResponse
+from django.db.models import Count, Q
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
 from accounts.decorators import teacher_required
 from classrooms.models import Classroom
-from education.models import Lesson
+from education.models import Course, Lesson
 
 from education.repartition import repartition_de_lecon
 
 from .models import Seance, SeanceElement
+from .pdf import document
 from .rubriques import elements, plan_de_lecon
 
 
@@ -59,7 +62,8 @@ def etat(request, pk):
                      'meme_niveau': c.niveau == lesson.course.niveau} for c in classes],
         'selection': [], 'deja': {}, 'existe': False,
         'repartition': repartition_de_lecon(lesson),
-        'cahier_url': reverse('cahier:index'),
+        'cahier_url': reverse('cahier:niveau', args=[lesson.course.niveau]),
+        'observations': '',
         'creer_classe_url': reverse('classrooms:create'),
     }
     classe = next((c for c in classes if str(c.pk) == request.GET.get('classe')), None)
@@ -72,6 +76,7 @@ def etat(request, pk):
             if s.date == jour:
                 data['selection'] = cles
                 data['existe'] = True
+                data['observations'] = s.observations
             else:
                 for k in cles:
                     data['deja'][k] = s.date.strftime('%d/%m')
@@ -107,11 +112,15 @@ def enregistrer(request, pk):
     if not choisis:
         return _refus('Cochez au moins un élément traité.', 400)
     choisis.sort(key=lambda e: e['ordre'])
+    observations = corps.get('observations')
+    observations = observations.strip()[:4000] if isinstance(observations, str) else None
     with transaction.atomic():
         seance, cree = Seance.objects.get_or_create(teacher=user, classroom=classe, lesson=lesson, date=jour)
         if not cree:
             seance.elements.all().delete()
-            seance.save(update_fields=['updated_at'])
+        if observations is not None:
+            seance.observations = observations
+        seance.save()
         SeanceElement.objects.bulk_create([
             SeanceElement(seance=seance, key=e['key'], title=e['titre'][:255], partie=e['partie'][:255],
                           sous_titre=e['sous_titre'][:255], order=e['ordre'], minutes=e['minutes'])
@@ -121,7 +130,7 @@ def enregistrer(request, pk):
         'ok': True, 'cree': cree, 'nombre': len(choisis),
         'message': ('Séance enregistrée' if cree else 'Séance mise à jour')
                    + f' : {len(choisis)} élément{"s" if len(choisis) > 1 else ""}, le {jour:%d/%m/%Y}.',
-        'url': reverse('cahier:index') + f'?classe={classe.pk}#seance-{seance.pk}',
+        'url': reverse('cahier:niveau', args=[lesson.course.niveau]) + f'#seance-{seance.pk}',
     })
 
 
@@ -147,21 +156,23 @@ def duree(minutes):
     return f'{h} h {m:02d}' if m else f'{h} h'
 
 
-def _progression(user, seances):
+def _progression(seances):
     """Pour chaque séance : temps prévu de tout ce qui a été traité dans cette leçon avec
-    cette classe jusqu'à cette date (incluse), comparé aux heures de la répartition."""
-    paires = {(s.classroom_id, s.lesson_id) for s in seances}
-    if not paires:
+    cette classe (par le même enseignant) jusqu'à cette date incluse, comparé aux heures
+    de la répartition."""
+    triplets = {(s.teacher_id, s.classroom_id, s.lesson_id) for s in seances}
+    if not triplets:
         return
     historiques = {}
-    for s in (Seance.objects.filter(teacher=user, classroom_id__in={c for c, _ in paires},
-                                    lesson_id__in={le for _, le in paires})
+    for s in (Seance.objects.filter(teacher_id__in={t for t, _, _ in triplets},
+                                    classroom_id__in={c for _, c, _ in triplets},
+                                    lesson_id__in={le for _, _, le in triplets})
               .prefetch_related('elements').order_by('date')):
-        historiques.setdefault((s.classroom_id, s.lesson_id), []).append(s)
+        historiques.setdefault((s.teacher_id, s.classroom_id, s.lesson_id), []).append(s)
     for s in seances:
         repartition = repartition_de_lecon(s.lesson)
         vus = {}
-        for h in historiques.get((s.classroom_id, s.lesson_id), []):
+        for h in historiques.get((s.teacher_id, s.classroom_id, s.lesson_id), []):
             if h.date > s.date:
                 break
             for e in h.elements.all():
@@ -174,32 +185,171 @@ def _progression(user, seances):
                              'pourcent': min(100, round(100 * fait / prevu)) if prevu else 0}
 
 
-@teacher_required
-def index(request):
-    user = request.edubac_user
-    classes = list(_classes(user))
-    seances = (Seance.objects.filter(teacher=user)
-               .select_related('classroom', 'lesson', 'lesson__course')
-               .prefetch_related('elements'))
-    classe = next((c for c in classes if str(c.pk) == request.GET.get('classe')), None)
-    if classe:
-        seances = seances.filter(classroom=classe)
-    page = Paginator(seances, 20).get_page(request.GET.get('page'))
-    _progression(user, page.object_list)
-    for s in page.object_list:
+NIVEAUX = dict(Course.NIVEAU_CHOICES)
+ICONES = {
+    'tronc_commun': 'bi-signpost-split', '1ere_bac_sc': 'bi-flower1', '1ere_bac_sm': 'bi-calculator',
+    '1ere_bac_lettres': 'bi-book', '2eme_bac_svt': 'bi-tree', '2eme_bac_pc': 'bi-lightning-charge',
+    '2eme_bac_lettres': 'bi-journal-text', '2eme_bac_sm': 'bi-infinity',
+}
+ACTIVITE = re.compile(r'^(Activit|Application|Exercice)', re.I)
+
+
+def est_directeur(user):
+    return bool(user.is_staff or user.is_superuser)
+
+
+def seances_visibles(user):
+    """Le directeur voit les séances de tous les enseignants ; un enseignant, les siennes."""
+    qs = (Seance.objects.select_related('classroom', 'lesson', 'lesson__course', 'teacher')
+          .prefetch_related('elements'))
+    return qs if est_directeur(user) else qs.filter(teacher=user)
+
+
+def _niveau_ou_404(niveau):
+    if niveau not in NIVEAUX:
+        raise Http404
+    return NIVEAUX[niveau]
+
+
+def _numeroter(seances):
+    """Numéro de séance : rang chronologique dans le cahier de la classe (même enseignant)."""
+    paires = {(s.teacher_id, s.classroom_id) for s in seances}
+    if not paires:
+        return
+    rang, numeros = {}, {}
+    lignes = (Seance.objects.filter(teacher_id__in={t for t, _ in paires}, classroom_id__in={c for _, c in paires})
+              .order_by('date', 'created_at', 'pk').values_list('pk', 'teacher_id', 'classroom_id'))
+    for pk, t, c in lignes:
+        if (t, c) in paires:
+            rang[(t, c)] = rang.get((t, c), 0) + 1
+            numeros[pk] = rang[(t, c)]
+    for s in seances:
+        s.numero = numeros.get(s.pk)
+
+
+def preparer(seances):
+    """Ajoute à chaque séance ce que l'affichage et le PDF utilisent."""
+    _numeroter(seances)
+    for s in seances:
         s.parties = _regrouper(s)
         s.minutes = sum(e.minutes for e in s.elements.all())
         s.minutes_texte = duree(s.minutes)
+        s.activites = [e.title for e in s.elements.all() if ACTIVITE.match(e.title)]
+    return seances
+
+
+def _filtrer(request, seances):
+    q = (request.GET.get('q') or '').strip()
+    if q:
+        seances = seances.filter(
+            Q(lesson__title__icontains=q) | Q(elements__title__icontains=q) | Q(elements__partie__icontains=q)
+            | Q(elements__sous_titre__icontains=q) | Q(observations__icontains=q)
+            | Q(classroom__name__icontains=q)).distinct()
+    du, au = _lire_date(request.GET.get('du')), _lire_date(request.GET.get('au'))
+    if du:
+        seances = seances.filter(date__gte=du)
+    if au:
+        seances = seances.filter(date__lte=au)
+    classe = request.GET.get('classe')
+    if classe and classe.isdigit():
+        seances = seances.filter(classroom_id=int(classe))
+    return seances, {'q': q, 'du': du, 'au': au, 'classe': classe or ''}
+
+
+@teacher_required
+def index(request):
+    """Une carte par niveau scolaire (niveaux des cours enregistrés), avec le nombre de séances."""
+    user = request.edubac_user
+    ancienne_classe = request.GET.get('classe')
+    if ancienne_classe and ancienne_classe.isdigit():       # anciens liens « ?classe= »
+        classe = Classroom.objects.filter(pk=int(ancienne_classe)).first()
+        if classe and classe.niveau in NIVEAUX:
+            return redirect(reverse('cahier:niveau', args=[classe.niveau]) + f'?classe={classe.pk}')
+    visibles = seances_visibles(user)
+    comptes = dict(visibles.order_by().values_list('lesson__course__niveau').annotate(n=Count('id')))
+    presents = set(Course.objects.values_list('niveau', flat=True)) | set(comptes)
+    niveaux = [{'code': code, 'nom': nom, 'icone': ICONES.get(code, 'bi-journal-bookmark'),
+                'nombre': comptes.get(code, 0)}
+               for code, nom in Course.NIVEAU_CHOICES if code in presents]
     return render(request, 'cahier/index.html', {
-        'page_title': 'Cahier de textes', 'classes': classes, 'classe': classe, 'page': page,
+        'page_title': 'Cahier de textes', 'niveaux': niveaux, 'total': sum(comptes.values()),
+        'directeur': est_directeur(user),
     })
+
+
+@teacher_required
+def niveau(request, niveau):
+    nom = _niveau_ou_404(niveau)
+    user = request.edubac_user
+    toutes = seances_visibles(user).filter(lesson__course__niveau=niveau)
+    seances, filtres = _filtrer(request, toutes)
+    page = Paginator(seances, 15).get_page(request.GET.get('page'))
+    preparer(page.object_list)
+    _progression(page.object_list)
+    classes = Classroom.objects.filter(pk__in=toutes.values('classroom')).order_by('name')
+    params = request.GET.copy()
+    params.pop('page', None)
+    return render(request, 'cahier/niveau.html', {
+        'page_title': f'Cahier de textes — {nom}', 'niveau': niveau, 'nom': nom, 'page': page,
+        'total': toutes.count(), 'trouvees': page.paginator.count, 'filtres': filtres, 'classes': classes,
+        'params': params.urlencode(), 'directeur': est_directeur(user), 'moi': user.pk,
+        'filtre_actif': any(filtres[k] for k in ('q', 'du', 'au', 'classe')),
+    })
+
+
+def _reponse_pdf(contenu, nom_fichier):
+    reponse = HttpResponse(contenu, content_type='application/pdf')
+    reponse['Content-Disposition'] = f'attachment; filename="{nom_fichier}"'
+    return reponse
+
+
+@teacher_required
+@require_GET
+def seance_pdf(request, pk):
+    user = request.edubac_user
+    seance = get_object_or_404(seances_visibles(user), pk=pk)
+    niveau = seance.lesson.course.niveau
+    contenu = document(preparer([seance]), NIVEAUX.get(niveau, niveau), avec_enseignant=est_directeur(user),
+                       titre_fichier=f'Séance du {seance.date:%d/%m/%Y}')
+    return _reponse_pdf(contenu, f'seance-{seance.date:%Y-%m-%d}-{seance.pk}.pdf')
+
+
+@teacher_required
+@require_GET
+def niveau_pdf(request, niveau):
+    """?ids=… : les séances choisies ; sinon toutes les séances du niveau (avec couverture)."""
+    nom = _niveau_ou_404(niveau)
+    user = request.edubac_user
+    seances = seances_visibles(user).filter(lesson__course__niveau=niveau).order_by('date', 'created_at', 'pk')
+    ids = [int(i) for i in request.GET.getlist('ids') if i.isdigit()]
+    selection = bool(request.GET.getlist('ids'))
+    if selection:
+        seances = seances.filter(pk__in=ids)
+    seances = list(seances)
+    if not seances:
+        raise Http404
+    contenu = document(preparer(seances), nom, couverture=not selection, avec_enseignant=est_directeur(user),
+                       titre_fichier=f'Cahier de textes — {nom}')
+    quoi = 'selection' if selection else 'complet'
+    return _reponse_pdf(contenu, f'cahier-de-textes-{niveau}-{quoi}.pdf')
+
+
+@teacher_required
+@require_POST
+def observations(request, pk):
+    """Seul l'enseignant de la séance écrit ses observations."""
+    seance = get_object_or_404(Seance.objects.select_related('lesson__course'), pk=pk, teacher=request.edubac_user)
+    seance.observations = (request.POST.get('observations') or '').strip()[:4000]
+    seance.save(update_fields=['observations', 'updated_at'])
+    messages.success(request, 'Observations enregistrées.')
+    return redirect(reverse('cahier:niveau', args=[seance.lesson.course.niveau]) + f'#seance-{seance.pk}')
 
 
 @teacher_required
 @require_POST
 def supprimer(request, pk):
-    seance = get_object_or_404(Seance, pk=pk, teacher=request.edubac_user)
-    classe = seance.classroom_id
+    seance = get_object_or_404(Seance.objects.select_related('lesson__course'), pk=pk, teacher=request.edubac_user)
+    niveau = seance.lesson.course.niveau
     seance.delete()
     messages.success(request, 'Séance supprimée du cahier de textes.')
-    return redirect(reverse('cahier:index') + f'?classe={classe}')
+    return redirect('cahier:niveau', niveau=niveau)
