@@ -13,7 +13,7 @@ from playwright.sync_api import sync_playwright
 from education.models import Course, Lesson
 
 BLOCS = 51          # blocs du cours « Produit scalaire » (dont l'activité d'ouverture)
-POINTS = 129        # éléments de liste <li> du cours (dont 14 dans l'activité : réponses et points d'étape)
+POINTS = 131        # éléments de liste <li> du cours (dont 16 dans l'activité : questions, réponses, points d'étape)
 
 
 class CourseHtmlBrowserTests(StaticLiveServerTestCase):

@@ -72,8 +72,28 @@ class SituationProduitScalaireBrowserTests(StaticLiveServerTestCase):
         page.keyboard.press('ArrowRight')
         page.wait_for_timeout(600)
         self.assertTrue(page.locator('.feuille.visible [data-situation]').count())
-        self.assertIn('Étape 1 / 8', self.compteur(page))
+        self.assertIn('Étape 1 / 8 — Situation', self.compteur(page))
         self.assertIn('F = 40 N · θ = 60° · AB = 5 m', page.inner_text('[data-mesures]'))
+        # Première étape : la figure, la situation et les questions seulement.
+        texte = page.inner_text('.sp-etape.active')
+        for attendu in ('Question 1.', 'Représenter les forces', 'Déterminer les composantes', 'Question 2.'):
+            self.assertIn(attendu, texte)
+        self.assertEqual(page.locator('.sp-etape.active [data-reponse], .sp-etape.active [data-reveler]').count(), 0)
+        self.assertFalse(page.is_visible('[data-reglages]'))
+        for cle in ('P', 'R', 'Fx', 'Fy'):
+            self.assertFalse(page.evaluate(f"document.querySelector('[data-etiquette={cle}]').classList.contains('visible')"))
+        en_3d = page.evaluate("document.querySelector('[data-situation]').classList.contains('en-3d')")
+        if en_3d:
+            # La caisse se fait glisser vers B (sans tourner la page du cours).
+            self.assertTrue(page.is_visible('[data-lancer]'))
+            c = page.evaluate("document.querySelector('[data-situation]').etapesInternes.caisseEcran()")
+            page.mouse.move(c['x'], c['y'])
+            page.mouse.down()
+            page.mouse.move(c['x'] + 160, c['y'], steps=8)
+            page.mouse.up()
+            self.assertGreater(page.evaluate("document.querySelector('[data-situation]').etapesInternes.valeurs.x"), 1)
+            self.assertIn('Étape 1 / 8', self.compteur(page))
+            self.assertTrue(page.locator('.feuille.visible [data-situation]').count())
         # → : étape suivante ; sur une question, → montre d'abord la réponse.
         page.keyboard.press('ArrowRight')
         self.assertIn('Étape 2 / 8', self.compteur(page))
@@ -86,7 +106,7 @@ class SituationProduitScalaireBrowserTests(StaticLiveServerTestCase):
         page.click('[data-suivante]')
         page.click('[data-suivante]')
         page.click('[data-suivante]')
-        self.assertIn('Question 2', self.compteur(page))
+        self.assertIn('Correction 2', self.compteur(page))
         self.assertTrue(page.is_visible('[data-lancer]') or not page.evaluate(
             "document.querySelector('[data-situation]').classList.contains('en-3d')"))
         page.click('.sp-etape.active [data-reveler]')
@@ -98,6 +118,12 @@ class SituationProduitScalaireBrowserTests(StaticLiveServerTestCase):
         self.assertEqual(page.inner_text('[data-v="produit"]'), '40 × 5 × 0,5 = 100')
         page.fill('[data-r="F"]', '80')
         page.dispatch_event('[data-r="F"]', 'input')
+        self.assertEqual(page.inner_text('[data-v="produit"]'), '80 × 5 × 0,5 = 200')
+        # La masse change le poids, pas le travail : le poids est perpendiculaire au déplacement.
+        page.fill('[data-r="m"]', '40')
+        page.dispatch_event('[data-r="m"]', 'input')
+        self.assertEqual(page.inner_text('[data-v="WP"]'), '0 J (P = 400 N)')
+        self.assertIn('P = 400 N', page.inner_text('[data-mesures]'))
         self.assertEqual(page.inner_text('[data-v="produit"]'), '80 × 5 × 0,5 = 200')
         # Généralisation : signe du produit scalaire.
         page.click('[data-suivante]')

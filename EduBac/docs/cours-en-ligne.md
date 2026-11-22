@@ -160,8 +160,11 @@ minuteur de présentation). Les clés des autres blocs (`s1-b1`…) ne changent 
 - Scène Three.js : `static/js/situation-produit-scalaire.js` (module, Three.js local),
   styles `static/css/situation.css`, chargés par le bloc `scripts_cours` du gabarit. Sans WebGL,
   une figure SVG de secours reste affichée et les calculs restent interactifs.
-- Huit étapes : Observer → Question 1 a) → 1 b) → Question 2 → Manipuler → Vers les mathématiques
-  → Généraliser → Vers le cours. La définition du produit scalaire n'apparaît qu'à l'étape 6.
+- Huit étapes : Situation → Correction 1 a) → 1 b) → Correction 2 → Manipuler → Vers les
+  mathématiques → Généraliser → Vers le cours. L'étape 1 ne montre que la figure, l'énoncé, les
+  données et les questions (aucune réponse, aucun curseur) ; on peut tourner la scène et faire
+  glisser la caisse de A vers B (ou « Lancer »). Les curseurs F, θ, AB et masse m n'apparaissent qu'à
+  l'étape « Manipuler » ; la définition du produit scalaire n'apparaît qu'à l'étape 6.
 - → / télécommande : affiche la réponse de l'étape, puis l'étape suivante ; après la dernière,
   la page suivante (partie I). ← revient en arrière. Mécanisme générique de `cours.js` :
   un élément `[data-etapes-internes]` expose `el.etapesInternes = { avancer(), reculer() }`,

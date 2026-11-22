@@ -64,13 +64,14 @@ Le sommaire est construit à partir de data-toc ; les chiffres de l'en-tête son
             <defs><marker id="spFleche2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#2E8B57"/></marker></defs>
             <text x="262" y="280" font-size="16" fill="#2E8B57">d = 5 m</text>
           </svg>
-          <p class="sp-aide-3d" data-aide-3d hidden>Faites glisser pour tourner la scène, molette ou deux doigts pour zoomer.</p>
+          <p class="sp-aide-3d" data-aide-3d hidden>Faites glisser la caisse de \(A\) vers \(B\) ; faites glisser le décor pour tourner la scène.</p>
         </div>
         <p class="sp-mesures" data-mesures aria-live="polite">F = 40 N · θ = 60° · AB = 5 m</p>
         <div class="sp-reglages" data-reglages hidden>
           <label class="sp-curseur">\(F\) <input type="range" min="10" max="80" step="5" value="40" data-r="F" aria-label="Intensité de la force F en newtons"> <output data-o="F">40 N</output></label>
           <label class="sp-curseur">\(\theta\) <input type="range" min="0" max="80" step="5" value="60" data-r="theta" aria-label="Angle θ en degrés"> <output data-o="theta">60°</output></label>
           <label class="sp-curseur">\(AB\) <input type="range" min="1" max="8" step="0.5" value="5" data-r="d" aria-label="Distance AB en mètres"> <output data-o="d">5 m</output></label>
+          <label class="sp-curseur" data-physique-seulement>\(m\) <input type="range" min="5" max="50" step="5" value="20" data-r="m" aria-label="Masse de la caisse en kilogrammes"> <output data-o="m">20 kg</output></label>
           <div class="sp-preselections" data-preselections hidden role="group" aria-label="Angles particuliers">
             <button type="button" data-angle="0">0°</button>
             <button type="button" data-angle="60">60°</button>
@@ -88,22 +89,25 @@ Le sommaire est construit à partir de data-toc ; les chiffres de l'en-tête son
       <div class="sp-panneau">
         <div class="sp-nav">
           <button type="button" class="sp-fleche" data-precedente aria-label="Étape précédente">‹</button>
-          <p class="sp-compteur" data-compteur aria-live="polite">Étape 1 / 8 — Observer</p>
+          <p class="sp-compteur" data-compteur aria-live="polite">Étape 1 / 8 — Situation</p>
           <button type="button" class="sp-fleche" data-suivante aria-label="Étape suivante">›</button>
         </div>
         <ol class="sp-points" data-points aria-hidden="true"></ol>
         <div class="sp-etapes">
 
-          <section class="sp-etape" data-titre="Observer" data-montrer="F d theta A B" data-mode="physique">
-            <h4>Observation</h4>
+          <section class="sp-etape" data-titre="Situation" data-montrer="F d theta A B" data-mode="physique" data-lancer-visible>
+            <h4>Situation problème</h4>
             <p>Une personne tire une caisse \(S\) posée sur un sol horizontal à l'aide d'une corde. Pendant le mouvement, la corde reste tendue et fait un angle constant \(\theta\) avec le sol. La caisse glisse en ligne droite du point \(A\) au point \(B\).</p>
-            <p class="sp-donnees">\(F=40\ \text{N}\) ; \(\theta=60^\circ\) ; \(AB=d=5\ \text{m}\).</p>
-            <p class="sp-consigne">Faites tourner la scène et repérez : la force \(\vect{F}\) exercée par la corde, le vecteur déplacement \(\vect{AB}\) et l'angle \(\theta\) entre ces deux vecteurs.</p>
+            <p class="sp-donnees">\(F=40\ \text{N}\) ; \(\theta=60^\circ\) ; \(d=AB=5\ \text{m}\).</p>
+            <ol class="sp-questions">
+              <li><strong>Question 1.</strong> a) Représenter les forces qui s'exercent sur la caisse \(S\).<br>b) Déterminer les composantes de la force \(\vect{F}\) selon les directions horizontale et verticale.</li>
+              <li><strong>Question 2.</strong> Calculer le travail de la force \(\vect{F}\) au cours du déplacement de la caisse de \(A\) vers \(B\).</li>
+            </ol>
           </section>
 
-          <section class="sp-etape" data-titre="Question 1 a)" data-montrer="F d theta A B" data-reponse-montrer="P R" data-mode="physique">
+          <section class="sp-etape" data-titre="Correction 1 a)" data-montrer="F d theta A B" data-reponse-montrer="P R" data-mode="physique">
             <h4>Question 1 — a)</h4>
-            <p>Quelles sont les forces qui s'exercent sur la caisse \(S\) ? Représentez-les.</p>
+            <p>Représenter les forces qui s'exercent sur la caisse \(S\).</p>
             <button type="button" class="sp-reveler" data-reveler>Afficher la réponse</button>
             <div class="sp-reponse" data-reponse>
               <ul>
@@ -114,9 +118,9 @@ Le sommaire est construit à partir de data-toc ; les chiffres de l'en-tête son
             </div>
           </section>
 
-          <section class="sp-etape" data-titre="Question 1 b)" data-montrer="F d theta A B" data-reponse-montrer="Fx Fy" data-mode="physique">
+          <section class="sp-etape" data-titre="Correction 1 b)" data-montrer="F d theta A B" data-reponse-montrer="Fx Fy" data-mode="physique">
             <h4>Question 1 — b)</h4>
-            <p>Déterminer les composantes de \(\vect{F}\) selon la direction horizontale (celle du déplacement) et la direction verticale.</p>
+            <p>Déterminer les composantes de la force \(\vect{F}\) selon les directions horizontale et verticale.</p>
             <button type="button" class="sp-reveler" data-reveler>Afficher la réponse</button>
             <div class="sp-reponse" data-reponse>
               <p>\(F_x=F\cos\theta=40\times\frac12=20\ \text{N}\)</p>
@@ -124,31 +128,31 @@ Le sommaire est construit à partir de data-toc ; les chiffres de l'en-tête son
             </div>
           </section>
 
-          <section class="sp-etape" data-titre="Question 2" data-montrer="F d theta A B Fx Fy" data-mode="physique" data-lancer-visible>
+          <section class="sp-etape" data-titre="Correction 2" data-montrer="F d theta A B Fx Fy" data-mode="physique" data-lancer-visible>
             <h4>Question 2</h4>
-            <p>Lancez le mouvement. Seule la composante \(\vect{F_x}\), parallèle au déplacement, fait avancer la caisse ; \(\vect{F_y}\), perpendiculaire au déplacement, ne travaille pas.</p>
-            <p>Calculer le travail \(W_{AB}(\vect{F})\) de la force \(\vect{F}\) au cours du déplacement de \(A\) vers \(B\).</p>
+            <p>Calculer le travail de la force \(\vect{F}\) au cours du déplacement de la caisse de \(A\) vers \(B\).</p>
             <button type="button" class="sp-reveler" data-reveler>Afficher la réponse</button>
             <div class="sp-reponse" data-reponse>
-              <p>\(W_{AB}(\vect{F})=F_x\times AB=F\cos\theta\times AB\)</p>
-              <p>\(W_{AB}(\vect{F})=20\times5=100\ \text{J}\).</p>
+              <p>Seule \(\vect{F_x}\), parallèle au déplacement, fait avancer la caisse ; \(\vect{F_y}\) ne travaille pas.</p>
+              <p>\(W_{AB}(\vect{F})=F_x\times AB=F\cos\theta\times AB=20\times5=100\ \text{J}\).</p>
             </div>
           </section>
 
-          <section class="sp-etape" data-titre="Manipuler" data-montrer="F d theta A B Fx" data-mode="physique" data-reglages-visibles data-lancer-visible>
+          <section class="sp-etape" data-titre="Manipuler" data-montrer="F d theta A B Fx P R" data-mode="physique" data-reglages-visibles data-lancer-visible>
             <h4>Manipulation et conjecture</h4>
-            <p>Faites varier \(F\), \(\theta\) et \(AB\). Le tableau donne le travail mesuré par la simulation et le produit \(F\times AB\times\cos\theta\).</p>
+            <p>Faites varier \(F\), \(\theta\), \(AB\) et la masse \(m\) de la caisse.</p>
             <table class="sp-tableau" data-tableau>
               <tbody>
-                <tr><th scope="row">Travail mesuré \(W\)</th><td data-v="W">100 J</td></tr>
+                <tr><th scope="row">\(W_{AB}(\vect{F})\) mesuré</th><td data-v="W">100 J</td></tr>
                 <tr><th scope="row">\(F\times AB\times\cos\theta\)</th><td data-v="produit">40 × 5 × 0,5 = 100</td></tr>
+                <tr><th scope="row">\(W_{AB}(\vect{P})\)</th><td data-v="WP">0 J</td></tr>
               </tbody>
             </table>
-            <p class="sp-consigne">Que remarquez-vous ? Quelle conjecture peut-on formuler ?</p>
+            <p class="sp-consigne">Que remarquez-vous ? Formulez une conjecture.</p>
             <button type="button" class="sp-reveler" data-reveler>Afficher la conjecture</button>
             <div class="sp-reponse" data-reponse>
               <p class="sp-encadre">\(W_{AB}(\vect{F})=F\times AB\times\cos\theta\)</p>
-              <p>Cette expression contient la norme de la force, la longueur du déplacement et le cosinus de l'angle formé par \(\vect{F}\) et \(\vect{AB}\).</p>
+              <p>\(\vect{P}\perp\vect{AB}\) : le poids ne travaille pas, quelle que soit la masse.</p>
             </div>
           </section>
 

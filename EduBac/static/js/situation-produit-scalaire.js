@@ -26,9 +26,9 @@ function demarrer(racine) {
   const $ = (sel) => racine.querySelector(sel);
   const $$ = (sel) => Array.from(racine.querySelectorAll(sel));
   const etapes = $$('.sp-etape');
-  const curseurs = { F: $('[data-r="F"]'), theta: $('[data-r="theta"]'), d: $('[data-r="d"]') };
-  const sorties = { F: $('[data-o="F"]'), theta: $('[data-o="theta"]'), d: $('[data-o="d"]') };
-  const etat = { F: 40, theta: 60, d: 5, x: 0, mode: 'physique', montrer: new Set(), etape: 0, revele: new Set() };
+  const curseurs = { F: $('[data-r="F"]'), theta: $('[data-r="theta"]'), d: $('[data-r="d"]'), m: $('[data-r="m"]') };
+  const sorties = { F: $('[data-o="F"]'), theta: $('[data-o="theta"]'), d: $('[data-o="d"]'), m: $('[data-o="m"]') };
+  const etat = { F: 40, theta: 60, d: 5, m: 20, x: 0, mode: 'physique', montrer: new Set(), etape: 0, revele: new Set() };
   const reduit = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Points de progression
@@ -46,11 +46,16 @@ function demarrer(racine) {
 
   // ---------------------------------------------------------------- Valeurs affichées
   function majValeurs() {
-    const { F, theta, d } = etat;
+    const { F, theta, d, m } = etat;
+    const P = m * 10;                       // g ≈ 10 N/kg
     sorties.F.textContent = `${F} N`;
     sorties.theta.textContent = `${theta}°`;
     sorties.d.textContent = `${nombre(d)} m`;
-    $('[data-mesures]').textContent = `F = ${F} N · θ = ${theta}° · AB = ${nombre(d)} m`;
+    sorties.m.textContent = `${m} kg`;
+    $('[data-mesures]').textContent = `F = ${F} N · θ = ${theta}° · AB = ${nombre(d)} m`
+      + (etat.montrer.has('P') && etat.mode === 'physique' ? ` · P = ${P} N` : '');
+    const wp = $('[data-v="WP"]');
+    if (wp) wp.textContent = `0 J (P = ${P} N)`;
     const Fx = F * cosinus(theta);
     const W = travail(F, d, theta);
     const w = $('[data-v="W"]');
@@ -140,6 +145,8 @@ function demarrer(racine) {
       if (mode === 'physique' && etat.theta > 80) { etat.theta = 60; curseurs.theta.value = '60'; }
     }
     $('[data-reglages]').hidden = !('reglagesVisibles' in section.dataset);
+    // La masse ne concerne que la caisse (pas les vecteurs abstraits) ; sa place est conservée.
+    $$('[data-physique-seulement]').forEach((el) => { el.style.visibility = mode === 'physique' ? '' : 'hidden'; });
     $('[data-preselections]').hidden = !('preselectionsVisibles' in section.dataset);
     const lancer = 'lancerVisible' in section.dataset && Boolean(scene3d) && mode === 'physique';
     $('[data-lancer]').hidden = !lancer;
@@ -196,8 +203,10 @@ function demarrer(racine) {
       return false;
     },
     get etape() { return etat.etape; },
-    get valeurs() { return { F: etat.F, theta: etat.theta, d: etat.d, W: travail(etat.F, etat.d, etat.theta) }; },
+    get valeurs() { return { F: etat.F, theta: etat.theta, d: etat.d, m: etat.m, x: etat.x, W: travail(etat.F, etat.d, etat.theta) }; },
+    caisseEcran: () => (scene3d ? scene3d.caisseEcran() : null),
   };
+  racine.addEventListener('pointerdown', (e) => e.stopPropagation());
   racine.dataset.pret = '1';
   afficherEtape(0);
 }
@@ -406,6 +415,7 @@ function creerScene(conteneur, racine, etat) {
 
   const v3 = (x, y, z = 0) => new THREE.Vector3(x, y, z);
   const ECHELLE = 1.7 / 40;          // 40 N → 1,7 m de flèche
+  const ECHELLE_POIDS = 1.05 / 200;  // 200 N → 1,05 m (poids et réaction)
 
   function maj() {
     const { F, theta, d, x, mode, montrer } = etat;
@@ -463,9 +473,11 @@ function creerScene(conteneur, racine, etat) {
     origine.position.copy(O);
 
     const centre = v3(x, 0.4, 0.42);
-    fP.poser(centre, v3(0, -1.05));
+    const kP = etat.m * 10 * ECHELLE_POIDS;
+    fP.poser(centre, v3(0, -kP));
     fP.groupe.visible = physique && montrer.has('P');
-    fR.poser(v3(x - 0.2, 0.0, 0.42), v3(0, 1.05));
+    // Équilibre vertical : R = P − F sin θ (un petit vecteur au minimum).
+    fR.poser(v3(x - 0.2, 0.0, 0.42), v3(0, Math.max(0.15, (etat.m * 10 - F * s) * ECHELLE_POIDS)));
     fR.groupe.visible = physique && montrer.has('R');
 
     // Arc de l'angle θ
@@ -529,13 +541,63 @@ function creerScene(conteneur, racine, etat) {
   }
   let manuel = false;
   controles.addEventListener('start', () => { manuel = true; });
+
+  // Glisser la caisse le long de [AB] (souris ou doigt) ; ailleurs, le geste tourne la scène.
+  const rayon = new THREE.Raycaster();
+  const pointeur = new THREE.Vector2();
+  const planTrajet = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);   // plan vertical du trajet (z = 0)
+  const point = new THREE.Vector3();
+  let glisse = null;
+  function viser(e) {
+    const r = renderer.domElement.getBoundingClientRect();
+    pointeur.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    rayon.setFromCamera(pointeur, camera);
+  }
+  const surCaisse = () => etat.mode === 'physique' && mobile.visible && rayon.intersectObject(caisse, false).length > 0;
+  conteneur.addEventListener('pointerdown', (e) => {
+    viser(e);
+    if (!surCaisse()) return;
+    e.stopPropagation();                  // ni rotation de la scène ni changement de page
+    e.preventDefault();
+    const x0 = rayon.ray.intersectPlane(planTrajet, point) ? point.x : etat.x;
+    glisse = { id: e.pointerId, decalage: x0 - etat.x };
+    renderer.domElement.style.cursor = 'grabbing';
+  }, { capture: true });
+  window.addEventListener('pointermove', (e) => {
+    if (glisse && e.pointerId === glisse.id) {
+      viser(e);
+      if (rayon.ray.intersectPlane(planTrajet, point)) {
+        etat.x = Math.max(0, Math.min(etat.d, point.x - glisse.decalage));
+        maj();
+      }
+      return;
+    }
+    if (e.pointerType === 'mouse' && e.target === renderer.domElement) {
+      viser(e);
+      renderer.domElement.style.cursor = surCaisse() ? 'grab' : '';
+    }
+  });
+  const lacher = (e) => {
+    if (!glisse || e.pointerId !== glisse.id) return;
+    glisse = null;
+    renderer.domElement.style.cursor = '';
+  };
+  window.addEventListener('pointerup', lacher);
+  window.addEventListener('pointercancel', lacher);
   controles.addEventListener('change', demander);
   new ResizeObserver(demander).observe(conteneur);
   document.addEventListener('visibilitychange', demander);
   // La page du cours devient visible (pagination, présentation) : redessiner.
   new MutationObserver(demander).observe(document.documentElement, { attributes: true, subtree: true, attributeFilter: ['class'] });
 
-  return { maj, vueDeFace: () => { manuel = false; vueDeFace(); demander(); } };
+  function caisseEcran() {
+    const v = new THREE.Vector3();
+    caisse.getWorldPosition(v).project(camera);
+    const r = renderer.domElement.getBoundingClientRect();
+    return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height };
+  }
+
+  return { maj, caisseEcran, vueDeFace: () => { manuel = false; vueDeFace(); demander(); } };
 }
 
 // Démarrage (après les déclarations ci-dessus).

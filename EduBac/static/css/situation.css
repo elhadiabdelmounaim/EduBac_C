@@ -10,7 +10,7 @@
 
 /* ---------- Scène ---------- */
 .sp-vue { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.sp-scene { position: relative; aspect-ratio: 16 / 11; max-height: max(150px, calc(100vh - 540px)); border-radius: 12px; overflow: hidden;
+.sp-scene { position: relative; aspect-ratio: 16 / 11; max-height: max(130px, calc(100vh - 575px)); border-radius: 12px; overflow: hidden;
   background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 82%, #9CC9E8) 0%, var(--surface) 70%);
   border: 1px solid var(--trait); touch-action: none; }
 .sp-scene canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; display: block; cursor: grab; }
@@ -32,7 +32,7 @@
 .sp-mesures { margin: 0; font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; }
 
 /* ---------- Réglages ---------- */
-.sp-reglages { display: grid; gap: 4px 14px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.sp-reglages { display: grid; gap: 4px 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 /* Masqués sans être retirés : la place reste réservée, la hauteur du bloc ne change pas d'une étape à l'autre. */
 .sp-reglages[hidden], .sp-preselections[hidden] { display: grid; visibility: hidden; }
 .sp-curseur { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 6px; font-size: .92em; }
@@ -43,7 +43,8 @@
   font: inherit; font-size: .9em; padding: 4px 12px; border-radius: 999px; cursor: pointer;
   border: 1.5px solid var(--b, #55606E); background: var(--surface); color: var(--b, #55606E); font-weight: 600; }
 .sp-preselections button[aria-pressed="true"], .sp-bouton:not(.sp-discret) { background: var(--b, #55606E); color: var(--surface); }
-.sp-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.sp-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; order: 1; }
+.sp-reglages { order: 2; }   /* boutons sous la scène ; la place réservée aux curseurs vient ensuite */
 .sp-actions [hidden] { display: none; }
 .sp-preselections[hidden] { display: flex; }
 :is(.sp-preselections button, .sp-bouton, .sp-reveler, .sp-fleche):focus-visible { outline: 3px solid var(--fig-accent, #E08A1E); outline-offset: 2px; }
@@ -66,6 +67,9 @@
 .sp-etape p { margin: 5px 0; }
 .sp-etape ul { margin: 4px 0; padding-left: 20px; }
 .sp-donnees { font-weight: 600; }
+.sp-questions { list-style: none; margin: 8px 0 0; padding: 8px 10px; border-radius: 8px;
+  background: color-mix(in srgb, var(--b, #55606E) 8%, transparent); }
+.sp-questions li + li { margin-top: 6px; }
 .sp-consigne { font-style: italic; }
 .sp-reponse { visibility: hidden; margin-top: 6px; padding: 6px 10px; border-left: 3px solid var(--b, #55606E);
   background: color-mix(in srgb, var(--b, #55606E) 8%, transparent); border-radius: 0 8px 8px 0; }
@@ -88,14 +92,14 @@
   .sp { grid-template-columns: minmax(0, 1fr); gap: 10px; }
   .sp-scene { aspect-ratio: 2 / 1; }
   .sp-mesures { font-size: .88em; }
-  .sp-reglages { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px 8px; font-size: .82em; }
+  .sp-reglages { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px 6px; font-size: .78em; }
   .sp-curseur { grid-template-columns: auto auto; grid-template-rows: auto auto; gap: 0 4px; }
   .sp-curseur input { grid-column: 1 / -1; grid-row: 2; }
   .sp-curseur output { min-width: 0; text-align: left; }
   .sp-preselections button { padding: 1px 9px; }
   .sp-points { margin: 4px 0; }
   .sp-scene { max-height: 24vh; }
-  .sp-etapes { max-height: max(80px, calc(100vh - 660px)); }
+  .sp-etapes { max-height: max(76px, calc(100vh - 672px)); }
   /* Mesures et boutons en surimpression sur la scène : la page garde toute l'activité. */
   .sp-vue { display: grid; gap: 6px; }
   .sp-scene, .sp-mesures, .sp-actions { grid-area: 1 / 1; }
@@ -114,8 +118,12 @@
 html.presentation .feuille-corps .sp { gap: 2.2vw; }
 html.presentation .feuille-corps .sp-panneau { font-size: .56em; }
 html.presentation .feuille-corps .sp-vue { font-size: .6em; }
-html.presentation .feuille-corps .sp-scene { aspect-ratio: auto; height: min(36vh, 30vw); max-height: none; }
+html.presentation .feuille-corps .sp-scene { aspect-ratio: auto; height: min(33vh, 30vw); max-height: none; }
 html.presentation .feuille-corps .sp-etapes { max-height: none; overflow: visible; }
+html.presentation .feuille-corps .sp-reglages { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px 10px; }
+html.presentation .feuille-corps .sp-curseur { grid-template-columns: auto auto; gap: 0 6px; }
+html.presentation .feuille-corps .sp-curseur input { grid-column: 1 / -1; grid-row: 2; }
+html.presentation .feuille-corps .sp-curseur output { min-width: 0; text-align: left; }
 html.presentation .feuille-corps .sp-lab { font-size: max(15px, 1.5vh); }
 
 @media (prefers-reduced-motion: reduce) { .sp-points li.ici { transform: none; } }
@@ -123,7 +131,7 @@ html.presentation .feuille-corps .sp-lab { font-size: max(15px, 1.5vh); }
 /* Petits téléphones (écran court) : scène et titre plus compacts. */
 @media (max-width: 760px) and (max-height: 700px) {
   .sp-scene { max-height: 15vh; }
-  .sp-etapes { max-height: 66px; }
+  .sp-etapes { max-height: 56px; }
   .feuille-corps .bloc.situation > .tag { font-size: 14.5px; margin-bottom: 4px; }
   .feuille-corps .bloc.situation { padding-top: 10px; }
 }
