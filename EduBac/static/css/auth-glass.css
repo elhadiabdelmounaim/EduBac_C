@@ -23,6 +23,7 @@
     justify-content: center;
     padding: 2.5rem 1rem 3rem;
     overflow: hidden;
+    border-radius: 32px;
     color: var(--ag-text);
     /* Fond calme : sable clair → ocre doux, avec deux reflets bleu/violet très légers */
     background:
@@ -320,7 +321,7 @@ html[data-theme="dark"] .auth-page.auth-glass .auth-card {
 
 /* Mobile */
 @media (max-width: 575.98px) {
-    .auth-page.auth-glass { padding: 1.5rem .9rem 2rem; min-height: auto; }
+    .auth-page.auth-glass { padding: 1.5rem .9rem 2rem; min-height: auto; border-radius: 22px; }
     .auth-page.auth-glass .auth-card { border-radius: 22px; padding: 1.75rem 1.1rem 2rem; }
     .auth-page.auth-glass .auth-float { display: none; }
     .auth-page.auth-glass .ag-field .form-control { height: 56px; font-size: 1rem; }
