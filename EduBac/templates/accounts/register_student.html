@@ -1,51 +1,61 @@
 {% extends "base.html" %}
+{% block extra_css %}<link rel="stylesheet" href="{% asset 'css/auth-glass.css' %}">{% endblock %}
 {% block content %}
-<div class="auth-page">
-    <div class="auth-card position-relative" style="max-width:480px;">
+<div class="auth-page auth-glass">
+    <span class="auth-float f1" aria-hidden="true">∑</span>
+    <span class="auth-float f2" aria-hidden="true">π</span>
+    <div class="auth-card">
         <div class="auth-brand">
-            <img src="/static/img/edubac-logo.png" alt="EduBac" class="auth-logo float-soft">
-            <h1 class="h4 fw-bold mb-1" style="color:var(--edubac-navy);">Inscription élève</h1>
-            <p class="text-muted small mb-0">Crée ton compte avec le code de ta classe. Il sera activé après validation de l’administrateur.</p>
+            <img src="/static/img/edubac-logo.png" alt="EduBac" class="auth-logo">
+            <h1 class="auth-title">Inscription élève</h1>
+            <p class="auth-subtitle">Crée ton compte avec le code de ta classe. Il sera activé après validation de l’administrateur.</p>
         </div>
         {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
         <form method="post">
             {% csrf_token %}
-            <div class="mb-2">
-                <label class="form-label small fw-semibold" for="regName">Nom *</label>
-                <input type="text" name="name" id="regName" class="form-control" required
-                       placeholder="Prénom et nom" autocomplete="name">
-            </div>
-            <div class="mb-2">
-                <label class="form-label small fw-semibold" for="regUsername">Nom d’utilisateur *</label>
-                <input type="text" name="username" id="regUsername" class="form-control" required maxlength="150"
-                       autocomplete="username">
-            </div>
-            <div class="mb-2">
-                <label class="form-label small fw-semibold" for="regClassCode">Code de classe *</label>
-                <input type="text" name="class_code" id="regClassCode" class="form-control" required maxlength="12"
-                       autocomplete="off" autocapitalize="characters">
-            </div>
-            <div class="mb-2">
-                <label class="form-label small fw-semibold" for="p1">Mot de passe *</label>
-                <div class="password-field">
-                    <input type="password" name="password" id="p1" class="form-control" required minlength="6" autocomplete="new-password">
-                    <button type="button" class="password-toggle" data-target="p1" aria-label="Afficher le mot de passe"><i class="bi bi-eye"></i></button>
+            <div class="ag-grid">
+                <div class="ag-field ag-span">
+                    <label class="visually-hidden" for="regName">Nom</label>
+                    <i class="bi bi-person-vcard ag-icon" aria-hidden="true"></i>
+                    <input type="text" name="name" id="regName" class="form-control" required
+                           placeholder="Prénom et nom *" autocomplete="name">
+                </div>
+                <div class="ag-field">
+                    <label class="visually-hidden" for="regUsername">Nom d’utilisateur</label>
+                    <i class="bi bi-person ag-icon" aria-hidden="true"></i>
+                    <input type="text" name="username" id="regUsername" class="form-control" required maxlength="150"
+                           placeholder="Nom d’utilisateur *" autocomplete="username">
+                </div>
+                <div class="ag-field">
+                    <label class="visually-hidden" for="regClassCode">Code de classe</label>
+                    <i class="bi bi-key ag-icon" aria-hidden="true"></i>
+                    <input type="text" name="class_code" id="regClassCode" class="form-control" required maxlength="12"
+                           placeholder="Code de classe *" autocomplete="off" autocapitalize="characters">
+                </div>
+                <div class="ag-field password-field">
+                    <label class="visually-hidden" for="p1">Mot de passe</label>
+                    <i class="bi bi-lock ag-icon" aria-hidden="true"></i>
+                    <input type="password" name="password" id="p1" class="form-control" required minlength="6"
+                           placeholder="Mot de passe *" autocomplete="new-password">
+                    <button type="button" class="password-toggle" data-target="p1" aria-label="Afficher le mot de passe" aria-pressed="false"><i class="bi bi-eye"></i></button>
+                </div>
+                <div class="ag-field password-field">
+                    <label class="visually-hidden" for="p2">Confirmer le mot de passe</label>
+                    <i class="bi bi-lock-fill ag-icon" aria-hidden="true"></i>
+                    <input type="password" name="password2" id="p2" class="form-control" required minlength="6"
+                           placeholder="Confirmer le mot de passe *" autocomplete="new-password">
+                    <button type="button" class="password-toggle" data-target="p2" aria-label="Afficher le mot de passe" aria-pressed="false"><i class="bi bi-eye"></i></button>
                 </div>
             </div>
-            <div class="mb-3">
-                <label class="form-label small fw-semibold" for="p2">Confirmer le mot de passe *</label>
-                <div class="password-field">
-                    <input type="password" name="password2" id="p2" class="form-control" required minlength="6" autocomplete="new-password">
-                    <button type="button" class="password-toggle" data-target="p2" aria-label="Afficher le mot de passe"><i class="bi bi-eye"></i></button>
-                </div>
-            </div>
-            <p class="small text-muted mb-2">En créant un compte, vous acceptez les
+            <p class="ag-note">En créant un compte, vous acceptez les
                 <a href="{% url 'education:terms' %}" target="_blank" rel="noopener">conditions d’utilisation</a> et la
                 <a href="{% url 'education:privacy' %}" target="_blank" rel="noopener">politique de confidentialité</a>.</p>
-            <button type="submit" class="btn btn-accent w-100 py-2 mb-3">Envoyer ma demande</button>
+            <button type="submit" class="ag-submit">
+                <i class="bi bi-person-plus" aria-hidden="true"></i>Envoyer ma demande
+            </button>
         </form>
-        <p class="text-center small mb-0 text-muted">
-            Déjà un compte ? <a href="{% url 'accounts:login' %}" class="fw-semibold">Connexion</a>
+        <p class="ag-footer">
+            Déjà un compte ? <a href="{% url 'accounts:login' %}">Connexion</a>
         </p>
     </div>
 </div>

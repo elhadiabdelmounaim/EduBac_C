@@ -1,42 +1,49 @@
 {% extends "base.html" %}
+{% block extra_css %}<link rel="stylesheet" href="{% asset 'css/auth-glass.css' %}">{% endblock %}
 {% block content %}
-<div class="auth-page">
-    <span class="auth-float f1">Δ</span>
-    <span class="auth-float f2">∫</span>
-    <div class="auth-card position-relative">
+<div class="auth-page auth-glass">
+    <span class="auth-float f1" aria-hidden="true">Δ</span>
+    <span class="auth-float f2" aria-hidden="true">∫</span>
+    <div class="auth-card">
         <div class="auth-brand">
-            <div class="logo-circle float-soft" style="background:linear-gradient(135deg,#2A0C3D,#1a6b6b);">
-                <i class="bi bi-person-badge"></i>
-            </div>
-            <h1 class="h4 fw-bold mb-1" style="color:var(--edubac-navy);">Connexion enseignant</h1>
-            <p class="text-muted small mb-0">Espace professeur et administrateur</p>
+            <img src="/static/img/edubac-logo.png" alt="EduBac" class="auth-logo">
+            <h1 class="auth-title">Connexion enseignant</h1>
+            <p class="auth-subtitle">Espace professeur et administrateur</p>
         </div>
-        <div class="text-center mb-3" style="font-size:2rem;">👩‍🏫 📊</div>
-        <div class="alert alert-light border small mb-3">
+        <div class="ag-info">
+            <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
             Les professeurs, membres du personnel et administrateurs peuvent entrer ici. Les comptes élèves sont refusés.
         </div>
         {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
         <form method="post" action="{% url 'accounts:login_teacher' %}">
             {% csrf_token %}
-            <div class="mb-3">
-                <label class="form-label small fw-semibold">Nom d’utilisateur ou e-mail</label>
-                <input type="text" name="username" class="form-control" required autofocus
+            <div class="ag-field">
+                <label class="visually-hidden" for="loginUsername">Nom d’utilisateur ou e-mail</label>
+                <i class="bi bi-person ag-icon" aria-hidden="true"></i>
+                <input type="text" name="username" id="loginUsername" class="form-control" required autofocus
                        placeholder="Nom d’utilisateur ou e-mail" autocomplete="username">
             </div>
-            <div class="mb-3">
-                <label class="form-label small fw-semibold">Mot de passe</label>
-                <div class="password-field">
-                    <input type="password" name="password" id="loginPassword" class="form-control" required
-                           placeholder="Votre mot de passe" autocomplete="current-password">
-                    <button type="button" class="password-toggle" data-target="loginPassword"
-                            aria-label="Afficher le mot de passe" aria-pressed="false">
-                        <i class="bi bi-eye"></i>
-                    </button>
-                </div>
+            <div class="ag-field password-field">
+                <label class="visually-hidden" for="loginPassword">Mot de passe</label>
+                <i class="bi bi-lock ag-icon" aria-hidden="true"></i>
+                <input type="password" name="password" id="loginPassword" class="form-control" required
+                       placeholder="Mot de passe" autocomplete="current-password">
+                <button type="button" class="password-toggle" data-target="loginPassword"
+                        aria-label="Afficher le mot de passe" aria-pressed="false">
+                    <i class="bi bi-eye"></i>
+                </button>
             </div>
-            <button type="submit" class="btn btn-accent w-100 py-2 mb-3">Accéder à l'espace enseignant</button>
+            <div class="ag-row">
+                <label class="ag-check">
+                    <input type="checkbox" name="remember" value="1"> Se souvenir de moi
+                </label>
+                <a href="{% url 'accounts:forgot_password' %}" class="ag-link">Mot de passe oublié ?</a>
+            </div>
+            <button type="submit" class="ag-submit">
+                <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>Accéder à l'espace enseignant
+            </button>
         </form>
-        <p class="text-center small mb-0">
+        <p class="ag-footer">
             <a href="{% url 'accounts:login_student' %}">Je suis élève</a>
         </p>
     </div>

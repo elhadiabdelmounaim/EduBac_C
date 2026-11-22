@@ -1,0 +1,301 @@
+/* ==========================================================
+   EduBac — pages Connexion / Inscription, style « verre dépoli »
+   Scope : .auth-page.auth-glass (chargé via {% block extra_css %})
+   ========================================================== */
+
+.auth-page.auth-glass {
+    --ag-text: #ffffff;
+    --ag-muted: rgba(255, 255, 255, .86);
+    --ag-glass: rgba(255, 255, 255, .16);
+    --ag-glass-strong: rgba(255, 255, 255, .22);
+    --ag-border: rgba(255, 255, 255, .55);
+    --ag-field-border: rgba(255, 255, 255, .6);
+    --ag-orange-1: #ffc14d;
+    --ag-orange-2: #ff9a3c;
+    --ag-link: #e8f1ff;
+
+    position: relative;
+    isolation: isolate;
+    min-height: calc(100vh - 88px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem 1rem 3rem;
+    overflow: hidden;
+    color: var(--ag-text);
+    /* Scène floue : bleu nuit → violet → lumière chaude */
+    background:
+        radial-gradient(ellipse 38% 45% at 8% 72%, rgba(122, 170, 80, .55), transparent 70%),
+        radial-gradient(ellipse 30% 40% at 92% 68%, rgba(66, 92, 190, .75), transparent 70%),
+        radial-gradient(ellipse 45% 35% at 70% 8%, rgba(255, 214, 170, .55), transparent 70%),
+        radial-gradient(ellipse 60% 30% at 50% 102%, rgba(255, 170, 120, .7), transparent 75%),
+        radial-gradient(ellipse 50% 60% at 18% 30%, rgba(92, 108, 220, .8), transparent 70%),
+        linear-gradient(135deg, #2b3b8f 0%, #5a5fc0 35%, #9a86d6 62%, #e9b7a8 100%) !important;
+}
+
+/* Halo doux derrière la carte */
+.auth-page.auth-glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(ellipse 45% 55% at 50% 50%, rgba(255, 255, 255, .18), transparent 70%);
+    pointer-events: none;
+}
+
+/* Symboles flottants */
+.auth-page.auth-glass .auth-float {
+    position: absolute;
+    z-index: 0;
+    font-size: clamp(3.5rem, 7vw, 6rem);
+    font-weight: 700;
+    color: rgba(150, 170, 255, .55) !important;
+    opacity: 1 !important;
+    pointer-events: none;
+    user-select: none;
+}
+.auth-page.auth-glass .auth-float.f1 { top: 20%; left: 9%; bottom: auto; right: auto; }
+.auth-page.auth-glass .auth-float.f2 { top: 28%; right: 12%; bottom: auto; left: auto; color: rgba(200, 190, 255, .5) !important; }
+
+/* Carte en verre */
+.auth-page.auth-glass .auth-card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 720px;
+    padding: 2.25rem clamp(1.25rem, 6vw, 2.75rem) 2.5rem;
+    border-radius: 28px;
+    background: linear-gradient(160deg, rgba(255, 255, 255, .30), rgba(255, 255, 255, .10)) !important;
+    border: 1.5px solid var(--ag-border) !important;
+    box-shadow:
+        0 30px 70px rgba(25, 20, 80, .35),
+        inset 0 1px 0 rgba(255, 255, 255, .6),
+        0 0 40px rgba(255, 255, 255, .12) !important;
+    backdrop-filter: blur(22px) saturate(140%);
+    -webkit-backdrop-filter: blur(22px) saturate(140%);
+    color: var(--ag-text);
+}
+.auth-page.auth-glass .auth-card::before,
+.auth-page.auth-glass .auth-card::after { display: none !important; }
+
+.auth-page.auth-glass .auth-brand { text-align: center; margin-bottom: 1.75rem; }
+.auth-page.auth-glass .auth-logo {
+    width: 128px;
+    height: auto;
+    max-width: 50%;
+    margin: 0 auto .9rem;
+    display: block;
+    filter: drop-shadow(0 6px 14px rgba(20, 20, 80, .25));
+}
+.auth-page.auth-glass .auth-title {
+    font-size: clamp(1.75rem, 4vw, 2.25rem);
+    font-weight: 800;
+    color: #fff !important;
+    margin-bottom: .35rem;
+    text-shadow: 0 2px 12px rgba(30, 20, 90, .3);
+    letter-spacing: .01em;
+}
+.auth-page.auth-glass .auth-subtitle {
+    color: var(--ag-muted) !important;
+    font-size: 1.05rem;
+    margin: 0;
+}
+
+/* Champs avec icône */
+.auth-page.auth-glass .ag-field {
+    position: relative;
+    margin-bottom: 1.4rem;
+}
+.auth-page.auth-glass .ag-field > .ag-icon {
+    position: absolute;
+    left: 1.15rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.35rem;
+    color: #fff;
+    opacity: .95;
+    pointer-events: none;
+    z-index: 2;
+}
+.auth-page.auth-glass .ag-field .form-control {
+    height: 64px;
+    padding: 0 1.25rem 0 3.6rem;
+    border-radius: 16px;
+    background: var(--ag-glass) !important;
+    border: 1.5px solid var(--ag-field-border) !important;
+    color: #fff !important;
+    font-size: 1.05rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25);
+    transition: background .2s, border-color .2s, box-shadow .2s;
+}
+.auth-page.auth-glass .ag-field .form-control::placeholder { color: rgba(255, 255, 255, .88); opacity: 1; }
+.auth-page.auth-glass .ag-field .form-control:focus {
+    background: var(--ag-glass-strong) !important;
+    border-color: #fff !important;
+    box-shadow: 0 0 0 4px rgba(255, 193, 77, .35), inset 0 1px 0 rgba(255, 255, 255, .3) !important;
+    outline: none;
+}
+/* Autoremplissage du navigateur : garder le texte blanc */
+.auth-page.auth-glass .ag-field .form-control:-webkit-autofill {
+    -webkit-text-fill-color: #fff;
+    -webkit-box-shadow: 0 0 0 1000px rgba(110, 110, 200, .55) inset;
+    transition: background-color 9999s ease-in-out 0s;
+}
+
+.auth-page.auth-glass .password-field .form-control { padding-right: 3.6rem; }
+.auth-page.auth-glass .password-toggle {
+    position: absolute;
+    right: .9rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent !important;
+    border: 0;
+    color: #fff !important;
+    font-size: 1.35rem;
+    padding: .25rem .4rem;
+    border-radius: 10px;
+    z-index: 3;
+}
+.auth-page.auth-glass .password-toggle:hover,
+.auth-page.auth-glass .password-toggle:focus-visible { background: rgba(255, 255, 255, .15) !important; }
+
+/* Ligne « se souvenir / oublié » */
+.auth-page.auth-glass .ag-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin: -.2rem 0 1.6rem;
+    font-size: 1rem;
+}
+.auth-page.auth-glass .ag-check {
+    display: inline-flex;
+    align-items: center;
+    gap: .7rem;
+    cursor: pointer;
+    color: #fff;
+    margin: 0;
+}
+.auth-page.auth-glass .ag-check input {
+    width: 1.4rem;
+    height: 1.4rem;
+    margin: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    border-radius: 6px;
+    border: 1.5px solid rgba(255, 255, 255, .75);
+    background: rgba(255, 255, 255, .15);
+    display: grid;
+    place-content: center;
+    cursor: pointer;
+}
+.auth-page.auth-glass .ag-check input::after {
+    content: "";
+    width: .7rem;
+    height: .4rem;
+    border-left: 2.5px solid #fff;
+    border-bottom: 2.5px solid #fff;
+    transform: rotate(-45deg) translate(1px, -1px) scale(0);
+    transition: transform .15s;
+}
+.auth-page.auth-glass .ag-check input:checked { background: var(--ag-orange-2); border-color: var(--ag-orange-2); }
+.auth-page.auth-glass .ag-check input:checked::after { transform: rotate(-45deg) translate(1px, -1px) scale(1); }
+.auth-page.auth-glass .ag-check input:focus-visible { outline: 3px solid rgba(255, 193, 77, .6); outline-offset: 2px; }
+
+.auth-page.auth-glass a.ag-link,
+.auth-page.auth-glass .ag-note a,
+.auth-page.auth-glass .ag-footer a {
+    color: var(--ag-link) !important;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-weight: 600;
+}
+.auth-page.auth-glass a.ag-link:hover,
+.auth-page.auth-glass .ag-footer a:hover { color: #fff !important; }
+
+/* Bouton orange */
+.auth-page.auth-glass .ag-submit {
+    width: 100%;
+    height: 66px;
+    border: 0;
+    border-radius: 16px;
+    background: linear-gradient(90deg, var(--ag-orange-1), var(--ag-orange-2)) !important;
+    color: #fff !important;
+    font-size: 1.3rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .7rem;
+    box-shadow: 0 10px 28px rgba(255, 140, 50, .45), inset 0 1px 0 rgba(255, 255, 255, .45);
+    text-shadow: 0 1px 2px rgba(140, 60, 0, .25);
+    transition: transform .15s, box-shadow .2s, filter .2s;
+}
+.auth-page.auth-glass .ag-submit i { font-size: 1.5rem; }
+.auth-page.auth-glass .ag-submit:hover { transform: translateY(-2px); filter: brightness(1.05); box-shadow: 0 14px 34px rgba(255, 140, 50, .55); }
+.auth-page.auth-glass .ag-submit:active { transform: translateY(0); }
+.auth-page.auth-glass .ag-submit:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+.auth-page.auth-glass .ag-note {
+    color: var(--ag-muted);
+    font-size: .92rem;
+    margin-bottom: 1.25rem;
+}
+.auth-page.auth-glass .ag-footer {
+    text-align: center;
+    color: var(--ag-muted);
+    margin: 1.5rem 0 0;
+    font-size: 1rem;
+}
+.auth-page.auth-glass .ag-info {
+    background: rgba(255, 255, 255, .14);
+    border: 1px solid rgba(255, 255, 255, .4);
+    color: #fff;
+    border-radius: 14px;
+    padding: .8rem 1rem;
+    font-size: .95rem;
+    margin-bottom: 1.4rem;
+}
+.auth-page.auth-glass .alert-danger {
+    background: rgba(220, 53, 69, .85) !important;
+    border: 1px solid rgba(255, 255, 255, .5) !important;
+    color: #fff !important;
+    border-radius: 14px;
+}
+
+/* Grille deux colonnes (inscription) */
+.auth-page.auth-glass .ag-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 1rem;
+}
+.auth-page.auth-glass .ag-grid .ag-span { grid-column: 1 / -1; }
+
+/* Mode sombre : même scène, plus nocturne */
+html[data-theme="dark"] .auth-page.auth-glass {
+    background:
+        radial-gradient(ellipse 38% 45% at 8% 72%, rgba(60, 100, 50, .45), transparent 70%),
+        radial-gradient(ellipse 30% 40% at 92% 68%, rgba(40, 60, 150, .7), transparent 70%),
+        radial-gradient(ellipse 45% 35% at 70% 8%, rgba(170, 120, 110, .35), transparent 70%),
+        radial-gradient(ellipse 60% 30% at 50% 102%, rgba(180, 100, 80, .45), transparent 75%),
+        linear-gradient(135deg, #0f1640 0%, #252a6b 40%, #4b3f86 70%, #7a5a78 100%) !important;
+}
+html[data-theme="dark"] .auth-page.auth-glass .auth-card {
+    background: linear-gradient(160deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .05)) !important;
+    border-color: rgba(255, 255, 255, .35) !important;
+}
+
+/* Mobile */
+@media (max-width: 575.98px) {
+    .auth-page.auth-glass { padding: 1.5rem .9rem 2rem; min-height: auto; }
+    .auth-page.auth-glass .auth-card { border-radius: 22px; padding: 1.75rem 1.1rem 2rem; }
+    .auth-page.auth-glass .auth-float { display: none; }
+    .auth-page.auth-glass .ag-field .form-control { height: 56px; font-size: 1rem; }
+    .auth-page.auth-glass .ag-submit { height: 58px; font-size: 1.15rem; }
+    .auth-page.auth-glass .ag-grid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .auth-page.auth-glass .ag-submit { transition: none; }
+}

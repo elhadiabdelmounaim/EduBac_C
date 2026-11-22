@@ -266,6 +266,9 @@ def login_view(request, *, teacher_entry=False):
             if teacher_entry and not user.is_teacher():
                 error = 'Ce formulaire est réservé aux professeurs et aux administrateurs.'
             else:
+                # « Se souvenir de moi » : session persistante (durée par défaut),
+                # sinon la session expire à la fermeture du navigateur.
+                request.session.set_expiry(None if request.POST.get('remember') else 0)
                 if user.is_staff or user.is_superuser:
                     _login_session(request, user)
                     return redirect('accounts:teacher_portal')
