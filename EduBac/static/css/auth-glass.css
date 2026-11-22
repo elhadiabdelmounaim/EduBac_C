@@ -106,8 +106,9 @@
     max-width: 50%;
     margin: 0 auto .9rem;
     display: block;
-    padding: .6rem .8rem;
-    border-radius: 18px;
+    padding: .7rem .9rem;
+    border-radius: 28px;
+    object-fit: contain;
     background: rgba(255, 255, 255, .92);
     box-shadow: 0 6px 18px rgba(20, 20, 80, .25);
 }
