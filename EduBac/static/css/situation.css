@@ -1,0 +1,129 @@
+/* Activité « Situation problème » (produit scalaire, 1ère Bac SE) : scène 3D + étapes.
+   Le bloc est d'un seul tenant (data-insecable) : sa hauteur est fixée par la plus haute étape
+   (toutes les étapes partagent la même case de grille), la pagination reste donc exacte. */
+.sp { --sp-F: #C0392B; --sp-d: #2E8B57; --sp-proj: #E08A1E; --sp-sol: #8FA1AE;
+  display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; align-items: start; margin-top: 4px; }
+:root[data-theme="dark"] .sp { --sp-F: #FF8A80; --sp-d: #7FD8A4; --sp-proj: #F5B461; --sp-sol: #6E8494; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .sp { --sp-F: #FF8A80; --sp-d: #7FD8A4; --sp-proj: #F5B461; --sp-sol: #6E8494; }
+}
+
+/* ---------- Scène ---------- */
+.sp-vue { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.sp-scene { position: relative; aspect-ratio: 16 / 11; max-height: max(150px, calc(100vh - 540px)); border-radius: 12px; overflow: hidden;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 82%, #9CC9E8) 0%, var(--surface) 70%);
+  border: 1px solid var(--trait); touch-action: none; }
+.sp-scene canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; display: block; cursor: grab; }
+.sp-scene canvas:active { cursor: grabbing; }
+.sp-secours { position: absolute; inset: 6% 4%; width: 92%; height: 88%; color: var(--texte); }
+.sp.en-3d .sp-secours { display: none; }
+.sp-etiquettes { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.sp-lab { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); font-size: 15px; font-weight: 700;
+  white-space: nowrap; padding: 0 4px; border-radius: 6px; background: color-mix(in srgb, var(--surface) 70%, transparent);
+  visibility: hidden; }
+.sp:not(.en-3d) .sp-lab { display: none; }
+.sp-lab.visible { visibility: visible; }
+.lab-F, .lab-Fx, .lab-Fy { color: var(--sp-F); }
+.lab-Fx, .lab-Fy { color: var(--sp-proj); }
+.lab-d { color: var(--sp-d); }
+.lab-P, .lab-R { color: var(--meth, #1D4E89); }
+.sp-aide-3d { position: absolute; left: 8px; bottom: 6px; margin: 0; font-size: 11.5px; color: var(--doux); z-index: 2;
+  background: color-mix(in srgb, var(--surface) 80%, transparent); padding: 1px 6px; border-radius: 6px; }
+.sp-mesures { margin: 0; font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; }
+
+/* ---------- Réglages ---------- */
+.sp-reglages { display: grid; gap: 4px 14px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* Masqués sans être retirés : la place reste réservée, la hauteur du bloc ne change pas d'une étape à l'autre. */
+.sp-reglages[hidden], .sp-preselections[hidden] { display: grid; visibility: hidden; }
+.sp-curseur { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 6px; font-size: .92em; }
+.sp-curseur input { width: 100%; accent-color: var(--sp-F); }
+.sp-curseur output { min-width: 3.6em; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.sp-preselections { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.sp-preselections button, .sp-bouton, .sp-reveler, .sp-fleche {
+  font: inherit; font-size: .9em; padding: 4px 12px; border-radius: 999px; cursor: pointer;
+  border: 1.5px solid var(--b, #55606E); background: var(--surface); color: var(--b, #55606E); font-weight: 600; }
+.sp-preselections button[aria-pressed="true"], .sp-bouton:not(.sp-discret) { background: var(--b, #55606E); color: var(--surface); }
+.sp-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.sp-actions [hidden] { display: none; }
+.sp-preselections[hidden] { display: flex; }
+:is(.sp-preselections button, .sp-bouton, .sp-reveler, .sp-fleche):focus-visible { outline: 3px solid var(--fig-accent, #E08A1E); outline-offset: 2px; }
+
+/* ---------- Étapes ---------- */
+.sp-panneau { min-width: 0; font-size: .9em; }
+.sp-nav { display: flex; align-items: center; gap: 8px; }
+.sp-fleche { padding: 0; width: 2em; height: 2em; line-height: 1; flex: none; font-size: 1.05em; }
+.sp-fleche:disabled { opacity: .35; cursor: default; }
+.sp-compteur { flex: 1; min-width: 0; margin: 0; text-align: center; font-weight: 700; color: var(--b, #55606E);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-points { display: flex; justify-content: center; gap: 6px; padding: 0; margin: 6px 0 8px; list-style: none; }
+.sp-points li { width: 9px; height: 9px; border-radius: 50%; background: var(--trait); }
+.sp-points li.fait { background: color-mix(in srgb, var(--b, #55606E) 55%, transparent); }
+.sp-points li.ici { background: var(--b, #55606E); transform: scale(1.25); }
+.sp-etapes { display: grid; max-height: max(180px, calc(100vh - 500px)); overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; }
+.sp-etape { grid-area: 1 / 1; visibility: hidden; min-width: 0; }
+.sp-etape.active { visibility: visible; }
+.sp-etape h4 { margin: 0 0 6px; font-size: 1.08em; color: var(--b, #55606E); }
+.sp-etape p { margin: 5px 0; }
+.sp-etape ul { margin: 4px 0; padding-left: 20px; }
+.sp-donnees { font-weight: 600; }
+.sp-consigne { font-style: italic; }
+.sp-reponse { visibility: hidden; margin-top: 6px; padding: 6px 10px; border-left: 3px solid var(--b, #55606E);
+  background: color-mix(in srgb, var(--b, #55606E) 8%, transparent); border-radius: 0 8px 8px 0; }
+.sp-etape.active .sp-reponse.revelee { visibility: visible; }
+.sp-reveler { margin-top: 4px; }
+.sp-reveler[aria-expanded="true"] { opacity: .55; }
+.sp-encadre { display: block; width: fit-content; margin: 6px auto; padding: 4px 12px; border: 2px solid var(--b, #55606E); border-radius: 8px; }
+.sp-formule { text-align: center; }
+.sp-tableau { width: 100%; border-collapse: collapse; margin: 6px 0; font-variant-numeric: tabular-nums; }
+.sp-tableau th, .sp-tableau td { border: 1px solid var(--trait); padding: 4px 8px; text-align: left; }
+.sp-tableau td { font-weight: 700; }
+.sp-signe { font-weight: 700; text-align: center; font-size: 1.05em; }
+.sp-signe .positif { color: var(--sp-d); }
+.sp-signe .nul { color: var(--doux); }
+.sp-signe .negatif { color: var(--sp-F); }
+.sp-cours { display: block; margin: 10px auto 0; }
+
+/* ---------- Téléphone : scène au-dessus, étapes défilantes ---------- */
+@media (max-width: 760px) {
+  .sp { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .sp-scene { aspect-ratio: 2 / 1; }
+  .sp-mesures { font-size: .88em; }
+  .sp-reglages { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px 8px; font-size: .82em; }
+  .sp-curseur { grid-template-columns: auto auto; grid-template-rows: auto auto; gap: 0 4px; }
+  .sp-curseur input { grid-column: 1 / -1; grid-row: 2; }
+  .sp-curseur output { min-width: 0; text-align: left; }
+  .sp-preselections button { padding: 1px 9px; }
+  .sp-points { margin: 4px 0; }
+  .sp-scene { max-height: 24vh; }
+  .sp-etapes { max-height: max(80px, calc(100vh - 660px)); }
+  /* Mesures et boutons en surimpression sur la scène : la page garde toute l'activité. */
+  .sp-vue { display: grid; gap: 6px; }
+  .sp-scene, .sp-mesures, .sp-actions { grid-area: 1 / 1; }
+  .sp-reglages { grid-area: 2 / 1; }
+  .sp-mesures { align-self: start; justify-self: center; z-index: 3; margin-top: 4px; padding: 0 8px; border-radius: 8px;
+    background: color-mix(in srgb, var(--surface) 82%, transparent); pointer-events: none; }
+  .sp-actions { align-self: end; justify-self: end; z-index: 3; margin: 0 6px 6px; gap: 4px; }
+  .sp-actions .sp-bouton { padding: 2px 9px; font-size: .8em; }
+  .sp-points { display: none; }
+  .sp-nav { margin-bottom: 4px; }
+  .sp-lab { font-size: 12.5px; }
+  .sp-aide-3d { display: none; }
+}
+
+/* ---------- Vidéoprojecteur ---------- */
+html.presentation .feuille-corps .sp { gap: 2.2vw; }
+html.presentation .feuille-corps .sp-panneau { font-size: .56em; }
+html.presentation .feuille-corps .sp-vue { font-size: .6em; }
+html.presentation .feuille-corps .sp-scene { aspect-ratio: auto; height: min(36vh, 30vw); max-height: none; }
+html.presentation .feuille-corps .sp-etapes { max-height: none; overflow: visible; }
+html.presentation .feuille-corps .sp-lab { font-size: max(15px, 1.5vh); }
+
+@media (prefers-reduced-motion: reduce) { .sp-points li.ici { transform: none; } }
+
+/* Petits téléphones (écran court) : scène et titre plus compacts. */
+@media (max-width: 760px) and (max-height: 700px) {
+  .sp-scene { max-height: 15vh; }
+  .sp-etapes { max-height: 66px; }
+  .feuille-corps .bloc.situation > .tag { font-size: 14.5px; margin-bottom: 4px; }
+  .feuille-corps .bloc.situation { padding-top: 10px; }
+}

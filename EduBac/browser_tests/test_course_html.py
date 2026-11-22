@@ -12,8 +12,8 @@ from playwright.sync_api import sync_playwright
 
 from education.models import Course, Lesson
 
-BLOCS = 50          # blocs (définitions, propositions…) du cours « Produit scalaire »
-POINTS = 115        # éléments de liste <li> du cours
+BLOCS = 51          # blocs du cours « Produit scalaire » (dont l'activité d'ouverture)
+POINTS = 129        # éléments de liste <li> du cours (dont 14 dans l'activité : réponses et points d'étape)
 
 
 class CourseHtmlBrowserTests(StaticLiveServerTestCase):
@@ -81,9 +81,9 @@ class CourseHtmlBrowserTests(StaticLiveServerTestCase):
         }""")
         self.assertGreater(state['pages'], 10)
         self.assertEqual(state['blocs'], BLOCS)                 # aucun bloc perdu ni dupliqué
-        self.assertEqual(state['points'], POINTS + 9)           # + 9 entrées du sommaire
-        self.assertEqual(state['sommaire'], 9)
-        self.assertEqual(state['parties'], 9)                   # I à IX
+        self.assertEqual(state['points'], POINTS + 10)          # + 10 entrées du sommaire
+        self.assertEqual(state['sommaire'], 10)
+        self.assertEqual(state['parties'], 10)                  # situation problème (★), puis I à IX
         self.assertEqual(state['source'], 0)                    # tout est passé dans les pages
         self.assertEqual(state['deborde'], 0)
         self.assertEqual(state['coupe'], 0)                     # aucune page tronquée

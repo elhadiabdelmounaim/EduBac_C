@@ -25,6 +25,178 @@ Le sommaire est construit à partir de data-toc ; les chiffres de l'en-tête son
 {% endverbatim %}{% endblock %}
 
 {% block cours %}{% verbatim %}
+<!-- ==================== Situation problème (activité de découverte) ====================
+     Scène 3D : static/js/situation-produit-scalaire.js (Three.js). → / ← parcourent ses étapes.
+     data-minutes="30" : durée fixe de l'activité (cahier de textes, minuteur de présentation). -->
+<section class="chap" id="s0" data-toc="Situation problème : le travail d'une force">
+  <h2><span class="num">★</span><span class="titre">Situation problème : le travail d'une force</span></h2>
+  <div class="bloc act situation" data-minutes="30"><div class="tag">Activité 1 — Le travail d'une force</div>
+    <div class="sp" data-situation data-insecable data-etapes-internes>
+      <div class="sp-vue">
+        <div class="sp-scene" data-scene role="img" aria-label="Scène : une personne tire une caisse de A vers B avec une corde.">
+          <div class="sp-etiquettes" aria-hidden="true">
+            <span class="sp-lab lab-F" data-etiquette="F">\(\vect{F}\)</span>
+            <span class="sp-lab lab-d" data-etiquette="d">\(\vect{AB}\)</span>
+            <span class="sp-lab lab-theta" data-etiquette="theta">\(\theta\)</span>
+            <span class="sp-lab lab-A" data-etiquette="A">\(A\)</span>
+            <span class="sp-lab lab-B" data-etiquette="B">\(B\)</span>
+            <span class="sp-lab lab-P" data-etiquette="P">\(\vect{P}\)</span>
+            <span class="sp-lab lab-R" data-etiquette="R">\(\vect{R}\)</span>
+            <span class="sp-lab lab-Fx" data-etiquette="Fx">\(\vect{F_x}\)</span>
+            <span class="sp-lab lab-Fy" data-etiquette="Fy">\(\vect{F_y}\)</span>
+          </div>
+          <svg class="sp-secours" viewBox="0 0 560 300" role="img" aria-label="Une personne tire une caisse de A vers B avec une corde faisant un angle de 60° avec le sol.">
+            <path d="M20 230 H540" stroke="currentColor" stroke-width="3"/>
+            <path d="M30 236 l-10 12 M60 236 l-10 12 M90 236 l-10 12 M120 236 l-10 12 M150 236 l-10 12 M180 236 l-10 12 M210 236 l-10 12 M240 236 l-10 12 M270 236 l-10 12 M300 236 l-10 12 M330 236 l-10 12 M360 236 l-10 12 M390 236 l-10 12 M420 236 l-10 12 M450 236 l-10 12 M480 236 l-10 12 M510 236 l-10 12 M540 236 l-10 12" stroke="currentColor" stroke-width="1.4"/>
+            <rect x="60" y="170" width="90" height="60" fill="#E8A55B" stroke="#8A4B12" stroke-width="2.5"/>
+            <path d="M60 170 L150 230 M150 170 L60 230" stroke="#8A4B12" stroke-width="2"/>
+            <path d="M150 200 L270 130" stroke="#C0392B" stroke-width="3"/>
+            <path d="M150 200 L215 162" stroke="#C0392B" stroke-width="4" marker-end="url(#spFleche)"/>
+            <defs><marker id="spFleche" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#C0392B"/></marker></defs>
+            <path d="M185 200 A35 35 0 0 0 167 170" fill="none" stroke="currentColor" stroke-width="1.6"/>
+            <text x="190" y="190" font-size="16">θ = 60°</text>
+            <text x="190" y="150" font-size="17" fill="#C0392B">F = 40 N</text>
+            <circle cx="290" cy="112" r="13" fill="#F2C9A0" stroke="currentColor"/>
+            <path d="M290 125 L300 180 M296 140 L272 132 M300 180 L285 228 M300 180 L322 228" stroke="#2B6CB0" stroke-width="7" stroke-linecap="round"/>
+            <circle cx="105" cy="230" r="5" fill="currentColor"/><text x="98" y="268" font-size="18" font-style="italic">A</text>
+            <circle cx="460" cy="230" r="5" fill="currentColor"/><text x="453" y="268" font-size="18" font-style="italic">B</text>
+            <path d="M112 285 H452" stroke="#2E8B57" stroke-width="2.5" marker-end="url(#spFleche2)" marker-start="url(#spFleche2)"/>
+            <defs><marker id="spFleche2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#2E8B57"/></marker></defs>
+            <text x="262" y="280" font-size="16" fill="#2E8B57">d = 5 m</text>
+          </svg>
+          <p class="sp-aide-3d" data-aide-3d hidden>Faites glisser pour tourner la scène, molette ou deux doigts pour zoomer.</p>
+        </div>
+        <p class="sp-mesures" data-mesures aria-live="polite">F = 40 N · θ = 60° · AB = 5 m</p>
+        <div class="sp-reglages" data-reglages hidden>
+          <label class="sp-curseur">\(F\) <input type="range" min="10" max="80" step="5" value="40" data-r="F" aria-label="Intensité de la force F en newtons"> <output data-o="F">40 N</output></label>
+          <label class="sp-curseur">\(\theta\) <input type="range" min="0" max="80" step="5" value="60" data-r="theta" aria-label="Angle θ en degrés"> <output data-o="theta">60°</output></label>
+          <label class="sp-curseur">\(AB\) <input type="range" min="1" max="8" step="0.5" value="5" data-r="d" aria-label="Distance AB en mètres"> <output data-o="d">5 m</output></label>
+          <div class="sp-preselections" data-preselections hidden role="group" aria-label="Angles particuliers">
+            <button type="button" data-angle="0">0°</button>
+            <button type="button" data-angle="60">60°</button>
+            <button type="button" data-angle="90">90°</button>
+            <button type="button" data-angle="135">135°</button>
+          </div>
+        </div>
+        <div class="sp-actions">
+          <button type="button" class="sp-bouton" data-lancer><span aria-hidden="true">▶</span> Lancer</button>
+          <button type="button" class="sp-bouton sp-discret" data-replacer><span aria-hidden="true">↺</span> Replacer</button>
+          <button type="button" class="sp-bouton sp-discret" data-vue><span aria-hidden="true">⟲</span> Vue de face</button>
+        </div>
+      </div>
+
+      <div class="sp-panneau">
+        <div class="sp-nav">
+          <button type="button" class="sp-fleche" data-precedente aria-label="Étape précédente">‹</button>
+          <p class="sp-compteur" data-compteur aria-live="polite">Étape 1 / 8 — Observer</p>
+          <button type="button" class="sp-fleche" data-suivante aria-label="Étape suivante">›</button>
+        </div>
+        <ol class="sp-points" data-points aria-hidden="true"></ol>
+        <div class="sp-etapes">
+
+          <section class="sp-etape" data-titre="Observer" data-montrer="F d theta A B" data-mode="physique">
+            <h4>Observation</h4>
+            <p>Une personne tire une caisse \(S\) posée sur un sol horizontal à l'aide d'une corde. Pendant le mouvement, la corde reste tendue et fait un angle constant \(\theta\) avec le sol. La caisse glisse en ligne droite du point \(A\) au point \(B\).</p>
+            <p class="sp-donnees">\(F=40\ \text{N}\) ; \(\theta=60^\circ\) ; \(AB=d=5\ \text{m}\).</p>
+            <p class="sp-consigne">Faites tourner la scène et repérez : la force \(\vect{F}\) exercée par la corde, le vecteur déplacement \(\vect{AB}\) et l'angle \(\theta\) entre ces deux vecteurs.</p>
+          </section>
+
+          <section class="sp-etape" data-titre="Question 1 a)" data-montrer="F d theta A B" data-reponse-montrer="P R" data-mode="physique">
+            <h4>Question 1 — a)</h4>
+            <p>Quelles sont les forces qui s'exercent sur la caisse \(S\) ? Représentez-les.</p>
+            <button type="button" class="sp-reveler" data-reveler>Afficher la réponse</button>
+            <div class="sp-reponse" data-reponse>
+              <ul>
+                <li>le poids \(\vect{P}\) : vertical, vers le bas ;</li>
+                <li>la réaction du sol \(\vect{R}\) ;</li>
+                <li>la force \(\vect{F}\) exercée par la corde.</li>
+              </ul>
+            </div>
+          </section>
+
+          <section class="sp-etape" data-titre="Question 1 b)" data-montrer="F d theta A B" data-reponse-montrer="Fx Fy" data-mode="physique">
+            <h4>Question 1 — b)</h4>
+            <p>Déterminer les composantes de \(\vect{F}\) selon la direction horizontale (celle du déplacement) et la direction verticale.</p>
+            <button type="button" class="sp-reveler" data-reveler>Afficher la réponse</button>
+            <div class="sp-reponse" data-reponse>
+              <p>\(F_x=F\cos\theta=40\times\frac12=20\ \text{N}\)</p>
+              <p>\(F_y=F\sin\theta=40\times\frac{\sqrt3}2=20\sqrt3\approx34{,}6\ \text{N}\)</p>
+            </div>
+          </section>
+
+          <section class="sp-etape" data-titre="Question 2" data-montrer="F d theta A B Fx Fy" data-mode="physique" data-lancer-visible>
+            <h4>Question 2</h4>
+            <p>Lancez le mouvement. Seule la composante \(\vect{F_x}\), parallèle au déplacement, fait avancer la caisse ; \(\vect{F_y}\), perpendiculaire au déplacement, ne travaille pas.</p>
+            <p>Calculer le travail \(W_{AB}(\vect{F})\) de la force \(\vect{F}\) au cours du déplacement de \(A\) vers \(B\).</p>
+            <button type="button" class="sp-reveler" data-reveler>Afficher la réponse</button>
+            <div class="sp-reponse" data-reponse>
+              <p>\(W_{AB}(\vect{F})=F_x\times AB=F\cos\theta\times AB\)</p>
+              <p>\(W_{AB}(\vect{F})=20\times5=100\ \text{J}\).</p>
+            </div>
+          </section>
+
+          <section class="sp-etape" data-titre="Manipuler" data-montrer="F d theta A B Fx" data-mode="physique" data-reglages-visibles data-lancer-visible>
+            <h4>Manipulation et conjecture</h4>
+            <p>Faites varier \(F\), \(\theta\) et \(AB\). Le tableau donne le travail mesuré par la simulation et le produit \(F\times AB\times\cos\theta\).</p>
+            <table class="sp-tableau" data-tableau>
+              <tbody>
+                <tr><th scope="row">Travail mesuré \(W\)</th><td data-v="W">100 J</td></tr>
+                <tr><th scope="row">\(F\times AB\times\cos\theta\)</th><td data-v="produit">40 × 5 × 0,5 = 100</td></tr>
+              </tbody>
+            </table>
+            <p class="sp-consigne">Que remarquez-vous ? Quelle conjecture peut-on formuler ?</p>
+            <button type="button" class="sp-reveler" data-reveler>Afficher la conjecture</button>
+            <div class="sp-reponse" data-reponse>
+              <p class="sp-encadre">\(W_{AB}(\vect{F})=F\times AB\times\cos\theta\)</p>
+              <p>Cette expression contient la norme de la force, la longueur du déplacement et le cosinus de l'angle formé par \(\vect{F}\) et \(\vect{AB}\).</p>
+            </div>
+          </section>
+
+          <section class="sp-etape" data-titre="Vers les mathématiques" data-montrer="F d theta" data-mode="physique">
+            <h4>Des grandeurs physiques aux vecteurs</h4>
+            <p>\(F=\|\vect{F}\|\) est la norme du vecteur \(\vect{F}\) et \(AB=\|\vect{AB}\|\) celle du vecteur \(\vect{AB}\). Le travail s'écrit donc :</p>
+            <p class="sp-formule">\(W_{AB}(\vect{F})=\|\vect{F}\|\times\|\vect{AB}\|\times\cos\theta\)</p>
+            <p>C'est un nombre réel calculé à partir de deux vecteurs.</p>
+            <button type="button" class="sp-reveler" data-reveler>Nommer ce nombre</button>
+            <div class="sp-reponse" data-reponse>
+              <p>Ce nombre s'appelle le <strong>produit scalaire</strong> des vecteurs \(\vect{F}\) et \(\vect{AB}\) ; on le note \(\vect{F}\cdot\vect{AB}\) :</p>
+              <p class="sp-encadre">\(\vect{F}\cdot\vect{AB}=\|\vect{F}\|\times\|\vect{AB}\|\times\cos\theta\)</p>
+              <p>Le travail d'une force constante est un exemple de produit scalaire.</p>
+            </div>
+          </section>
+
+          <section class="sp-etape" data-titre="Généraliser" data-montrer="F d theta proj" data-mode="abstrait" data-reglages-visibles data-preselections-visibles>
+            <h4>Signe du produit scalaire</h4>
+            <p>Choisissez un angle : \(0^\circ\) (même direction, même sens), \(90^\circ\) (vecteurs perpendiculaires) ou un angle obtus.</p>
+            <p class="sp-signe">\(\vect{F}\cdot\vect{AB}\) <span data-v="signe">= 40 × 5 × cos 60° = 100 : positif</span></p>
+            <p class="sp-consigne">Quand le produit scalaire est-il positif ? nul ? négatif ?</p>
+            <button type="button" class="sp-reveler" data-reveler>Afficher la réponse</button>
+            <div class="sp-reponse" data-reponse>
+              <ul>
+                <li>\(0^\circ\le\theta<90^\circ\) : \(\cos\theta>0\), le produit scalaire est <strong>positif</strong> (travail moteur) ;</li>
+                <li>\(\theta=90^\circ\) : \(\cos\theta=0\), le produit scalaire est <strong>nul</strong> ;</li>
+                <li>\(90^\circ<\theta\le180^\circ\) : \(\cos\theta<0\), il est <strong>négatif</strong> (travail résistant).</li>
+              </ul>
+            </div>
+          </section>
+
+          <section class="sp-etape" data-titre="Vers le cours" data-montrer="F d theta" data-mode="abstrait">
+            <h4>Question de réflexion</h4>
+            <p>Comment peut-on généraliser cette relation à deux vecteurs quelconques \(\vu\) et \(\vv\), même lorsqu'ils ne représentent plus une force et un déplacement ?</p>
+            <button type="button" class="sp-reveler" data-reveler>Afficher la piste</button>
+            <div class="sp-reponse" data-reponse>
+              <p class="sp-encadre">\(\vu\cdot\vv=\|\vu\|\times\|\vv\|\times\cos\left(\widehat{\vu,\vv}\right)\)</p>
+              <p>Dans ce chapitre, on calcule aussi ce nombre à l'aide des coordonnées des vecteurs.</p>
+            </div>
+            <button type="button" class="sp-bouton sp-cours" data-commencer>Commencer le cours <span aria-hidden="true">›</span></button>
+          </section>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ============================ I ============================ -->
 <section class="chap" id="s1" data-toc="Étude analytique du produit scalaire">
   <h2><span class="num">I</span><span class="titre">Étude analytique du produit scalaire</span></h2>
@@ -613,3 +785,14 @@ Le sommaire est construit à partir de data-toc ; les chiffres de l'en-tête son
   </div>
 </section>
 {% endverbatim %}{% endblock %}
+
+{% block scripts_cours %}{% load static edubac_assets %}
+<link rel="stylesheet" href="{% asset 'css/situation.css' %}">
+<script type="importmap">
+{"imports": {
+  "three": "{% asset 'vendor/three/three.module.min.js' %}",
+  "three/addons/": "{% get_static_prefix %}vendor/three/addons/"
+}}
+</script>
+<script type="module" src="{% asset 'js/situation-produit-scalaire.js' %}"></script>
+{% endblock %}

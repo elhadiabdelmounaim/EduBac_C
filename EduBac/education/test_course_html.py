@@ -41,7 +41,13 @@ class CourseHtmlTests(TestCase):
         self.assertNotIn('cdnjs', page)
         # Le LaTeX est transmis tel quel (pas interprété par Django).
         self.assertIn(r"\[\vu\cdot\vv=xx'+yy'", page)
-        self.assertEqual(page.count('class="chap"'), 9)
+        self.assertEqual(page.count('class="chap"'), 10)
+        # Situation problème 3D : Three.js local (carte d'import), script et styles de l'activité.
+        self.assertIn('data-situation', page)
+        self.assertIn('/static/vendor/three/three.module.min.js', page)
+        self.assertIn('/static/js/situation-produit-scalaire.js', page)
+        self.assertIn('/static/css/situation.css', page)
+        self.assertLess(page.index('id="s0"'), page.index('id="s1"'))
         self.assertContains(response, reverse('education:lesson_detail', args=[self.lesson.pk]))
 
     def test_suites_course_page(self):

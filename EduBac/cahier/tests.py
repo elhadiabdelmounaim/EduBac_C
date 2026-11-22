@@ -43,18 +43,25 @@ class CahierTests(CahierBase):
     # ---------- Plan du cours ----------
     def test_plan_has_parts_subtitles_and_blocks(self):
         plan = plan_de_lecon(self.lesson)
-        self.assertEqual(len(plan), 9)
-        self.assertEqual(plan[0]['titre'], 'I. Étude analytique du produit scalaire')
-        sous = plan[0]['enfants'][0]
+        self.assertEqual(len(plan), 10)
+        # Situation problème d'ouverture : partie s0, une activité de 30 min (les clés s1… ne bougent pas).
+        self.assertEqual(plan[0]['key'], 's0')
+        self.assertEqual(plan[0]['titre'], "★. Situation problème : le travail d'une force")
+        activite = plan[0]['enfants'][0]
+        self.assertEqual((activite['key'], activite['titre'], activite['minutes']),
+                         ('s0-b1', "Activité 1 — Le travail d'une force", 30))
+        self.assertEqual(plan[1]['titre'], 'I. Étude analytique du produit scalaire')
+        sous = plan[1]['enfants'][0]
         self.assertEqual(sous['type'], 'titre')
         self.assertEqual(sous['titre'], 'I.1 Expression analytique du produit scalaire')
         self.assertEqual([b['titre'] for b in sous['enfants']], ['Proposition', 'Remarque', 'Exemples', 'Applications'])
+        self.assertEqual(sous['enfants'][0]['key'], 's1-b1')
         # Partie sans sous-titre : ses blocs sont directement dessous.
-        self.assertEqual(plan[1]['enfants'][0]['type'], 'bloc')
+        self.assertEqual(plan[2]['enfants'][0]['type'], 'bloc')
         feuilles = elements(plan)
-        self.assertEqual(len(feuilles), 50)
-        self.assertEqual(len({f['key'] for f in feuilles}), 50)
-        self.assertEqual(feuilles[0]['sous_titre'], 'I.1 Expression analytique du produit scalaire')
+        self.assertEqual(len(feuilles), 51)
+        self.assertEqual(len({f['key'] for f in feuilles}), 51)
+        self.assertEqual(feuilles[1]['sous_titre'], 'I.1 Expression analytique du produit scalaire')
         self.assertIsNone(plan_de_lecon(self.sans_html))
 
     # ---------- Accès ----------
@@ -84,7 +91,7 @@ class CahierTests(CahierBase):
         self.login_as(self.prof)
         data = self.client.get(self.etat_url).json()
         self.assertEqual([c['nom'] for c in data['classes']], ['1BAC SE 2'])
-        self.assertEqual(len(data['plan']), 9)
+        self.assertEqual(len(data['plan']), 10)
         self.assertEqual(self.client.get(reverse('cahier:etat', args=[self.sans_html.pk])).status_code, 404)
 
     def test_save_with_date_class_and_titles(self):
@@ -179,8 +186,9 @@ class MinutageTests(CahierBase):
         self.assertEqual(sum(f['minutes'] for f in feuilles), 13 * 60)
         self.assertEqual(sum(p['minutes'] for p in plan), 13 * 60)
         self.assertTrue(all(f['minutes'] >= 5 and f['minutes'] % 5 == 0 for f in feuilles))
+        self.assertEqual(plan[0]['minutes'], 30)          # situation problème : durée fixe
         # Une partie vaut la somme de ses sous-titres et blocs.
-        un = plan[0]
+        un = plan[1]
         self.assertEqual(un['minutes'], sum(e['minutes'] for e in un['enfants']))
         # À volume égal, une application compte plus qu'une proposition.
         sous = un['enfants'][0]['enfants']

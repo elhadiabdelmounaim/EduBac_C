@@ -149,3 +149,22 @@ l'ancien fichier ; supprimer le document supprime son fichier. Le « Gestionnair
 
     python tools/tex2html.py TC_Polynomes.tex 4 templates/education/cours/TCS/04_les-polynomes.html \
         "Tronc commun scientifique" TCS "8 heures"
+
+## Situation problème 3D (Produit scalaire, 1ère Bac SE)
+
+Le cours `1BAC_SE/04_le-produit-scalaire-dans-le-plan.html` commence par une partie `s0`
+(« ★ Situation problème : le travail d'une force »), placée juste après la couverture et le
+sommaire. Elle contient un bloc `act` de durée fixe (`data-minutes="30"` : cahier de textes et
+minuteur de présentation). Les clés des autres blocs (`s1-b1`…) ne changent pas.
+
+- Scène Three.js : `static/js/situation-produit-scalaire.js` (module, Three.js local),
+  styles `static/css/situation.css`, chargés par le bloc `scripts_cours` du gabarit. Sans WebGL,
+  une figure SVG de secours reste affichée et les calculs restent interactifs.
+- Huit étapes : Observer → Question 1 a) → 1 b) → Question 2 → Manipuler → Vers les mathématiques
+  → Généraliser → Vers le cours. La définition du produit scalaire n'apparaît qu'à l'étape 6.
+- → / télécommande : affiche la réponse de l'étape, puis l'étape suivante ; après la dernière,
+  la page suivante (partie I). ← revient en arrière. Mécanisme générique de `cours.js` :
+  un élément `[data-etapes-internes]` expose `el.etapesInternes = { avancer(), reculer() }`,
+  et `[data-insecable]` empêche de le couper entre deux pages.
+- La hauteur du bloc ne varie pas d'une étape à l'autre (étapes superposées, réglages réservés) :
+  la pagination reste exacte sur ordinateur, téléphone et vidéoprojecteur.

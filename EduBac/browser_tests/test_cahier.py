@@ -56,18 +56,18 @@ class CahierBrowserTests(StaticLiveServerTestCase):
         # Classe du même niveau que la leçon proposée d'abord ; date du jour.
         self.assertIn('1BAC SE 2', page.locator('#seanceClasse option:checked').inner_text())
         self.assertTrue(page.input_value('#seanceDate'))
-        self.assertEqual(page.locator('#seanceArbre .niveau-1').count(), 9)
+        self.assertEqual(page.locator('#seanceArbre .niveau-1').count(), 10)   # ★ situation problème, I à IX
         self.assertTrue(page.is_disabled('#seanceEnregistrer'))
         # Le panneau ne tourne pas les pages du cours quand on y tape.
         page.fill('#seanceDate', '2026-11-21')
         page.dispatch_event('#seanceDate', 'change')
         page.wait_for_timeout(300)
         # Cocher la partie I coche ses sous-titres et ses blocs.
-        partie = page.locator('#seanceArbre .niveau-1').first
+        partie = page.locator('#seanceArbre .niveau-1').nth(1)
         partie.locator(':scope > .seance-ligne input').check()
         self.assertEqual(partie.locator('input[data-cle]:checked').count(), 7)
         # Partie II : on déplie et on ne coche que « Proposition ».
-        deux = page.locator('#seanceArbre .niveau-1').nth(1)
+        deux = page.locator('#seanceArbre .niveau-1').nth(2)
         deux.locator('.seance-plier').first.click()
         deux.locator('label:has-text("Proposition") input').first.check()
         self.assertTrue(deux.locator(':scope > .seance-ligne input').evaluate('b => b.indeterminate'))

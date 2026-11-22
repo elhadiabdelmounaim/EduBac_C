@@ -20,6 +20,7 @@ d.className+=' pagine';setTimeout(function(){if(!/\bpagine-pret\b/.test(d.classN
 <script defer src="{% asset 'vendor/mathjax/tex-svg-3.2.2.js' %}"></script>
 {% if can_present %}<link rel="stylesheet" href="{% asset 'css/cahier-seance.css' %}"><link rel="stylesheet" href="{% asset 'css/suivi.css' %}">
 <script defer src="{% asset 'js/cahier-seance.js' %}"></script>{% endif %}
+{% block scripts_cours %}{% endblock %}
 </head>
 <body>
 <div class="progress" id="progress" aria-hidden="true"></div>

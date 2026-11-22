@@ -228,6 +228,11 @@ svg text.s { font-size: 12px; font-style: normal; font-family: var(--corps); fil
   color: var(--doux); margin: 0 0 6px 8px; font-weight: 600; }
 .bloc-sommaire ol { list-style: none; margin: 0; padding: 0; columns: 2 240px; column-gap: 12px; }
 .bloc-sommaire li { break-inside: avoid; }
+/* Petits téléphones : sommaire resserré pour tenir sur sa page. */
+@media (max-width: 640px) and (max-height: 720px) {
+  .feuille-corps .bloc-sommaire { padding-top: 10px; padding-bottom: 8px; }
+  .feuille-corps .bloc-sommaire a { padding: 3px 6px; line-height: 1.35; font-size: .94em; }
+}
 .bloc-sommaire a { display: grid; grid-template-columns: 38px 1fr; gap: 4px; padding: 6px 8px; border-radius: 8px;
   color: var(--texte); text-decoration: none; font-size: 14.5px; line-height: 1.35; }
 .bloc-sommaire a:hover { background: var(--def-bg); color: var(--petrole); }

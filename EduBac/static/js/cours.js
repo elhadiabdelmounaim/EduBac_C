@@ -279,14 +279,30 @@
     });
 
     // Élément suivant de la page, puis la page suivante quand tout est affiché.
+    // Activité interactive de la page (data-etapes-internes) : → et ← parcourent d'abord ses
+    // propres étapes. Elle expose el.etapesInternes = { avancer(), reculer() } (true si fait).
+    function etapesInternes() {
+      var p = pages[courante];
+      if (!p) return null;
+      var el = p.$corps.find('[data-etapes-internes]').filter(function () {
+        // En présentation, l'activité doit être apparue ; en lecture, elle est toujours visible.
+        return !enPresentation() || !$(this).closest('.etape-cache, .voilee').length;
+      })[0];
+      return el && el.etapesInternes ? el.etapesInternes : null;
+    }
+
     function avancer() {
       var p = pages[courante];
       if (enPresentation() && p && p.vu < p.etapes.length) { p.vu++; majEtapes(courante, true); return; }
+      var interne = etapesInternes();
+      if (interne && interne.avancer()) return;
       suivante();
     }
 
     function reculer() {
       var p = pages[courante];
+      var interne = etapesInternes();
+      if (interne && interne.reculer()) return;
       if (enPresentation() && p && p.vu > 0) { p.vu--; majEtapes(courante, false); return; }
       if (courante > 0 && pages[courante - 1]) pages[courante - 1].vu = pages[courante - 1].etapes.length;
       precedente();
@@ -343,6 +359,7 @@
     var mouvements = [];    // chaque déplacement, pour tout remettre en place avant de repaginer
 
     function decoupable(el) {
+      if (el.hasAttribute && el.hasAttribute('data-insecable')) return false;   // activité interactive : d'un seul tenant
       return /^(OL|UL|LI|TABLE)$/.test(el.tagName) || (el.tagName === 'DIV' && !$(el).hasClass('tag'));
     }
 
@@ -597,6 +614,8 @@
       afficher(pageDePartie(this.getAttribute('href').slice(1)));
       $next.trigger('focus');
     });
+    // Une activité demande la page suivante (« Commencer le cours »).
+    $(document).on('cours:suivante', function () { suivante(); });
     $feuilles.on('click', '[data-haut]', function (event) {
       event.preventDefault();
       afficher(0);
