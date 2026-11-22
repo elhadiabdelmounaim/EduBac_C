@@ -24,13 +24,14 @@
     overflow: hidden;
     color: var(--ag-text);
     /* Scène floue : bleu nuit → violet → lumière chaude */
+    /* Bas de scène assombri : le texte blanc reste lisible partout */
     background:
-        radial-gradient(ellipse 38% 45% at 8% 72%, rgba(122, 170, 80, .55), transparent 70%),
-        radial-gradient(ellipse 30% 40% at 92% 68%, rgba(66, 92, 190, .75), transparent 70%),
-        radial-gradient(ellipse 45% 35% at 70% 8%, rgba(255, 214, 170, .55), transparent 70%),
-        radial-gradient(ellipse 60% 30% at 50% 102%, rgba(255, 170, 120, .7), transparent 75%),
+        radial-gradient(ellipse 38% 45% at 8% 72%, rgba(110, 160, 70, .45), transparent 70%),
+        radial-gradient(ellipse 30% 40% at 92% 68%, rgba(50, 72, 170, .8), transparent 70%),
+        radial-gradient(ellipse 45% 35% at 70% 8%, rgba(255, 205, 160, .45), transparent 70%),
+        radial-gradient(ellipse 60% 26% at 50% 104%, rgba(230, 140, 100, .45), transparent 75%),
         radial-gradient(ellipse 50% 60% at 18% 30%, rgba(92, 108, 220, .8), transparent 70%),
-        linear-gradient(135deg, #2b3b8f 0%, #5a5fc0 35%, #9a86d6 62%, #e9b7a8 100%) !important;
+        linear-gradient(135deg, #26347f 0%, #4b50ab 38%, #6d5fae 66%, #8a6a9e 100%) !important;
 }
 
 /* Halo doux derrière la carte */
@@ -65,18 +66,56 @@
     max-width: 720px;
     padding: 2.25rem clamp(1.25rem, 6vw, 2.75rem) 2.5rem;
     border-radius: 28px;
-    background: linear-gradient(160deg, rgba(255, 255, 255, .30), rgba(255, 255, 255, .10)) !important;
-    border: 1.5px solid var(--ag-border) !important;
+    overflow: hidden;
+    /* Verre : reflet clair en haut + voile indigo léger pour le contraste */
+    background:
+        linear-gradient(160deg, rgba(255, 255, 255, .34) 0%, rgba(255, 255, 255, .12) 45%, rgba(255, 255, 255, .06) 100%),
+        rgba(40, 36, 120, .14) !important;
+    border: 1.5px solid rgba(255, 255, 255, .6) !important;
+    border-bottom-color: rgba(255, 255, 255, .28) !important;
+    border-right-color: rgba(255, 255, 255, .35) !important;
     box-shadow:
-        0 30px 70px rgba(25, 20, 80, .35),
-        inset 0 1px 0 rgba(255, 255, 255, .6),
-        0 0 40px rgba(255, 255, 255, .12) !important;
-    backdrop-filter: blur(22px) saturate(140%);
-    -webkit-backdrop-filter: blur(22px) saturate(140%);
+        0 40px 90px rgba(20, 16, 70, .45),
+        0 0 0 1px rgba(255, 255, 255, .08),
+        inset 0 2px 0 rgba(255, 255, 255, .75),
+        inset 0 -1px 0 rgba(255, 255, 255, .15),
+        inset 0 0 60px rgba(255, 255, 255, .08),
+        0 0 60px rgba(180, 170, 255, .25) !important;
+    backdrop-filter: blur(34px) saturate(185%) brightness(1.04);
+    -webkit-backdrop-filter: blur(34px) saturate(185%) brightness(1.04);
     color: var(--ag-text);
 }
-.auth-page.auth-glass .auth-card::before,
-.auth-page.auth-glass .auth-card::after { display: none !important; }
+/* Reflet diagonal sur le verre */
+.auth-page.auth-glass .auth-card::before {
+    content: "" !important;
+    display: block !important;
+    position: absolute;
+    top: -40%;
+    left: -30%;
+    width: 80%;
+    height: 120%;
+    background: linear-gradient(115deg, rgba(255, 255, 255, .22) 0%, rgba(255, 255, 255, .06) 40%, transparent 60%);
+    transform: rotate(-8deg);
+    pointer-events: none;
+    z-index: 0;
+}
+/* Liseré lumineux en haut */
+.auth-page.auth-glass .auth-card::after {
+    content: "" !important;
+    display: block !important;
+    position: absolute;
+    top: 0;
+    left: 12%;
+    right: 12%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .95), transparent);
+    pointer-events: none;
+}
+.auth-page.auth-glass .auth-card > * { position: relative; z-index: 1; }
+.auth-page.auth-glass .auth-subtitle,
+.auth-page.auth-glass .ag-note,
+.auth-page.auth-glass .ag-footer,
+.auth-page.auth-glass .ag-check { text-shadow: 0 1px 6px rgba(25, 20, 90, .45); }
 
 .auth-page.auth-glass .auth-brand { text-align: center; margin-bottom: 1.75rem; }
 .auth-page.auth-glass .auth-logo {
@@ -121,14 +160,18 @@
     height: 64px;
     padding: 0 1.25rem 0 3.6rem;
     border-radius: 16px;
-    background: var(--ag-glass) !important;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, .20), rgba(255, 255, 255, .08)),
+        rgba(45, 40, 130, .18) !important;
     border: 1.5px solid var(--ag-field-border) !important;
     color: #fff !important;
     font-size: 1.05rem;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 -1px 0 rgba(255, 255, 255, .08), 0 4px 14px rgba(20, 16, 70, .12);
     transition: background .2s, border-color .2s, box-shadow .2s;
 }
-.auth-page.auth-glass .ag-field .form-control::placeholder { color: rgba(255, 255, 255, .88); opacity: 1; }
+.auth-page.auth-glass .ag-field .form-control::placeholder { color: rgba(255, 255, 255, .92); opacity: 1; }
 .auth-page.auth-glass .ag-field .form-control:focus {
     background: var(--ag-glass-strong) !important;
     border-color: #fff !important;
@@ -249,7 +292,9 @@
     font-size: 1rem;
 }
 .auth-page.auth-glass .ag-info {
-    background: rgba(255, 255, 255, .14);
+    background: linear-gradient(180deg, rgba(255, 255, 255, .18), rgba(255, 255, 255, .08)), rgba(45, 40, 130, .18);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, .4);
     color: #fff;
     border-radius: 14px;
@@ -282,8 +327,15 @@ html[data-theme="dark"] .auth-page.auth-glass {
         linear-gradient(135deg, #0f1640 0%, #252a6b 40%, #4b3f86 70%, #7a5a78 100%) !important;
 }
 html[data-theme="dark"] .auth-page.auth-glass .auth-card {
-    background: linear-gradient(160deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .05)) !important;
-    border-color: rgba(255, 255, 255, .35) !important;
+    background:
+        linear-gradient(160deg, rgba(255, 255, 255, .20) 0%, rgba(255, 255, 255, .07) 45%, rgba(255, 255, 255, .03) 100%),
+        rgba(20, 18, 70, .2) !important;
+    border-color: rgba(255, 255, 255, .4) !important;
+}
+
+/* Navigateurs sans backdrop-filter : verre plus opaque pour garder le contraste */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .auth-page.auth-glass .auth-card { background: rgba(60, 56, 150, .82) !important; }
 }
 
 /* Mobile */
