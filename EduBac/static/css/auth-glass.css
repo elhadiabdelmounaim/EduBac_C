@@ -1,18 +1,19 @@
 /* ==========================================================
    EduBac — pages Connexion / Inscription, style « verre dépoli »
+   Fond : ocre / sable doux et calme.
+   Carte : verre bleu → violet, texte blanc.
    Scope : .auth-page.auth-glass (chargé via {% block extra_css %})
    ========================================================== */
 
 .auth-page.auth-glass {
     --ag-text: #ffffff;
-    --ag-muted: rgba(255, 255, 255, .86);
-    --ag-glass: rgba(255, 255, 255, .16);
-    --ag-glass-strong: rgba(255, 255, 255, .22);
-    --ag-border: rgba(255, 255, 255, .55);
-    --ag-field-border: rgba(255, 255, 255, .6);
-    --ag-orange-1: #ffc14d;
-    --ag-orange-2: #ff9a3c;
-    --ag-link: #e8f1ff;
+    --ag-muted: rgba(255, 255, 255, .88);
+    --ag-field-border: rgba(255, 255, 255, .5);
+    --ag-blue: #3a4fa3;
+    --ag-violet: #6a52a8;
+    --ag-ochre-1: #e2b75a;
+    --ag-ochre-2: #c98f2e;
+    --ag-link: #f3e3b8;
 
     position: relative;
     isolation: isolate;
@@ -23,42 +24,29 @@
     padding: 2.5rem 1rem 3rem;
     overflow: hidden;
     color: var(--ag-text);
-    /* Scène floue : bleu nuit → violet → lumière chaude */
-    /* Bas de scène assombri : le texte blanc reste lisible partout */
+    /* Fond calme : sable clair → ocre doux, avec deux reflets bleu/violet très légers */
     background:
-        radial-gradient(ellipse 38% 45% at 8% 72%, rgba(110, 160, 70, .45), transparent 70%),
-        radial-gradient(ellipse 30% 40% at 92% 68%, rgba(50, 72, 170, .8), transparent 70%),
-        radial-gradient(ellipse 45% 35% at 70% 8%, rgba(255, 205, 160, .45), transparent 70%),
-        radial-gradient(ellipse 60% 26% at 50% 104%, rgba(230, 140, 100, .45), transparent 75%),
-        radial-gradient(ellipse 50% 60% at 18% 30%, rgba(92, 108, 220, .8), transparent 70%),
-        linear-gradient(135deg, #26347f 0%, #4b50ab 38%, #6d5fae 66%, #8a6a9e 100%) !important;
+        radial-gradient(ellipse 40% 50% at 10% 20%, rgba(106, 82, 168, .10), transparent 70%),
+        radial-gradient(ellipse 40% 50% at 92% 85%, rgba(58, 79, 163, .10), transparent 70%),
+        radial-gradient(ellipse 60% 45% at 50% 0%, rgba(255, 250, 235, .7), transparent 70%),
+        linear-gradient(160deg, #f6ecd4 0%, #eedbb0 45%, #e3c68d 100%) !important;
 }
 
-/* Halo doux derrière la carte */
-.auth-page.auth-glass::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background: radial-gradient(ellipse 45% 55% at 50% 50%, rgba(255, 255, 255, .18), transparent 70%);
-    pointer-events: none;
-}
-
-/* Symboles flottants */
+/* Symboles flottants : violet très doux */
 .auth-page.auth-glass .auth-float {
     position: absolute;
     z-index: 0;
     font-size: clamp(3.5rem, 7vw, 6rem);
     font-weight: 700;
-    color: rgba(150, 170, 255, .55) !important;
+    color: rgba(106, 82, 168, .18) !important;
     opacity: 1 !important;
     pointer-events: none;
     user-select: none;
 }
 .auth-page.auth-glass .auth-float.f1 { top: 20%; left: 9%; bottom: auto; right: auto; }
-.auth-page.auth-glass .auth-float.f2 { top: 28%; right: 12%; bottom: auto; left: auto; color: rgba(200, 190, 255, .5) !important; }
+.auth-page.auth-glass .auth-float.f2 { top: 28%; right: 12%; bottom: auto; left: auto; color: rgba(58, 79, 163, .18) !important; }
 
-/* Carte en verre */
+/* Carte en verre bleu → violet */
 .auth-page.auth-glass .auth-card {
     position: relative;
     z-index: 1;
@@ -67,22 +55,20 @@
     padding: 2.25rem clamp(1.25rem, 6vw, 2.75rem) 2.5rem;
     border-radius: 28px;
     overflow: hidden;
-    /* Verre : reflet clair en haut + voile indigo léger pour le contraste */
     background:
-        linear-gradient(160deg, rgba(255, 255, 255, .34) 0%, rgba(255, 255, 255, .12) 45%, rgba(255, 255, 255, .06) 100%),
-        rgba(40, 36, 120, .14) !important;
-    border: 1.5px solid rgba(255, 255, 255, .6) !important;
-    border-bottom-color: rgba(255, 255, 255, .28) !important;
-    border-right-color: rgba(255, 255, 255, .35) !important;
+        linear-gradient(160deg, rgba(255, 255, 255, .22) 0%, rgba(255, 255, 255, .05) 45%, rgba(255, 255, 255, 0) 100%),
+        linear-gradient(145deg, rgba(52, 72, 156, .86) 0%, rgba(98, 78, 160, .84) 100%) !important;
+    border: 1.5px solid rgba(255, 255, 255, .55) !important;
+    border-bottom-color: rgba(255, 255, 255, .25) !important;
+    border-right-color: rgba(255, 255, 255, .32) !important;
     box-shadow:
-        0 40px 90px rgba(20, 16, 70, .45),
-        0 0 0 1px rgba(255, 255, 255, .08),
-        inset 0 2px 0 rgba(255, 255, 255, .75),
-        inset 0 -1px 0 rgba(255, 255, 255, .15),
-        inset 0 0 60px rgba(255, 255, 255, .08),
-        0 0 60px rgba(180, 170, 255, .25) !important;
-    backdrop-filter: blur(34px) saturate(185%) brightness(1.04);
-    -webkit-backdrop-filter: blur(34px) saturate(185%) brightness(1.04);
+        0 30px 70px rgba(70, 50, 20, .22),
+        0 10px 25px rgba(58, 79, 163, .18),
+        inset 0 2px 0 rgba(255, 255, 255, .55),
+        inset 0 -1px 0 rgba(255, 255, 255, .12),
+        inset 0 0 60px rgba(255, 255, 255, .06) !important;
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
     color: var(--ag-text);
 }
 /* Reflet diagonal sur le verre */
@@ -94,7 +80,7 @@
     left: -30%;
     width: 80%;
     height: 120%;
-    background: linear-gradient(115deg, rgba(255, 255, 255, .22) 0%, rgba(255, 255, 255, .06) 40%, transparent 60%);
+    background: linear-gradient(115deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, .04) 40%, transparent 60%);
     transform: rotate(-8deg);
     pointer-events: none;
     z-index: 0;
@@ -108,14 +94,10 @@
     left: 12%;
     right: 12%;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .95), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .9), transparent);
     pointer-events: none;
 }
 .auth-page.auth-glass .auth-card > * { position: relative; z-index: 1; }
-.auth-page.auth-glass .auth-subtitle,
-.auth-page.auth-glass .ag-note,
-.auth-page.auth-glass .ag-footer,
-.auth-page.auth-glass .ag-check { text-shadow: 0 1px 6px rgba(25, 20, 90, .45); }
 
 .auth-page.auth-glass .auth-brand { text-align: center; margin-bottom: 1.75rem; }
 .auth-page.auth-glass .auth-logo {
@@ -124,14 +106,16 @@
     max-width: 50%;
     margin: 0 auto .9rem;
     display: block;
-    filter: drop-shadow(0 6px 14px rgba(20, 20, 80, .25));
+    padding: .6rem .8rem;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, .92);
+    box-shadow: 0 6px 18px rgba(20, 20, 80, .25);
 }
 .auth-page.auth-glass .auth-title {
     font-size: clamp(1.75rem, 4vw, 2.25rem);
     font-weight: 800;
     color: #fff !important;
     margin-bottom: .35rem;
-    text-shadow: 0 2px 12px rgba(30, 20, 90, .3);
     letter-spacing: .01em;
 }
 .auth-page.auth-glass .auth-subtitle {
@@ -152,7 +136,7 @@
     transform: translateY(-50%);
     font-size: 1.35rem;
     color: #fff;
-    opacity: .95;
+    opacity: .9;
     pointer-events: none;
     z-index: 2;
 }
@@ -160,28 +144,24 @@
     height: 64px;
     padding: 0 1.25rem 0 3.6rem;
     border-radius: 16px;
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, .20), rgba(255, 255, 255, .08)),
-        rgba(45, 40, 130, .18) !important;
+    background: linear-gradient(180deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .07)) !important;
     border: 1.5px solid var(--ag-field-border) !important;
     color: #fff !important;
     font-size: 1.05rem;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 -1px 0 rgba(255, 255, 255, .08), 0 4px 14px rgba(20, 16, 70, .12);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 4px 14px rgba(20, 16, 70, .12);
     transition: background .2s, border-color .2s, box-shadow .2s;
 }
-.auth-page.auth-glass .ag-field .form-control::placeholder { color: rgba(255, 255, 255, .92); opacity: 1; }
+.auth-page.auth-glass .ag-field .form-control::placeholder { color: rgba(255, 255, 255, .85); opacity: 1; }
 .auth-page.auth-glass .ag-field .form-control:focus {
-    background: var(--ag-glass-strong) !important;
+    background: linear-gradient(180deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, .12)) !important;
     border-color: #fff !important;
-    box-shadow: 0 0 0 4px rgba(255, 193, 77, .35), inset 0 1px 0 rgba(255, 255, 255, .3) !important;
+    box-shadow: 0 0 0 4px rgba(226, 183, 90, .4), inset 0 1px 0 rgba(255, 255, 255, .35) !important;
     outline: none;
 }
 /* Autoremplissage du navigateur : garder le texte blanc */
 .auth-page.auth-glass .ag-field .form-control:-webkit-autofill {
     -webkit-text-fill-color: #fff;
-    -webkit-box-shadow: 0 0 0 1000px rgba(110, 110, 200, .55) inset;
+    -webkit-box-shadow: 0 0 0 1000px rgba(80, 76, 160, .95) inset;
     transition: background-color 9999s ease-in-out 0s;
 }
 
@@ -228,7 +208,7 @@
     -webkit-appearance: none;
     border-radius: 6px;
     border: 1.5px solid rgba(255, 255, 255, .75);
-    background: rgba(255, 255, 255, .15);
+    background: rgba(255, 255, 255, .12);
     display: grid;
     place-content: center;
     cursor: pointer;
@@ -242,9 +222,9 @@
     transform: rotate(-45deg) translate(1px, -1px) scale(0);
     transition: transform .15s;
 }
-.auth-page.auth-glass .ag-check input:checked { background: var(--ag-orange-2); border-color: var(--ag-orange-2); }
+.auth-page.auth-glass .ag-check input:checked { background: var(--ag-ochre-2); border-color: var(--ag-ochre-2); }
 .auth-page.auth-glass .ag-check input:checked::after { transform: rotate(-45deg) translate(1px, -1px) scale(1); }
-.auth-page.auth-glass .ag-check input:focus-visible { outline: 3px solid rgba(255, 193, 77, .6); outline-offset: 2px; }
+.auth-page.auth-glass .ag-check input:focus-visible { outline: 3px solid rgba(226, 183, 90, .7); outline-offset: 2px; }
 
 .auth-page.auth-glass a.ag-link,
 .auth-page.auth-glass .ag-note a,
@@ -255,28 +235,28 @@
     font-weight: 600;
 }
 .auth-page.auth-glass a.ag-link:hover,
+.auth-page.auth-glass .ag-note a:hover,
 .auth-page.auth-glass .ag-footer a:hover { color: #fff !important; }
 
-/* Bouton orange */
+/* Bouton ocre doré, sans éclat excessif */
 .auth-page.auth-glass .ag-submit {
     width: 100%;
     height: 66px;
     border: 0;
     border-radius: 16px;
-    background: linear-gradient(90deg, var(--ag-orange-1), var(--ag-orange-2)) !important;
-    color: #fff !important;
+    background: linear-gradient(90deg, var(--ag-ochre-1), var(--ag-ochre-2)) !important;
+    color: #1f2357 !important; /* bleu nuit : bien lisible sur l'ocre */
     font-size: 1.3rem;
     font-weight: 700;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: .7rem;
-    box-shadow: 0 10px 28px rgba(255, 140, 50, .45), inset 0 1px 0 rgba(255, 255, 255, .45);
-    text-shadow: 0 1px 2px rgba(140, 60, 0, .25);
+    box-shadow: 0 8px 20px rgba(120, 80, 20, .28), inset 0 1px 0 rgba(255, 255, 255, .4);
     transition: transform .15s, box-shadow .2s, filter .2s;
 }
 .auth-page.auth-glass .ag-submit i { font-size: 1.5rem; }
-.auth-page.auth-glass .ag-submit:hover { transform: translateY(-2px); filter: brightness(1.05); box-shadow: 0 14px 34px rgba(255, 140, 50, .55); }
+.auth-page.auth-glass .ag-submit:hover { transform: translateY(-2px); filter: brightness(1.05); box-shadow: 0 12px 26px rgba(120, 80, 20, .34); }
 .auth-page.auth-glass .ag-submit:active { transform: translateY(0); }
 .auth-page.auth-glass .ag-submit:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
 
@@ -292,10 +272,8 @@
     font-size: 1rem;
 }
 .auth-page.auth-glass .ag-info {
-    background: linear-gradient(180deg, rgba(255, 255, 255, .18), rgba(255, 255, 255, .08)), rgba(45, 40, 130, .18);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, .4);
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .38);
     color: #fff;
     border-radius: 14px;
     padding: .8rem 1rem;
@@ -303,7 +281,7 @@
     margin-bottom: 1.4rem;
 }
 .auth-page.auth-glass .alert-danger {
-    background: rgba(220, 53, 69, .85) !important;
+    background: rgba(200, 45, 60, .9) !important;
     border: 1px solid rgba(255, 255, 255, .5) !important;
     color: #fff !important;
     border-radius: 14px;
@@ -317,25 +295,27 @@
 }
 .auth-page.auth-glass .ag-grid .ag-span { grid-column: 1 / -1; }
 
-/* Mode sombre : même scène, plus nocturne */
+/* Mode sombre : ocre profond et feutré, carte plus nocturne */
 html[data-theme="dark"] .auth-page.auth-glass {
     background:
-        radial-gradient(ellipse 38% 45% at 8% 72%, rgba(60, 100, 50, .45), transparent 70%),
-        radial-gradient(ellipse 30% 40% at 92% 68%, rgba(40, 60, 150, .7), transparent 70%),
-        radial-gradient(ellipse 45% 35% at 70% 8%, rgba(170, 120, 110, .35), transparent 70%),
-        radial-gradient(ellipse 60% 30% at 50% 102%, rgba(180, 100, 80, .45), transparent 75%),
-        linear-gradient(135deg, #0f1640 0%, #252a6b 40%, #4b3f86 70%, #7a5a78 100%) !important;
+        radial-gradient(ellipse 40% 50% at 10% 20%, rgba(106, 82, 168, .14), transparent 70%),
+        radial-gradient(ellipse 40% 50% at 92% 85%, rgba(58, 79, 163, .14), transparent 70%),
+        linear-gradient(160deg, #2a2418 0%, #3a3020 50%, #4a3a22 100%) !important;
 }
+html[data-theme="dark"] .auth-page.auth-glass .auth-float { color: rgba(226, 183, 90, .14) !important; }
 html[data-theme="dark"] .auth-page.auth-glass .auth-card {
     background:
-        linear-gradient(160deg, rgba(255, 255, 255, .20) 0%, rgba(255, 255, 255, .07) 45%, rgba(255, 255, 255, .03) 100%),
-        rgba(20, 18, 70, .2) !important;
-    border-color: rgba(255, 255, 255, .4) !important;
+        linear-gradient(160deg, rgba(255, 255, 255, .14) 0%, rgba(255, 255, 255, .03) 45%, rgba(255, 255, 255, 0) 100%),
+        linear-gradient(145deg, rgba(36, 50, 115, .9) 0%, rgba(70, 54, 122, .88) 100%) !important;
+    border-color: rgba(255, 255, 255, .35) !important;
+    box-shadow: 0 30px 70px rgba(0, 0, 0, .45), inset 0 2px 0 rgba(255, 255, 255, .35) !important;
 }
 
-/* Navigateurs sans backdrop-filter : verre plus opaque pour garder le contraste */
+/* Navigateurs sans backdrop-filter : la carte est déjà assez opaque */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    .auth-page.auth-glass .auth-card { background: rgba(60, 56, 150, .82) !important; }
+    .auth-page.auth-glass .auth-card {
+        background: linear-gradient(145deg, #34489c 0%, #624ea0 100%) !important;
+    }
 }
 
 /* Mobile */
