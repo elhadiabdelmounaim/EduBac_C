@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block extra_css %}{% if voir_presence %}<link rel="stylesheet" href="{% asset 'css/presence.css' %}">{% endif %}{% endblock %}
 {% block content %}
 {% if not is_teacher_owner %}
 <section class="container py-4" aria-labelledby="my-class-title">
@@ -104,7 +105,9 @@
 
 <div class="card shadow-sm border-0" style="border-radius:16px;">
     <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
-        <span>Élèves ({{ members|length }})</span>
+        <span>Élèves ({{ members|length }})
+            {% if voir_presence %}<span class="presence-total ms-2" data-presence-total title="Actifs dans l’application au cours des {{ actif_minutes }} dernières minutes"><span class="presence-point" aria-hidden="true"></span>{{ nb_actifs }} actif{{ nb_actifs|pluralize }} maintenant</span>{% endif %}
+        </span>
         {% if is_teacher_owner %}
         <span class="small text-muted">Code d'invitation : <strong class="user-select-all">{{ classroom.code }}</strong></span>
         {% endif %}
@@ -124,7 +127,9 @@
                 <label for="member-{{ m.pk }}" class="visually-hidden">Sélectionner {{ m.user.get_full_name|default:m.user.username }}</label>
                 {% endif %}
                 <div>
-                <div class="fw-semibold">{{ m.user.get_full_name|default:m.user.username }}</div>
+                <div class="fw-semibold">{{ m.user.get_full_name|default:m.user.username }}
+                    {% if voir_presence %}{% if m.est_actif %}<span class="presence-etat actif" data-presence="actif"><span class="presence-point" aria-hidden="true"></span>En ligne</span>{% elif m.user.derniere_activite %}<span class="presence-etat" data-presence="inactif">Actif il y a {{ m.user.derniere_activite|timesince }}</span>{% else %}<span class="presence-etat" data-presence="jamais">Pas encore d’activité</span>{% endif %}{% endif %}
+                </div>
                 <div class="small text-muted">
                     {{ m.user.email }}
                     {% if m.user.student_profile %}

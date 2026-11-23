@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
-from django.http import HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -333,6 +333,12 @@ def admin_teacher_dashboard(request):
     request.session['password_session_version'] = user.password_session_version
     request.session.cycle_key()
     return redirect('accounts:teacher_portal')
+
+
+@require_POST
+def presence(request):
+    """Page ouverte et visible : l'activité est notée par le middleware (au plus 1/min)."""
+    return HttpResponse(status=204 if getattr(request, 'edubac_user', None) else 401)
 
 
 def register(request):

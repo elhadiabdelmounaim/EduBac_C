@@ -52,6 +52,15 @@ class User(AbstractUser):
         default=0,
         editable=False,
     )
+    # Dernière activité dans l'application (page ou présence d'une page ouverte),
+    # mise à jour au plus une fois par minute ; visible par l'administrateur.
+    derniere_activite = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+        editable=False,
+        verbose_name='Dernière activité',
+    )
     # Code de récupération (haché) : permet à l'élève de choisir un nouveau mot de
     # passe sans e-mail ni professeur. Affiché une seule fois, utilisable une fois.
     recovery_code_hash = models.CharField(

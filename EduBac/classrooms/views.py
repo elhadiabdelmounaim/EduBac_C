@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
+from django.utils import timezone
 from django.db.models import Avg, Count, Q
 from django.db import transaction
 from django.http import FileResponse, HttpResponse, Http404
@@ -13,6 +16,10 @@ from .services.excel_results import (
     delete_class_excel,
     build_quiz_only_workbook,
 )
+
+
+# Un utilisateur est « actif » s'il a utilisé l'application dans les 5 dernières minutes.
+ACTIF_DEPUIS = timedelta(minutes=5)
 
 
 def _user(request):
@@ -171,13 +178,27 @@ def classroom_detail(request, pk):
     members = classroom.members.select_related('user', 'user__student_profile')
     nb_eleves = members.count()
 
+    # Administrateur seulement : qui est actif dans l'application en ce moment.
+    voir_presence = _is_admin(user)
+    nb_actifs = 0
+    if voir_presence:
+        limite = timezone.now() - ACTIF_DEPUIS
+        members = list(members)
+        for m in members:
+            vu = m.user.derniere_activite
+            m.est_actif = bool(vu and vu >= limite)
+        nb_actifs = sum(m.est_actif for m in members)
+        # Les actifs d'abord, puis du plus récemment vu au plus ancien (jamais vus à la fin).
+        members.sort(key=lambda m: (not m.est_actif, -(m.user.derniere_activite.timestamp()
+                                                         if m.user.derniere_activite else 0)))
+
     # Stats quiz / résultats pour le propriétaire
     quiz_stats = []
     nb_quiz = 0
     nb_results = 0
     if is_teacher_owner:
         from quizzes.models import Attempt, Quiz
-        student_ids = list(members.values_list('user_id', flat=True))
+        student_ids = [m.user_id for m in members]
         attempts = Attempt.objects.filter(
             student_id__in=student_ids,
             submitted_at__isnull=False,
@@ -205,6 +226,9 @@ def classroom_detail(request, pk):
         'nb_quiz': nb_quiz,
         'nb_results': nb_results,
         'quiz_stats': quiz_stats,
+        'voir_presence': voir_presence,
+        'nb_actifs': nb_actifs,
+        'actif_minutes': int(ACTIF_DEPUIS.total_seconds() // 60),
         'has_excel': class_has_excel(classroom) if is_teacher_owner else False,
         'page_title': classroom.name,
     })

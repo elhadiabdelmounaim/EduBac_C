@@ -1,0 +1,9 @@
+/* Présence des élèves (vue administrateur d'une classe) */
+.presence-total { display: inline-flex; align-items: center; gap: 6px; font-size: .85em; font-weight: 600;
+  color: #157347; background: rgba(25, 135, 84, .1); padding: 2px 10px; border-radius: 999px; }
+.presence-etat { display: inline-flex; align-items: center; gap: 5px; margin-left: 8px; font-size: .78em;
+  font-weight: 500; color: var(--bs-secondary-color, #6c757d); }
+.presence-etat.actif { color: #157347; font-weight: 600; }
+.presence-point { width: 8px; height: 8px; border-radius: 50%; background: #198754; flex: none;
+  box-shadow: 0 0 0 3px rgba(25, 135, 84, .2); }
+:root[data-theme="dark"] .presence-total, :root[data-theme="dark"] .presence-etat.actif { color: #75d6a3; }

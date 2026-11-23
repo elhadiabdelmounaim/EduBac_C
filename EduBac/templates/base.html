@@ -84,6 +84,7 @@
     <script src="{% asset 'js/sidebar.js' %}"></script>
     <script src="{% asset 'js/notifications.js' %}"></script>
     <script src="{% asset 'js/pwa.js' %}"></script>
+    {% if request.edubac_user %}<script src="{% asset 'js/presence.js' %}" data-url="{% url 'accounts:presence' %}" data-csrf="{{ csrf_token }}"></script>{% endif %}
     <script>
     (function(){
         var btn=document.getElementById('themeToggle');

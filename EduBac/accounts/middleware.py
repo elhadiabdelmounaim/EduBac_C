@@ -1,7 +1,23 @@
+from datetime import timedelta
+
 from accounts.models import User
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.conf import settings
+from django.utils import timezone
+
+# Présence : une écriture au plus par minute et par utilisateur.
+ACTIVITE_INTERVALLE = timedelta(seconds=60)
+
+
+def noter_activite(request, user):
+    if any(prefix and request.path.startswith(prefix) for prefix in (settings.STATIC_URL, settings.MEDIA_URL)):
+        return
+    maintenant = timezone.now()
+    if user.derniere_activite and maintenant - user.derniere_activite < ACTIVITE_INTERVALLE:
+        return
+    User.objects.filter(pk=user.pk).update(derniere_activite=maintenant)
+    user.derniere_activite = maintenant
 
 
 class SimpleSessionAuthMiddleware:
@@ -42,6 +58,7 @@ class SimpleSessionAuthMiddleware:
                         request.user = AnonymousEduBacUser()
                 else:
                     request.edubac_user = user
+                    noter_activite(request, user)
                     # Pour les pages EduBac, request.user = utilisateur session
                     if not request.path.startswith('/admin/'):
                         request.user = user
