@@ -82,11 +82,14 @@ class StudentApprovalBrowserTests(StaticLiveServerTestCase):
             page.locator('input[name="password2"]').fill('BrowserTest-2026!')
             page.locator('button[type="submit"]').click()
 
-            page.wait_for_url(f'**{reverse("accounts:login")}')
-            expect(page.get_by_text('Votre demande a été envoyée.')).to_be_visible()
-            expect(page.locator('input[name="email"]')).to_have_count(0)
+            page.wait_for_url(f'**{reverse("accounts:inscription_envoyee")}')
+            expect(page.get_by_role('heading', name='Demande envoyée')).to_be_visible()
+            expect(page.get_by_text('browser_student', exact=True)).to_be_visible()
             for width in (320, 390, 768, 1440):
                 self.assert_page_fits(page, width)
+            page.get_by_role('link', name='Aller à la connexion').click()
+            page.wait_for_url(f'**{reverse("accounts:login")}')
+            expect(page.locator('input[name="email"]')).to_have_count(0)
 
             page.locator('input[name="username"]').fill('browser_student')
             page.locator('input[name="password"]').fill('BrowserTest-2026!')

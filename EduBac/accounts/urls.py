@@ -27,6 +27,7 @@ urlpatterns = [
     path('inscription/', views.register, name='register'),
     path('inscription/choix/', views.register_choice, name='register_choice'),
     path('inscription/eleve/', views.register_student, name='register_student'),
+    path('inscription/envoyee/', views.inscription_envoyee, name='inscription_envoyee'),
     path('inscription/professeur/', views.register_teacher, name='register_teacher'),
     path('administration/', views.admin_dashboard, name='admin_dashboard'),
     path('administration/etat/', status_views.system_status, name='system_status'),

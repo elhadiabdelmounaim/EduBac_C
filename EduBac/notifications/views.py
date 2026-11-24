@@ -171,8 +171,23 @@ def preferences(request):
 @require_POST
 def push_subscribe(request):
     """Enregistre l'abonnement Web Push de cet appareil pour l'utilisateur connecté."""
-    import json
     from .models import PushSubscription
+    resultat = _abonnement_depuis_requete(request)
+    if isinstance(resultat, JsonResponse):
+        return resultat
+    endpoint, p256dh, auth = resultat
+    user = _recipient(request)
+    PushSubscription.objects.update_or_create(
+        endpoint=endpoint,
+        defaults={'user': user, 'p256dh': p256dh, 'auth': auth, 'failures': 0,
+                  'user_agent': request.META.get('HTTP_USER_AGENT', '')[:300]},
+    )
+    return JsonResponse({'ok': True})
+
+
+def _abonnement_depuis_requete(request):
+    """(endpoint, p256dh, auth) validés, ou une JsonResponse d'erreur."""
+    import json
     from .push import endpoint_allowed, is_configured
     if not is_configured():
         return JsonResponse({'error': 'Notifications du téléphone non configurées.'}, status=503)
@@ -185,7 +200,26 @@ def push_subscribe(request):
         return JsonResponse({'error': 'Abonnement invalide.'}, status=400)
     if not endpoint_allowed(endpoint) or len(endpoint) > 1000 or not (40 <= len(p256dh) <= 200) or not (8 <= len(auth) <= 100):
         return JsonResponse({'error': 'Abonnement refusé.'}, status=400)
-    user = _recipient(request)
+    return endpoint, p256dh, auth
+
+
+@require_POST
+def push_subscribe_inscription(request):
+    """Inscription en attente : le téléphone de l'élève sera prévenu de la validation.
+
+    Seule la session qui vient d'envoyer la demande peut abonner un appareil, et
+    seulement tant que la demande est en attente (aucune connexion nécessaire)."""
+    from accounts.models import User
+    from .models import PushSubscription
+    user = User.objects.filter(
+        pk=request.session.get('inscription_en_attente'), role='student', approval_status='pending',
+    ).first()
+    if user is None:
+        return JsonResponse({'error': 'Aucune demande d’inscription en attente sur cet appareil.'}, status=403)
+    resultat = _abonnement_depuis_requete(request)
+    if isinstance(resultat, JsonResponse):
+        return resultat
+    endpoint, p256dh, auth = resultat
     PushSubscription.objects.update_or_create(
         endpoint=endpoint,
         defaults={'user': user, 'p256dh': p256dh, 'auth': auth, 'failures': 0,

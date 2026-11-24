@@ -182,8 +182,8 @@ def notify_registration_pending(user):
 def notify_registration_approved(user):
     notify_user(
         user=user,
-        title='Bienvenue sur EduBac',
-        message='Votre inscription a été validée. Vous pouvez maintenant suivre vos cours et vos quiz.',
+        title='Inscription acceptée — EduBac',
+        message='Votre demande a été acceptée. Connectez-vous avec votre nom d’utilisateur et votre mot de passe.',
         type='account',
         link=reverse('accounts:dashboard'),
         send_email=True,

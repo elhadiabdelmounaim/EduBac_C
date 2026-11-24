@@ -181,6 +181,8 @@
       ios: ['Sur iPhone : installez d’abord EduBac sur l’écran d’accueil (Partager → Sur l’écran d’accueil), puis ouvrez-le depuis son icône.', 'Activer', true],
       busy: ['Activation…', '…', true],
     }[state];
+    var t = config.textes && config.textes[state];
+    if (t) labels = [t[0] || labels[0], t[1] || labels[1], t.length > 2 ? t[2] : labels[2]];
     document.querySelectorAll('[data-push-panel]').forEach(function (panel) { panel.hidden = false; });
     document.querySelectorAll('[data-push-status]').forEach(function (el) { el.textContent = labels[0]; });
     document.querySelectorAll('[data-push-toggle]').forEach(function (button) {

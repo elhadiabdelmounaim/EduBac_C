@@ -441,16 +441,29 @@ def register_student(request):
                             notify_registration_pending(user)
                         except Exception:
                             logger.exception('registration_pending_notification_failed user_id=%s', user.pk)
-                        messages.success(
-                            request,
-                            'Votre demande a été envoyée. Connectez-vous après '
-                            'son approbation par l’administrateur.',
-                        )
-                        return redirect('accounts:login')
+                        # Cette session (et elle seule) pourra abonner le téléphone à l'alerte de validation.
+                        request.session['inscription_en_attente'] = user.pk
+                        return redirect('accounts:inscription_envoyee')
 
     return render(request, 'accounts/register_student.html', {
         'page_title': 'Inscription élève',
         'error': error,
+    })
+
+
+@never_cache
+@require_GET
+def inscription_envoyee(request):
+    """Demande envoyée : proposer d'être prévenu sur le téléphone quand elle sera acceptée."""
+    from notifications.push import is_configured, public_key
+    user = User.objects.filter(pk=request.session.get('inscription_en_attente'), role='student').first()
+    if user is None:
+        return redirect('accounts:login')
+    return render(request, 'accounts/inscription_envoyee.html', {
+        'page_title': 'Demande envoyée',
+        'eleve': user,
+        'en_attente': user.approval_status == 'pending',
+        'push_public_key': public_key() if is_configured() else '',
     })
 
 

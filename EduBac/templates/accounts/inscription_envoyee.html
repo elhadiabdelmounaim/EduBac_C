@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block extra_css %}<link rel="stylesheet" href="{% asset 'css/auth-glass.css' %}">{% endblock %}
+{% block content %}
+<div class="auth-page auth-glass">
+    <span class="auth-float f1" aria-hidden="true">∑</span>
+    <span class="auth-float f2" aria-hidden="true">π</span>
+    <div class="auth-card">
+        <div class="auth-brand">
+            <img src="/static/img/edubac-logo.png" alt="EduBac" class="auth-logo">
+            {% if en_attente %}
+            <h1 class="auth-title">Demande envoyée</h1>
+            <p class="auth-subtitle">Merci {{ eleve.first_name|default:eleve.username }} ! Ton compte sera activé dès que l’administrateur aura validé ta demande.</p>
+            {% else %}
+            <h1 class="auth-title">Demande acceptée</h1>
+            <p class="auth-subtitle">Ton compte est activé : tu peux te connecter.</p>
+            {% endif %}
+        </div>
+
+        <div class="inscription-recap">
+            <span>Ton nom d’utilisateur</span>
+            <strong class="user-select-all" dir="ltr">{{ eleve.username }}</strong>
+            <small>Garde-le bien : il sert à te connecter (attention aux majuscules).</small>
+        </div>
+
+        {% if en_attente and push_public_key %}
+        <div class="inscription-alerte" data-push-panel hidden data-alerte-inscription>
+            <p class="mb-2 fw-semibold"><i class="bi bi-bell" aria-hidden="true"></i> Être prévenu sur ce téléphone</p>
+            <p class="small mb-2" data-push-status>Reçois une notification dès que ta demande est acceptée.</p>
+            <button type="button" class="ag-submit" data-push-toggle>Me prévenir</button>
+        </div>
+        <script>
+        window.EDUBAC_PUSH = {
+            publicKey: "{{ push_public_key }}",
+            subscribeUrl: "{% url 'notifications:push_subscribe_inscription' %}",
+            unsubscribeUrl: "{% url 'notifications:push_subscribe_inscription' %}",
+            csrfToken: "{{ csrf_token }}",
+            textes: {
+                off: ['Reçois une notification dès que ta demande est acceptée.', 'Me prévenir'],
+                on: ['C’est fait : ce téléphone recevra une notification quand ta demande sera acceptée.', 'Activé ✓', true],
+                busy: ['Activation…'],
+                denied: ['Les notifications sont bloquées pour EduBac dans les réglages du téléphone. Reviens plus tard te connecter.'],
+                ios: ['Sur iPhone : ajoute d’abord EduBac à l’écran d’accueil (Partager → Sur l’écran d’accueil), puis ouvre-le depuis son icône.']
+            }
+        };
+        </script>
+        {% endif %}
+
+        <p class="ag-note mt-3">
+            {% if en_attente %}Tu peux aussi revenir plus tard : si ta demande n’est pas encore acceptée, la page de connexion te le dira.{% endif %}
+        </p>
+        <a class="ag-submit ag-submit-secondaire" href="{% url 'accounts:login' %}">
+            <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>Aller à la connexion
+        </a>
+    </div>
+</div>
+{% endblock %}

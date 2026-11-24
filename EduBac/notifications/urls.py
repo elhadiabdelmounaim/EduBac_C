@@ -14,5 +14,6 @@ urlpatterns = [
     path('api/read-all/', views.api_mark_all_read, name='api_mark_all_read'),
     path('telephone/abonner/', views.push_subscribe, name='push_subscribe'),
     path('telephone/desabonner/', views.push_unsubscribe, name='push_unsubscribe'),
+    path('telephone/inscription/', views.push_subscribe_inscription, name='push_subscribe_inscription'),
     path('telephone/test/', views.push_test, name='push_test'),
 ]

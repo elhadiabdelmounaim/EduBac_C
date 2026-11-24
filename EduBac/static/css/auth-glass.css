@@ -332,3 +332,34 @@ html[data-theme="dark"] .auth-page.auth-glass .auth-card {
 @media (prefers-reduced-motion: reduce) {
     .auth-page.auth-glass .ag-submit { transition: none; }
 }
+
+/* Page « Demande envoyée » : identifiant à retenir, alerte de validation sur le téléphone. */
+.auth-page.auth-glass .inscription-recap {
+    display: grid;
+    gap: .2rem;
+    text-align: center;
+    padding: .9rem 1rem;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, .14);
+    border: 1px solid var(--ag-field-border);
+    margin-bottom: 1.1rem;
+}
+.auth-page.auth-glass .inscription-recap span,
+.auth-page.auth-glass .inscription-recap small { color: var(--ag-muted); }
+.auth-page.auth-glass .inscription-recap strong { font-size: 1.35rem; letter-spacing: .02em; word-break: break-all; }
+.auth-page.auth-glass .inscription-alerte {
+    padding: 1rem;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, .1);
+    border: 1px dashed var(--ag-field-border);
+}
+.auth-page.auth-glass .inscription-alerte .ag-submit { height: 54px; font-size: 1.1rem; }
+.auth-page.auth-glass .inscription-alerte .ag-submit:disabled { opacity: .8; cursor: default; transform: none; }
+.auth-page.auth-glass .ag-submit-secondaire {
+    background: rgba(255, 255, 255, .16) !important;
+    color: var(--ag-text) !important;
+    border: 1.5px solid var(--ag-field-border);
+    text-decoration: none;
+    height: 54px;
+    font-size: 1.1rem;
+}

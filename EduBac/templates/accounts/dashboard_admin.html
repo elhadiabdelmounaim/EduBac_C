@@ -18,6 +18,14 @@
                 <h2 id="pending-title" class="h5 mb-0">Demandes d’inscription</h2>
                 <span class="badge text-bg-primary">{{ pending_count }} en attente</span>
             </div>
+            {% if webpush_public_key %}
+            <div class="alert alert-light border d-flex flex-wrap align-items-center gap-2 py-2 small" data-push-panel data-alerte-admin hidden>
+                <i class="bi bi-phone" aria-hidden="true"></i>
+                <span class="flex-grow-1"><strong>Être prévenu sur ce téléphone à chaque nouvelle demande :</strong>
+                    <span class="d-block text-muted" data-push-status></span></span>
+                <button type="button" class="btn btn-sm btn-edubac" data-push-toggle>Activer</button>
+            </div>
+            {% endif %}
 
             {% if registrations %}
             <div class="table-responsive">

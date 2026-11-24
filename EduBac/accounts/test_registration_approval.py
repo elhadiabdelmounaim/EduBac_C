@@ -48,7 +48,7 @@ class StudentRegistrationApprovalTests(TestCase):
             self.payload(class_code='test2026'),
         )
 
-        self.assertRedirects(response, reverse('accounts:login'))
+        self.assertRedirects(response, reverse('accounts:inscription_envoyee'))
         user = User.objects.get(username='amina_2026')
         self.assertEqual(user.get_full_name(), 'Amina El Amrani')
         self.assertEqual(user.role, 'student')
@@ -242,13 +242,13 @@ class RegistrationRedirectsToLoginTests(TestCase):
             'password2': 'LongPass123!', 'class_code': 'CODE01',
         }
 
-    def test_signup_redirects_to_login_without_sending_email_during_the_request(self):
+    def test_signup_redirects_to_confirmation_without_sending_email_during_the_request(self):
         from django.core import mail
         from notifications.models import Notification
 
         response = self.client.post(reverse('accounts:register_student'), self.data)
 
-        self.assertRedirects(response, reverse('accounts:login'))
+        self.assertRedirects(response, reverse('accounts:inscription_envoyee'))
         self.assertEqual(mail.outbox, [], 'aucun envoi SMTP ne retarde l’inscription')
         notification = Notification.objects.get(recipient=self.admin, group_key='registrations_pending')
         self.assertEqual(notification.email_status, Notification.EMAIL_DIGEST)
@@ -262,5 +262,5 @@ class RegistrationRedirectsToLoginTests(TestCase):
         ), self.assertLogs('accounts.views', level='ERROR'):
             response = self.client.post(reverse('accounts:register_student'), self.data)
 
-        self.assertRedirects(response, reverse('accounts:login'))
+        self.assertRedirects(response, reverse('accounts:inscription_envoyee'))
         self.assertTrue(User.objects.filter(username='yassine', approval_status='pending').exists())
