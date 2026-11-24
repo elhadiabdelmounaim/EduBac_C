@@ -135,7 +135,8 @@ window.EDUBAC_PUSH = {
     publicKey: "{{ webpush_public_key|default:'' }}",
     subscribeUrl: "{% url 'notifications:push_subscribe' %}",
     unsubscribeUrl: "{% url 'notifications:push_unsubscribe' %}",
-    csrfToken: "{{ csrf_token }}"
+    csrfToken: "{{ csrf_token }}",
+    compte: "{{ user.pk }}"
 };
 window.EDUBAC_NOTIF = {
     listUrl: "{% url 'notifications:api_list' %}",

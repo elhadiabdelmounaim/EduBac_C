@@ -110,7 +110,7 @@ elif database_engine == 'sqlite' or (
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': db_path,
-            'OPTIONS': {'timeout': 20},
+            'OPTIONS': sqlite_options(),  # noqa: F405 (défini dans config.settings)
             'CONN_MAX_AGE': 0,
         }
     }

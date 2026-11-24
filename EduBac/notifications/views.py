@@ -171,17 +171,12 @@ def preferences(request):
 @require_POST
 def push_subscribe(request):
     """Enregistre l'abonnement Web Push de cet appareil pour l'utilisateur connecté."""
-    from .models import PushSubscription
     resultat = _abonnement_depuis_requete(request)
     if isinstance(resultat, JsonResponse):
         return resultat
     endpoint, p256dh, auth = resultat
     user = _recipient(request)
-    PushSubscription.objects.update_or_create(
-        endpoint=endpoint,
-        defaults={'user': user, 'p256dh': p256dh, 'auth': auth, 'failures': 0,
-                  'user_agent': request.META.get('HTTP_USER_AGENT', '')[:300]},
-    )
+    _enregistrer_abonnement(request, user, endpoint, p256dh, auth)
     return JsonResponse({'ok': True})
 
 
@@ -203,6 +198,22 @@ def _abonnement_depuis_requete(request):
     return endpoint, p256dh, auth
 
 
+def _enregistrer_abonnement(request, user, endpoint, p256dh, auth):
+    """Enregistre l'appareil, sans écrire si rien n'a changé (SQLite : une écriture à la fois)."""
+    from .models import PushSubscription
+    inchange = PushSubscription.objects.filter(
+        endpoint=endpoint, user=user, p256dh=p256dh, auth=auth, failures=0,
+    ).exists()
+    if inchange:
+        return False
+    PushSubscription.objects.update_or_create(
+        endpoint=endpoint,
+        defaults={'user': user, 'p256dh': p256dh, 'auth': auth, 'failures': 0,
+                  'user_agent': request.META.get('HTTP_USER_AGENT', '')[:300]},
+    )
+    return True
+
+
 @require_POST
 def push_subscribe_inscription(request):
     """Inscription en attente : le téléphone de l'élève sera prévenu de la validation.
@@ -210,7 +221,6 @@ def push_subscribe_inscription(request):
     Seule la session qui vient d'envoyer la demande peut abonner un appareil, et
     seulement tant que la demande est en attente (aucune connexion nécessaire)."""
     from accounts.models import User
-    from .models import PushSubscription
     user = User.objects.filter(
         pk=request.session.get('inscription_en_attente'), role='student', approval_status='pending',
     ).first()
@@ -220,11 +230,7 @@ def push_subscribe_inscription(request):
     if isinstance(resultat, JsonResponse):
         return resultat
     endpoint, p256dh, auth = resultat
-    PushSubscription.objects.update_or_create(
-        endpoint=endpoint,
-        defaults={'user': user, 'p256dh': p256dh, 'auth': auth, 'failures': 0,
-                  'user_agent': request.META.get('HTTP_USER_AGENT', '')[:300]},
-    )
+    _enregistrer_abonnement(request, user, endpoint, p256dh, auth)
     return JsonResponse({'ok': True})
 
 

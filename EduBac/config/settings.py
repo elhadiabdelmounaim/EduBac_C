@@ -145,11 +145,23 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
+def sqlite_options():
+    """SQLite n'accepte qu'une écriture à la fois. En mode IMMEDIATE (Django ≥ 5.1), une
+    transaction qui va écrire réserve la base dès le départ et attend son tour (timeout),
+    au lieu d'échouer aussitôt par « database is locked » quand elle passe de la lecture
+    à l'écriture pendant qu'une autre requête écrit."""
+    import django
+    options = {'timeout': 20}
+    if django.VERSION >= (5, 1):
+        options['transaction_mode'] = 'IMMEDIATE'
+    return options
+
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
-        'OPTIONS': {'timeout': 20},
+        'OPTIONS': sqlite_options(),
     }
 }
 

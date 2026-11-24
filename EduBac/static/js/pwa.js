@@ -165,6 +165,17 @@
     });
   }
 
+  var SYNC_KEY = 'edubac-push-sync';
+  function synchroniser(subscription) {
+    var empreinte = [config.subscribeUrl, config.compte || '', subscription.endpoint].join('|');
+    var dernier = null;
+    try { dernier = JSON.parse(localStorage.getItem(SYNC_KEY) || 'null'); } catch (e) {}
+    if (dernier && dernier.e === empreinte && Date.now() - dernier.t < 86400000) return;
+    send(config.subscribeUrl, subscription.toJSON()).then(function () {
+      try { localStorage.setItem(SYNC_KEY, JSON.stringify({ e: empreinte, t: Date.now() })); } catch (e) {}
+    }).catch(function () {});
+  }
+
   function unsubscribe() {
     return currentSubscription().then(function (subscription) {
       if (!subscription) return null;
@@ -220,8 +231,9 @@
     currentSubscription().then(function (subscription) {
       if (subscription && Notification.permission === 'granted') {
         render('on');
-        // Garde le serveur à jour (réinstallation, changement de compte sur l'appareil).
-        send(config.subscribeUrl, subscription.toJSON()).catch(function () {});
+        // Garde le serveur à jour (réinstallation, changement de compte sur l'appareil),
+        // mais pas à chaque page : une fois par jour, ou tout de suite si quelque chose a changé.
+        synchroniser(subscription);
       } else {
         render('off');
         maybeBanner();
