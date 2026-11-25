@@ -22,12 +22,14 @@ from .models import (
     ChatBlock,
     ChatMessage,
     ChatPresence,
+    ChatReport,
     DirectConversation,
     PrivateConversation,
     PrivateMessage,
 )
 from .payloads import conversation_message_payload, parse_since
 from .permissions import (
+    class_reaction_restriction,
     accessible_direct_conversations,
     can_moderate_classroom,
     class_post_restriction,
@@ -389,6 +391,8 @@ def api_messages(request, classroom_id):
             'classroom_name': classroom.name,
             'members_count': classroom.members.count(),
         }
+    from .reactions import charger
+    charger(ChatReport.KIND_CLASS, messages_list, noms=can_moderate_classroom(user, classroom))
     return JsonResponse({
         'messages': [m.to_dict(user) for m in messages_list],
         'classroom_id': classroom.pk,
@@ -405,6 +409,7 @@ def _room_state(room, user):
         'can_post': not restriction,
         'restriction': restriction,
         'can_moderate': can_moderate_classroom(user, room.classroom),
+        'can_react': not class_reaction_restriction(user, room),
         'is_locked': room.is_locked,
         'allow_student_direct': room.allow_student_direct,
         'quiet_hours_start': room.quiet_hours_start.strftime('%H:%M') if room.quiet_hours_start else '',

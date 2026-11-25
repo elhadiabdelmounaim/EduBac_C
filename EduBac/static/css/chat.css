@@ -1433,3 +1433,91 @@ fieldset.chat-setting { display: block; }
 .moderation-snapshot-body { white-space: pre-wrap; overflow-wrap: anywhere; }
 .moderation-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
 .moderation-actions input { flex: 1 1 200px; min-width: 0; }
+
+/* ─── Réactions ─────────────────────────────────────────────────────────── */
+.chat-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: -6px;
+  padding: 0 8px;
+  position: relative;
+  z-index: 2;
+}
+.chat-bubble-row.mine .chat-reactions { justify-content: flex-end; }
+.chat-reaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 26px;
+  padding: 1px 8px;
+  border: 1px solid var(--ch-line);
+  border-radius: 999px;
+  background: var(--ch-panel);
+  color: var(--ch-ink);
+  font: inherit;
+  font-size: 0.82rem;
+  line-height: 1.2;
+  box-shadow: var(--ch-shadow);
+  cursor: pointer;
+}
+.chat-reaction span { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ch-muted); }
+.chat-reaction.is-mine { border-color: var(--ch-accent); background: var(--ch-accent-soft); }
+.chat-reaction.is-mine span { color: var(--ch-accent); }
+.chat-reaction:disabled { cursor: default; }
+.chat-reaction:not(:disabled):hover { background: var(--ch-hover); }
+.chat-reaction:focus-visible,
+.chat-reaction-choice:focus-visible { outline: 2px solid var(--ch-accent); outline-offset: 2px; }
+.chat-reaction-who {
+  flex-basis: 100%;
+  font-size: 0.78rem;
+  color: var(--ch-danger);
+  padding: 0 2px;
+}
+.chat-bubble-row.mine .chat-reaction-who { text-align: right; }
+.chat-reaction-picker {
+  position: fixed;
+  z-index: 1080;
+  display: flex;
+  gap: 2px;
+  padding: 5px;
+  border-radius: 999px;
+  background: var(--ch-panel, #fff);
+  box-shadow: var(--ch-shadow-lg, 0 12px 32px rgba(17, 27, 33, 0.16));
+  border: 1px solid var(--ch-line, #dde3ee);
+}
+.chat-reaction-picker[hidden] { display: none; }
+.chat-reaction-choice {
+  display: grid;
+  place-items: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.chat-reaction-choice small { font-size: 0.6rem; color: var(--ch-muted, #5f6d74); line-height: 1; }
+.chat-reaction-choice:hover { transform: scale(1.18); background: var(--ch-hover, #f1f4fa); }
+.chat-reaction-choice.is-mine { background: var(--ch-accent-soft, #e6eefb); }
+@media (prefers-reduced-motion: reduce) {
+  .chat-reaction-choice, .chat-reaction-choice:hover { transition: none; transform: none; }
+}
+
+/* Longue bulle : la barre d'actions passe au-dessus au lieu de déborder hors de la conversation. */
+@media (hover: hover) {
+  .chat-bubble-row.chat-actions-above .chat-msg-actions {
+    top: auto;
+    bottom: calc(100% - 10px);
+    transform: scale(0.92);
+  }
+  .chat-bubble-row.mine.chat-actions-above .chat-msg-actions { right: 8px; left: auto; }
+  .chat-bubble-row.theirs.chat-actions-above .chat-msg-actions { left: 8px; right: auto; }
+  .chat-bubble-row.chat-actions-above:hover .chat-msg-actions,
+  .chat-bubble-row.chat-actions-above:focus-within .chat-msg-actions { transform: scale(1); }
+}

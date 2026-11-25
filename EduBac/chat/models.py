@@ -9,6 +9,11 @@ from .storage import PrivateChatStorage, private_message_upload_to
 EDIT_WINDOW_SECONDS = 5 * 60
 
 
+def _reactions_resume(message, user):
+    from .reactions import resume
+    return resume(message, user)
+
+
 class ModeratedMessage(models.Model):
     """Champs communs d'édition et de suppression douce des messages."""
 
@@ -499,6 +504,7 @@ class ChatMessage(ModeratedMessage):
             'is_announcement': self.is_announcement and not deleted,
             'reply_to': reply,
             'whiteboard_share': share,
+            'reactions': _reactions_resume(self, user),
             **self.moderation_payload(user),
         }
 
@@ -631,3 +637,33 @@ class ChatReport(models.Model):
 
     def __str__(self):
         return f'Signalement {self.get_kind_display()} #{self.message_id}'
+
+
+class MessageReaction(models.Model):
+    """Réaction d'un utilisateur à un message (une seule par personne et par message)."""
+    EMOJIS = ('👍', '❤️', '😂', '😮', '✅', '❓')
+    LABELS = {
+        '👍': 'J’aime', '❤️': 'J’adore', '😂': 'Drôle', '😮': 'Surprenant',
+        '✅': 'Compris', '❓': 'Pas compris',
+    }
+
+    kind = models.CharField(max_length=20, choices=ChatReport.KIND_CHOICES)
+    message_id = models.PositiveBigIntegerField()
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='chat_reactions',
+    )
+    emoji = models.CharField(max_length=8)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Réaction'
+        verbose_name_plural = 'Réactions'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['kind', 'message_id', 'user'], name='unique_chat_reaction_per_user',
+            ),
+        ]
+        indexes = [models.Index(fields=['kind', 'message_id'], name='chat_reaction_message_idx')]
+
+    def __str__(self):
+        return f'{self.emoji} {self.get_kind_display()} #{self.message_id}'

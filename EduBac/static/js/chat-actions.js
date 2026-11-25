@@ -442,10 +442,160 @@
     return { refresh: refresh };
   }
 
+  // ─── Réactions ──────────────────────────────────────────────────────────────
+  var REACTIONS = [
+    ['👍', 'J’aime'], ['❤️', 'J’adore'], ['😂', 'Drôle'], ['😮', 'Surprenant'],
+    ['✅', 'Compris'], ['❓', 'Pas compris'],
+  ];
+  var picker = null;
+
+  function react(kind, message, emoji) {
+    return api(messageUrl(kind, message.id, 'react'), { emoji: emoji }).then(function (d) { return d.message; });
+  }
+
+  function reactAndRender(kind, message, emoji, onUpdated) {
+    react(kind, message, emoji).then(onUpdated).catch(function (error) {
+      window.alert(error.message || 'Réaction impossible.');
+    });
+  }
+
+  function closePicker() {
+    if (picker) { picker.hidden = true; picker._anchor = null; }
+  }
+
+  /** Palette des six réactions, ouverte près du bouton « Réagir ». */
+  function openPicker(anchor, kind, message, onUpdated) {
+    if (!picker) {
+      picker = document.createElement('div');
+      picker.className = 'chat-reaction-picker';
+      picker.setAttribute('role', 'menu');
+      picker.hidden = true;
+      document.body.append(picker);
+      document.addEventListener('click', function (event) {
+        if (picker.hidden || picker.contains(event.target) || (picker._anchor && picker._anchor.contains(event.target))) return;
+        closePicker();
+      });
+      document.addEventListener('keydown', function (event) { if (event.key === 'Escape') closePicker(); });
+      window.addEventListener('scroll', closePicker, true);
+    }
+    if (picker._anchor === anchor && !picker.hidden) { closePicker(); return; }
+    picker.replaceChildren();
+    var current = (message.reactions || []).filter(function (r) { return r.mine; }).map(function (r) { return r.emoji; })[0];
+    REACTIONS.forEach(function (item) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'chat-reaction-choice' + (item[0] === current ? ' is-mine' : '');
+      button.setAttribute('role', 'menuitem');
+      button.title = item[1];
+      button.setAttribute('aria-label', item[1]);
+      button.dataset.emoji = item[0];
+      button.append(document.createTextNode(item[0]));
+      if (item[0] === '✅' || item[0] === '❓') {
+        var small = document.createElement('small');
+        small.textContent = item[1];
+        button.append(small);
+      }
+      button.addEventListener('click', function () {
+        closePicker();
+        reactAndRender(kind, message, item[0], onUpdated);
+      });
+      picker.append(button);
+    });
+    picker._anchor = anchor;
+    picker.hidden = false;
+    var box = anchor.getBoundingClientRect();
+    var width = picker.offsetWidth, height = picker.offsetHeight;
+    var left = Math.min(Math.max(8, box.left + box.width / 2 - width / 2), window.innerWidth - width - 8);
+    var top = box.top - height - 8;
+    if (top < 8) top = box.bottom + 8;
+    picker.style.left = left + 'px';
+    picker.style.top = top + 'px';
+    var first = picker.querySelector('button');
+    if (first) first.focus({ preventScroll: true });
+  }
+
+  function reactionButton(kind, message, onUpdated) {
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'chat-act-react';
+    button.title = 'Réagir';
+    button.setAttribute('aria-label', 'Réagir');
+    button.setAttribute('aria-haspopup', 'menu');
+    var i = document.createElement('i');
+    i.className = 'bi bi-emoji-smile';
+    i.setAttribute('aria-hidden', 'true');
+    button.append(i);
+    button.addEventListener('click', function (event) {
+      event.stopPropagation();
+      openPicker(button, kind, message, onUpdated);
+    });
+    return button;
+  }
+
+  /**
+   * Pastilles « 👍 3 · ✅ 12 » sous la bulle. Le professeur voit aussi qui n'a pas compris
+   * (les élèves ne reçoivent jamais les noms).
+   */
+  function reactionChips(kind, message, onUpdated, canReact) {
+    var list = message.is_deleted ? [] : (message.reactions || []);
+    if (!list.length) return null;
+    var box = document.createElement('div');
+    box.className = 'chat-reactions';
+    list.forEach(function (r) {
+      var chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'chat-reaction' + (r.mine ? ' is-mine' : '');
+      chip.dataset.emoji = r.emoji;
+      chip.setAttribute('aria-pressed', r.mine ? 'true' : 'false');
+      var who = r.names && r.names.length ? ' : ' + r.names.join(', ') : '';
+      chip.title = r.label + ' (' + r.count + ')' + who;
+      chip.setAttribute('aria-label', r.label + ', ' + r.count + (r.mine ? ', dont vous' : ''));
+      chip.append(document.createTextNode(r.emoji + ' '));
+      var count = document.createElement('span');
+      count.textContent = String(r.count);
+      chip.append(count);
+      if (canReact) {
+        chip.addEventListener('click', function (event) {
+          event.stopPropagation();
+          reactAndRender(kind, message, r.emoji, onUpdated);
+        });
+      } else {
+        chip.disabled = true;
+      }
+      box.append(chip);
+    });
+    var lost = list.filter(function (r) { return r.emoji === '❓' && r.names && r.names.length; })[0];
+    if (lost) {
+      var line = document.createElement('div');
+      line.className = 'chat-reaction-who';
+      line.textContent = '❓ Pas compris : ' + lost.names.join(', ');
+      box.append(line);
+    }
+    return box;
+  }
+
+  /** Barre d'actions trop large pour tenir à côté d'une longue bulle : on la place au-dessus. */
+  function keepActionsInside(container, row) {
+    var bar = row && row.querySelector('.chat-msg-actions');
+    if (!bar) return;
+    row.classList.remove('chat-actions-above');
+    var box = container.getBoundingClientRect();
+    var stack = row.querySelector('.chat-bubble-stack').getBoundingClientRect();
+    var mine = row.classList.contains('mine');
+    var room = mine ? stack.left - box.left : box.right - stack.right;
+    if (room < bar.offsetWidth + 10) row.classList.add('chat-actions-above');
+  }
+
   /** Sur écran tactile, toucher une bulle affiche ses actions. */
   function enableTapActions(container) {
+    var check = function (event) {
+      var row = event.target.closest && event.target.closest('.chat-bubble-row');
+      if (row && container.contains(row)) keepActionsInside(container, row);
+    };
+    container.addEventListener('mouseover', check);
+    container.addEventListener('focusin', check);
     container.addEventListener('click', function (event) {
-      if (event.target.closest('a, button, input, audio, .chat-voice')) return;
+      if (event.target.closest('a, button, input, audio, .chat-voice, .chat-reactions')) return;
       var row = event.target.closest('.chat-bubble-row');
       container.querySelectorAll('.chat-bubble-row.is-selected').forEach(function (other) {
         if (other !== row) other.classList.remove('is-selected');
@@ -473,5 +623,7 @@
     scroller: scroller,
     composer: composer,
     enableTapActions: enableTapActions,
+    reactionButton: reactionButton,
+    reactionChips: reactionChips,
   };
 })();

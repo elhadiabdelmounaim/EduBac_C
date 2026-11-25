@@ -186,9 +186,12 @@
     }
     bubble.append(meta);
     stack.append(bubble);
+    const chips = Chat.reactionChips(messageKind, message, onUpdated, true);
+    if (chips) stack.append(chips);
 
     if (!message.is_deleted) {
       const actions = el('div', 'chat-msg-actions');
+      actions.append(Chat.reactionButton(messageKind, message, onUpdated));
       if (Chat.canEdit(message, currentUser)) {
         actions.append(actionButton('chat-act-edit', 'bi-pencil', 'Modifier', () => {
           Chat.editMessage(messageKind, message).then(onUpdated).catch(showActionError);

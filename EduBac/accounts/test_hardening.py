@@ -6,7 +6,7 @@ from unittest import mock
 
 from django.core.cache import cache
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 from django.urls import reverse
 
 from accounts.models import User
@@ -51,7 +51,9 @@ class LoginThrottleTests(TestCase):
         self.assertNotContains(self.post('faux'), 'Trop de tentatives')
 
 
-class BackupRotationTests(TestCase):
+class BackupRotationTests(TransactionTestCase):
+    # Hors transaction, comme en production : avec les transactions SQLite « IMMEDIATE »,
+    # la transaction d'un TestCase verrouille la base et la copie attendrait sans fin.
     def test_keeps_only_the_most_recent_backups(self):
         with tempfile.TemporaryDirectory() as home:
             folder = Path(home) / 'backups' / 'edubac'

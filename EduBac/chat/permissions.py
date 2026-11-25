@@ -184,6 +184,20 @@ def class_post_restriction(user, room):
     return ''
 
 
+def class_reaction_restriction(user, room):
+    """Réagir à un message du salon : permis même en mode annonces, pas en sourdine
+    ni pendant les heures de silence (professeur et administration : toujours)."""
+    if can_moderate_classroom(user, room.classroom):
+        return ''
+    mute = room.active_mute_for(user)
+    if mute:
+        local = timezone.localtime(mute.until)
+        return f'Vous ne pouvez pas réagir dans ce salon avant le {local:%d/%m à %H:%M}.'
+    if room.in_quiet_hours():
+        return quiet_hours_message(room)
+    return ''
+
+
 def quiet_hours_message(room):
     return (
         f'Heures de silence ({room.quiet_hours_start:%H:%M} – '

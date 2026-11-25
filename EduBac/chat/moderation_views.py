@@ -27,11 +27,14 @@ from .models import (
     ChatReport,
     ClassChatRoom,
     DirectMessage,
+    MessageReaction,
     PrivateConversation,
     PrivateMessage,
 )
 from .permissions import (
     can_moderate_classroom,
+    class_reaction_restriction,
+    student_quiet_hours_restriction,
     get_edubac_user,
     is_platform_admin,
     platform_admin_user,
@@ -116,6 +119,9 @@ def _resolve(user, kind, message_id):
 
 
 def _message_payload(kind, message, user):
+    from .reactions import charger
+    noms = kind == ChatReport.KIND_CLASS and can_moderate_classroom(user, message.room.classroom)
+    charger(kind, [message], noms=noms)
     if kind == ChatReport.KIND_CLASS:
         return message.to_dict(user)
     from .payloads import conversation_message_payload
@@ -160,6 +166,49 @@ def api_message_delete(request, kind, message_id):
     if kind == ChatReport.KIND_CLASS and message.is_pinned:
         message.is_pinned = False
         message.touch('is_pinned')
+    target.notify()
+    return JsonResponse({'ok': True, 'message': _message_payload(kind, message, user)})
+
+
+def _reaction_restriction(user, kind, target):
+    message = target.message
+    if kind == ChatReport.KIND_CLASS:
+        return class_reaction_restriction(user, message.room)
+    if kind == ChatReport.KIND_CONSULTATION:
+        return student_quiet_hours_restriction(user, target.classroom)
+    other = message.conversation.other_participant(user)
+    if other and ChatBlock.between(user, other):
+        return 'Les messages sont bloqués entre vous et ce camarade.'
+    if other and other.is_student() and user.is_student():
+        return student_quiet_hours_restriction(user, target.classroom)
+    return ''
+
+
+@login_required_simple
+@require_POST
+def api_message_react(request, kind, message_id):
+    """Une réaction par personne et par message : la même la retire, une autre la remplace."""
+    user = get_edubac_user(request)
+    target = _resolve(user, kind, message_id)
+    message = target.message
+    emoji = (_json_body(request) or {}).get('emoji')
+    if emoji not in MessageReaction.EMOJIS:
+        return JsonResponse({'error': 'Réaction inconnue.'}, status=400)
+    if message.is_deleted:
+        return JsonResponse({'error': 'Ce message a été supprimé.'}, status=400)
+    restriction = _reaction_restriction(user, kind, target)
+    if restriction:
+        return JsonResponse({'error': restriction}, status=403)
+    with transaction.atomic():
+        existante = MessageReaction.objects.filter(kind=kind, message_id=message.pk, user=user).first()
+        if existante and existante.emoji == emoji:
+            existante.delete()
+        elif existante:
+            existante.emoji = emoji
+            existante.save(update_fields=['emoji'])
+        else:
+            MessageReaction.objects.create(kind=kind, message_id=message.pk, user=user, emoji=emoji)
+        message.touch()          # les autres navigateurs reçoivent le changement à la synchronisation
     target.notify()
     return JsonResponse({'ok': True, 'message': _message_payload(kind, message, user)})
 

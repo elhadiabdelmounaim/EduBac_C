@@ -15,6 +15,7 @@ urlpatterns = [
     path(f'api/messages/{MESSAGE_KINDS}/edit/', moderation_views.api_message_edit, name='api_message_edit'),
     path(f'api/messages/{MESSAGE_KINDS}/delete/', moderation_views.api_message_delete, name='api_message_delete'),
     path(f'api/messages/{MESSAGE_KINDS}/report/', moderation_views.api_message_report, name='api_message_report'),
+    path(f'api/messages/{MESSAGE_KINDS}/react/', moderation_views.api_message_react, name='api_message_react'),
     path('api/classe/<int:classroom_id>/settings/', moderation_views.api_room_settings, name='api_room_settings'),
     path('api/classe/<int:classroom_id>/mute/', moderation_views.api_room_mute, name='api_room_mute'),
     path('api/block/', moderation_views.api_block, name='api_block'),

@@ -28,6 +28,11 @@ def context_payload(message):
     return None
 
 
+def _reactions_resume(message, user):
+    from .reactions import resume
+    return resume(message, user)
+
+
 def conversation_message_payload(message, user, attachment_route):
     sender = message.sender
     deleted = message.is_deleted
@@ -47,6 +52,7 @@ def conversation_message_payload(message, user, attachment_route):
         ),
         'attachment_name': message.attachment_name if has_attachment else '',
         'context': None if deleted else context_payload(message),
+        'reactions': _reactions_resume(message, user),
         **message.moderation_payload(user),
     }
 

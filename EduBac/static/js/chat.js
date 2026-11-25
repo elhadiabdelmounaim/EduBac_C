@@ -242,9 +242,13 @@
     if (mine && !m.is_deleted) meta.append(Chat.receipt('sent'));
     bubble.append(meta);
     stack.append(bubble);
+    var onReacted = function (updated) { afterAction(updated); };
+    var chips = Chat.reactionChips('class', m, onReacted, roomState.can_react);
+    if (chips) stack.append(chips);
 
     if (!m.is_deleted) {
       var actions = el('div', 'chat-msg-actions');
+      if (roomState.can_react) actions.append(Chat.reactionButton('class', m, onReacted));
       if (roomState.can_post) actions.append(actionButton('chat-act-reply', 'bi-reply', 'Répondre'));
       if (Chat.canEdit(m, userId)) actions.append(actionButton('chat-act-edit', 'bi-pencil', 'Modifier'));
       if (mine || roomState.can_moderate) actions.append(actionButton('chat-act-delete', 'bi-trash', 'Supprimer'));
@@ -705,8 +709,9 @@
         if (settle) { settle(); markReadAfterIncomingMessages([event.message]); }
         updatePinnedBar();
       } else if (event.type === 'update' && event.message) {
-        if (document.getElementById('msg-' + event.message.id)) renderMessage(event.message, false, false);
-        updatePinnedBar();
+        // Le message diffusé ne connaît pas le lecteur (ses réactions, ses droits) : on relit
+        // les changements depuis la dernière synchronisation.
+        if (document.getElementById('msg-' + event.message.id)) loadMessages(false);
       } else if (event.type === 'room') {
         loadMessages(false);
       }

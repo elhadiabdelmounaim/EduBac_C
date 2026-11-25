@@ -94,6 +94,8 @@ def conversation_messages_response(request, user, conversation, *, payload, kind
             ) + messages
     else:
         messages = list(reversed(list(messages_qs.order_by('-created_at')[:100])))
+    from .reactions import charger
+    charger(kind, messages)
     return JsonResponse({
         'messages': [payload(message, user) for message in messages],
         'read_ids': list(
