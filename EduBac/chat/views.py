@@ -15,7 +15,7 @@ from accounts.models import User
 
 from . import realtime
 from .attachments import AttachmentError, serve_attachment, validate_upload
-from .conversation_api import conversation_messages_response, parse_send_request
+from .conversation_api import conversation_messages_response, parse_send_request, resolve_reply
 from .models import (
     EDIT_WINDOW_SECONDS,
     ClassChatRoom,
@@ -852,6 +852,7 @@ def api_private_send(request, conversation_id):
         is_voice=parsed['is_voice'],
         lesson=lesson,
         question=question,
+        reply_to=resolve_reply(conversation, parsed['reply_to_id']),
     )
     if parsed['upload']:
         message.attachment = parsed['upload']

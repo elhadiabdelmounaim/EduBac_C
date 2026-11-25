@@ -28,6 +28,23 @@ def context_payload(message):
     return None
 
 
+def reply_payload(message):
+    """Citation du message auquel on répond (jamais le contenu d'un message supprimé)."""
+    if not getattr(message, 'reply_to_id', None):
+        return None
+    cite = message.reply_to
+    if cite is None:
+        return None
+    return {
+        'id': cite.pk,
+        'body': (
+            'Message supprimé' if cite.is_deleted
+            else (cite.body or cite.attachment_name or ('Message vocal' if cite.is_voice else 'Message'))[:120]
+        ),
+        'sender_name': cite.sender.get_full_name() or cite.sender.username,
+    }
+
+
 def _reactions_resume(message, user):
     from .reactions import resume
     return resume(message, user)
@@ -52,6 +69,7 @@ def conversation_message_payload(message, user, attachment_route):
         ),
         'attachment_name': message.attachment_name if has_attachment else '',
         'context': None if deleted else context_payload(message),
+        'reply_to': None if deleted else reply_payload(message),
         'reactions': _reactions_resume(message, user),
         **message.moderation_payload(user),
     }

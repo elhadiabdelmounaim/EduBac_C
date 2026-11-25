@@ -220,6 +220,10 @@ class PrivateMessage(ModeratedMessage):
     is_voice = models.BooleanField(default=False, verbose_name='Message vocal')
     read_at = models.DateTimeField(null=True, blank=True, verbose_name='Lu le')
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    reply_to = models.ForeignKey(
+        'self', on_delete=models.SET_NULL, null=True, blank=True, related_name='+',
+        verbose_name='En réponse à',
+    )
     # Contexte pédagogique : la leçon ou la question de quiz concernée.
     lesson = models.ForeignKey(
         'education.Lesson',
@@ -369,6 +373,10 @@ class DirectMessage(ModeratedMessage):
     is_voice = models.BooleanField(default=False, verbose_name='Message vocal')
     read_at = models.DateTimeField(null=True, blank=True, verbose_name='Lu le')
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    reply_to = models.ForeignKey(
+        'self', on_delete=models.SET_NULL, null=True, blank=True, related_name='+',
+        verbose_name='En réponse à',
+    )
 
     class Meta:
         verbose_name = 'Message individuel'

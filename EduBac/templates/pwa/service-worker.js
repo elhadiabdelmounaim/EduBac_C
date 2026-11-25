@@ -131,11 +131,19 @@ self.addEventListener('push', (event) => {
   })());
 });
 
+async function updateAppBadge() {
+  if (!(self.navigator && 'setAppBadge' in self.navigator)) return;
+  const shown = await self.registration.getNotifications();
+  if (shown.length) self.navigator.setAppBadge(shown.length).catch(() => {});
+  else if ('clearAppBadge' in self.navigator) self.navigator.clearAppBadge().catch(() => {});
+}
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const target = new URL((event.notification.data && event.notification.data.url) || '/', self.location.origin);
   if (target.origin !== self.location.origin) return;
   event.waitUntil((async () => {
+    await updateAppBadge();
     const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     for (const client of windows) {
       if (new URL(client.url).origin === self.location.origin && 'focus' in client) {

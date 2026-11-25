@@ -29,6 +29,14 @@ def device_keys():
     return private, push.b64url_encode(public), push.b64url_encode(os.urandom(16))
 
 
+
+def lien_cible(url):
+    """Lien final d'une notification de téléphone (paramètre « lien » de l'adresse d'ouverture)."""
+    from urllib.parse import parse_qs, urlsplit
+    partie = urlsplit(url)
+    assert partie.path == reverse('notifications:open_push'), url
+    return parse_qs(partie.query)['lien'][0]
+
 class CryptoTests(TestCase):
     def test_encryption_matches_rfc8291_test_vector(self):
         server = ec.derive_private_key(int.from_bytes(push.b64url_decode(
@@ -116,7 +124,8 @@ class SubscriptionAndDeliveryTests(TestCase):
         message = decrypt(body, self.device_private, self.auth)
         self.assertEqual(message['title'], 'Consultation — nouveau message')
         self.assertIn('Révisez la page 12', message['body'])
-        self.assertEqual(message['url'], reverse('chat:private_room', args=[conversation.pk]))
+        # Le clic passe par l'adresse qui marque la notification comme lue, puis mène à la conversation.
+        self.assertEqual(lien_cible(message['url']), reverse('chat:private_room', args=[conversation.pk]))
         self.assertIsNotNone(PushSubscription.objects.get().last_success_at)
 
     def test_class_message_notifies_other_members_but_not_the_sender(self):
@@ -258,7 +267,7 @@ class SendAndSharePushTests(TestCase):
         self.assertEqual(list(pushed), ['omar'])
         self.assertEqual(pushed['omar'][0]['title'], 'Nouveau quiz assigné')
         self.assertIn('Généralités sur les fonctions', pushed['omar'][0]['body'])
-        self.assertEqual(pushed['omar'][0]['url'], reverse('quizzes:detail', args=[quiz.pk]))
+        self.assertEqual(lien_cible(pushed['omar'][0]['url']), reverse('quizzes:detail', args=[quiz.pk]))
 
     def test_whiteboard_shared_with_the_class_rings_every_member(self):
         from types import SimpleNamespace

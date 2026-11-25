@@ -12,6 +12,7 @@ urlpatterns = [
     path('api/count/', views.api_unread_count, name='api_count'),
     path('api/<int:pk>/read/', views.api_mark_read, name='api_mark_read'),
     path('api/read-all/', views.api_mark_all_read, name='api_mark_all_read'),
+    path('telephone/ouvrir/', views.open_from_phone, name='open_push'),
     path('telephone/abonner/', views.push_subscribe, name='push_subscribe'),
     path('telephone/desabonner/', views.push_unsubscribe, name='push_unsubscribe'),
     path('telephone/inscription/', views.push_subscribe_inscription, name='push_subscribe_inscription'),

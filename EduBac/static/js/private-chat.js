@@ -31,6 +31,24 @@
   const aiDraftButton = document.getElementById('privateAiDraftBtn');
   const blockButton = document.getElementById('privateBlockBtn');
   const messagesById = new Map();
+  const replyBar = document.getElementById('privateReplyBar');
+  const replyName = document.getElementById('privateReplyName');
+  const replyText = document.getElementById('privateReplyText');
+  let replyToId = null;
+
+  function setReply(message) {
+    replyToId = message.id;
+    if (replyBar) replyBar.hidden = false;
+    if (replyName) replyName.textContent = message.sender_name || '';
+    if (replyText) replyText.textContent = Chat.replyExcerpt(message);
+    input.focus();
+  }
+
+  function clearReply() {
+    replyToId = null;
+    if (replyBar) replyBar.hidden = true;
+  }
+  document.getElementById('privateReplyCancel')?.addEventListener('click', clearReply);
   const scroll = Chat.scroller(messagesEl, document.getElementById('chatJumpBtn'));
   let serverTime = '';
   let lastId = 0;
@@ -165,6 +183,7 @@
         : 'Message supprimé');
       bubble.append(deleted);
     } else {
+      if (message.reply_to) bubble.append(Chat.replyQuote(message.reply_to, 'private-message-'));
       if (message.context) bubble.append(contextCard(message.context));
       const attachment = makeAttachment(message);
       if (attachment) bubble.append(attachment);
@@ -192,6 +211,7 @@
     if (!message.is_deleted) {
       const actions = el('div', 'chat-msg-actions');
       actions.append(Chat.reactionButton(messageKind, message, onUpdated));
+      actions.append(actionButton('chat-act-reply', 'bi-reply', 'Répondre', () => setReply(message)));
       if (Chat.canEdit(message, currentUser)) {
         actions.append(actionButton('chat-act-edit', 'bi-pencil', 'Modifier', () => {
           Chat.editMessage(messageKind, message).then(onUpdated).catch(showActionError);
@@ -325,6 +345,7 @@
         formData.append('body', body);
         formData.append('attachment', file, file.name || (isVoice ? 'message-vocal.webm' : 'piece-jointe'));
         if (isVoice) formData.append('is_voice', '1');
+        if (replyToId) formData.append('reply_to', String(replyToId));
         Object.entries(selectedContext()).forEach(([key, value]) => formData.append(key, value));
         response = await fetch(root.dataset.sendUrl, {
           method: 'POST',
@@ -339,7 +360,7 @@
             'X-CSRFToken': csrfToken,
             Accept: 'application/json',
           },
-          body: JSON.stringify({ body, ...selectedContext() }),
+          body: JSON.stringify({ body, ...selectedContext(), ...(replyToId ? { reply_to: replyToId } : {}) }),
         });
       }
       const data = await readJson(response, 'Le message n’a pas pu être envoyé.');
@@ -349,6 +370,7 @@
       if (!isVoice) input.value = '';
       if (file && !isVoice) clearFile();
       if (contextSelect) contextSelect.value = '';
+      clearReply();
       return true;
     } catch (error) {
       showError(error.message || 'Erreur de connexion. Réessayez.');

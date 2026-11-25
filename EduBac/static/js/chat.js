@@ -97,7 +97,7 @@
     replyToId = m.id;
     if (replyBar) replyBar.hidden = false;
     if (replyName) replyName.textContent = m.sender_name || '';
-    if (replyText) replyText.textContent = (m.body || m.attachment_name || (m.is_voice ? 'Message vocal' : 'Message')).slice(0, 80);
+    if (replyText) replyText.textContent = Chat.replyExcerpt(m);
     if (input) input.focus();
   }
 
@@ -192,23 +192,7 @@
         badge.append(icon('bi-megaphone-fill'), ' Annonce importante');
         bubble.append(badge);
       }
-      if (m.reply_to) {
-        var quote = el('button', 'chat-reply-quote');
-        quote.type = 'button';
-        quote.title = 'Voir le message d’origine';
-        var quoteText = el('span', '', m.reply_to.body);
-        quote.append(el('strong', '', m.reply_to.sender_name), quoteText);
-        // Formule rendue seulement si la citation n'a pas coupé un « $…$ ».
-        if (((m.reply_to.body || '').match(/\$/g) || []).length % 2 === 0) Chat.renderMath(quoteText);
-        quote.addEventListener('click', function () {
-          var original = document.getElementById('msg-' + m.reply_to.id);
-          if (!original) return;
-          original.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          original.classList.add('is-highlighted');
-          setTimeout(function () { original.classList.remove('is-highlighted'); }, 1600);
-        });
-        bubble.append(quote);
-      }
+      if (m.reply_to) bubble.append(Chat.replyQuote(m.reply_to, 'msg-'));
       if (m.whiteboard_share) {
         var share = el('a', 'chat-share-card');
         share.href = m.whiteboard_share.view_url;

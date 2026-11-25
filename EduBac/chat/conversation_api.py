@@ -48,6 +48,10 @@ def parse_send_request(request):
         question_id = _optional_id(data.get('question_id'))
     except ValueError:
         return JsonResponse({'error': 'Contexte du message invalide.'}, status=400)
+    try:
+        reply_to_id = _optional_id(data.get('reply_to'))
+    except ValueError:
+        reply_to_id = None
     attachment_name = ''
     if upload:
         try:
@@ -61,10 +65,19 @@ def parse_send_request(request):
         'is_voice': is_voice,
         'lesson_id': lesson_id,
         'question_id': question_id,
+        'reply_to_id': reply_to_id,
     }
 
 
+def resolve_reply(conversation, reply_to_id):
+    """Message cité, seulement s'il appartient à la même conversation et n'est pas supprimé."""
+    if not reply_to_id:
+        return None
+    return conversation.messages.filter(pk=reply_to_id, deleted_at__isnull=True).first()
+
+
 def conversation_messages_response(request, user, conversation, *, payload, kind, select=('sender',)):
+    select = (*select, 'reply_to__sender')
     """Messages d'une conversation : chargement initial, nouveautés et modifications."""
     server_time = timezone.now()
     marked = conversation.messages.filter(

@@ -1,6 +1,7 @@
 import logging
 import secrets
 import uuid
+from urllib.parse import urlencode
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -247,6 +248,17 @@ def _login_session(request, user):
     request.session.cycle_key()
 
 
+def _adresse_retour(request):
+    """Notification du téléphone touchée avec une session expirée : l'adresse où revenir."""
+    retour = request.session.pop('apres_connexion', '')
+    return retour if retour.startswith(reverse('notifications:open_push')) else ''
+
+
+def _retour_notification(request):
+    retour = _adresse_retour(request)
+    return redirect(retour) if retour else None
+
+
 # Formulaire public : jamais servi depuis le cache, sinon son jeton CSRF peut être périmé.
 @never_cache
 @ensure_csrf_cookie
@@ -271,7 +283,7 @@ def login_view(request, *, teacher_entry=False):
                 request.session.set_expiry(None if request.POST.get('remember') else 0)
                 if user.is_staff or user.is_superuser:
                     _login_session(request, user)
-                    return redirect('accounts:teacher_portal')
+                    return _retour_notification(request) or redirect('accounts:teacher_portal')
                 if user.must_change_password:
                     _login_session(request, user)
                     return redirect('accounts:change_password')
@@ -289,7 +301,13 @@ def login_view(request, *, teacher_entry=False):
                 )
                 from .recovery import needs_code
                 if not teacher_entry and needs_code(user):
-                    return redirect(reverse('accounts:recovery_code') + '?premiere=1')
+                    # Le code de récupération d'abord, puis la notification touchée (s'il y en a une).
+                    retour = _adresse_retour(request)
+                    suite = '&' + urlencode({'suite': retour}) if retour else ''
+                    return redirect(reverse('accounts:recovery_code') + '?premiere=1' + suite)
+                retour = _retour_notification(request)
+                if retour:
+                    return retour
                 return redirect(
                     'accounts:teacher_portal'
                     if teacher_entry

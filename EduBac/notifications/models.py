@@ -83,6 +83,19 @@ class Notification(models.Model):
     def icon(self):
         return catalog.icon_for(self.type)
 
+    @staticmethod
+    def lien_telephone(link, tag=''):
+        """Adresse ouverte par un clic sur la notification du téléphone : elle marque comme
+        lues les notifications correspondantes dans l'application, puis mène au lien."""
+        from urllib.parse import urlencode
+        from django.urls import reverse
+        params = {}
+        if link and link.startswith('/') and not link.startswith('//'):
+            params['lien'] = link
+        if tag:
+            params['groupe'] = tag
+        return reverse('notifications:open_push') + ('?' + urlencode(params) if params else '')
+
     @property
     def safe_link(self):
         """Lien interne uniquement (jamais vers un autre site)."""
@@ -218,7 +231,7 @@ class Notification(models.Model):
         try:
             from .push import push_to_users
             ids = user_ids if isinstance(user_ids, (list, tuple, set)) else [user_ids]
-            push_to_users(ids, title, message, url=link or '/notifications/', tag=tag)
+            push_to_users(ids, title, message, url=Notification.lien_telephone(link, tag), tag=tag)
         except Exception:
             pass
 

@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
@@ -116,6 +117,36 @@ def open_notification(request, pk):
     notification = get_object_or_404(Notification, pk=pk, recipient=_recipient(request))
     notification.mark_as_read()
     return redirect(notification.safe_link or 'notifications:history')
+
+
+def _lien_interne(lien):
+    lien = (lien or '').strip()
+    if not lien.startswith('/') or lien.startswith('//') or '\\' in lien or len(lien) > 500:
+        return ''
+    return lien
+
+
+@require_GET
+def open_from_phone(request):
+    """Clic sur une notification du téléphone : marque comme lues, pour l'utilisateur connecté,
+    les notifications de ce lien (y compris groupées ou envoyées à toute une classe), puis y mène."""
+    lien = _lien_interne(request.GET.get('lien'))
+    groupe = (request.GET.get('groupe') or '')[:120]
+    user = getattr(request, 'edubac_user', None)
+    if not user:
+        # Session expirée : après la connexion, on revient ici (et la notification sera lue).
+        request.session['apres_connexion'] = request.get_full_path()
+        messages.info(request, 'Veuillez vous connecter.')
+        return redirect('accounts:login')
+    filtre = Q(pk__in=[])
+    if lien:
+        filtre |= Q(link=lien)
+    if groupe.startswith('notif-') and groupe[6:].isdigit():
+        filtre |= Q(pk=int(groupe[6:]))
+    elif groupe and not groupe.startswith('many-'):
+        filtre |= Q(group_key=groupe)
+    Notification.objects.filter(filtre, recipient=user, is_read=False).update(is_read=True)
+    return redirect(lien or 'notifications:history')
 
 
 @login_required_simple

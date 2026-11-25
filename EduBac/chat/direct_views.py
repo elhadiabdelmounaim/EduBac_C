@@ -14,7 +14,7 @@ from classrooms.models import Classroom, ClassroomMember
 
 from . import realtime
 from .attachments import serve_attachment
-from .conversation_api import conversation_messages_response, parse_send_request
+from .conversation_api import conversation_messages_response, parse_send_request, resolve_reply
 from .models import (
     ChatBlock,
     ChatPresence,
@@ -94,6 +94,7 @@ def api_direct_send(request, conversation_id):
         body=parsed['body'],
         attachment_name=parsed['attachment_name'],
         is_voice=parsed['is_voice'],
+        reply_to=resolve_reply(conversation, parsed['reply_to_id']),
     )
     if parsed['upload']:
         message.attachment = parsed['upload']

@@ -442,6 +442,35 @@
     return { refresh: refresh };
   }
 
+  // ─── Citation (réponse à un message) ───────────────────────────────────────
+  /** Citation affichée dans la bulle ; un clic amène au message d'origine (`idPrefix` + id). */
+  function replyQuote(reply, idPrefix) {
+    var quote = document.createElement('button');
+    quote.type = 'button';
+    quote.className = 'chat-reply-quote';
+    quote.title = 'Voir le message d’origine';
+    var name = document.createElement('strong');
+    name.textContent = reply.sender_name || '';
+    var text = document.createElement('span');
+    text.textContent = reply.body || '';
+    quote.append(name, text);
+    // Formule rendue seulement si la citation n'a pas coupé un « $…$ ».
+    if (((reply.body || '').match(/\$/g) || []).length % 2 === 0) renderMath(text);
+    quote.addEventListener('click', function () {
+      var original = document.getElementById(idPrefix + reply.id);
+      if (!original) return;
+      original.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      original.classList.add('is-highlighted');
+      setTimeout(function () { original.classList.remove('is-highlighted'); }, 1600);
+    });
+    return quote;
+  }
+
+  /** Extrait montré dans la bande « Répondre à … » au-dessus de la saisie. */
+  function replyExcerpt(message) {
+    return (message.body || message.attachment_name || (message.is_voice ? 'Message vocal' : 'Message')).slice(0, 80);
+  }
+
   // ─── Réactions ──────────────────────────────────────────────────────────────
   var REACTIONS = [
     ['👍', 'J’aime'], ['❤️', 'J’adore'], ['😂', 'Drôle'], ['😮', 'Surprenant'],
@@ -623,6 +652,8 @@
     scroller: scroller,
     composer: composer,
     enableTapActions: enableTapActions,
+    replyQuote: replyQuote,
+    replyExcerpt: replyExcerpt,
     reactionButton: reactionButton,
     reactionChips: reactionChips,
   };

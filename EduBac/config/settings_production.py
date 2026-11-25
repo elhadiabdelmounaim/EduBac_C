@@ -95,7 +95,8 @@ if database_engine == 'mysql':
             'PASSWORD': os.environ['MYSQL_PASSWORD'],
             'HOST': os.environ['MYSQL_HOST'],
             'PORT': os.getenv('MYSQL_PORT', '3306'),
-            'OPTIONS': {'charset': 'utf8mb4'},
+            # Mode strict : une valeur trop longue est refusée au lieu d'être tronquée en silence.
+            'OPTIONS': {'charset': 'utf8mb4', 'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"},
             'CONN_MAX_AGE': 60,
         }
     }
