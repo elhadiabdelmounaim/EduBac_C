@@ -97,11 +97,8 @@
             </ul>
             {% endif %}
 
-            {% if item.explanation %}
-            <div class="mt-2 p-2 rounded-3 small" style="background:#f7f8fa;">
-                <strong><i class="bi bi-lightbulb"></i> Explication</strong>
-                <div class="mt-1 lesson-md">{{ item.explanation|latex }}</div>
-            </div>
+            {% if item.explanation or item.regle %}
+            <div class="mt-2 small">{% include "quizzes/_explication.html" with regle=item.regle solution=item.explanation compact=True %}</div>
             {% endif %}
             <div class="mt-2">
                 <a href="/tableau/correction/{{ attempt.pk }}/{{ item.question.pk }}/"

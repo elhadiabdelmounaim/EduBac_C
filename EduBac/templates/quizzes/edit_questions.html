@@ -54,8 +54,12 @@
                 <input type="text" name="q_{{ q.pk }}_correct" class="form-control" value="{{ q.correct_answer }}">
             </div>
             <div class="mb-2">
-                <label class="form-label small">Explication</label>
-                <textarea name="q_{{ q.pk }}_expl" class="form-control" rows="2">{{ q.explanation }}</textarea>
+                <label class="form-label small" for="regle_{{ q.pk }}">Règle du cours <span class="text-muted">(propriété utilisée)</span></label>
+                <textarea name="q_{{ q.pk }}_regle" id="regle_{{ q.pk }}" class="form-control" rows="2">{{ q.regle }}</textarea>
+            </div>
+            <div class="mb-2">
+                <label class="form-label small" for="expl_{{ q.pk }}">Solution <span class="text-muted">(application de la règle)</span></label>
+                <textarea name="q_{{ q.pk }}_expl" id="expl_{{ q.pk }}" class="form-control" rows="2">{{ q.explanation }}</textarea>
             </div>
             <div class="row g-2 mb-3">
                 <div class="col-sm-6">

@@ -407,6 +407,7 @@ def quiz_results(request, attempt_id):
             'student_answer': a.answer,
             'is_correct': a.is_correct,
             'good_answer': good_answer,
+            'regle': q.regle,
             'explanation': (q.explanation or a.explanation or ''),
             'choices': choices_list,
         })
@@ -1101,6 +1102,7 @@ def edit_quiz_questions(request, pk):
                     text = request.POST.get(f'q_{q.pk}_text', q.text).strip()
                     correct = request.POST.get(f'q_{q.pk}_correct', q.correct_answer).strip()
                     explanation = request.POST.get(f'q_{q.pk}_expl', q.explanation).strip()
+                    regle = request.POST.get(f'q_{q.pk}_regle', q.regle).strip()
                     difficulty = request.POST.get(f'q_{q.pk}_difficulty', q.difficulty)
                     try:
                         points = Decimal(request.POST.get(f'q_{q.pk}_points', str(q.points)))
@@ -1114,7 +1116,7 @@ def edit_quiz_questions(request, pk):
                         raise ValueError(f"Question {q.order} : choisissez une difficulté valide.")
                     if not text or len(text) > 20_000:
                         raise ValueError(f"Question {q.order} : l’énoncé est obligatoire.")
-                    if len(explanation) > 20_000:
+                    if len(explanation) > 20_000 or len(regle) > 20_000:
                         raise ValueError(f"Question {q.order} : l’explication est trop longue.")
                     choice_updates = []
                     choices = list(q.choices.all())
@@ -1143,7 +1145,7 @@ def edit_quiz_questions(request, pk):
                         correct = selected[0]
                     elif not correct:
                         raise ValueError(f"Question {q.order} : indiquez la réponse correcte.")
-                    updates.append((q, text, correct, explanation, difficulty, points, choice_updates))
+                    updates.append((q, text, correct, regle, explanation, difficulty, points, choice_updates))
             except (ValueError, ValidationError) as exc:
                 messages.error(request, str(exc))
                 return render(request, 'quizzes/edit_questions.html', {
@@ -1160,14 +1162,15 @@ def edit_quiz_questions(request, pk):
                 quiz.save(update_fields=[
                     'title', 'duration', 'seconds_per_question', 'question_count',
                 ])
-                for q, text, correct, explanation, difficulty, points, choice_updates in updates:
+                for q, text, correct, regle, explanation, difficulty, points, choice_updates in updates:
                     q.text = normalize_math_text(text)
                     q.correct_answer = normalize_math_text(correct)
+                    q.regle = normalize_math_text(regle)
                     q.explanation = normalize_math_text(explanation)
                     q.difficulty = difficulty
                     q.points = points
                     q.save(update_fields=[
-                        'text', 'correct_answer', 'explanation', 'difficulty', 'points',
+                        'text', 'correct_answer', 'regle', 'explanation', 'difficulty', 'points',
                     ])
                     for choice, choice_text, is_correct in choice_updates:
                         choice.text = normalize_math_text(choice_text)
@@ -1451,6 +1454,7 @@ def duplicate_quiz(request, pk):
             quiz=new_quiz,
             text=q.text,
             correct_answer=q.correct_answer,
+            regle=q.regle,
             explanation=q.explanation,
             hint=getattr(q, 'hint', '') or '',
             difficulty=q.difficulty,

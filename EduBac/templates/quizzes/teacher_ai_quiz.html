@@ -156,6 +156,13 @@
                     formulaire. Les niveaux de difficulté acceptés sont
                     <code>easy</code>, <code>medium</code> et <code>hard</code>.
                 </p>
+                <p class="form-text">
+                    <code>explication</code> est montrée à l’élève après sa réponse, en deux temps :
+                    <code>regle</code> — la règle ou la propriété du cours utilisée, puis
+                    <code>solution</code> — son application pas à pas jusqu’à la bonne réponse.
+                    Écrivez les formules entre <code>$...$</code> et doublez chaque antislash dans le JSON
+                    (<code>\\times</code>, <code>\\frac</code>).
+                </p>
                 <pre class="bg-light border rounded p-3 small mb-0" style="white-space:pre-wrap;overflow-wrap:anywhere;">{
   "quiz": {
     "title": "Les fonctions numériques",
@@ -171,7 +178,11 @@
       ],
       "correct_answer": "B",
       "difficulty": "easy",
-      "points": 1
+      "points": 1,
+      "explication": {
+        "regle": "Pour calculer l'image de $a$ par $f$, on remplace $x$ par $a$ dans l'expression de $f(x)$.",
+        "solution": "$f(2)=2\\times 2+3=4+3=7$. La bonne réponse est B."
+      }
     }]
   }
 }</pre>
@@ -221,8 +232,8 @@
                         </li>
                         {% endfor %}
                     </ul>
-                    {% if q.explanation %}
-                    <div class="qb-detail-explain"><strong>Explication :</strong> {{ q.explanation|latex }}</div>
+                    {% if q.explanation or q.regle %}
+                    <div class="qb-detail-explain">{% include "quizzes/_explication.html" with regle=q.regle solution=q.explanation compact=True %}</div>
                     {% endif %}
                 </li>
                 {% endfor %}

@@ -1,0 +1,17 @@
+{% load markdown_extras %}{# Explication d'une question : la règle du cours, puis la solution qui l'applique. #}
+{% if regle or solution %}
+<div class="quiz-explication{% if compact %} quiz-explication--compacte{% endif %}">
+    {% if regle %}
+    <div class="quiz-explication__bloc quiz-explication__regle" data-explication-regle>
+        <strong><i class="bi bi-book" aria-hidden="true"></i> Règle du cours</strong>
+        <div class="mt-1 lesson-md">{{ regle|latex }}</div>
+    </div>
+    {% endif %}
+    {% if solution %}
+    <div class="quiz-explication__bloc quiz-explication__solution" data-explication-solution>
+        <strong><i class="bi {% if regle %}bi-pencil-square{% else %}bi-lightbulb{% endif %}" aria-hidden="true"></i> {% if regle %}Solution{% else %}Explication{% endif %}</strong>
+        <div class="mt-1 lesson-md">{{ solution|latex }}</div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}

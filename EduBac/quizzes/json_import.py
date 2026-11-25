@@ -168,6 +168,14 @@ def _parse_question(value, number, seen_ids):
         else:
             hint = content.strip()
 
+    regle = ''
+    if 'explication' in value:
+        if value.get('explanation') not in (None, ''):
+            raise QuizImportError(
+                f"Question {number} : utilisez « explication » ou « explanation », pas les deux."
+            )
+        regle, explanation = _parse_explication(value['explication'], number)
+
     points = _parse_points(value.get('points'), number)
     return {
         'id': question_id,
@@ -176,9 +184,35 @@ def _parse_question(value, number, seen_ids):
         'correct_answer_id': answer_id,
         'difficulty': DIFFICULTY_MAP[difficulty.strip().casefold()],
         'points': points,
+        'regle': regle,
         'explanation': explanation,
         'hint': hint,
     }
+
+
+def _parse_explication(value, number):
+    """« explication » : la règle du cours, puis la solution qui l'applique (les deux obligatoires)."""
+    if not isinstance(value, dict):
+        raise QuizImportError(
+            f"Question {number} : « explication » doit contenir « regle » (la règle du cours) "
+            "et « solution »."
+        )
+    if 'regle' in value and 'règle' in value:
+        raise QuizImportError(f"Question {number} : la règle de l’explication est répétée.")
+    inconnues = set(value) - {'regle', 'règle', 'solution'}
+    if inconnues:
+        raise QuizImportError(
+            f"Question {number} : « explication » accepte seulement « regle » et « solution »."
+        )
+    regle = value.get('regle', value.get('règle'))
+    if regle in (None, '') or (isinstance(regle, str) and not regle.strip()):
+        raise QuizImportError(f"Question {number} : la règle de l’explication est manquante.")
+    solution = value.get('solution')
+    if solution in (None, '') or (isinstance(solution, str) and not solution.strip()):
+        raise QuizImportError(f"Question {number} : la solution de l’explication est manquante.")
+    regle = _nonempty_text(regle, f"Question {number} : la règle de l’explication", 20_000)
+    solution = _nonempty_text(solution, f"Question {number} : la solution de l’explication", 20_000)
+    return regle, solution
 
 
 def validate_quiz_json(upload, selected_lesson=None):
@@ -307,6 +341,7 @@ def create_quiz_from_json(
                 order=order,
                 text=normalize_math_text(source['text']),
                 correct_answer=normalize_math_text(correct['text']),
+                regle=normalize_math_text(source['regle']),
                 explanation=normalize_math_text(source['explanation']),
                 hint=normalize_math_text(source['hint']),
                 difficulty=source['difficulty'],

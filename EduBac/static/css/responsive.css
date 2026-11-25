@@ -31,6 +31,12 @@ svg {
     max-width: 100%;
 }
 
+/* KaTeX dessine certains accents (flèche de \vec, \overrightarrow…) en SVG dans une boîte de
+   largeur nulle : la limite ci-dessus les écrasait et les flèches des vecteurs disparaissaient. */
+.katex svg {
+    max-width: none;
+}
+
 img,
 video {
     height: auto;

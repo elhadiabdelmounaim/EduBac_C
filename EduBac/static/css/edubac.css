@@ -2709,3 +2709,16 @@ html[data-theme="dark"] .qb-detail-explain {
 }
 .recovery-choice:hover, .recovery-choice:focus-visible { border-color: var(--nb-teal); color: var(--nb-ink); }
 .recovery-choice > .bi:first-child { color: var(--nb-teal); font-size: 1.3rem; }
+
+/* Quiz : explication en deux temps — règle du cours, puis solution. */
+.quiz-explication { display: grid; gap: .5rem; }
+.quiz-explication__bloc { padding: .6rem .85rem; border-radius: 10px; border-left: 4px solid; }
+.quiz-explication__regle { background: #EEF4FB; border-color: #1D4E89; }
+.quiz-explication__regle > strong { color: #1D4E89; }
+.quiz-explication__solution { background: #EFF8F2; border-color: #2E8B57; }
+.quiz-explication__solution > strong { color: #237047; }
+.quiz-explication--compacte .quiz-explication__bloc { padding: .45rem .7rem; }
+:root[data-theme="dark"] .quiz-explication__regle { background: rgba(110, 160, 230, .12); border-color: #7FB2F0; }
+:root[data-theme="dark"] .quiz-explication__regle > strong { color: #9CC4F5; }
+:root[data-theme="dark"] .quiz-explication__solution { background: rgba(110, 200, 150, .12); border-color: #7FD8A4; }
+:root[data-theme="dark"] .quiz-explication__solution > strong { color: #8FE0B2; }

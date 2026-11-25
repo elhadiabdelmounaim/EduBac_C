@@ -16,12 +16,7 @@
             {% else %}<i class="bi bi-x-circle text-danger"></i>{% endif %}
         </p>
         <p class="mb-2 small">Bonne réponse : <strong>{{ a.question.correct_answer|latex }}</strong></p>
-        {% if a.question.explanation %}
-        <div class="alert alert-light border mb-0">
-            <strong><i class="bi bi-lightbulb"></i> Explication :</strong>
-            <div class="lesson-md">{{ a.question.explanation|latex }}</div>
-        </div>
-        {% endif %}
+        {% include "quizzes/_explication.html" with regle=a.question.regle solution=a.question.explanation %}
         {% if user.is_teacher and not a.is_correct %}
         <a href="{% url 'ai:assistant' %}" class="btn btn-sm btn-outline-primary mt-2">Demander une autre explication à l'IA</a>
         {% endif %}

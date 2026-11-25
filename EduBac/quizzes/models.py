@@ -143,7 +143,9 @@ class Question(models.Model):
     Question d'un quiz.
     """
     text = models.TextField(verbose_name='Énoncé')
-    explanation = models.TextField(blank=True, verbose_name='Explication')
+    # Explication en deux temps : la règle (propriété du cours), puis la solution qui l'applique.
+    regle = models.TextField(blank=True, verbose_name='Règle du cours')
+    explanation = models.TextField(blank=True, verbose_name='Explication (solution)')
     hint = models.TextField(blank=True, verbose_name='Indice')
     difficulty = models.CharField(
         max_length=20,
