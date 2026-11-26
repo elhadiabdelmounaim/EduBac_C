@@ -138,6 +138,9 @@ def enregistrer(request, pk):
                           sous_titre=e['sous_titre'][:255], order=e['ordre'], minutes=e['minutes'])
             for e in choisis
         ])
+    # Plan entièrement traité avec cette classe : la leçon s'ouvre aux élèves.
+    from . import acces
+    acces.recalculer(classe, lesson)
     return JsonResponse({
         'ok': True, 'cree': cree, 'nombre': len(choisis),
         'message': ('Séance enregistrée' if cree else 'Séance mise à jour')
@@ -287,6 +290,8 @@ def index(request):
     return render(request, 'cahier/index.html', {
         'page_title': 'Cahier de textes', 'niveaux': niveaux, 'total': sum(comptes.values()),
         'directeur': est_directeur(user),
+        'classes_acces': (Classroom.objects.order_by('name') if user.is_staff or user.is_superuser
+                          else Classroom.objects.filter(teacher=user).order_by('name')),
     })
 
 
@@ -380,6 +385,71 @@ def observations(request, pk):
 def supprimer(request, pk):
     seance = get_object_or_404(Seance.objects.select_related('lesson__course'), pk=pk, teacher=request.edubac_user)
     niveau = seance.lesson.course.niveau
+    classe, lesson = seance.classroom, seance.lesson
     seance.delete()
+    from . import acces
+    acces.recalculer(classe, lesson)
     messages.success(request, 'Séance supprimée du cahier de textes.')
     return redirect('cahier:niveau', niveau=niveau)
+
+
+# ─── Accès des élèves aux leçons ─────────────────────────────────────────────
+
+def _classe_geree(user, pk):
+    classe = get_object_or_404(Classroom, pk=pk)
+    if classe.teacher_id != user.pk and not (user.is_staff or user.is_superuser):
+        raise Http404
+    return classe
+
+
+def _lecons_du_niveau(classe):
+    return list(Lesson.objects.filter(course__niveau=classe.niveau)
+                .select_related('course').order_by('course__order', 'order', 'pk'))
+
+
+@teacher_required
+def acces_lecons(request, pk):
+    """Leçons ouvertes ou verrouillées pour les élèves d'une classe, avec l'avancement du cahier."""
+    from . import acces
+    from .models import AccesLecon
+    user = request.edubac_user
+    classe = _classe_geree(user, pk)
+    lecons = _lecons_du_niveau(classe)
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        lecon = next((l for l in lecons if str(l.pk) == request.POST.get('lecon')), None)
+        if lecon is None:
+            messages.error(request, 'Leçon inconnue pour cette classe.')
+        elif action == 'jusqua':
+            cibles = lecons[:lecons.index(lecon) + 1]
+            for l in cibles:
+                acces.decider(classe, l, AccesLecon.OUVERT, user)
+            messages.success(request, f'{len(cibles)} leçon(s) ouvertes aux élèves de {classe.name}.')
+        elif action in ('ouvrir', 'fermer', 'auto'):
+            decision = {'ouvrir': AccesLecon.OUVERT, 'fermer': AccesLecon.FERME, 'auto': ''}[action]
+            etat_ = acces.decider(classe, lecon, decision, user)
+            messages.success(request, f'« {lecon.title} » : '
+                             + ('ouverte aux élèves.' if etat_.est_ouverte else 'verrouillée pour les élèves.'))
+        else:
+            messages.error(request, 'Action inconnue.')
+        if lecon and request.POST.get('retour') == 'lecon':
+            return redirect('education:lesson_detail', pk=lecon.pk)
+        return redirect(reverse('cahier:acces', args=[classe.pk]) + (f'#lecon-{lecon.pk}' if lecon else ''))
+    lignes_acces = {a.lesson_id: a for a in AccesLecon.objects.filter(classroom=classe)}
+    lignes = []
+    for lecon in lecons:
+        faites, total = acces.avancement(classe, lecon)
+        a = lignes_acces.get(lecon.pk)
+        lignes.append({
+            'lecon': lecon, 'faites': faites, 'total': total,
+            'pourcent': round(100 * faites / total) if total else None,
+            'ouverte': bool(a and a.est_ouverte),
+            'decision': a.decision if a else '',
+            'termine_auto': bool(a and a.termine_auto),
+        })
+    return render(request, 'cahier/acces.html', {
+        'classe': classe, 'lignes': lignes,
+        'classes': Classroom.objects.filter(teacher=user).order_by('name')
+                   if not (user.is_staff or user.is_superuser) else Classroom.objects.order_by('name'),
+        'page_title': f'Accès des élèves — {classe.name}',
+    })

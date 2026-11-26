@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load edubac_assets %}
+{% block extra_css %}<link rel="stylesheet" href="{% asset 'css/cahier.css' %}">{% endblock %}
+{% block content %}
+<div class="cahier-page acces-page">
+  <header class="cahier-entete">
+    <div class="cahier-entete-icone" aria-hidden="true"><i class="bi bi-lock"></i></div>
+    <div>
+      <h1>Accès des élèves — {{ classe.name }}</h1>
+      <p>{{ classe.get_niveau_display }} · Les élèves ne peuvent ouvrir ni télécharger une leçon (cours, PDF, exercices) tant qu’elle est verrouillée.</p>
+    </div>
+  </header>
+
+  {% if classes|length > 1 %}
+  <nav class="acces-classes" aria-label="Autres classes">
+    {% for c in classes %}
+    <a href="{% url 'cahier:acces' c.pk %}" class="btn btn-sm {% if c.pk == classe.pk %}btn-primary{% else %}btn-outline-primary{% endif %}"{% if c.pk == classe.pk %} aria-current="page"{% endif %}>{{ c.name }}</a>
+    {% endfor %}
+  </nav>
+  {% endif %}
+
+  <p class="acces-aide"><i class="bi bi-info-circle" aria-hidden="true"></i>
+    <strong>Automatique</strong> : la leçon s’ouvre quand tous les éléments de son plan sont cochés dans les séances de cette classe.
+    Votre choix « Ouvrir » ou « Verrouiller » l’emporte ; « Automatique » revient au cahier de textes.
+    Les élèves reçoivent une notification à la première ouverture.</p>
+
+  <ol class="acces-liste">
+    {% for l in lignes %}
+    <li class="acces-ligne {% if l.ouverte %}est-ouverte{% else %}est-verrouillee{% endif %}" id="lecon-{{ l.lecon.pk }}" data-lecon="{{ l.lecon.pk }}">
+      <div class="acces-etat" aria-hidden="true"><i class="bi {% if l.ouverte %}bi-unlock-fill{% else %}bi-lock-fill{% endif %}"></i></div>
+      <div class="acces-info">
+        <a href="{% url 'education:lesson_detail' l.lecon.pk %}" class="acces-titre">{{ l.lecon.title }}</a>
+        <span class="acces-statut" data-statut>
+          {% if l.ouverte %}Ouverte aux élèves{% else %}Verrouillée{% endif %}
+          · {% if l.decision == 'ouvert' %}ouverte par vous{% elif l.decision == 'ferme' %}verrouillée par vous{% else %}automatique{% endif %}
+        </span>
+        {% if l.total %}
+        <span class="acces-avancement">
+          <span class="acces-barre" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ l.pourcent }}" aria-label="Plan traité dans le cahier"><span style="width: {{ l.pourcent }}%"></span></span>
+          {{ l.faites }}/{{ l.total }} éléments du plan traités
+        </span>
+        {% else %}
+        <span class="acces-avancement text-muted">Pas de plan en ligne : ouverture manuelle uniquement.</span>
+        {% endif %}
+      </div>
+      <form method="post" class="acces-actions">
+        {% csrf_token %}
+        <input type="hidden" name="lecon" value="{{ l.lecon.pk }}">
+        {% if not l.ouverte %}<button class="btn btn-sm btn-success" name="action" value="ouvrir"><i class="bi bi-unlock" aria-hidden="true"></i> Ouvrir</button>{% endif %}
+        {% if l.ouverte %}<button class="btn btn-sm btn-outline-danger" name="action" value="fermer"><i class="bi bi-lock" aria-hidden="true"></i> Verrouiller</button>{% endif %}
+        {% if l.decision %}<button class="btn btn-sm btn-outline-secondary" name="action" value="auto">Automatique</button>{% endif %}
+        <button class="btn btn-sm btn-link" name="action" value="jusqua" title="Ouvrir cette leçon et toutes celles qui la précèdent">Ouvrir jusqu’ici</button>
+      </form>
+    </li>
+    {% empty %}
+    <li class="acces-vide">Aucune leçon pour ce niveau.</li>
+    {% endfor %}
+  </ol>
+</div>
+{% endblock %}

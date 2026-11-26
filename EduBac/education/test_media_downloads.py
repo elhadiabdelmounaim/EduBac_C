@@ -15,6 +15,8 @@ class LessonPdfDownloadTests(TestCase):
         self.media_override = override_settings(MEDIA_ROOT=self.temp_media.name)
         self.media_override.enable()
         self.addCleanup(self.media_override.disable)
+        from .test_course_html import connecter_professeur
+        connecter_professeur(self.client)
         course = Course.objects.create(
             name='Mathématiques',
             niveau='tronc_commun',

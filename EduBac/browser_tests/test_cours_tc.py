@@ -50,6 +50,8 @@ ETAT = """() => {
 }"""
 
 
+from .acces_eleve import session_eleve_avec_acces
+
 class CoursTroncCommunBrowserTests(StaticLiveServerTestCase):
     def setUp(self):
         course = Course.objects.create(name='Mathématiques', niveau='tronc_commun')
@@ -60,6 +62,7 @@ class CoursTroncCommunBrowserTests(StaticLiveServerTestCase):
         session['user_id'] = prof.pk
         session.save()
         self.teacher_session = session.session_key
+        self.student_session = session_eleve_avec_acces([l for l, _ in self.lessons])
         self.playwright = sync_playwright().start()
         executable = os.environ.get('CHROMIUM_EXECUTABLE') or shutil.which('chromium')
         self.browser = self.playwright.chromium.launch(
@@ -74,6 +77,9 @@ class CoursTroncCommunBrowserTests(StaticLiveServerTestCase):
         context = self.browser.new_context(viewport={'width': width, 'height': height})
         if teacher:
             context.add_cookies([{'name': settings.SESSION_COOKIE_NAME, 'value': self.teacher_session,
+                                  'url': self.live_server_url}])
+        else:
+            context.add_cookies([{'name': settings.SESSION_COOKIE_NAME, 'value': self.student_session,
                                   'url': self.live_server_url}])
         page = context.new_page()
         page.route('https://fonts.googleapis.com/**', lambda route: route.abort())

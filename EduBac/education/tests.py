@@ -147,6 +147,17 @@ class CurriculumAutoLoadViewTests(TestCase):
             page = self.client.get(reverse('education:niveau_detail', kwargs={'niveau': 'tronc_commun'}))
             self.assertEqual(page.status_code, 200)
             lesson = Lesson.objects.filter(course__niveau='tronc_commun').order_by('order').first()
-            self.assertContains(page, reverse('education:lesson_detail', args=[lesson.pk]))
-            self.assertEqual(self.client.get(reverse('education:lesson_detail', args=[lesson.pk])).status_code, 200)
+            # Tous les niveaux restent consultables (titres), mais une leçon ne s'ouvre à l'élève
+            # qu'une fois traitée dans l'une de ses classes.
+            self.assertContains(page, lesson.title)
+            self.assertContains(page, 'data-verrou')
+            url = reverse('education:lesson_detail', args=[lesson.pk])
+            self.assertEqual(self.client.get(url).status_code, 403)
+            from cahier.models import AccesLecon
+            from classrooms.models import Classroom, ClassroomMember
+            eleve = User.objects.get(username='curriculum_student')
+            classe = Classroom.objects.create(name='TC A', niveau='tronc_commun')
+            ClassroomMember.objects.create(classroom=classe, user=eleve)
+            AccesLecon.objects.create(classroom=classe, lesson=lesson, decision=AccesLecon.OUVERT)
+            self.assertEqual(self.client.get(url).status_code, 200)
         self.assertNotContains(page, "n'est pas associé à votre compte")

@@ -28,6 +28,18 @@
     {% endfor %}
   </div>
 
+  {% if classes_acces %}
+  <section class="cahier-acces-raccourcis" aria-labelledby="acces-titre">
+    <h2 id="acces-titre"><i class="bi bi-lock" aria-hidden="true"></i> Accès des élèves aux leçons</h2>
+    <p>Une leçon s’ouvre aux élèves quand le cahier de textes de la classe couvre tout son plan, ou quand vous l’ouvrez vous-même.</p>
+    <div class="cahier-acces-classes">
+      {% for c in classes_acces %}
+      <a class="btn btn-outline-primary btn-sm" href="{% url 'cahier:acces' c.pk %}">{{ c.name }} <span class="text-muted">· {{ c.get_niveau_display }}</span></a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
   {% if not total %}
   <p class="cahier-aide">Pour remplir le cahier : ouvrez un cours en ligne, cliquez sur « Séance », cochez ce que vous avez traité puis « Enregistrer ».</p>
   {% endif %}

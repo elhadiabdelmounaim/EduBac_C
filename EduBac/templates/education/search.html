@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load acces_lecons %}
 {% block content %}
 <h1 class="h3 fw-bold mb-3" style="color:var(--edubac-navy);">Recherche</h1>
 <form method="get" class="mb-4">
@@ -28,7 +29,7 @@
         <ul class="list-group shadow-sm">
             {% for l in lessons %}
             <li class="list-group-item">
-                <a href="{% url 'education:lesson_detail' l.pk %}">{{ l.title }}</a>
+                <a href="{% url 'education:lesson_detail' l.pk %}">{{ l.title }}</a>{% if l|verrouillee:request %} <span class="lecon-verrou-badge" data-verrou><i class="bi bi-lock-fill" aria-hidden="true"></i> Après la séance</span>{% endif %}
                 <span class="small text-muted"> — {{ l.course.get_niveau_display }}</span>
             </li>
             {% empty %}

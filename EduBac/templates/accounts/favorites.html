@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load acces_lecons %}
 {% block content %}
 <h1 class="h3 fw-bold mb-4" style="color:var(--edubac-navy);">Mes favoris</h1>
 {% if favs %}
@@ -6,7 +7,7 @@
 {% for f in favs %}
     <li class="list-group-item d-flex justify-content-between align-items-center">
         <div>
-            <a href="{% url 'education:lesson_detail' f.lesson.pk %}">{{ f.lesson.title }}</a>
+            <a href="{% url 'education:lesson_detail' f.lesson.pk %}">{{ f.lesson.title }}</a>{% if f.lesson|verrouillee:request %} <span class="lecon-verrou-badge" data-verrou><i class="bi bi-lock-fill" aria-hidden="true"></i> Après la séance</span>{% endif %}
             <div class="small text-muted">{{ f.lesson.course.get_niveau_display }}</div>
         </div>
         <i class="bi bi-star-fill text-warning"></i>

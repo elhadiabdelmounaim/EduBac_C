@@ -12,5 +12,6 @@ urlpatterns = [
     path('seance/<int:pk>/observations/', views.observations, name='observations'),
     path('seance/<int:pk>/supprimer/', views.supprimer, name='supprimer'),
     path('lecon/<int:pk>/etat/', views.etat, name='etat'),
+    path('classe/<int:pk>/acces/', views.acces_lecons, name='acces'),
     path('lecon/<int:pk>/enregistrer/', views.enregistrer, name='enregistrer'),
 ]

@@ -53,6 +53,7 @@
     </div>
     {% if is_teacher_owner %}
     <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'cahier:acces' classroom.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-lock" aria-hidden="true"></i> Accès aux leçons</a>
         <a href="{% url 'classrooms:edit' classroom.pk %}" class="btn btn-sm btn-outline-primary">Modifier</a>
         <form method="post" action="{% url 'classrooms:toggle_active' classroom.pk %}">
             {% csrf_token %}

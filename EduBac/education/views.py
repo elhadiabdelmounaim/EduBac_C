@@ -96,6 +96,7 @@ def niveau_detail(request, niveau):
     # Contenu public : tous les niveaux sont consultables par tous (visiteur, élève, enseignant),
     # quel que soit le niveau du profil. Seules les fonctions privées (classes, quiz assignés,
     # résultats…) dépendent du compte.
+    from cahier.acces import peut_voir
     _ensure_curriculum_loaded()
     meta = next((n for n in CURRICULUM if n['code'] == niveau), None)
     label = meta['label'] if meta else niveau
@@ -122,6 +123,7 @@ def niveau_detail(request, niveau):
             has_file = fp.is_file() and fp.stat().st_size > 0
         lessons.append({
             'obj': lesson, 'has_file': has_file,
+            'verrouillee': not peut_voir(request, lesson),
             'documents': lesson_documents,
             'course_html_url': html_url,
         })
@@ -145,6 +147,30 @@ def course_detail(request, pk):
 
 
 VISIBLES = {'.pdf', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.txt'}   # pas de SVG : il peut contenir du script
+
+
+def _lecon_verrouillee(request, lesson):
+    """Page « Disponible après la séance » si l'élève (ou le visiteur) n'a pas encore accès à la
+    leçon ; None sinon. Protège la page, le cours en ligne et chaque fichier (ouvrir ou télécharger)."""
+    from cahier.acces import peut_voir
+    if peut_voir(request, lesson):
+        return None
+    return render(request, 'education/lecon_verrouillee.html', {
+        'lesson': lesson, 'course': lesson.course, 'page_title': lesson.title,
+        'connecte': bool(getattr(request, 'edubac_user', None)),
+    }, status=403)
+
+
+def _acces_classes_du_professeur(request, lesson):
+    """Pour le professeur : la leçon est-elle ouverte aux élèves de chacune de ses classes du niveau ?"""
+    user = getattr(request, 'edubac_user', None)
+    if not user or not user.is_teacher():
+        return []
+    from cahier.models import AccesLecon
+    from classrooms.models import Classroom
+    classes = list(Classroom.objects.filter(teacher=user, niveau=lesson.course.niveau).order_by('name'))
+    etats = {a.classroom_id: a for a in AccesLecon.objects.filter(lesson=lesson, classroom__in=classes)}
+    return [{'classe': c, 'ouverte': bool(etats.get(c.pk) and etats[c.pk].est_ouverte)} for c in classes]
 
 
 def _documents_lecon(lesson, resources, resource_descriptions, course_html_url):
@@ -190,6 +216,9 @@ def _documents_lecon(lesson, resources, resource_descriptions, course_html_url):
 
 def lesson_detail(request, pk):
     lesson = get_object_or_404(Lesson, pk=pk)
+    verrou = _lecon_verrouillee(request, lesson)
+    if verrou:
+        return verrou
     from .media_library import chapter_relative, course_book_data, course_html_template, documents
     course_content_error = ''
     try:
@@ -244,6 +273,7 @@ def lesson_detail(request, pk):
                 faq_items.append({'q': line, 'a': ''})
     docs = _documents_lecon(lesson, resources, resource_descriptions, course_html_url)
     return render(request, 'education/lesson_detail.html', {
+        'acces_classes': _acces_classes_du_professeur(request, lesson),
         'lesson': lesson,
         'course_content': course_content,
         'course_content_error': course_content_error,
@@ -292,6 +322,9 @@ def resource_download(request, pk, resource_id):
         or relative.parts[0] != 'resources'
     ):
         raise Http404
+    verrou = _lecon_verrouillee(request, lesson)
+    if verrou:
+        return verrou
     root = Path(settings.MEDIA_ROOT).resolve()
     candidate = root / relative
     if candidate.is_symlink():
@@ -322,6 +355,9 @@ def lesson_document(request, pk, kind, filename):
     lesson = get_object_or_404(Lesson, pk=pk)
     if kind not in ('Cours', 'Exercices'):
         raise Http404
+    verrou = _lecon_verrouillee(request, lesson)
+    if verrou:
+        return verrou
     path = next((p for p in documents(lesson, kind) if p.name == filename), None)
     if path is None:
         raise Http404
@@ -343,6 +379,9 @@ def lesson_course_html(request, pk):
     template = course_html_template(lesson)
     if template is None:
         raise Http404
+    verrou = _lecon_verrouillee(request, lesson)
+    if verrou:
+        return verrou
     # Le mode « Présenter » (vidéoprojecteur) est réservé aux professeurs et aux administrateurs.
     is_teacher = getattr(request.user, 'is_teacher', None)
     can_present = bool(request.user.is_authenticated and callable(is_teacher) and is_teacher())
@@ -364,6 +403,9 @@ def lesson_book_3d(request, pk):
     data = course_book_data(lesson)
     if data is None:
         raise Http404
+    verrou = _lecon_verrouillee(request, lesson)
+    if verrou:
+        return verrou
     return render(request, 'education/cours/livre3d.html', {
         'lesson': lesson, 'course': lesson.course, 'livre': data,
     })
@@ -375,6 +417,9 @@ def lesson_pdf(request, pk):
     lesson = get_object_or_404(Lesson, pk=pk)
     if not lesson.pdf:
         raise Http404
+    verrou = _lecon_verrouillee(request, lesson)
+    if verrou:
+        return verrou
     try:
         handle = lesson.pdf.open('rb')
     except FileNotFoundError:

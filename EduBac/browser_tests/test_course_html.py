@@ -16,6 +16,8 @@ BLOCS = 51          # blocs du cours « Produit scalaire » (dont l'activité d'
 POINTS = 131        # éléments de liste <li> du cours (dont 16 dans l'activité : questions, réponses, points d'étape)
 
 
+from .acces_eleve import session_eleve_avec_acces
+
 class CourseHtmlBrowserTests(StaticLiveServerTestCase):
     def setUp(self):
         course = Course.objects.create(name='Mathématiques', niveau='1ere_bac_sc')
@@ -26,6 +28,7 @@ class CourseHtmlBrowserTests(StaticLiveServerTestCase):
         session['user_id'] = prof.pk
         session.save()
         self.teacher_session = session.session_key
+        self.student_session = session_eleve_avec_acces([self.lesson])
         self.playwright = sync_playwright().start()
         executable = os.environ.get('CHROMIUM_EXECUTABLE') or shutil.which('chromium')
         self.browser = self.playwright.chromium.launch(
@@ -41,6 +44,9 @@ class CourseHtmlBrowserTests(StaticLiveServerTestCase):
         if teacher:
             # Le mode « Présenter » est réservé aux professeurs : session d'un compte professeur.
             context.add_cookies([{'name': settings.SESSION_COOKIE_NAME, 'value': self.teacher_session,
+                                  'url': self.live_server_url}])
+        else:
+            context.add_cookies([{'name': settings.SESSION_COOKIE_NAME, 'value': self.student_session,
                                   'url': self.live_server_url}])
         page = context.new_page()
         # Les polices Google sont facultatives : on ne dépend pas du réseau.

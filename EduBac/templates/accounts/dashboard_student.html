@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load acces_lecons %}
 {% block content %}
 <header class="dash-hello">
     <div>
@@ -53,7 +54,7 @@
 <div class="continue-card fade-up">
     <div>
         <h3><i class="bi bi-play-circle me-1"></i> Continuer l'apprentissage</h3>
-        <p>{{ continue_lesson.title }} · {{ continue_lesson.course.name }}</p>
+        <p>{{ continue_lesson.title }} · {{ continue_lesson.course.name }}{% if continue_lesson|verrouillee:request %} <span class="lecon-verrou-badge" data-verrou><i class="bi bi-lock-fill" aria-hidden="true"></i> Après la séance</span>{% endif %}</p>
     </div>
     <a href="{% url 'education:lesson_detail' continue_lesson.pk %}" class="btn btn-sm">Reprendre →</a>
 </div>

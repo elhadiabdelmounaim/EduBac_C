@@ -54,3 +54,42 @@ class SeanceElement(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class AccesLecon(models.Model):
+    """Accès des élèves d'une classe à une leçon (cours, PDF, exercices).
+
+    La leçon s'ouvre d'elle-même quand le cahier de textes de la classe couvre tout son plan
+    (`termine_auto`) ; la décision du professeur (`decision`), si elle existe, l'emporte dans
+    les deux sens. Sans ligne : leçon verrouillée."""
+    OUVERT = 'ouvert'
+    FERME = 'ferme'
+    DECISIONS = [('', 'Automatique (cahier de textes)'), (OUVERT, 'Ouverte'), (FERME, 'Verrouillée')]
+
+    classroom = models.ForeignKey('classrooms.Classroom', on_delete=models.CASCADE,
+                                  related_name='acces_lecons', verbose_name='Classe')
+    lesson = models.ForeignKey('education.Lesson', on_delete=models.CASCADE,
+                               related_name='acces_classes', verbose_name='Leçon')
+    termine_auto = models.BooleanField(default=False, verbose_name='Plan terminé (cahier)')
+    decision = models.CharField(max_length=10, choices=DECISIONS, blank=True, default='',
+                                verbose_name='Décision du professeur')
+    decide_par = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
+                                   blank=True, related_name='+', verbose_name='Décidé par')
+    ouverte_le = models.DateTimeField(null=True, blank=True, verbose_name='Ouverte aux élèves le')
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Accès à une leçon'
+        verbose_name_plural = 'Accès aux leçons'
+        constraints = [
+            models.UniqueConstraint(fields=['classroom', 'lesson'], name='cahier_acces_unique'),
+        ]
+
+    def __str__(self):
+        return f'{self.classroom} · {self.lesson.title} · {"ouverte" if self.est_ouverte else "verrouillée"}'
+
+    @property
+    def est_ouverte(self):
+        if self.decision:
+            return self.decision == self.OUVERT
+        return self.termine_auto

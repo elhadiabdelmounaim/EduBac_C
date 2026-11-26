@@ -112,3 +112,30 @@ body.cahier-avec-selection .cahier-page { padding-bottom: 90px; }
 .cahier-suivi-meta { margin: 0 0 4px; font-size: .85rem; color: var(--nb-muted, #56627a); }
 .cahier-duree-champ { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 8px; font-size: .9rem; }
 .cahier-duree-champ input { width: 110px; }
+
+/* ─── Accès des élèves aux leçons ─────────────────────────────────────────── */
+.cahier-acces-raccourcis { margin-top: 1.5rem; padding: 1rem 1.1rem; border-radius: 14px; background: var(--bs-body-bg, #fff); border: 1px solid rgba(0,0,0,.08); }
+.cahier-acces-raccourcis h2 { font-size: 1.05rem; margin: 0 0 .3rem; }
+.cahier-acces-raccourcis p { font-size: .9rem; color: var(--bs-secondary-color, #6c757d); margin: 0 0 .6rem; }
+.cahier-acces-classes { display: flex; flex-wrap: wrap; gap: .4rem; }
+.acces-classes { display: flex; flex-wrap: wrap; gap: .4rem; margin: .8rem 0; }
+.acces-aide { font-size: .88rem; color: var(--bs-secondary-color, #6c757d); background: rgba(13,110,253,.06); border-radius: 10px; padding: .6rem .8rem; }
+.acces-liste { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: .55rem; }
+.acces-ligne { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .8rem; align-items: center;
+  padding: .75rem .9rem; border-radius: 12px; border: 1px solid rgba(0,0,0,.08); background: var(--bs-body-bg, #fff); }
+.acces-ligne.est-ouverte { border-left: 4px solid #198754; }
+.acces-ligne.est-verrouillee { border-left: 4px solid #adb5bd; }
+.acces-etat { font-size: 1.3rem; }
+.est-ouverte .acces-etat { color: #198754; }
+.est-verrouillee .acces-etat { color: #6c757d; }
+.acces-info { display: grid; gap: .15rem; min-width: 0; }
+.acces-titre { font-weight: 600; text-decoration: none; }
+.acces-statut, .acces-avancement { font-size: .82rem; color: var(--bs-secondary-color, #6c757d); }
+.acces-avancement { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.acces-barre { display: inline-block; width: 110px; height: 6px; border-radius: 99px; background: rgba(0,0,0,.1); overflow: hidden; }
+.acces-barre > span { display: block; height: 100%; background: #198754; }
+.acces-actions { display: flex; flex-wrap: wrap; gap: .3rem; justify-content: flex-end; }
+@media (max-width: 640px) {
+  .acces-ligne { grid-template-columns: auto minmax(0, 1fr); }
+  .acces-actions { grid-column: 1 / -1; justify-content: flex-start; }
+}

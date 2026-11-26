@@ -4,6 +4,7 @@ interrompue par l'utilisateur, retour à la vue d'ensemble, animations réduites
 import os
 import shutil
 
+from django.conf import settings
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.urls import reverse
 from playwright.sync_api import sync_playwright
@@ -11,11 +12,14 @@ from playwright.sync_api import sync_playwright
 from education.models import Course, Lesson
 
 
+from .acces_eleve import session_eleve_avec_acces
+
 class Livre3DBrowserTests(StaticLiveServerTestCase):
     def setUp(self):
         course = Course.objects.create(name='Mathématiques', niveau='1ere_bac_sc')
         self.lesson = Lesson.objects.create(
             title='Le produit scalaire dans le plan', content='', course=course, order=4)
+        self.student_session = session_eleve_avec_acces([self.lesson])
         self.playwright = sync_playwright().start()
         executable = os.environ.get('CHROMIUM_EXECUTABLE') or shutil.which('chromium')
         self.browser = self.playwright.chromium.launch(
@@ -29,6 +33,8 @@ class Livre3DBrowserTests(StaticLiveServerTestCase):
     def open(self, width=1440, height=900, touch=False, reduced=False):
         context = self.browser.new_context(viewport={'width': width, 'height': height}, has_touch=touch,
                                            reduced_motion='reduce' if reduced else 'no-preference')
+        context.add_cookies([{'name': settings.SESSION_COOKIE_NAME, 'value': self.student_session,
+                              'url': self.live_server_url}])
         page = context.new_page()
         page.route('https://fonts.googleapis.com/**', lambda route: route.abort())
         page.route('https://fonts.gstatic.com/**', lambda route: route.abort())

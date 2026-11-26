@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<nav class="lesson-breadcrumb mb-3" aria-label="Fil d’Ariane">
+    <a href="{% url 'education:niveau_detail' course.niveau %}">{{ course.get_niveau_display }}</a>
+    <span aria-hidden="true">›</span>
+    <span>{{ lesson.title }}</span>
+</nav>
+<section class="lecon-verrouillee card border-0 shadow-sm" data-lecon-verrouillee>
+    <div class="card-body text-center py-5 px-3">
+        <div class="lecon-verrouillee__icone" aria-hidden="true"><i class="bi bi-lock-fill"></i></div>
+        <h1 class="h4 fw-bold mt-3">{{ lesson.title }}</h1>
+        <p class="lead mb-2">Disponible après la séance</p>
+        <p class="text-muted mb-4">
+            {% if connecte %}
+            Ce cours, son PDF et ses exercices s’ouvriront dès que la leçon aura été traitée en classe.
+            Vous recevrez une notification.
+            {% else %}
+            Connectez-vous avec votre compte élève : les leçons traitées en classe sont disponibles dans votre espace.
+            {% endif %}
+        </p>
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+            <a class="btn btn-outline-primary" href="{% url 'education:niveau_detail' course.niveau %}"><i class="bi bi-arrow-left" aria-hidden="true"></i> Toutes les leçons</a>
+            {% if not connecte %}<a class="btn btn-edubac" href="{% url 'accounts:login' %}"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Se connecter</a>{% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -10,6 +10,11 @@ from education.models import Course, Lesson
 
 
 class MediaFoldersTests(TestCase):
+    def setUp(self):
+        # Pages et fichiers des leçons vus par un professeur (accès des élèves : cahier/test_acces_lecons.py).
+        from .test_course_html import connecter_professeur
+        connecter_professeur(self.client)
+
     def test_lesson_footer_navigation_handles_first_middle_last_and_single(self):
         course = Course.objects.create(name='Mathématiques', niveau='1ere_bac_sc')
         lessons = [

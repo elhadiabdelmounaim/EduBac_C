@@ -27,13 +27,19 @@
                     <span class="d-flex align-items-center gap-2 min-width-0">
                         <span class="lesson-num">{{ forloop.counter }}</span>
                         <span class="fw-semibold text-truncate">{{ item.obj.title }}</span>
-                        {% if item.has_file %}
+                        {% if item.verrouillee %}
+                        <span class="lecon-verrou-badge" data-verrou><i class="bi bi-lock-fill" aria-hidden="true"></i> Après la séance</span>
+                        {% elif item.has_file %}
                         <span class="badge bg-success">PDF</span>
                         {% endif %}
                     </span>
                     <i class="bi bi-chevron-down lesson-chevron flex-shrink-0"></i>
                 </button>
                 <div class="lesson-panel d-none px-3 pb-3">
+                    {% if item.verrouillee %}
+                    <p class="small text-muted mb-0"><i class="bi bi-lock-fill" aria-hidden="true"></i>
+                        Disponible après la séance : le cours, le PDF et les exercices s’ouvriront quand la leçon aura été traitée en classe.</p>
+                    {% else %}
                     <div class="d-flex flex-wrap gap-2">
                         {% if item.documents %}
                         {% for document in item.documents %}
@@ -79,6 +85,7 @@
                         <span class="small text-muted align-self-center">Fichier bientôt disponible</span>
                         {% endif %}
                     </div>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}

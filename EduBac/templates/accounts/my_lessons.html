@@ -1,11 +1,12 @@
 {% extends "base.html" %}
+{% load acces_lecons %}
 {% block content %}
 <header class="page-head"><div><h1 class="h3 mb-1">Mes leçons</h1></div></header>
 {% if lessons %}
 <div class="list-group shadow-sm">
 {% for l in lessons %}
     <a href="{% url 'education:lesson_detail' l.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center gap-2">
-        <span class="min-width-0"><strong>{{ l.course.name }}</strong> — {{ l.title }}</span>
+        <span class="min-width-0"><strong>{{ l.course.name }}</strong> — {{ l.title }}{% if l|verrouillee:request %} <span class="lecon-verrou-badge" data-verrou><i class="bi bi-lock-fill" aria-hidden="true"></i> Après la séance</span>{% endif %}</span>
         <i class="bi bi-chevron-right" aria-hidden="true"></i>
     </a>
 {% endfor %}

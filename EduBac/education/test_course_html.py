@@ -7,6 +7,16 @@ from django.urls import reverse
 from .models import Course, Lesson
 
 
+def connecter_professeur(client):
+    """Ces tests portent sur l'affichage du cours : un professeur voit toutes les leçons
+    (les élèves n'y ont accès qu'une fois la leçon traitée, voir cahier/test_acces_lecons.py)."""
+    from django.contrib.auth import get_user_model
+    prof = get_user_model().objects.create_user(username='prof-affichage', email='pa@example.test', role='teacher')
+    session = client.session
+    session['user_id'] = prof.pk
+    session.save()
+
+
 @override_settings(ALLOWED_HOSTS=['testserver'])
 class CourseHtmlTests(TestCase):
     """Cours en ligne (HTML) : « Ouvrir » affiche le cours, « Télécharger » garde le PDF."""
@@ -23,6 +33,7 @@ class CourseHtmlTests(TestCase):
         self.other = Lesson.objects.create(
             title='Les ensembles', content='',
             course=Course.objects.create(name='Mathématiques TC', niveau='tronc_commun'), order=1)
+        connecter_professeur(self.client)
 
     def add_pdf(self, lesson_folder, name='produit_scalaire.pdf', niveau='1BAC_SE'):
         folder = Path(self.temp_media.name) / 'lessons' / niveau / lesson_folder / 'Cours'
@@ -96,6 +107,7 @@ class CourseBook3DTests(TestCase):
         self.lesson = Lesson.objects.create(
             title='Le produit scalaire dans le plan', content='', course=course, order=4)
         self.other = Lesson.objects.create(title='Calcul trigonométrique', content='', course=course, order=6)
+        connecter_professeur(self.client)
 
     def test_book_page_embeds_lessons_and_local_three_js(self):
         response = self.client.get(reverse('education:lesson_book_3d', args=[self.lesson.pk]))
@@ -149,9 +161,18 @@ class CoursePresentationAccessTests(TestCase):
 
     def test_visitor_and_student_cannot_present(self):
         from django.contrib.auth import get_user_model
-        self.assertFalse(self.has_button())
+        from cahier.models import AccesLecon
+        from classrooms.models import Classroom, ClassroomMember
+        # Visiteur : la leçon est verrouillée (et donc aucun bouton « Présenter »).
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 403)
+        self.assertNotIn('id="coursPresenter"', response.content.decode())
+        # Élève d'une classe où la leçon est ouverte : le cours, sans « Présenter ».
         student = get_user_model().objects.create_user(
             username='eleve', email='eleve@example.test', role='student')
+        classe = Classroom.objects.create(name='1BAC', niveau='1ere_bac_sc')
+        ClassroomMember.objects.create(classroom=classe, user=student)
+        AccesLecon.objects.create(classroom=classe, lesson=self.lesson, decision=AccesLecon.OUVERT)
         self.login_as(student)
         self.assertFalse(self.has_button())
 

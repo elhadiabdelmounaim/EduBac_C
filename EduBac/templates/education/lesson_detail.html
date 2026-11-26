@@ -392,6 +392,33 @@ html[data-theme="dark"] #lessonContent.lesson-md--boxed .course-box--note {
     {% endif %}
 </div>
 
+{% if acces_classes %}
+<section class="lecon-acces card border-0 shadow-sm mb-3" aria-labelledby="leconAccesTitre" data-acces-lecon>
+    <div class="card-body py-2">
+        <h2 class="h6 fw-bold mb-2" id="leconAccesTitre"><i class="bi bi-lock" aria-hidden="true"></i> Accès des élèves à cette leçon</h2>
+        <ul class="lecon-acces__liste">
+            {% for a in acces_classes %}
+            <li class="{% if a.ouverte %}est-ouverte{% else %}est-verrouillee{% endif %}">
+                <span><i class="bi {% if a.ouverte %}bi-unlock-fill text-success{% else %}bi-lock-fill text-secondary{% endif %}" aria-hidden="true"></i>
+                    <strong>{{ a.classe.name }}</strong> — {% if a.ouverte %}ouverte aux élèves{% else %}verrouillée{% endif %}</span>
+                <form method="post" action="{% url 'cahier:acces' a.classe.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="lecon" value="{{ lesson.pk }}">
+                    <input type="hidden" name="retour" value="lecon">
+                    {% if a.ouverte %}
+                    <button class="btn btn-sm btn-outline-danger" name="action" value="fermer">Verrouiller</button>
+                    {% else %}
+                    <button class="btn btn-sm btn-success" name="action" value="ouvrir">Ouvrir aux élèves</button>
+                    {% endif %}
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+        <a class="small" href="{% url 'cahier:acces' acces_classes.0.classe.pk %}">Gérer toutes les leçons de mes classes</a>
+    </div>
+</section>
+{% endif %}
+
 {% if lesson.summary %}
 <div class="card shadow-sm mb-3 border-0" style="border-left:4px solid var(--edubac-accent)!important;border-radius:16px;">
     <div class="card-body">

@@ -23,6 +23,10 @@ class DocumentsLeconTests(TestCase):
         course = Course.objects.create(name='Mathématiques', niveau='2eme_bac_pc')
         self.lesson = Lesson.objects.create(course=course, title='Limites et continuité', order=1, content='x')
         self.url = reverse('education:lesson_detail', args=[self.lesson.pk])
+        # Affichage et téléchargement des documents : vus par un professeur (pour les élèves,
+        # la leçon s'ouvre une fois traitée — voir cahier/test_acces_lecons.py).
+        from .test_course_html import connecter_professeur
+        connecter_professeur(self.client)
 
     def ressource(self, nom, fichier, contenu, categorie, **extra):
         return Resources.objects.create(lesson=self.lesson, name=nom, categorie=categorie,

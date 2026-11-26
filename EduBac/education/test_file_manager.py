@@ -37,6 +37,10 @@ class AdminFileManagerTests(TestCase):
             password='not-used-by-force-login',
         )
         self.client.force_login(self.admin_user)
+        # Session EduBac de l'administrateur : il voit toutes les leçons sur le site.
+        session = self.client.session
+        session['user_id'] = self.admin_user.pk
+        session.save()
         self.url = reverse('admin:education_course_file_manager')
 
     def upload(self, category, title, filename, content, **extra):

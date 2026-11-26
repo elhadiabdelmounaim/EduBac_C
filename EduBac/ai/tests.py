@@ -72,6 +72,11 @@ class StudentTeacherToolAccessTests(TestCase):
         tutor.assert_not_called()
 
     def test_all_student_entry_pages_hide_tools_and_keep_quiz_results(self):
+        from cahier.models import AccesLecon
+        from classrooms.models import Classroom, ClassroomMember
+        classe = Classroom.objects.create(name='1BAC outils', niveau='1ere_bac_sc', teacher=self.teacher)
+        ClassroomMember.objects.create(classroom=classe, user=self.student)
+        AccesLecon.objects.create(classroom=classe, lesson=self.lesson, decision=AccesLecon.OUVERT)
         self.login(self.student)
         urls = [
             reverse('accounts:dashboard'),
