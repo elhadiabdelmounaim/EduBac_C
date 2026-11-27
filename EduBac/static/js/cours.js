@@ -138,6 +138,11 @@
       var id = this.id;
       $(this).find('.bloc').filter(function () { return !$(this).parent().closest('.bloc').length; })
         .each(function (i) { $(this).attr('data-cle', id + '-b' + (i + 1)); });
+      // Titre de la partie (« s2 ») et sous-titres (« s2-t1 ») : même numérotation que le plan du
+      // cahier de textes et la recherche rapide.
+      $(this).children('h2').first().attr('data-ancre', id);
+      $(this).find('h3').filter(function () { return !$(this).closest('.bloc').length; })
+        .each(function (i) { $(this).attr('data-ancre', id + '-t' + (i + 1)); });
     });
     $source.find('.bloc.app').append($('<button>', {
       type: 'button', 'class': 'app-voile', text: "Afficher l'application"
@@ -597,10 +602,34 @@
     function suivante() { if (courante + parVue < pages.length) afficher(courante + parVue); }
     function precedente() { if (courante > 0) afficher(courante - parVue); }
 
+    // Adresse « #s3-b2 » (recherche rapide) : page du paragraphe, mis en évidence à l'arrivée.
+    var cibleAdresse = null;
+
+    function pageDeCle(cle) {
+      var choix = '[data-cle="' + cle + '"], [data-ancre="' + cle + '"]';
+      for (var k = 0; k < pages.length; k++) {
+        var $el = pages[k].$corps.find(choix).first();
+        if ($el.length) return { index: k, $el: $el };
+      }
+      return null;
+    }
+
+    function montrerCible() {
+      if (!cibleAdresse) return;
+      var $el = cibleAdresse;
+      cibleAdresse = null;
+      $el.addClass('cible-recherche');
+      if ($el[0].scrollIntoView) $el[0].scrollIntoView({ block: 'center', behavior: mouvementReduit ? 'auto' : 'smooth' });
+      setTimeout(function () { $el.removeClass('cible-recherche'); }, 4000);
+    }
+
     function depuisAdresse() {
       var h = window.location.hash;
       var m = /^#p(\d+)$/.exec(h);
       if (m) return parseInt(m[1], 10) - 1;
+      var c = /^#(s\d+(?:-[bt]\d+)?)$/.exec(h);
+      var trouve = c && pageDeCle(c[1]);
+      if (trouve) { cibleAdresse = trouve.$el; return trouve.index; }
       if (h && partieParId[h.slice(1)]) return pageDePartie(h.slice(1));
       return 0;
     }
@@ -742,8 +771,14 @@
     $.when(mathPret, policesPretes()).always(function () {
       var cible = paginer();
       var demande = depuisAdresse();
-      afficher(demande || cible, true);
+      afficher(cibleAdresse ? demande : (demande || cible), true);
       $root.addClass('pagine-pret');
+      montrerCible();
+      // Lien « #s3-b2 » suivi depuis la page déjà ouverte : même chose sans recharger.
+      $(window).on('hashchange', function () {
+        var index = depuisAdresse();
+        if (cibleAdresse) { afficher(index); montrerCible(); }
+      });
       $(window).on('resize orientationchange', reconstruire);
       verifierPages();
       if (document.fonts && document.fonts.addEventListener) {

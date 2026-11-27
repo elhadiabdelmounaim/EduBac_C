@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{# Pas de bouton micro flottant : il gênerait la saisie et les outils. #}
+{% block recherche_vocale %}{% endblock %}
 {% block title %}{{ page_title|default:"Conversation privée" }}{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% asset 'css/chat.css' %}">

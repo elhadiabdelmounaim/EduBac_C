@@ -5,6 +5,7 @@ app_name = 'education'
 
 urlpatterns = [
     path('recherche/', views.search, name='search'),
+    path('recherche/rapide/', views.search_quick, name='search_quick'),
     path('a-propos/', views.about, name='about'),
     path('mentions-legales/', info_views.legal, name='legal'),
     path('confidentialite/', info_views.privacy, name='privacy'),

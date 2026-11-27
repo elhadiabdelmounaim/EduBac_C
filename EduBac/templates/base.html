@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="{% asset 'css/tokens.css' %}">
     <link rel="stylesheet" href="{% asset 'css/edubac.css' %}">
     <link rel="stylesheet" href="{% asset 'css/edubac-motion.css' %}">
+    <link rel="stylesheet" href="{% asset 'css/recherche-vocale.css' %}">
     {% block extra_css %}{% endblock %}
     <link rel="stylesheet" href="{% asset 'css/notebook.css' %}">
     <link rel="stylesheet" href="{% asset 'css/responsive.css' %}">
@@ -76,6 +77,7 @@
 
     {% include "includes/bottom_nav.html" %}
     {% include "includes/pwa_install.html" %}
+    {% block recherche_vocale %}{% include "includes/recherche_vocale.html" %}{% endblock %}
 
     <script src="{% asset 'vendor/jquery/jquery-3.7.1.min.js' %}"></script>
     <script src="{% asset 'vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>

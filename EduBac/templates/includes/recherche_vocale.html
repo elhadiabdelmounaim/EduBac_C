@@ -1,0 +1,35 @@
+{% load edubac_assets %}
+{# Recherche rapide : bouton micro flottant (la dictée va directement au résultat), Ctrl+K ou « / » au clavier. #}
+<button type="button" class="rv-fab" id="rvFab" hidden aria-haspopup="dialog" aria-controls="rvPanel"
+        aria-label="Rechercher à la voix" title="Rechercher à la voix (Ctrl+K)">
+    <i class="bi bi-mic-fill" aria-hidden="true"></i>
+</button>
+<div class="rv-fond" id="rvPanel" hidden>
+    <div class="rv-panneau" role="dialog" aria-modal="true" aria-labelledby="rvTitre">
+        <h2 class="visually-hidden" id="rvTitre">Recherche rapide</h2>
+        <div class="rv-ligne">
+            <button type="button" class="rv-micro" id="rvMicro" aria-label="Parler" title="Parler">
+                <i class="bi bi-mic-fill" aria-hidden="true"></i>
+                <span class="rv-onde" aria-hidden="true"><i></i><i></i><i></i></span>
+            </button>
+            <input type="search" class="rv-champ" id="rvChamp" autocomplete="off" spellcheck="false"
+                   placeholder="Dites ou tapez : produit scalaire, messagerie…" aria-label="Rechercher"
+                   aria-controls="rvResultats" aria-autocomplete="list">
+            <button type="button" class="rv-langue" id="rvLangue" title="Langue de la dictée"
+                    aria-label="Langue de la dictée : français">FR</button>
+            <button type="button" class="rv-fermer" id="rvFermer" aria-label="Fermer"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+        </div>
+        <p class="rv-etat" id="rvEtat" role="status" aria-live="polite"></p>
+        <div class="rv-direct" id="rvDirect" hidden>
+            <span id="rvDirectTexte"></span>
+            <button type="button" class="rv-annuler" id="rvAnnuler">Annuler</button>
+            <span class="rv-barre" aria-hidden="true"></span>
+        </div>
+        <ul class="rv-resultats" id="rvResultats" role="listbox" aria-label="Résultats"></ul>
+        <div class="rv-pied">
+            <a href="{% url 'education:search' %}" id="rvTout">Voir tous les résultats</a>
+            <span class="rv-aide d-none d-md-inline"><kbd>↑</kbd><kbd>↓</kbd> choisir · <kbd>Entrée</kbd> ouvrir · <kbd>Échap</kbd> fermer</span>
+        </div>
+    </div>
+</div>
+<script src="{% asset 'js/recherche-vocale.js' %}" data-url="{% url 'education:search_quick' %}" defer></script>

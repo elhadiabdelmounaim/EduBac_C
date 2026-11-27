@@ -457,6 +457,16 @@ def search(request):
     })
 
 
+def search_quick(request):
+    """Recherche rapide (bouton micro flottant) : résultats en JSON pendant la dictée ou la frappe."""
+    from django.http import JsonResponse
+    from .recherche_rapide import rechercher
+    q = (request.GET.get('q') or '').strip()[:200]
+    reponse = JsonResponse({'q': q, **rechercher(request, q)})
+    reponse['Cache-Control'] = 'private, no-store'
+    return reponse
+
+
 def about(request):
     """Page À propos d'EduBac."""
     return render(request, 'education/about.html', {

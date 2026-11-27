@@ -496,3 +496,9 @@ html.presentation .minuteur.change:not([hidden]) { animation: minuteur-change .5
   .minuteur-arc { transition: none; }
 }
 @media print { .minuteur { display: none !important; } }
+
+/* Paragraphe ouvert depuis la recherche rapide (adresse « #s3-b2 ») : halo quelques secondes. */
+.cible-recherche { outline: 3px solid #f2a516; outline-offset: 4px; border-radius: 14px;
+  animation: cible-recherche 1.2s ease-in-out 3; }
+@keyframes cible-recherche { 50% { outline-color: rgba(242, 165, 22, .25); } }
+@media (prefers-reduced-motion: reduce) { .cible-recherche { animation: none; } }
