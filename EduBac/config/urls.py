@@ -32,6 +32,7 @@ urlpatterns = [
     path('tableau/', include('whiteboard.urls')),
     path('tableau-maths/', include('mathboard.urls')),
     path('cahier-de-textes/', include('cahier.urls')),
+    path('devoirs/', include('devoirs.urls')),
 ]
 
 if settings.DEBUG:

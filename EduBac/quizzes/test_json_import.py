@@ -289,7 +289,8 @@ class ImportedQuizClassListTests(QuizJsonImportTests):
     def test_classes_of_the_quiz_level_are_selectable_and_others_explained(self):
         Classroom.objects.create(name='1BAC SM', niveau='1ere_bac_sm', teacher=self.teacher)
         page = self.client.get(self.post_json()['Location'])
-        self.assertContains(page, f'name="classroom" value="{self.classroom.pk}" required')
+        # Cases à cocher : une ou plusieurs classes du niveau du quiz.
+        self.assertContains(page, f'type="checkbox" name="classroom" value="{self.classroom.pk}"')
         self.assertContains(page, '1ère Bac Sciences Mathématiques · code')
         self.assertContains(page, 'Autre niveau : ce quiz ne peut pas lui être affecté')
         self.assertNotContains(page, 'aucune de vos classes n’est à ce niveau')
@@ -324,7 +325,7 @@ class QuizGoesToTheChosenClassTests(QuizJsonImportTests):
         self.assertFalse(QuizAssignment.objects.exists())
         page = self.client.get(response['Location'])
         self.assertContains(page, f'Confirmer l’envoi à {self.classroom.name}')
-        self.assertRegex(page.content.decode(), rf'value="{self.classroom.pk}" required\s+checked')
+        self.assertRegex(page.content.decode(), rf'name="classroom" value="{self.classroom.pk}"\s+checked')
 
     def test_class_of_another_level_or_teacher_is_refused_at_import(self):
         other_teacher = User.objects.create_user(username='autre-prof', email='ap@example.test', role='teacher')

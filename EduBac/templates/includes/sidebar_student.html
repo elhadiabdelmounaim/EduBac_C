@@ -34,6 +34,12 @@
             </li>
             <li class="nav-section" role="presentation">Quiz et progrès</li>
             <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.app_name == 'devoirs' %}active{% endif %}"
+                   href="{% url 'devoirs:index' %}">
+                    <i class="bi bi-journal-arrow-down"></i><span>Devoirs</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'assigned' %}active{% endif %} {% if not student_has_class %}nav-link-muted{% endif %}"
                    href="{% if student_has_class %}{% url 'quizzes:assigned' %}{% else %}{% url 'classrooms:join' %}{% endif %}"
                    {% if not student_has_class %}title="Rejoins d'abord une classe"{% endif %}>

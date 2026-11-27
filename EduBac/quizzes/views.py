@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.shortcuts import render, get_object_or_404, redirect
+from django.http import Http404
 from django.urls import reverse
 from accounts.decorators import login_required_simple
 from django.contrib import messages
@@ -157,26 +158,76 @@ class AssignmentError(ValueError):
 
 
 def _publish_to_classroom(quiz, classroom, deadline=None):
-    """Publie le quiz pour les élèves de la classe : seule porte d'envoi à une classe.
+    """Publie le quiz pour les élèves d'une classe (voir _publish_to_classrooms)."""
+    return _publish_to_classrooms(quiz, [classroom], deadline=deadline)
 
-    Mêmes règles partout (import, « Publier », publication programmée) : classe
-    active, du niveau du quiz, avec au moins un élève. Renvoie le nombre
-    d'élèves nouvellement affectés (chacun reçoit une notification).
+
+def _publish_to_classrooms(quiz, classrooms, deadline=None):
+    """Publie le quiz pour les élèves d'une ou plusieurs classes : seule porte d'envoi.
+
+    Mêmes règles partout (import, « Publier », publication programmée) : chaque classe
+    active, du niveau du quiz, avec au moins un élève — sinon rien n'est envoyé.
+    Renvoie le nombre d'élèves nouvellement affectés (chacun reçoit une notification ;
+    un élève déjà affecté, ou présent dans deux classes, ne la reçoit qu'une fois).
     """
-    if classroom is None or not classroom.is_active:
+    classrooms = [c for c in classrooms if c is not None]
+    if not classrooms:
         raise AssignmentError("Choisissez la classe destinataire du quiz.")
-    if classroom.niveau != quiz.lesson.course.niveau:
-        raise AssignmentError("La classe sélectionnée n’appartient pas au niveau de ce quiz.")
-    student_ids = ClassroomMember.objects.filter(classroom=classroom).values_list('user_id', flat=True)
-    students = list(User.objects.filter(pk__in=student_ids, role='student'))
-    if not students:
-        raise AssignmentError(f"La classe « {classroom.name} » ne contient aucun élève.")
+    students = {}
+    for classroom in classrooms:
+        if not classroom.is_active:
+            raise AssignmentError("Choisissez la classe destinataire du quiz.")
+        if classroom.niveau != quiz.lesson.course.niveau:
+            if len(classrooms) > 1:
+                raise AssignmentError(f"La classe « {classroom.name} » n’appartient pas au niveau de ce quiz.")
+            raise AssignmentError("La classe sélectionnée n’appartient pas au niveau de ce quiz.")
+        student_ids = ClassroomMember.objects.filter(classroom=classroom).values_list('user_id', flat=True)
+        eleves = list(User.objects.filter(pk__in=student_ids, role='student'))
+        if not eleves:
+            raise AssignmentError(f"La classe « {classroom.name} » ne contient aucun élève.")
+        for eleve in eleves:
+            students.setdefault(eleve.pk, eleve)
     with transaction.atomic():
         quiz.status = 'published'
         quiz.question_count = quiz.questions.count()
-        quiz.classroom = classroom
+        quiz.classroom = classrooms[0]
         quiz.save(update_fields=['status', 'question_count', 'classroom'])
-        return _notify_assignments(quiz, students, deadline=deadline)
+        return _notify_assignments(quiz, list(students.values()), deadline=deadline)
+
+
+def _class_names(classrooms):
+    """« 1bac1 » ; « 1bac1 et 1bac2 » ; « 1bac1, 1bac2 et 1bac3 »."""
+    names = [c.name for c in classrooms]
+    return names[0] if len(names) == 1 else ', '.join(names[:-1]) + ' et ' + names[-1]
+
+
+def _to_classes(classrooms):
+    """« à la classe 1bac1 » ou « aux classes 1bac1 et 1bac2 »."""
+    return ('aux classes ' if len(classrooms) > 1 else 'à la classe ') + _class_names(classrooms)
+
+
+def _for_classes(classrooms):
+    """« pour la classe 1bac1 » ou « pour les classes 1bac1 et 1bac2 »."""
+    return ('pour les classes ' if len(classrooms) > 1 else 'pour la classe ') + _class_names(classrooms)
+
+
+def _draft_url(quiz, classrooms):
+    """Page du brouillon ; les classes choisies à l'import restent cochées pour l'envoi."""
+    url = f"{reverse('quizzes:teacher_ai')}?quiz={quiz.pk}"
+    if len(classrooms) > 1:
+        url += '&classes=' + ','.join(str(c.pk) for c in classrooms)
+    return url
+
+
+def _chosen_classrooms(user, raw_ids):
+    """Classes cochées (dans l'ordre du formulaire, sans doublon) ; Http404 si l'une n'est pas à lui."""
+    ids = list(dict.fromkeys(v.strip() for v in raw_ids if v and v.strip()))
+    if any(not v.isdecimal() for v in ids):
+        raise Http404
+    found = {str(c.pk): c for c in _managed_classrooms(user, is_active=True).filter(pk__in=ids)}
+    if len(found) != len(ids):
+        raise Http404
+    return [found[v] for v in ids]
 
 
 # ─── Élève ───────────────────────────────────────────────────────────────────
@@ -695,19 +746,21 @@ def assign_quiz(request, pk=None):
 
         created = 0
         if target == 'classroom':
-            class_id = request.POST.get('classroom')
-            if not class_id:
+            chosen = _chosen_classrooms(request.user, request.POST.getlist('classroom'))
+            if not chosen:
                 messages.error(request, "Sélectionnez une classe destinataire.")
                 return redirect('quizzes:assign')
-            classroom = _managed_classroom(request.user, class_id, is_active=True)
             quiz.status = 'published'
-            quiz.classroom = classroom
+            quiz.classroom = chosen[0]
             quiz.save(update_fields=['status', 'classroom'])
-            student_list = [m.user for m in classroom.members.select_related('user')]
+            student_list = list({
+                m.user_id: m.user for c in chosen for m in c.members.select_related('user')
+            }.values())
             created = _notify_assignments(quiz, student_list, deadline=deadline)
             messages.success(
                 request,
-                f'Quiz assigné à la classe {classroom.name} ({created} élève(s)).'
+                f'Quiz assigné {_to_classes(chosen)} '
+                f'({created} élève(s)).'
             )
             return redirect('quizzes:manage')
         else:
@@ -882,18 +935,21 @@ def teacher_ai_quiz(request):
                 if selected_lesson is None:
                     raise QuizImportError("Choisissez une leçon de ce cours.")
                 # Classe destinataire choisie dès l'import (envoi après relecture et confirmation).
-                target_classroom = None
-                target_id = (request.POST.get('target_classroom') or '').strip()
-                if target_id:
-                    target_classroom = _managed_classrooms(request.user, is_active=True).filter(
+                target_classrooms = []
+                for target_id in dict.fromkeys(v.strip() for v in request.POST.getlist('target_classroom')):
+                    if not target_id:
+                        continue
+                    target = _managed_classrooms(request.user, is_active=True).filter(
                         pk=target_id if target_id.isdecimal() else 0,
                     ).first()
-                    if target_classroom is None:
+                    if target is None:
                         raise QuizImportError("Choisissez une de vos classes.")
-                    if target_classroom.niveau != selected_niveau:
+                    if target.niveau != selected_niveau:
                         raise QuizImportError(
-                            f"La classe « {target_classroom.name} » n’est pas du niveau choisi pour ce quiz."
+                            f"La classe « {target.name} » n’est pas du niveau choisi pour ce quiz."
                         )
+                    target_classrooms.append(target)
+                target_classroom = target_classrooms[0] if target_classrooms else None
                 # « Importer et envoyer » : tout est vérifié avant de créer le quiz.
                 send_now = request.POST.get('send_now') == '1'
                 if send_now and target_classroom is None:
@@ -927,28 +983,30 @@ def teacher_ai_quiz(request):
                     trace.quiz_id = quiz_created.pk
                 if send_now:
                     try:
-                        created = _publish_to_classroom(quiz_created, target_classroom, deadline=send_deadline)
+                        created = _publish_to_classrooms(quiz_created, target_classrooms, deadline=send_deadline)
                     except AssignmentError as exc:
                         # Le quiz reste en brouillon, rattaché à la classe : rien n'est perdu.
                         quiz_created.classroom = target_classroom
                         quiz_created.save(update_fields=['classroom'])
                         messages.error(request, f"Quiz importé mais non envoyé : {exc}")
-                        return redirect(f"{reverse('quizzes:teacher_ai')}?quiz={quiz_created.pk}")
+                        return redirect(_draft_url(quiz_created, target_classrooms))
                     messages.success(
                         request,
-                        f"Quiz « {quiz_created.title} » ({quiz_created.question_count} question(s)) envoyé à la "
-                        f"classe {target_classroom.name} : {created} élève(s) notifié(s).",
+                        f"Quiz « {quiz_created.title} » ({quiz_created.question_count} question(s)) envoyé "
+                        f"{_to_classes(target_classrooms)} : {created} élève(s) notifié(s).",
                     )
                     return redirect('quizzes:manage')
                 if target_classroom:
                     # Mémorisée sur le brouillon ; aucun élève n'y a accès avant l'envoi.
+                    # Les autres classes choisies restent cochées dans le formulaire d'envoi.
                     quiz_created.classroom = target_classroom
                     quiz_created.save(update_fields=['classroom'])
                     messages.success(
                         request,
-                        f"Brouillon créé pour la classe {target_classroom.name}. "
+                        f"Brouillon créé {_for_classes(target_classrooms)}. "
                         "Vérifiez les questions, puis confirmez l’envoi en bas de la page.",
                     )
+                    return redirect(_draft_url(quiz_created, target_classrooms))
                 else:
                     messages.success(
                         request,
@@ -960,26 +1018,23 @@ def teacher_ai_quiz(request):
                 created_by=request.user,
             )
             quiz = get_object_or_404(quiz_queryset, pk=request.POST.get('quiz_id'))
-            classroom_id = (request.POST.get('classroom') or '').strip()
-            if not classroom_id:
+            chosen = _chosen_classrooms(request.user, request.POST.getlist('classroom'))
+            if not chosen:
                 messages.error(request, "Sélectionnez une classe destinataire avant d’envoyer le quiz.")
                 return redirect(f"{reverse('quizzes:teacher_ai')}?quiz={quiz.pk}")
-            classroom = _managed_classroom(
-                request.user, classroom_id, is_active=True,
-            )
             try:
                 deadline = _parse_deadline(request.POST.get('deadline'))
             except ValueError as exc:
                 messages.error(request, str(exc))
                 return redirect(f"{reverse('quizzes:teacher_ai')}?quiz={quiz.pk}")
             try:
-                created = _publish_to_classroom(quiz, classroom, deadline=deadline)
+                created = _publish_to_classrooms(quiz, chosen, deadline=deadline)
             except AssignmentError as exc:
                 messages.error(request, str(exc))
                 return redirect(f"{reverse('quizzes:teacher_ai')}?quiz={quiz.pk}")
             messages.success(
                 request,
-                f'Quiz « {quiz.title} » envoyé à la classe {classroom.name} '
+                f'Quiz « {quiz.title} » envoyé {_to_classes(chosen)} '
                 f'({created} élève(s) notifié(s)).',
             )
             return redirect('quizzes:manage')
@@ -1014,9 +1069,22 @@ def teacher_ai_quiz(request):
         ))
         .order_by('name')
     ) if selected_niveau else []
+    preselected = {c for c in (request.GET.get('classes') or '').split(',') if c.isdecimal()}
+    if quiz_created and quiz_created.classroom_id:
+        preselected.add(str(quiz_created.classroom_id))
+    # Classes qui ont déjà reçu ce quiz (au moins un de leurs élèves affecté).
+    assigned_ids = set()
+    if quiz_created and quiz_created.status == 'published':
+        assigned_ids = set(ClassroomMember.objects.filter(
+            classroom__in=[c.pk for c in classrooms],
+            user__quiz_assignments__quiz=quiz_created,
+        ).values_list('classroom_id', flat=True))
     for classroom in classrooms:
         classroom.matches_level = classroom.niveau == selected_niveau
         classroom.can_receive = classroom.matches_level and classroom.student_count > 0
+        classroom.already_assigned = classroom.pk in assigned_ids
+        classroom.preselected = (str(classroom.pk) in preselected and classroom.can_receive
+                                 and not classroom.already_assigned)
     classrooms.sort(key=lambda c: (not c.can_receive, not c.matches_level, c.name.lower()))
     matching_classrooms = sum(1 for c in classrooms if c.matches_level)
     quiz_level_label = dict(Classroom.NIVEAU_CHOICES).get(selected_niveau, selected_niveau)
@@ -1034,6 +1102,7 @@ def teacher_ai_quiz(request):
             ),
             'assigned_students': quiz_created.assignments.count(),
             'assigned_classroom': quiz_created.classroom if quiz_created.status == 'published' else None,
+            'assigned_classrooms': [c for c in classrooms if c.already_assigned],
         }
     courses = Course.objects.order_by('niveau', 'order', 'name')
     lessons = Lesson.objects.select_related('course').order_by(
@@ -1050,6 +1119,7 @@ def teacher_ai_quiz(request):
         'niveaux': niveaux,
         'import_classrooms': import_classrooms,
         'selected_target_id': (request.POST.get('target_classroom') or '') if request.method == 'POST' else '',
+        'selected_extra_ids': request.POST.getlist('target_classroom')[1:] if request.method == 'POST' else [],
         'selected_niveau': selected_niveau,
         'courses': courses,
         'selected_course_id': selected_course_id,

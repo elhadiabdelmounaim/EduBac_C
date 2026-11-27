@@ -29,14 +29,15 @@
         <div class="form-text">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs élèves.</div>
     </div>
     <div class="mb-3 d-none" id="classroomBlock">
-        <label class="form-label">Classe</label>
-        <select name="classroom" class="form-select">
-            {% for c in classrooms %}
-            <option value="{{ c.pk }}">{{ c.name }} ({{ c.code }})</option>
-            {% empty %}
-            <option value="">Aucune classe</option>
-            {% endfor %}
-        </select>
+        <span class="form-label d-block">Classes <span class="text-muted small">— une ou plusieurs</span></span>
+        {% for c in classrooms %}
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="classroom" value="{{ c.pk }}" id="assignClass{{ c.pk }}">
+            <label class="form-check-label" for="assignClass{{ c.pk }}">{{ c.name }} <span class="text-muted">· {{ c.get_niveau_display }} · code {{ c.code }}</span></label>
+        </div>
+        {% empty %}
+        <p class="text-muted mb-0">Aucune classe.</p>
+        {% endfor %}
     </div>
     <div class="mb-3">
         <label class="form-label" for="assignDeadline">Date limite (optionnel)</label>

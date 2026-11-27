@@ -66,3 +66,13 @@ html[data-theme="dark"] .qb-assign-summary { background: var(--nb-teal-soft); }
 .qb-class-card.is-checked { border-color: var(--nb-teal, #1d4fa3); box-shadow: 0 6px 18px rgba(29, 79, 163, .16); background: var(--nb-teal-soft, #e6eefb); }
 .qb-class-card.is-checked .qb-class-check { opacity: 1; transform: scale(1); }
 .qb-class-card.is-checked .qb-class-count { visibility: hidden; }
+
+/* Envoi à plusieurs classes du même niveau. */
+.qb-assign-hint { text-transform: none; letter-spacing: 0; font-weight: 400; }
+.qb-class-done { color: var(--edubac-green, #39744f); font-size: .76rem; }
+.qi-extra-classes { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-top: 10px; padding: 10px 12px;
+  border: 1px dashed var(--nb-line, #d9e0ec); border-radius: 12px; }
+.qi-extra-classes[hidden], .qi-extra-class[hidden] { display: none; }
+.qi-extra-label { font-weight: 600; font-size: .88rem; color: var(--nb-ink, #263449); }
+.qi-extra-class { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; }
+.qi-extra-class input { width: 18px; height: 18px; accent-color: var(--nb-teal, #1d4fa3); }

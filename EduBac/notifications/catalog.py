@@ -35,6 +35,12 @@ TYPES = {
         'roles': {'teacher'},
         'email': {'teacher': EMAIL_DIGEST},
     },
+    'devoir': {
+        'label': 'Nouveaux devoirs',
+        'icon': 'bi-journal-arrow-down',
+        'roles': {'student'},
+        'email': {'student': EMAIL_INSTANT},
+    },
     'comment': {
         'label': 'Commentaires du professeur',
         'icon': 'bi-chat-square-text',

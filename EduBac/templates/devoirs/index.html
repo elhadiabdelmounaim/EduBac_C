@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load edubac_assets %}
+{% block extra_css %}<link rel="stylesheet" href="{% asset 'css/devoirs.css' %}">{% endblock %}
+{% block content %}
+<div class="dv-page">
+  <header class="dv-entete">
+    <div class="dv-entete-icone" aria-hidden="true"><i class="bi bi-journal-arrow-down"></i></div>
+    <div class="dv-entete-texte">
+      <h1>Devoirs</h1>
+      <p>{% if gestion %}Publiez un devoir pour une ou plusieurs classes ; gardez une correction verrouillée jusqu’au moment voulu.{% else %}Les devoirs de votre classe : énoncés, documents et corrections dès qu’elles sont ouvertes.{% endif %}</p>
+    </div>
+    {% if gestion %}
+    <a href="{% url 'devoirs:creer' %}" class="btn btn-edubac dv-nouveau"><i class="bi bi-plus-lg" aria-hidden="true"></i> Nouveau devoir</a>
+    {% endif %}
+  </header>
+
+  {% if devoirs %}
+  <ol class="dv-liste">
+    {% for d in devoirs %}
+    <li class="dv-carte">
+      <a class="dv-carte-titre" href="{% url 'devoirs:detail' d.pk %}">{{ d.titre }}</a>
+      <div class="dv-carte-meta">
+        {% if d.date_limite %}
+        <span class="dv-echeance{% if d.depasse %} est-passee{% endif %}"><i class="bi bi-calendar-event" aria-hidden="true"></i>
+          À rendre le {{ d.date_limite|date:"l j F à H\hi" }}</span>
+        {% endif %}
+        {% if gestion %}
+        <span class="dv-classes">{% for c in d.classes.all|dictsort:"name" %}<span class="dv-classe">{{ c.name }}</span>{% endfor %}</span>
+        {% endif %}
+        <span class="dv-date">Publié le {{ d.cree_le|date:"j F Y" }}</span>
+      </div>
+      {% if d.liste_fichiers %}
+      <ul class="dv-fichiers-mini">
+        {% for f in d.liste_fichiers %}
+        <li class="{% if not f.visible %}est-verrouille{% endif %}">
+          <i class="bi {% if f.visible %}bi-file-earmark-text{% else %}bi-lock-fill{% endif %}" aria-hidden="true"></i>
+          {% if f.visible or gestion %}<a href="{% url 'devoirs:telecharger' f.pk %}" target="_blank" rel="noopener">{{ f.nom }}</a>{% else %}<span>{{ f.nom }}</span>{% endif %}
+          {% if not f.visible %}<span class="dv-badge-verrou">{% if gestion %}Non visible par les élèves{% else %}Disponible plus tard{% endif %}</span>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <div class="dv-vide">
+    <i class="bi bi-journal-check" aria-hidden="true"></i>
+    {% if gestion %}
+    <p>Aucun devoir pour l’instant.</p>
+    <a href="{% url 'devoirs:creer' %}" class="btn btn-edubac">Publier un premier devoir</a>
+    {% else %}
+    <p>Aucun devoir pour votre classe pour l’instant.</p>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

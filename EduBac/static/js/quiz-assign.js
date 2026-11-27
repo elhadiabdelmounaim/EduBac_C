@@ -23,8 +23,18 @@
         card.classList.toggle('is-checked', !!(input && input.checked));
       });
     }
+    var label = document.getElementById('assignQuizLabel');
+    function checkedClasses() {
+      return Array.prototype.slice.call(form.querySelectorAll('input[name="classroom"]:checked:not(:disabled)'));
+    }
+    function updateLabel() {
+      if (!label) return;
+      var n = checkedClasses().length;
+      label.textContent = n > 1 ? 'Affecter le quiz à ces ' + n + ' classes' : 'Affecter le quiz à cette classe';
+    }
     markChecked();
-    form.addEventListener('change', function () { if (errorBox) errorBox.hidden = true; markChecked(); });
+    updateLabel();
+    form.addEventListener('change', function () { if (errorBox) errorBox.hidden = true; markChecked(); updateLabel(); });
 
     function submitNow() {
       confirmed = true;
@@ -32,7 +42,7 @@
       HTMLFormElement.prototype.submit.call(form);
     }
 
-    // Les boutons radio sont invisibles (cartes) : le navigateur ne peut pas afficher
+    // Les cases sont invisibles (cartes) : le navigateur ne peut pas afficher
     // son avertissement, on explique donc nous-mêmes pourquoi rien ne part.
     form.setAttribute('novalidate', '');
     form.addEventListener('submit', function (event) {
@@ -40,16 +50,20 @@
       event.preventDefault();
       var radios = form.querySelectorAll('input[name="classroom"]');
       var enabled = Array.prototype.filter.call(radios, function (r) { return !r.disabled; });
-      var choice = form.querySelector('input[name="classroom"]:checked:not(:disabled)');
+      var chosen = checkedClasses();
       if (!radios.length) { showError('Vous n’avez encore aucune classe : créez-en une, puis revenez affecter ce quiz.'); return; }
       if (!enabled.length) {
         showError('Aucune de vos classes ne peut recevoir ce quiz : elles sont d’un autre niveau ou n’ont aucun élève inscrit (voir la mention sous chaque classe).');
         return;
       }
-      if (!choice) { showError('Cliquez d’abord sur la classe qui doit recevoir le quiz.'); return; }
-      var count = Number(choice.dataset.students || 0);
+      if (!chosen.length) { showError('Cliquez d’abord sur la classe (ou les classes) qui doit recevoir le quiz.'); return; }
+      var count = chosen.reduce(function (sum, c) { return sum + Number(c.dataset.students || 0); }, 0);
+      var names = chosen.map(function (c) { return c.dataset.name; });
+      var where = names.length > 1
+        ? 'aux classes ' + names.slice(0, -1).join(', ') + ' et ' + names[names.length - 1]
+        : 'à la classe ' + names[0];
       var deadline = form.elements.deadline ? form.elements.deadline.value : '';
-      var message = 'Affecter « ' + title.trim() + ' » à la classe ' + choice.dataset.name + ' ? '
+      var message = 'Affecter « ' + title.trim() + ' » ' + where + ' ? '
         + count + ' élève' + (count > 1 ? 's' : '') + ' le recevr' + (count > 1 ? 'ont' : 'a')
         + (deadline ? ', à rendre avant le ' + new Date(deadline).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) : '') + '.';
       if (!dialog || !dialog.showModal) {
@@ -131,6 +145,27 @@
       }
       if (courseField) courseField.classList.toggle('is-auto', options.length === 1);
     }
+    var extras = document.getElementById('quizExtraClasses');
+    function updateExtras() {
+      if (!extras || !target) return;
+      var option = target.options[target.selectedIndex];
+      var niveau = option && option.value ? option.dataset.niveau : '';
+      var shown = 0;
+      Array.prototype.forEach.call(extras.querySelectorAll('.qi-extra-class'), function (item) {
+        var ok = !!niveau && item.dataset.niveau === niveau && item.dataset.id !== target.value;
+        item.hidden = !ok;
+        var box = item.querySelector('input');
+        box.disabled = !ok;
+        if (!ok) box.checked = false;
+        if (ok) shown += 1;
+      });
+      extras.hidden = !shown;
+    }
+    function extraChosen() {
+      return extras ? Array.prototype.slice.call(extras.querySelectorAll('input:checked:not(:disabled)')) : [];
+    }
+    if (target) target.addEventListener('change', updateExtras);
+    updateExtras();
     if (target && level) {
       target.addEventListener('change', function () {
         var option = target.options[target.selectedIndex];
@@ -225,11 +260,19 @@
       }
       var option = target.options[target.selectedIndex];
       var students = Number(option.dataset.students || 0);
+      var names = [option.textContent.split('·')[0].trim()];
+      extraChosen().forEach(function (box) {
+        names.push(box.dataset.name);
+        students += Number(box.dataset.students || 0);
+      });
+      var where = names.length > 1
+        ? 'aux classes ' + names.slice(0, -1).join(', ') + ' et ' + names[names.length - 1]
+        : 'à la classe ' + names[0];
       var lessonName = lesson.options[lesson.selectedIndex].textContent.trim();
       var deadline = form.elements.deadline.value;
       document.getElementById('importConfirmText').textContent =
-        'Le quiz du fichier « ' + file.files[0].name + ' » (leçon : ' + lessonName + ') sera envoyé à la classe '
-        + option.textContent.split('·')[0].trim() + ' : ' + students + ' élève' + (students > 1 ? 's' : '')
+        'Le quiz du fichier « ' + file.files[0].name + ' » (leçon : ' + lessonName + ') sera envoyé '
+        + where + ' : ' + students + ' élève' + (students > 1 ? 's' : '')
         + (deadline ? ', à rendre avant le ' + new Date(deadline).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) : '') + '.';
       dialog.showModal();
     });

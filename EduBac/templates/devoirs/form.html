@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load edubac_assets %}
+{% block extra_css %}<link rel="stylesheet" href="{% asset 'css/devoirs.css' %}">{% endblock %}
+{% block content %}
+<div class="dv-page dv-page-form">
+  <header class="dv-entete">
+    <div class="dv-entete-icone" aria-hidden="true"><i class="bi {% if creation %}bi-journal-plus{% else %}bi-pencil-square{% endif %}"></i></div>
+    <div class="dv-entete-texte">
+      <h1>{% if creation %}Nouveau devoir{% else %}Modifier le devoir{% endif %}</h1>
+      <p>{% if creation %}Les élèves des classes choisies sont prévenus (dans EduBac et sur leur téléphone).{% else %}Les élèves d’une classe ajoutée sont prévenus.{% endif %}</p>
+    </div>
+  </header>
+
+  <form method="post" enctype="multipart/form-data" class="dv-form" id="devoirForm">
+    {% csrf_token %}
+    <div class="dv-champ">
+      <label for="dvTitre" class="form-label">Titre <span class="text-danger">*</span></label>
+      <input type="text" name="titre" id="dvTitre" class="form-control" maxlength="200" required
+             value="{{ valeurs.titre }}" placeholder="Devoir maison n°3 — Produit scalaire">
+    </div>
+    <div class="dv-champ">
+      <label for="dvConsigne" class="form-label">Consigne <span class="dv-facultatif">(facultative)</span></label>
+      <textarea name="consigne" id="dvConsigne" class="form-control" rows="3" placeholder="Exercices 1 à 3, rédiger sur copie double…">{{ valeurs.consigne }}</textarea>
+    </div>
+    <div class="dv-champ">
+      <label for="dvDateLimite" class="form-label">À rendre le <span class="dv-facultatif">(facultatif)</span></label>
+      <input type="datetime-local" name="date_limite" id="dvDateLimite" class="form-control dv-date-input" value="{{ valeurs.date_limite }}">
+    </div>
+
+    <fieldset class="dv-champ dv-classes-choix">
+      <legend class="form-label">Classes <span class="text-danger">*</span> <span class="dv-facultatif">— une ou plusieurs</span></legend>
+      {% for niveau, classes in groupes %}
+      <div class="dv-niveau">
+        <div class="dv-niveau-titre">
+          <span>{{ niveau }}</span>
+          {% if classes|length > 1 %}<button type="button" class="dv-tout" data-tout>Toutes</button>{% endif %}
+        </div>
+        <div class="dv-classes-grille">
+          {% for c in classes %}
+          <label class="dv-classe-carte">
+            <input type="checkbox" name="classes" value="{{ c.pk }}"{% if c.cochee %} checked{% endif %}>
+            <span class="dv-classe-nom">{{ c.name }}</span>
+            <i class="bi bi-check-circle-fill dv-coche" aria-hidden="true"></i>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      {% empty %}
+      <p class="dv-aucune">Vous n’avez encore aucune classe active. <a href="{% url 'classrooms:list' %}">Créer une classe</a></p>
+      {% endfor %}
+    </fieldset>
+
+    {% if creation %}
+    <div class="dv-depots">
+      <div class="dv-depot">
+        <label for="dvFichiers" class="dv-depot-titre"><i class="bi bi-file-earmark-arrow-up" aria-hidden="true"></i> Fichiers visibles <span class="dv-facultatif">(énoncé, documents)</span></label>
+        <input type="file" name="fichiers" id="dvFichiers" class="form-control" multiple>
+      </div>
+      <div class="dv-depot est-verrouille">
+        <label for="dvFichiersVerrou" class="dv-depot-titre"><i class="bi bi-lock-fill" aria-hidden="true"></i> Fichiers verrouillés <span class="dv-facultatif">(corrections…)</span></label>
+        <input type="file" name="fichiers_verrouilles" id="dvFichiersVerrou" class="form-control" multiple>
+        <label for="dvOuverture" class="form-label small mt-2 mb-1">Ouverture automatique <span class="dv-facultatif">(facultative — sinon vous les déverrouillez à la main)</span></label>
+        <input type="datetime-local" name="ouverture_le" id="dvOuverture" class="form-control dv-date-input" value="{{ valeurs.ouverture_le }}">
+      </div>
+      <p class="dv-aide">PDF, images, Word, PowerPoint, Excel, GeoGebra ou ZIP · 20 Mo au plus par fichier. Vous pourrez en ajouter ou en retirer ensuite.</p>
+    </div>
+    {% endif %}
+
+    <div class="dv-actions">
+      <a href="{% if devoir %}{% url 'devoirs:detail' devoir.pk %}{% else %}{% url 'devoirs:index' %}{% endif %}" class="btn btn-outline-secondary">Annuler</a>
+      <button type="submit" class="btn btn-edubac"><i class="bi {% if creation %}bi-send{% else %}bi-check-lg{% endif %}" aria-hidden="true"></i>
+        {% if creation %}Publier le devoir{% else %}Enregistrer{% endif %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+(function () {
+  document.querySelectorAll('[data-tout]').forEach(function (bouton) {
+    bouton.addEventListener('click', function () {
+      var cases = bouton.closest('.dv-niveau').querySelectorAll('input[type="checkbox"]');
+      var toutes = Array.prototype.every.call(cases, function (c) { return c.checked; });
+      cases.forEach(function (c) { c.checked = !toutes; });
+    });
+  });
+  var form = document.getElementById('devoirForm');
+  form.addEventListener('submit', function (event) {
+    var cochee = form.querySelector('input[name="classes"]:checked');
+    if (!cochee) {
+      event.preventDefault();
+      alert('Choisissez au moins une classe.');
+    }
+  });
+})();
+</script>
+{% endblock %}

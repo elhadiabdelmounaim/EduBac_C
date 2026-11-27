@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% load edubac_assets %}
+{% block extra_css %}<link rel="stylesheet" href="{% asset 'css/devoirs.css' %}">{% endblock %}
+{% block content %}
+<div class="dv-page">
+  <a href="{% url 'devoirs:index' %}" class="dv-retour"><i class="bi bi-arrow-left" aria-hidden="true"></i> Tous les devoirs</a>
+  <header class="dv-entete">
+    <div class="dv-entete-icone" aria-hidden="true"><i class="bi bi-journal-text"></i></div>
+    <div class="dv-entete-texte">
+      <h1>{{ devoir.titre }}</h1>
+      <div class="dv-carte-meta">
+        {% if devoir.date_limite %}
+        <span class="dv-echeance{% if depasse %} est-passee{% endif %}"><i class="bi bi-calendar-event" aria-hidden="true"></i>
+          À rendre le {{ devoir.date_limite|date:"l j F Y à H\hi" }}</span>
+        {% endif %}
+        {% if gestion %}<span class="dv-classes">{% for c in devoir.classes.all|dictsort:"name" %}<span class="dv-classe">{{ c.name }}</span>{% endfor %}</span>{% endif %}
+        <span class="dv-date">Publié le {{ devoir.cree_le|date:"j F Y" }}</span>
+      </div>
+    </div>
+    {% if gestion %}
+    <div class="dv-entete-actions">
+      <a href="{% url 'devoirs:modifier' devoir.pk %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil" aria-hidden="true"></i> Modifier</a>
+      <form method="post" action="{% url 'devoirs:supprimer' devoir.pk %}" data-confirmer="Supprimer le devoir « {{ devoir.titre }} » et tous ses fichiers ?">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash" aria-hidden="true"></i> Supprimer</button>
+      </form>
+    </div>
+    {% endif %}
+  </header>
+
+  {% if devoir.consigne %}
+  <section class="dv-consigne" aria-label="Consigne">{{ devoir.consigne|linebreaks }}</section>
+  {% endif %}
+
+  <section class="dv-section" aria-labelledby="dvFichiersTitre">
+    <h2 id="dvFichiersTitre">Fichiers</h2>
+    {% if fichiers %}
+    <ul class="dv-fichiers">
+      {% for f in fichiers %}
+      <li class="dv-fichier{% if not f.visible %} est-verrouille{% endif %}" id="fichier-{{ f.pk }}">
+        <span class="dv-fichier-icone" aria-hidden="true"><i class="bi {% if f.visible %}bi-file-earmark-text{% else %}bi-lock-fill{% endif %}"></i></span>
+        <span class="dv-fichier-info">
+          {% if f.visible or gestion %}
+          <a href="{% url 'devoirs:telecharger' f.pk %}" target="_blank" rel="noopener" class="dv-fichier-nom">{{ f.nom }}</a>
+          {% else %}
+          <span class="dv-fichier-nom">{{ f.nom }}</span>
+          {% endif %}
+          <span class="dv-fichier-meta">
+            {{ f.taille|filesizeformat }}
+            {% if not f.visible %}
+              · <span class="dv-badge-verrou">
+              {% if gestion %}🔒 Non visible par les élèves{% if f.ouverture_le %} — ouverture le {{ f.ouverture_le|date:"j F à H\hi" }}{% endif %}
+              {% else %}🔒 Disponible {% if f.ouverture_le %}le {{ f.ouverture_le|date:"j F à H\hi" }}{% else %}plus tard{% endif %}{% endif %}
+              </span>
+            {% elif gestion and f.verrouille %}
+              · <span class="dv-badge-ouvert">Ouvert automatiquement le {{ f.ouverture_le|date:"j F à H\hi" }}</span>
+            {% endif %}
+          </span>
+        </span>
+        {% if f.visible or gestion %}
+        <a href="{% url 'devoirs:telecharger' f.pk %}?telecharger=1" class="btn btn-sm btn-light dv-dl" title="Télécharger" aria-label="Télécharger {{ f.nom }}"><i class="bi bi-download" aria-hidden="true"></i></a>
+        {% endif %}
+        {% if gestion %}
+        <div class="dv-fichier-actions">
+          {% if f.visible %}
+          <details class="dv-verrou-menu">
+            <summary class="btn btn-sm btn-outline-warning"><i class="bi bi-lock" aria-hidden="true"></i> Verrouiller</summary>
+            <form method="post" action="{% url 'devoirs:verrou' f.pk %}" class="dv-verrou-form">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="verrouiller">
+              <label class="form-label small mb-1" for="ouv{{ f.pk }}">Ouverture automatique (facultative)</label>
+              <input type="datetime-local" name="ouverture_le" id="ouv{{ f.pk }}" class="form-control form-control-sm dv-date-input">
+              <button type="submit" class="btn btn-sm btn-warning mt-2 w-100">Verrouiller</button>
+            </form>
+          </details>
+          {% else %}
+          <form method="post" action="{% url 'devoirs:verrou' f.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="deverrouiller">
+            <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-unlock" aria-hidden="true"></i> Déverrouiller</button>
+          </form>
+          {% endif %}
+          <form method="post" action="{% url 'devoirs:retirer' f.pk %}" data-confirmer="Supprimer « {{ f.nom }} » ?">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Supprimer {{ f.nom }}" title="Supprimer"><i class="bi bi-trash" aria-hidden="true"></i></button>
+          </form>
+        </div>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="dv-aucune">Aucun fichier{% if gestion %} : ajoutez l’énoncé ci-dessous{% endif %}.</p>
+    {% endif %}
+  </section>
+
+  {% if gestion %}
+  <section class="dv-section dv-ajout" aria-labelledby="dvAjoutTitre">
+    <h2 id="dvAjoutTitre">Ajouter des fichiers</h2>
+    <form method="post" action="{% url 'devoirs:ajouter' devoir.pk %}" enctype="multipart/form-data" class="dv-ajout-form">
+      {% csrf_token %}
+      <input type="file" name="fichiers" class="form-control" multiple required aria-label="Fichiers à ajouter">
+      <div class="dv-ajout-options">
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" role="switch" name="verrouille" value="1" id="dvVerrouille">
+          <label class="form-check-label" for="dvVerrouille">🔒 Verrouillé (une correction, par exemple)</label>
+        </div>
+        <div class="dv-ajout-date" id="dvAjoutDate" hidden>
+          <label class="form-label small mb-1" for="dvAjoutOuverture">Ouverture automatique (facultative)</label>
+          <input type="datetime-local" name="ouverture_le" id="dvAjoutOuverture" class="form-control form-control-sm dv-date-input">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-edubac"><i class="bi bi-upload" aria-hidden="true"></i> Ajouter</button>
+      <p class="dv-aide">PDF, images, Word, PowerPoint, Excel, GeoGebra ou ZIP · 20 Mo au plus par fichier.</p>
+    </form>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+(function () {
+  document.querySelectorAll('form[data-confirmer]').forEach(function (form) {
+    form.addEventListener('submit', function (event) {
+      if (!window.confirm(form.getAttribute('data-confirmer'))) event.preventDefault();
+    });
+  });
+  var bascule = document.getElementById('dvVerrouille');
+  var date = document.getElementById('dvAjoutDate');
+  if (bascule && date) {
+    bascule.addEventListener('change', function () { date.hidden = !bascule.checked; });
+  }
+})();
+</script>
+{% endblock %}

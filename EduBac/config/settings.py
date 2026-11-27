@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'whiteboard',
     'mathboard',
     'cahier',
+    'devoirs',
     'rest_framework',
     'channels',
 ]

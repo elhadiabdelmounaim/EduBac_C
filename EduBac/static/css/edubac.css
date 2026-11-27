@@ -1635,6 +1635,10 @@ html[data-theme="dark"] .edubac-breadcrumb .current { color: #e6e9ef; }
     background: var(--edubac-light);
 }
 .bottom-nav .bn-item:active { transform: scale(0.96); }
+/* Six entrées (professeur) : plus serrées, libellés sur une ligne. */
+.bottom-nav-6 { padding-left: 0.1rem; padding-right: 0.1rem; }
+.bottom-nav-6 .bn-item { padding: 0.4rem 0.05rem; font-size: 0.6rem; }
+.bottom-nav-6 .bn-item span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 html[data-theme="dark"] .bottom-nav {
     background: #1a2030;
     border-top-color: rgba(255,255,255,0.06);

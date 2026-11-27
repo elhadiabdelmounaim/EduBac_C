@@ -12,13 +12,17 @@
         <i class="bi bi-journal-check"></i>
         <span>Quiz</span>
     </a>
+    <a href="{% url 'devoirs:index' %}" class="bn-item" data-nav="devoirs">
+        <i class="bi bi-journal-arrow-down"></i>
+        <span>Devoirs</span>
+    </a>
     <a href="{% url 'accounts:profile' %}" class="bn-item" data-nav="profile">
         <i class="bi bi-person"></i>
         <span>Profil</span>
     </a>
 </nav>
 {% elif user.is_authenticated and user.is_teacher %}
-<nav class="bottom-nav" aria-label="Navigation principale">
+<nav class="bottom-nav bottom-nav-6" aria-label="Navigation principale">
     <a href="{% url 'accounts:dashboard' %}" class="bn-item" data-nav="dashboard">
         <i class="bi bi-house-door"></i>
         <span>Accueil</span>
@@ -34,6 +38,10 @@
     <a href="{% url 'ai:assistant' %}" class="bn-item" data-nav="ai">
         <i class="bi bi-robot"></i>
         <span>IA</span>
+    </a>
+    <a href="{% url 'devoirs:index' %}" class="bn-item" data-nav="devoirs">
+        <i class="bi bi-journal-arrow-down"></i>
+        <span>Devoirs</span>
     </a>
     <a href="{% url 'accounts:profile' %}" class="bn-item" data-nav="profile">
         <i class="bi bi-person"></i>

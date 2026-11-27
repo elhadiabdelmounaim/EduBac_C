@@ -1,0 +1,111 @@
+/* Devoirs (templates/devoirs/*) : liste, formulaire, fichiers verrouillés. Couleurs : tokens.css. */
+.dv-page { max-width: 920px; margin: 0 auto; padding-bottom: 2rem; }
+.dv-retour { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px; font-weight: 600; text-decoration: none; }
+
+.dv-entete { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.dv-entete-icone {
+    flex: none; width: 52px; height: 52px; display: grid; place-items: center; border-radius: 16px;
+    background: var(--nb-teal-soft); color: var(--nb-teal); font-size: 1.5rem;
+}
+.dv-entete-texte { flex: 1; min-width: 220px; }
+.dv-entete h1 { margin: 0 0 4px; font-size: clamp(1.35rem, 3vw, 1.75rem); font-weight: 700; color: var(--nb-ink); overflow-wrap: anywhere; }
+.dv-entete p { margin: 0; color: var(--nb-muted); }
+.dv-nouveau { align-self: center; white-space: nowrap; }
+.dv-entete-actions { display: flex; gap: 8px; align-self: center; flex-wrap: wrap; }
+.dv-entete-actions form { margin: 0; }
+
+/* ---------- Liste ---------- */
+.dv-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.dv-carte {
+    background: var(--nb-surface); border: 1px solid var(--nb-line); border-radius: var(--radius-md);
+    padding: 16px 18px; box-shadow: var(--nb-shadow);
+}
+.dv-carte-titre { display: inline-block; font-size: 1.1rem; font-weight: 700; color: var(--nb-ink); text-decoration: none; overflow-wrap: anywhere; }
+.dv-carte-titre:hover { color: var(--nb-teal); text-decoration: underline; }
+.dv-carte-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-top: 6px; font-size: .86rem; color: var(--nb-muted); }
+.dv-echeance { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; color: var(--nb-ochre); }
+.dv-echeance.est-passee { color: var(--nb-muted); text-decoration: line-through; }
+.dv-classes { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.dv-classe { padding: 1px 9px; border-radius: var(--radius-pill); background: var(--nb-teal-soft); color: var(--nb-teal); font-weight: 600; font-size: .8rem; }
+.dv-fichiers-mini { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 4px; font-size: .92rem; }
+.dv-fichiers-mini li { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.dv-fichiers-mini li > a, .dv-fichiers-mini li > span:not(.dv-badge-verrou) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.dv-fichiers-mini .est-verrouille { color: var(--nb-muted); }
+.dv-badge-verrou { flex: none; font-size: .76rem; font-weight: 600; color: var(--nb-ochre); }
+.dv-badge-ouvert { font-size: .76rem; font-weight: 600; color: var(--edubac-green); }
+.dv-vide { text-align: center; padding: 3rem 1rem; color: var(--nb-muted); background: var(--nb-surface); border: 1px dashed var(--nb-line); border-radius: var(--radius-md); }
+.dv-vide > i { font-size: 2.4rem; color: var(--nb-teal); }
+.dv-vide p { margin: .6rem 0 1rem; }
+
+/* ---------- Détail ---------- */
+.dv-consigne {
+    background: var(--nb-surface); border: 1px solid var(--nb-line); border-left: 4px solid var(--nb-teal);
+    border-radius: var(--radius-sm); padding: 14px 18px; margin-bottom: 1.25rem; color: var(--nb-ink);
+}
+.dv-consigne p:last-child { margin-bottom: 0; }
+.dv-section { margin-bottom: 1.5rem; }
+.dv-section h2 { font-size: 1.05rem; font-weight: 700; color: var(--nb-ink); margin-bottom: .6rem; }
+.dv-fichiers { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.dv-fichier {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    background: var(--nb-surface); border: 1px solid var(--nb-line); border-radius: var(--radius-sm); padding: 10px 12px;
+}
+.dv-fichier.est-verrouille { background: color-mix(in srgb, var(--nb-surface) 88%, #f39c12 12%); border-style: dashed; }
+.dv-fichier-icone { flex: none; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 10px; background: var(--nb-teal-soft); color: var(--nb-teal); font-size: 1.15rem; }
+.est-verrouille .dv-fichier-icone { background: rgba(243, 156, 18, .18); color: var(--nb-ochre); }
+.dv-fichier-info { flex: 1; min-width: 160px; display: flex; flex-direction: column; }
+.dv-fichier-nom { font-weight: 600; color: var(--nb-ink); overflow-wrap: anywhere; }
+a.dv-fichier-nom { color: var(--nb-teal); }
+.dv-fichier-meta { font-size: .8rem; color: var(--nb-muted); }
+.dv-fichier-actions { display: flex; align-items: flex-start; gap: 6px; flex-wrap: wrap; }
+.dv-fichier-actions form { margin: 0; }
+.dv-verrou-menu { position: relative; }
+.dv-verrou-menu > summary { list-style: none; }
+.dv-verrou-menu > summary::-webkit-details-marker { display: none; }
+.dv-verrou-form {
+    position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; width: 250px; padding: 12px;
+    background: var(--nb-surface); border: 1px solid var(--nb-line); border-radius: var(--radius-sm); box-shadow: var(--shadow-md);
+}
+.dv-ajout-form { display: grid; gap: 10px; background: var(--nb-surface); border: 1px solid var(--nb-line); border-radius: var(--radius-md); padding: 16px; }
+.dv-ajout-options { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 22px; }
+.dv-ajout-form > .btn { justify-self: start; }
+.dv-ajout-date[hidden] { display: none; }
+.dv-aide { margin: 0; font-size: .8rem; color: var(--nb-muted); }
+.dv-aucune { color: var(--nb-muted); }
+
+/* ---------- Formulaire ---------- */
+.dv-form { display: grid; gap: 1.1rem; background: var(--nb-surface); border: 1px solid var(--nb-line); border-radius: var(--radius-lg); padding: clamp(16px, 3vw, 26px); box-shadow: var(--nb-shadow); }
+.dv-champ { margin: 0; min-width: 0; }
+.dv-champ .form-label, .dv-classes-choix legend { font-weight: 600; color: var(--nb-ink); }
+.dv-facultatif { font-weight: 400; color: var(--nb-muted); font-size: .85em; }
+.dv-date-input { max-width: 260px; }
+.dv-classes-choix legend { font-size: 1rem; float: none; margin-bottom: .4rem; }
+.dv-niveau + .dv-niveau { margin-top: .8rem; }
+.dv-niveau-titre { display: flex; align-items: center; gap: 10px; font-size: .8rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--nb-muted); margin-bottom: 6px; }
+.dv-tout { border: 1px solid var(--nb-line); background: transparent; color: var(--nb-teal); border-radius: var(--radius-pill); padding: 0 10px; font-size: .75rem; font-weight: 600; text-transform: none; letter-spacing: 0; }
+.dv-classes-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.dv-classe-carte {
+    position: relative; display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer;
+    border: 2px solid var(--nb-line); border-radius: var(--radius-sm); background: var(--nb-surface); transition: border-color .15s, background .15s;
+}
+.dv-classe-carte input { width: 18px; height: 18px; accent-color: var(--nb-teal); flex: none; }
+.dv-classe-nom { font-weight: 600; color: var(--nb-ink); overflow-wrap: anywhere; }
+.dv-coche { margin-left: auto; color: var(--nb-teal); opacity: 0; transition: opacity .15s; }
+.dv-classe-carte:has(input:checked) { border-color: var(--nb-teal); background: var(--nb-teal-soft); }
+.dv-classe-carte:has(input:checked) .dv-coche { opacity: 1; }
+.dv-classe-carte:has(input:focus-visible) { outline: 3px solid #f39c12; outline-offset: 2px; }
+.dv-depots { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.dv-depot { padding: 14px; border: 1px dashed var(--nb-line); border-radius: var(--radius-sm); min-width: 0; }
+.dv-depot.est-verrouille { border-color: rgba(243, 156, 18, .55); background: color-mix(in srgb, var(--nb-surface) 92%, #f39c12 8%); }
+.dv-depot-titre { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-weight: 600; color: var(--nb-ink); margin-bottom: 8px; }
+.dv-depots .dv-aide { grid-column: 1 / -1; }
+.dv-actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+
+@media (max-width: 640px) {
+    .dv-depots { grid-template-columns: 1fr; }
+    .dv-nouveau { width: 100%; }
+    .dv-fichier-actions { width: 100%; justify-content: flex-end; }
+    .dv-verrou-menu[open] { flex-basis: 100%; order: 3; }
+    .dv-verrou-form { position: static; width: 100%; margin-top: 8px; box-shadow: none; }
+    .dv-date-input { max-width: none; }
+}
