@@ -97,6 +97,7 @@
         <div class="card shadow-sm border-0 text-center h-100" style="border-radius:12px;">
             <div class="card-body py-3 d-flex flex-column align-items-center justify-content-center gap-1">
                 <a href="{% url 'classrooms:results' classroom.pk %}" class="btn btn-sm btn-edubac w-100">📊 Résultats</a>
+                {% if is_teacher_owner %}<a href="{% url 'classrooms:carnet' classroom.pk %}" class="btn btn-sm btn-outline-primary w-100">📒 Carnet de notes</a>{% endif %}
                 <a href="{% url 'classrooms:download_excel' classroom.pk %}" class="btn btn-sm btn-outline-success w-100">📥 Excel</a>
             </div>
         </div>

@@ -74,11 +74,13 @@ def ajouter_fichiers(devoir, fichiers, verrouille=False, ouverture_le=None):
 
 
 def supprimer_fichier(fichier):
-    """Supprime l'enregistrement et le fichier sur le disque (après validation de la transaction)."""
-    stockage, chemin = fichier.fichier.storage, fichier.fichier.name
+    """Supprime l'enregistrement et ses fichiers sur le disque (page, et calque / page corrigée
+    s'il y en a), après validation de la transaction."""
+    champs = [getattr(fichier, nom, None) for nom in ('fichier', 'calque', 'annotee')]
+    a_effacer = [(c.storage, c.name) for c in champs if c]
     fichier.delete()
-    if chemin:
-        transaction.on_commit(lambda: stockage.delete(chemin) if stockage.exists(chemin) else None)
+    for stockage, chemin in a_effacer:
+        transaction.on_commit(lambda s=stockage, c=chemin: s.delete(c) if s.exists(c) else None)
 
 
 def notifier_nouveau_devoir(devoir, eleves):

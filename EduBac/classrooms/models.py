@@ -112,3 +112,38 @@ class ClassroomMember(models.Model):
 
     def leave(self):
         self.delete()
+
+
+class ColonneNote(models.Model):
+    """Une colonne du carnet de notes d'une classe : note saisie à la main (contrôle, oral…),
+    ou reprise d'un devoir (note /20) ou d'un quiz (score % ramené sur 20)."""
+    MANUEL, DEVOIR, QUIZ = 'manuel', 'devoir', 'quiz'
+    SOURCES = [(MANUEL, 'Saisie'), (DEVOIR, 'Devoir'), (QUIZ, 'Quiz')]
+
+    classe = models.ForeignKey(Classroom, on_delete=models.CASCADE, related_name='colonnes_notes')
+    titre = models.CharField(max_length=120)
+    source = models.CharField(max_length=10, choices=SOURCES, default=MANUEL)
+    devoir = models.ForeignKey('devoirs.Devoir', on_delete=models.CASCADE, null=True, blank=True, related_name='+')
+    quiz = models.ForeignKey('quizzes.Quiz', on_delete=models.CASCADE, null=True, blank=True, related_name='+')
+    coefficient = models.DecimalField(max_digits=4, decimal_places=2, default=1)
+    dans_moyenne = models.BooleanField('Compte dans la moyenne', default=True)
+    visible_eleves = models.BooleanField('Visible par les élèves', default=False)
+    ordre = models.PositiveIntegerField(default=0)
+    cree_le = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['ordre', 'pk']
+        verbose_name = 'Colonne du carnet de notes'
+        verbose_name_plural = 'Colonnes du carnet de notes'
+
+    def __str__(self):
+        return f'{self.classe} — {self.titre}'
+
+
+class NoteSaisie(models.Model):
+    colonne = models.ForeignKey(ColonneNote, on_delete=models.CASCADE, related_name='notes')
+    eleve = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notes_saisies')
+    note = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['colonne', 'eleve'], name='une_note_par_colonne')]

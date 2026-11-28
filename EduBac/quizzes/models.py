@@ -364,3 +364,58 @@ class StudentAnswer(models.Model):
         self.explanation = self.question.explanation
         self.save()
         return self.is_correct
+
+
+# ─── Quiz en direct (en classe, sur les téléphones) ─────────────────────────────
+
+class LiveSession(models.Model):
+    """Une partie en direct : le professeur projette les questions, les élèves répondent
+    sur leur téléphone ; les points récompensent la bonne réponse et la rapidité."""
+    ATTENTE, QUESTION, RESULTATS, FINI = 'attente', 'question', 'resultats', 'fini'
+    ETATS = [(ATTENTE, 'Salle d’attente'), (QUESTION, 'Question en cours'),
+             (RESULTATS, 'Réponse affichée'), (FINI, 'Terminé')]
+
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='live_sessions')
+    classroom = models.ForeignKey('classrooms.Classroom', on_delete=models.CASCADE, related_name='live_sessions')
+    host = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='hosted_live_sessions')
+    code = models.CharField(max_length=6, db_index=True)
+    state = models.CharField(max_length=12, choices=ETATS, default=ATTENTE)
+    question_index = models.IntegerField(default=-1)
+    question_started_at = models.DateTimeField(null=True, blank=True)
+    seconds = models.PositiveIntegerField(default=20)
+    counts_as_attempt = models.BooleanField(
+        default=False, verbose_name='Compter comme une tentative notée',
+        help_text='À la fin, chaque élève reçoit une tentative (score en %) comme pour un quiz assigné.')
+    created_at = models.DateTimeField(auto_now_add=True)
+    ended_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Quiz en direct'
+        verbose_name_plural = 'Quiz en direct'
+
+    def __str__(self):
+        return f'{self.quiz} — {self.classroom} ({self.code})'
+
+
+class LiveParticipant(models.Model):
+    session = models.ForeignKey(LiveSession, on_delete=models.CASCADE, related_name='participants')
+    student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='live_participations')
+    score = models.PositiveIntegerField(default=0)
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['session', 'student'], name='une_place_par_partie')]
+        ordering = ['-score', 'joined_at']
+
+
+class LiveAnswer(models.Model):
+    participant = models.ForeignKey(LiveParticipant, on_delete=models.CASCADE, related_name='answers')
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='live_answers')
+    choice = models.ForeignKey(Choice, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+    is_correct = models.BooleanField(default=False)
+    points = models.PositiveIntegerField(default=0)
+    answered_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['participant', 'question'], name='une_reponse_par_question')]

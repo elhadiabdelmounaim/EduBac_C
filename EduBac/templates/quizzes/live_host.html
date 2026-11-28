@@ -1,0 +1,28 @@
+{% load edubac_assets %}<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>En direct — {{ session.quiz.title }}</title>
+<link rel="icon" href="{% asset 'pwa/favicon-32.png' %}">
+<link rel="stylesheet" href="{% asset 'css/direct.css' %}">
+{% include "includes/katex.html" %}
+</head>
+<body class="direct-hote">
+<div id="directApp" data-mode="hote" data-csrf="{{ csrf_token }}"
+     data-etat="{% url 'quizzes:live_host_state' session.pk %}" data-action="{% url 'quizzes:live_host_action' session.pk %}"
+     data-retour="{% url 'quizzes:manage' %}">
+  <header class="direct-entete">
+    <strong class="direct-titre">{{ session.quiz.title }}</strong>
+    <span class="direct-classe">{{ session.classroom.name }}</span>
+    <span class="direct-code">Code <b>{{ session.code|slice:":3" }} {{ session.code|slice:"3:" }}</b></span>
+    <span class="direct-joueurs" id="directJoueurs">0 joueur</span>
+    <span class="direct-lien">{{ join_url }}</span>
+    <button type="button" class="direct-outil" id="directPleinEcran" title="Plein écran">⛶</button>
+    <button type="button" class="direct-outil" id="directTerminer" title="Terminer la partie">■</button>
+  </header>
+  <main class="direct-scene" id="directScene" aria-live="polite"></main>
+</div>
+<script src="{% asset 'js/direct.js' %}"></script>
+</body>
+</html>

@@ -160,3 +160,25 @@ html[data-theme="dark"] .dv-etat.est-a-rendre { color: #ff8a80; }
     .dv-note-champ { max-width: 160px; }
     .dv-correction .btn { justify-self: start; }
 }
+
+/* ---------- Correction sur la copie ---------- */
+.an-page { max-width: 1200px; margin: 0 auto; }
+.an-tete { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-bottom: 8px; }
+.an-titre { color: var(--nb-ink); }
+.an-pages { margin-left: auto; color: var(--nb-muted); }
+.an-pages a { display: inline-block; padding: 0 8px; font-size: 1.3rem; text-decoration: none; }
+.an-outils { position: sticky; top: calc(var(--navbar-height, 64px) + 4px); z-index: 20; display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+    padding: 6px 8px; background: var(--nb-surface); border: 1px solid var(--nb-line); border-radius: 14px; box-shadow: var(--nb-shadow); }
+.an-outil { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--nb-line); border-radius: 10px;
+    background: var(--nb-paper); color: var(--nb-ink); font-size: 1.1rem; font-weight: 700; cursor: pointer; }
+.an-outil.est-actif { border-color: var(--nb-teal); box-shadow: inset 0 0 0 2px var(--nb-teal); background: var(--nb-teal-soft); }
+.an-pastille { width: 20px; height: 20px; border-radius: 50%; display: block; }
+.an-sep { width: 1px; height: 28px; background: var(--nb-line); margin: 0 2px; }
+.an-enregistrer { margin-left: auto; }
+.an-etat { min-height: 1.4em; margin: 6px 2px; font-size: .88rem; color: var(--nb-muted); }
+.an-zone { overflow: auto; max-height: calc(100vh - 220px); border: 1px solid var(--nb-line); border-radius: 12px; background: #c9ced6; padding: 0; }
+.an-feuille { position: relative; margin: 0 auto; }
+.an-feuille canvas { display: block; width: 100%; height: auto; }
+.an-calque { position: absolute; inset: 0; touch-action: none; cursor: crosshair; }
+.dv-corrige { display: inline-flex; align-items: center; gap: 4px; font-size: .78rem; font-weight: 700; color: #b42318; }
+@media (max-width: 640px) { .an-outil { width: 36px; height: 36px; } .an-zone { max-height: calc(100vh - 260px); } }

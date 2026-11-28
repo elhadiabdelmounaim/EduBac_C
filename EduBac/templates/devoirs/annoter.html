@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load edubac_assets %}
+{% block extra_css %}<link rel="stylesheet" href="{% asset 'css/devoirs.css' %}">{% endblock %}
+{% block recherche_vocale %}{% endblock %}
+{% block content %}
+<div class="an-page" id="annotation"
+     data-image="{% url 'devoirs:fichier_rendu' page.pk %}"
+     data-calque="{% if page.calque %}{% url 'devoirs:fichier_rendu' page.pk %}?version=calque{% endif %}"
+     data-enregistrer="{% url 'devoirs:annoter' page.pk %}" data-csrf="{{ csrf_token }}">
+  <div class="an-tete">
+    <a href="{% url 'devoirs:rendus' devoir.pk %}#rendu-{{ rendu.pk }}" class="dv-retour mb-0"><i class="bi bi-arrow-left" aria-hidden="true"></i> Copies</a>
+    <strong class="an-titre">{{ rendu.eleve.get_full_name|default:rendu.eleve.username }} · {{ devoir.titre }}</strong>
+    <span class="an-pages">
+      {% if precedente %}<a href="{% url 'devoirs:annoter' precedente.pk %}" aria-label="Page précédente">‹</a>{% endif %}
+      page {{ numero }}/{{ total }}
+      {% if suivante %}<a href="{% url 'devoirs:annoter' suivante.pk %}" aria-label="Page suivante">›</a>{% endif %}
+    </span>
+  </div>
+  <div class="an-outils" role="toolbar" aria-label="Outils de correction">
+    <button type="button" class="an-outil est-actif" data-outil="stylo" data-couleur="#d32f2f" title="Stylo rouge" aria-label="Stylo rouge"><span class="an-pastille" style="background:#d32f2f"></span></button>
+    <button type="button" class="an-outil" data-outil="stylo" data-couleur="#2e7d32" title="Stylo vert" aria-label="Stylo vert"><span class="an-pastille" style="background:#2e7d32"></span></button>
+    <button type="button" class="an-outil" data-outil="stylo" data-couleur="#1d4fa3" title="Stylo bleu" aria-label="Stylo bleu"><span class="an-pastille" style="background:#1d4fa3"></span></button>
+    <button type="button" class="an-outil" data-epaisseur title="Épaisseur" aria-label="Changer l’épaisseur">━</button>
+    <span class="an-sep" aria-hidden="true"></span>
+    <button type="button" class="an-outil" data-outil="texte" title="Texte" aria-label="Écrire un texte">T</button>
+    <button type="button" class="an-outil" data-outil="juste" title="Juste ✓" aria-label="Tampon juste">✓</button>
+    <button type="button" class="an-outil" data-outil="faux" title="Faux ✗" aria-label="Tampon faux">✗</button>
+    <button type="button" class="an-outil" data-outil="gomme" title="Gomme" aria-label="Gomme"><i class="bi bi-eraser" aria-hidden="true"></i></button>
+    <button type="button" class="an-outil" data-outil="main" title="Déplacer" aria-label="Déplacer la page"><i class="bi bi-arrows-move" aria-hidden="true"></i></button>
+    <span class="an-sep" aria-hidden="true"></span>
+    <button type="button" class="an-outil" data-zoom="-1" title="Dézoomer" aria-label="Dézoomer"><i class="bi bi-zoom-out" aria-hidden="true"></i></button>
+    <button type="button" class="an-outil" data-zoom="1" title="Zoomer" aria-label="Zoomer"><i class="bi bi-zoom-in" aria-hidden="true"></i></button>
+    <button type="button" class="an-outil" data-annuler title="Annuler" aria-label="Annuler le dernier trait"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button>
+    <button type="button" class="an-outil" data-effacer title="Tout effacer" aria-label="Effacer toute la correction"><i class="bi bi-trash" aria-hidden="true"></i></button>
+    <button type="button" class="btn btn-edubac btn-sm an-enregistrer" data-enregistrer-btn><i class="bi bi-check2" aria-hidden="true"></i> Enregistrer</button>
+  </div>
+  <p class="an-etat" data-etat role="status">Chargement de la page…</p>
+  <div class="an-zone" data-zone>
+    <div class="an-feuille" data-feuille>
+      <canvas class="an-fond" data-fond></canvas>
+      <canvas class="an-calque" data-dessin></canvas>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% asset 'js/annotation.js' %}"></script>{% endblock %}

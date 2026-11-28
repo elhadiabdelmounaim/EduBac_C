@@ -18,4 +18,5 @@ urlpatterns = [
     path('<int:pk>/copies/', views.rendus, name='rendus'),
     path('copie/<int:pk>/', views.fichier_rendu, name='fichier_rendu'),
     path('copie/<int:pk>/retirer/', views.retirer_page, name='retirer_page'),
+    path('copie/<int:pk>/annoter/', views.annoter, name='annoter'),
 ]

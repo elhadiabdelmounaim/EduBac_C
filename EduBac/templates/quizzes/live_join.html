@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card border-0 shadow-sm mx-auto" style="max-width:440px;">
+  <div class="card-body p-4 text-center">
+    <h1 class="h4 fw-bold mb-1"><i class="bi bi-broadcast" aria-hidden="true"></i> Quiz en direct</h1>
+    {% if ouvertes %}
+    <p class="text-muted mb-2">En cours dans ta classe :</p>
+    <div class="d-grid gap-2 mb-3">
+      {% for s in ouvertes %}
+      <a class="btn btn-edubac btn-lg" href="{% url 'quizzes:live_play' s.pk %}">Rejoindre « {{ s.quiz.title }} »</a>
+      {% endfor %}
+    </div>
+    <p class="text-muted small mb-2">ou entre le code affiché au tableau :</p>
+    {% else %}
+    <p class="text-muted">Entre le code affiché au tableau.</p>
+    {% endif %}
+    <form method="post" class="d-grid gap-2">
+      {% csrf_token %}
+      <label for="liveCode" class="visually-hidden">Code</label>
+      <input type="text" inputmode="numeric" autocomplete="off" maxlength="7" name="code" id="liveCode" class="form-control form-control-lg text-center fw-bold" style="letter-spacing:.3em;font-size:2rem" placeholder="000000" required>
+      <button type="submit" class="btn btn-accent btn-lg">Rejoindre</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

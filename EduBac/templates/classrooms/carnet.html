@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="carnet-page">
+  <header class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+    <div>
+      <h1 class="h3 fw-bold mb-1"><i class="bi bi-journal-bookmark-fill" aria-hidden="true"></i> Carnet de notes — {{ classe.name }}</h1>
+      <p class="text-muted mb-0">Notes sur 20. Devoirs et quiz se remplissent seuls ; les colonnes « saisie » s’enregistrent dès que vous quittez la case.</p>
+    </div>
+    <a href="{% url 'classrooms:carnet_excel' classe.pk %}" class="btn btn-outline-success btn-sm"><i class="bi bi-file-earmark-excel" aria-hidden="true"></i> Exporter Excel</a>
+  </header>
+
+  {% if classes|length > 1 %}
+  <nav class="d-flex flex-wrap gap-2 mb-3" aria-label="Classes">
+    {% for c in classes %}<a href="{% url 'classrooms:carnet' c.pk %}" class="btn btn-sm {% if c.pk == classe.pk %}btn-primary{% else %}btn-outline-primary{% endif %}"{% if c.pk == classe.pk %} aria-current="page"{% endif %}>{{ c.name }}</a>{% endfor %}
+  </nav>
+  {% endif %}
+
+  <details class="carnet-ajout mb-3"{% if not t.colonnes %} open{% endif %}>
+    <summary><i class="bi bi-plus-circle" aria-hidden="true"></i> Ajouter une colonne</summary>
+    <div class="carnet-ajout-corps">
+      <form method="post" class="carnet-ajout-form">
+        {% csrf_token %}<input type="hidden" name="action" value="ajouter"><input type="hidden" name="source" value="manuel">
+        <label class="form-label small mb-1" for="colTitre">Note à saisir (contrôle, oral…)</label>
+        <div class="input-group input-group-sm">
+          <input type="text" name="titre" id="colTitre" class="form-control" maxlength="120" placeholder="Contrôle 1" required>
+          <button class="btn btn-edubac" type="submit">Ajouter</button>
+        </div>
+      </form>
+      <form method="post" class="carnet-ajout-form">
+        {% csrf_token %}<input type="hidden" name="action" value="ajouter"><input type="hidden" name="source" value="devoir">
+        <label class="form-label small mb-1" for="colDevoir">Devoir (note de la copie)</label>
+        <div class="input-group input-group-sm">
+          <select name="devoir" id="colDevoir" class="form-select" required {% if not devoirs_libres %}disabled{% endif %}>
+            {% for d in devoirs_libres %}<option value="{{ d.pk }}">{{ d.titre }}</option>{% empty %}<option>Aucun devoir à ajouter</option>{% endfor %}
+          </select>
+          <button class="btn btn-edubac" type="submit" {% if not devoirs_libres %}disabled{% endif %}>Ajouter</button>
+        </div>
+      </form>
+      <form method="post" class="carnet-ajout-form">
+        {% csrf_token %}<input type="hidden" name="action" value="ajouter"><input type="hidden" name="source" value="quiz">
+        <label class="form-label small mb-1" for="colQuiz">Quiz (dernier score, ramené sur 20)</label>
+        <div class="input-group input-group-sm">
+          <select name="quiz" id="colQuiz" class="form-select" required {% if not quiz_libres %}disabled{% endif %}>
+            {% for q in quiz_libres %}<option value="{{ q.pk }}">{{ q.title }}</option>{% empty %}<option>Aucun quiz à ajouter</option>{% endfor %}
+          </select>
+          <button class="btn btn-edubac" type="submit" {% if not quiz_libres %}disabled{% endif %}>Ajouter</button>
+        </div>
+      </form>
+    </div>
+  </details>
+
+  {% if t.colonnes %}
+  <div class="carnet-table-wrap">
+    <table class="carnet-table" data-url="{% url 'classrooms:carnet_note' classe.pk %}" data-csrf="{{ csrf_token }}">
+      <thead>
+        <tr>
+          <th scope="col" class="carnet-eleve">Élève</th>
+          {% for c in t.colonnes %}
+          <th scope="col">
+            <details class="carnet-col">
+              <summary>
+                <span class="carnet-col-titre">{{ c.titre }}</span>
+                <span class="carnet-col-info">
+                  <i class="bi {% if c.source == 'devoir' %}bi-journal-text{% elif c.source == 'quiz' %}bi-clipboard-check{% else %}bi-pencil{% endif %}" aria-hidden="true"></i>
+                  coef {{ c.coef_texte }}{% if not c.dans_moyenne %} · hors moyenne{% endif %}{% if c.visible_eleves %} · 👁{% endif %}
+                </span>
+              </summary>
+              <form method="post" class="carnet-col-form">
+                {% csrf_token %}<input type="hidden" name="colonne" value="{{ c.pk }}">
+                <label class="small">Titre <input type="text" name="titre" value="{{ c.titre }}" maxlength="120" class="form-control form-control-sm"></label>
+                <label class="small">Coefficient <input type="text" inputmode="decimal" name="coefficient" value="{{ c.coef_texte }}" class="form-control form-control-sm"></label>
+                <label class="form-check small"><input type="checkbox" class="form-check-input" name="dans_moyenne" value="1"{% if c.dans_moyenne %} checked{% endif %}> Compte dans la moyenne</label>
+                <label class="form-check small"><input type="checkbox" class="form-check-input" name="visible_eleves" value="1"{% if c.visible_eleves %} checked{% endif %}> Visible par les élèves</label>
+                <div class="d-flex gap-1">
+                  <button type="submit" name="action" value="regler" class="btn btn-sm btn-edubac">Enregistrer</button>
+                  <button type="submit" name="action" value="supprimer" class="btn btn-sm btn-outline-danger" data-confirmer="Supprimer la colonne « {{ c.titre }} » ?{% if c.source == 'manuel' %} Les notes saisies seront perdues.{% endif %}">Supprimer</button>
+                </div>
+              </form>
+            </details>
+          </th>
+          {% endfor %}
+          <th scope="col" class="carnet-moy">Moyenne</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in t.lignes %}
+        <tr data-eleve="{{ l.eleve.pk }}">
+          <th scope="row" class="carnet-eleve">{{ l.eleve.get_full_name|default:l.eleve.username }}</th>
+          {% for x in l.cellules %}
+          <td>
+            {% if x.colonne.source == 'manuel' %}
+            <input type="text" inputmode="decimal" class="carnet-saisie" value="{{ x.texte }}" data-colonne="{{ x.colonne.pk }}"
+                   aria-label="{{ x.colonne.titre }} — {{ l.eleve.get_full_name|default:l.eleve.username }}">
+            {% else %}
+            <span class="carnet-auto{% if x.note is None %} est-vide{% endif %}">{{ x.texte|default:"—" }}</span>
+            {% endif %}
+          </td>
+          {% endfor %}
+          <td class="carnet-moy" data-moyenne>{{ l.moyenne_texte|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="{{ t.colonnes|length|add:2 }}" class="text-muted">Aucun élève dans cette classe.</td></tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th scope="row" class="carnet-eleve">Moyenne de la classe</th>
+          {% for c in t.colonnes %}<td data-moyenne-colonne="{{ c.pk }}">{{ c.moyenne_texte|default:"—" }}</td>{% endfor %}
+          <td class="carnet-moy" data-moyenne-classe>{{ t.moyenne_classe_texte|default:"—" }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+  <p class="small text-muted mt-2">👁 : la colonne apparaît dans « Mes notes » des élèves (chacun ne voit que ses notes). La moyenne de la page est recalculée après chaque saisie.</p>
+  {% endif %}
+</div>
+<style>
+.carnet-page { max-width: 100%; }
+.carnet-ajout { background: var(--nb-surface, #fff); border: 1px solid var(--nb-line, #d9e0ec); border-radius: 14px; padding: 10px 14px; }
+.carnet-ajout > summary { cursor: pointer; font-weight: 600; color: var(--nb-teal, #1d4fa3); }
+.carnet-ajout-corps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 10px; }
+.carnet-table-wrap { overflow-x: auto; border: 1px solid var(--nb-line, #d9e0ec); border-radius: 14px; background: var(--nb-surface, #fff); }
+.carnet-table { border-collapse: separate; border-spacing: 0; min-width: 100%; font-size: .92rem; color: var(--nb-ink, #263449); }
+.carnet-table th, .carnet-table td { padding: 6px 10px; border-bottom: 1px solid var(--nb-line, #d9e0ec); text-align: center; white-space: nowrap; vertical-align: middle; }
+.carnet-table thead th { background: var(--nb-paper, #f4f6fb); vertical-align: top; min-width: 120px; }
+.carnet-eleve { position: sticky; left: 0; z-index: 1; text-align: left !important; background: var(--nb-surface, #fff); min-width: 180px; }
+.carnet-table thead .carnet-eleve, .carnet-table tfoot .carnet-eleve { background: var(--nb-paper, #f4f6fb); }
+.carnet-table tfoot td, .carnet-table tfoot th { background: var(--nb-paper, #f4f6fb); font-weight: 700; }
+.carnet-moy { font-weight: 700; background: var(--nb-teal-soft, #e6eefb); }
+.carnet-col > summary { list-style: none; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+.carnet-col > summary::-webkit-details-marker { display: none; }
+.carnet-col-titre { font-weight: 700; white-space: normal; }
+.carnet-col-info { font-size: .74rem; font-weight: 400; color: var(--nb-muted, #56627a); }
+.carnet-col-form { display: grid; gap: 6px; margin-top: 6px; text-align: left; min-width: 200px; font-weight: 400; }
+.carnet-saisie { width: 64px; text-align: center; border: 1px solid var(--nb-line, #d9e0ec); border-radius: 8px; padding: 3px 4px; background: var(--nb-surface, #fff); color: inherit; }
+.carnet-saisie:focus { outline: 2px solid var(--nb-teal, #1d4fa3); }
+.carnet-saisie.est-ok { border-color: #2e9e5b; background: rgba(46,158,91,.08); }
+.carnet-saisie.est-erreur { border-color: #c0392b; background: rgba(192,57,43,.08); }
+.carnet-auto.est-vide { color: var(--nb-muted, #56627a); }
+</style>
+{% endblock %}
+{% block extra_js %}
+<script>
+(function () {
+  document.querySelectorAll('[data-confirmer]').forEach(function (b) {
+    b.addEventListener('click', function (e) { if (!window.confirm(b.getAttribute('data-confirmer'))) e.preventDefault(); });
+  });
+  var table = document.querySelector('.carnet-table');
+  if (!table) return;
+  table.addEventListener('change', function (e) {
+    var champ = e.target.closest('.carnet-saisie');
+    if (!champ) return;
+    var ligne = champ.closest('tr');
+    champ.classList.remove('est-ok', 'est-erreur');
+    fetch(table.getAttribute('data-url'), {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': table.getAttribute('data-csrf'), Accept: 'application/json' },
+      body: JSON.stringify({ colonne: champ.getAttribute('data-colonne'), eleve: ligne.getAttribute('data-eleve'), note: champ.value })
+    }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (res) {
+        if (!res.ok) { champ.classList.add('est-erreur'); champ.title = res.d.error || 'Erreur'; return; }
+        champ.value = res.d.note;
+        champ.title = 'Enregistré';
+        champ.classList.add('est-ok');
+        ligne.querySelector('[data-moyenne]').textContent = res.d.moyenne || '—';
+        var pied = table.querySelector('[data-moyenne-colonne="' + champ.getAttribute('data-colonne') + '"]');
+        if (pied) pied.textContent = res.d.moyenne_colonne || '—';
+        table.querySelector('[data-moyenne-classe]').textContent = res.d.moyenne_classe || '—';
+      })
+      .catch(function () { champ.classList.add('est-erreur'); champ.title = 'Réseau indisponible'; });
+  });
+  // Entrée : case suivante de la même colonne (saisie rapide d'un paquet de copies).
+  table.addEventListener('keydown', function (e) {
+    var champ = e.target.closest('.carnet-saisie');
+    if (!champ || e.key !== 'Enter') return;
+    e.preventDefault();
+    var col = champ.getAttribute('data-colonne');
+    var suivante = champ.closest('tr').nextElementSibling;
+    var cible = suivante && suivante.querySelector('.carnet-saisie[data-colonne="' + col + '"]');
+    if (cible) { cible.focus(); cible.select(); } else champ.blur();
+  });
+})();
+</script>
+{% endblock %}

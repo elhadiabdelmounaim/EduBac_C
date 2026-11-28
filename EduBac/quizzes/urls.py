@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import live_views, views
 from .performance import generation_progress
 
 app_name = 'quizzes'
@@ -9,6 +9,14 @@ urlpatterns = [
     path('assignes/', views.assigned_quizzes, name='assigned'),
     path('mes-resultats/', views.my_results, name='my_results'),
     path('mes-erreurs/', views.review_mistakes, name='review_mistakes'),
+    path('direct/', live_views.rejoindre, name='live_join'),
+    path('<int:pk>/direct/', live_views.lancer, name='live_launch'),
+    path('direct/<int:pk>/animer/', live_views.animer, name='live_host'),
+    path('direct/<int:pk>/animer/etat/', live_views.etat_hote, name='live_host_state'),
+    path('direct/<int:pk>/animer/action/', live_views.action_hote, name='live_host_action'),
+    path('direct/<int:pk>/', live_views.jouer, name='live_play'),
+    path('direct/<int:pk>/etat/', live_views.etat_eleve, name='live_state'),
+    path('direct/<int:pk>/repondre/', live_views.repondre, name='live_answer'),
     path('entrainement/', views.training, name='training'),
     path('<int:pk>/', views.quiz_detail, name='detail'),
     path('<int:pk>/commencer/', views.start_quiz, name='start'),

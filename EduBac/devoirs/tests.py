@@ -383,3 +383,72 @@ class RendusTests(BaseDevoirs):
         self.rendre(devoir, self.eleve_a, self.photo())
         self.connecter(self.eleve_a)
         self.assertNotContains(self.client.get(reverse('accounts:dashboard')), 'Devoirs à rendre')
+
+
+PNG = b'\x89PNG\r\n\x1a\n' + b'\x00' * 40
+
+
+class AnnotationTests(BaseDevoirs):
+    """Correction dessinée sur une page photographiée : calque + page corrigée, original intact."""
+
+    def setUp(self):
+        super().setUp()
+        self.creer([self.a])
+        self.devoir = Devoir.objects.get()
+        self.connecter(self.eleve_a)
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(reverse('devoirs:rendre', args=[self.devoir.pk]), {'pages': [
+                SimpleUploadedFile('p1.jpg', b'\xff\xd8\xff jpeg', content_type='image/jpeg'),
+                SimpleUploadedFile('p2.pdf', b'%PDF-1.4', content_type='application/pdf')]})
+        from .models import FichierRendu
+        self.photo = FichierRendu.objects.get(nom='p1.jpg')
+        self.pdf = FichierRendu.objects.get(nom='p2.pdf')
+        Notification.objects.all().delete()
+
+    def enregistrer(self, page, calque=PNG, annotee=PNG):
+        with self.captureOnCommitCallbacks(execute=True):
+            return self.client.post(reverse('devoirs:annoter', args=[page.pk]), {
+                'calque': SimpleUploadedFile('calque.png', calque, content_type='image/png'),
+                'annotee': SimpleUploadedFile('corrigee.png', annotee, content_type='image/png')})
+
+    def test_annoter_puis_l_eleve_voit_la_copie_corrigee(self):
+        self.connecter(self.prof)
+        self.assertContains(self.client.get(reverse('devoirs:rendus', args=[self.devoir.pk])), 'Annoter')
+        self.assertEqual(self.client.get(reverse('devoirs:annoter', args=[self.photo.pk])).status_code, 200)
+        self.assertEqual(self.enregistrer(self.photo).status_code, 200)
+        self.photo.refresh_from_db()
+        self.assertTrue(self.photo.annotee and self.photo.calque and self.photo.annote_le)
+        self.assertEqual(Notification.objects.get().title, 'Copie corrigée')
+        self.enregistrer(self.photo)                       # reprise : pas de seconde notification
+        self.assertEqual(Notification.objects.count(), 1)
+        url = reverse('devoirs:fichier_rendu', args=[self.photo.pk])
+        self.assertEqual(self.client.get(url + '?version=calque').status_code, 200)
+        self.connecter(self.eleve_a)
+        page = self.client.get(reverse('devoirs:detail', args=[self.devoir.pk]))
+        self.assertContains(page, 'p1.jpg — corrigée')
+        r = self.client.get(url + '?version=corrigee')
+        self.assertEqual(r['Content-Type'], 'image/png')
+        self.assertEqual(self.client.get(url + '?version=calque').status_code, 404)    # le calque : professeur seulement
+        self.client.post(reverse('devoirs:retirer_page', args=[self.photo.pk]))          # page annotée : on la garde
+        self.assertTrue(type(self.photo).objects.filter(pk=self.photo.pk).exists())
+        self.assertEqual(b''.join(self.client.get(url).streaming_content), b'\xff\xd8\xff jpeg')   # original intact
+
+    def test_refus(self):
+        self.connecter(self.prof)
+        self.assertEqual(self.enregistrer(self.photo, calque=b'pas une image').status_code, 400)
+        self.assertEqual(self.client.get(reverse('devoirs:annoter', args=[self.pdf.pk])).status_code, 404)
+        for user in (self.autre_prof, self.eleve_a):
+            self.connecter(user)
+            self.enregistrer(self.photo)
+        self.photo.refresh_from_db()
+        self.assertFalse(self.photo.annotee)
+
+    def test_supprimer_la_page_efface_la_correction(self):
+        self.connecter(self.prof)
+        self.enregistrer(self.photo)
+        self.photo.refresh_from_db()
+        chemins = [Path(self.photo.fichier.path), Path(self.photo.calque.path), Path(self.photo.annotee.path)]
+        self.assertTrue(all(c.exists() for c in chemins))
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(reverse('devoirs:supprimer', args=[self.devoir.pk]))
+        self.assertFalse(any(c.exists() for c in chemins))

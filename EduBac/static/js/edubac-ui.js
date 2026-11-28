@@ -49,13 +49,17 @@
   }
 
   function initActiveSidebar() {
+    // Le lien le plus précis seulement (« /classrooms/carnet/ » plutôt que « /classrooms/ »).
     var path = window.location.pathname;
+    var meilleur = null, longueur = 0;
     $('.sidebar-nav .nav-link').each(function () {
       var href = $(this).attr('href');
-      if (href && path.indexOf(href) === 0 && href !== '/') {
-        $(this).addClass('active');
+      if (href && href !== '/' && href.charAt(0) === '/' && path.indexOf(href.split('?')[0]) === 0 && href.length > longueur) {
+        meilleur = this;
+        longueur = href.length;
       }
     });
+    if (meilleur && !$('.sidebar-nav .nav-link.active').not(meilleur).length) $(meilleur).addClass('active');
   }
 
   function initActiveBottomNav() {

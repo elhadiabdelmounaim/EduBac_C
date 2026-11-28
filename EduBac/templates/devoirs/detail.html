@@ -123,9 +123,14 @@
     <ul class="dv-pages">
       {% for page in mon_rendu.fichiers.all %}
       <li>
+        {% if page.annotee %}
+        <a href="{% url 'devoirs:fichier_rendu' page.pk %}?version=corrigee" target="_blank" rel="noopener" class="dv-corrige"><i class="bi bi-pencil-square" aria-hidden="true"></i> {{ page.nom }} — corrigée</a>
+        <a href="{% url 'devoirs:fichier_rendu' page.pk %}" target="_blank" rel="noopener" class="dv-fichier-meta">voir l’original</a>
+        {% else %}
         <a href="{% url 'devoirs:fichier_rendu' page.pk %}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-image" aria-hidden="true"></i> {{ page.nom }}</a>
         <span class="dv-fichier-meta">{{ page.taille|filesizeformat }}</span>
-        {% if not mon_rendu.corrige_le %}
+        {% endif %}
+        {% if not mon_rendu.corrige_le and not page.annote_le %}
         <form method="post" action="{% url 'devoirs:retirer_page' page.pk %}" data-confirmer="Retirer « {{ page.nom }} » ?">
           {% csrf_token %}
           <button type="submit" class="btn btn-sm btn-link text-danger p-0" aria-label="Retirer {{ page.nom }}"><i class="bi bi-x-circle" aria-hidden="true"></i></button>

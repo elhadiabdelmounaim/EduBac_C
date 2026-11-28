@@ -1777,8 +1777,18 @@ def review_mistakes(request):
         .select_related('question__quiz__lesson', 'attempt')
         .order_by('-attempt__submitted_at', '-pk')
     )
+    # Réponses des quiz (tentatives) et des quiz en direct : la plus récente compte pour chaque question.
+    from types import SimpleNamespace
+    from .models import LiveAnswer
+    toutes = [SimpleNamespace(question_id=r.question_id, question=r.question, answer=r.answer,
+                              is_correct=r.is_correct, quand=r.attempt.submitted_at) for r in reponses]
+    for r in (LiveAnswer.objects.filter(participant__student=request.user)
+              .select_related('question__quiz__lesson', 'choice')):
+        toutes.append(SimpleNamespace(question_id=r.question_id, question=r.question,
+                                      answer=r.choice.text if r.choice else '', is_correct=r.is_correct, quand=r.answered_at))
+    toutes.sort(key=lambda r: r.quand, reverse=True)
     derniere = {}
-    for r in reponses:
+    for r in toutes:
         derniere.setdefault(r.question_id, r)       # la plus récente d'abord
     ratees = [r for r in derniere.values() if not r.is_correct][:60]
     questions = []

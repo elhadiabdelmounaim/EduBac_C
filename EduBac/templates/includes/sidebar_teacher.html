@@ -15,7 +15,7 @@
             </li>
             <li class="nav-section" role="presentation">Classes</li>
             <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.app_name == 'classrooms' and request.resolver_match.url_name != 'students' %}active{% endif %}"
+                <a class="nav-link {% if request.resolver_match.app_name == 'classrooms' and request.resolver_match.url_name not in 'students rapport carnet carnet_index' %}active{% endif %}"
                    href="{% url 'classrooms:list' %}">
                     <i class="bi bi-people"></i><span>Mes classes</span>
                 </a>
@@ -24,6 +24,12 @@
                 <a class="nav-link {% if request.resolver_match.url_name == 'students' %}active{% endif %}"
                    href="{% url 'classrooms:students' %}">
                     <i class="bi bi-person-badge"></i><span>Mes élèves</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'carnet' %}active{% endif %}"
+                   href="{% url 'classrooms:carnet_index' %}">
+                    <i class="bi bi-journal-bookmark-fill"></i><span>Carnet de notes</span>
                 </a>
             </li>
             <li class="nav-item">

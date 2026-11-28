@@ -502,3 +502,126 @@ def rapport_semaine(request):
         'rapport': rapport_professeur(request.edubac_user),
         'page_title': 'Rapport de la semaine',
     })
+
+
+# ─── Carnet de notes ─────────────────────────────────────────────────────────
+
+@teacher_required
+def carnet_index(request):
+    """Le carnet de la première classe ; les autres sont accessibles par des onglets."""
+    classe = _managed_classrooms(_user(request)).filter(is_active=True).order_by('niveau', 'name').first()
+    if classe is None:
+        messages.info(request, 'Créez d’abord une classe.')
+        return redirect('classrooms:list')
+    return redirect('classrooms:carnet', classe.pk)
+
+
+@teacher_required
+def carnet(request, pk):
+    from decimal import Decimal, InvalidOperation
+    from . import notes
+    from .models import ColonneNote
+    user = _user(request)
+    classe = _managed_classroom(user, pk)
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'ajouter':
+            source = request.POST.get('source')
+            colonne = ColonneNote(classe=classe, ordre=classe.colonnes_notes.count())
+            if source == ColonneNote.DEVOIR:
+                from devoirs.models import Devoir
+                colonne.devoir = get_object_or_404(Devoir, pk=request.POST.get('devoir'), classes=classe)
+                colonne.source, colonne.titre = ColonneNote.DEVOIR, colonne.devoir.titre[:120]
+            elif source == ColonneNote.QUIZ:
+                from quizzes.models import Quiz
+                colonne.quiz = get_object_or_404(Quiz, pk=request.POST.get('quiz'))
+                colonne.source, colonne.titre = ColonneNote.QUIZ, colonne.quiz.title[:120]
+            else:
+                colonne.titre = (request.POST.get('titre') or '').strip()[:120] or 'Contrôle'
+            colonne.save()
+            messages.success(request, f'Colonne « {colonne.titre} » ajoutée.')
+        elif action in ('regler', 'supprimer'):
+            colonne = get_object_or_404(ColonneNote, pk=request.POST.get('colonne'), classe=classe)
+            if action == 'supprimer':
+                colonne.delete()
+                messages.success(request, f'Colonne « {colonne.titre} » supprimée.')
+            else:
+                try:
+                    coef = Decimal((request.POST.get('coefficient') or '1').replace(',', '.'))
+                    if not (0 < coef <= 20):
+                        raise InvalidOperation
+                except InvalidOperation:
+                    messages.error(request, 'Le coefficient doit être un nombre entre 0 et 20.')
+                    return redirect('classrooms:carnet', classe.pk)
+                colonne.titre = (request.POST.get('titre') or colonne.titre).strip()[:120]
+                colonne.coefficient = coef
+                colonne.dans_moyenne = request.POST.get('dans_moyenne') == '1'
+                colonne.visible_eleves = request.POST.get('visible_eleves') == '1'
+                colonne.save()
+                messages.success(request, 'Colonne mise à jour.')
+        return redirect('classrooms:carnet', classe.pk)
+    devoirs, quiz = notes.suggestions(classe)
+    return render(request, 'classrooms/carnet.html', {
+        'classe': classe, 't': notes.tableau(classe), 'devoirs_libres': devoirs, 'quiz_libres': quiz,
+        'classes': _managed_classrooms(user).filter(is_active=True).order_by('niveau', 'name'),
+        'page_title': f'Carnet de notes — {classe.name}',
+    })
+
+
+@require_POST
+@teacher_required
+def carnet_note(request, pk):
+    """Enregistre une note saisie (JSON) et renvoie la nouvelle moyenne de l'élève."""
+    import json
+    from decimal import Decimal, InvalidOperation
+    from django.http import JsonResponse
+    from . import notes
+    from .models import ColonneNote, NoteSaisie
+    classe = _managed_classroom(_user(request), pk)
+    try:
+        data = json.loads(request.body.decode('utf-8') or '{}')
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'error': 'Requête invalide.'}, status=400)
+    colonne = get_object_or_404(ColonneNote, pk=data.get('colonne'), classe=classe, source=ColonneNote.MANUEL)
+    if not ClassroomMember.objects.filter(classroom=classe, user_id=data.get('eleve')).exists():
+        return JsonResponse({'error': 'Élève inconnu dans cette classe.'}, status=404)
+    brut = str(data.get('note') or '').strip().replace(',', '.')
+    try:
+        note = Decimal(brut) if brut else None
+        if note is not None and not (0 <= note <= 20):
+            raise InvalidOperation
+    except InvalidOperation:
+        return JsonResponse({'error': 'Note entre 0 et 20.'}, status=400)
+    NoteSaisie.objects.update_or_create(colonne=colonne, eleve_id=data['eleve'], defaults={'note': note})
+    t = notes.tableau(classe)
+    moyenne = next((l['moyenne'] for l in t['lignes'] if str(l['eleve'].pk) == str(data['eleve'])), None)
+    colonne_calculee = next(c for c in t['colonnes'] if c.pk == colonne.pk)
+    return JsonResponse({'ok': True, 'note': notes.texte(note), 'moyenne': notes.texte(moyenne),
+                         'moyenne_colonne': colonne_calculee.moyenne_texte, 'moyenne_classe': t['moyenne_classe_texte']})
+
+
+@teacher_required
+def carnet_excel(request, pk):
+    from io import BytesIO
+    from django.utils.text import slugify
+    from . import notes
+    classe = _managed_classroom(_user(request), pk)
+    tampon = BytesIO()
+    notes.classeur_excel(classe).save(tampon)
+    reponse = HttpResponse(tampon.getvalue(),
+                           content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    reponse['Content-Disposition'] = f'attachment; filename="carnet-{slugify(classe.name) or classe.pk}.xlsx"'
+    return reponse
+
+
+@student_required
+def mes_notes(request):
+    """Les notes de l'élève, colonnes rendues visibles par le professeur, classe par classe."""
+    from . import notes
+    user = _user(request)
+    carnets = []
+    for m in ClassroomMember.objects.filter(user=user, classroom__is_active=True).select_related('classroom'):
+        t = notes.tableau(m.classroom, pour_eleve=user)
+        if t['colonnes']:
+            carnets.append({'classe': m.classroom, 'ligne': t['lignes'][0], 'colonnes': t['colonnes']})
+    return render(request, 'classrooms/mes_notes.html', {'carnets': carnets, 'page_title': 'Mes notes'})

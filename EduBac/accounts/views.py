@@ -1010,6 +1010,7 @@ def student_dashboard(request):
     # « Devoirs à rendre » : rendu en ligne, pas encore rendu, date limite à venir (ou sans date).
     from django.db.models import Q
     from devoirs.acces import devoirs_de_l_eleve
+    from quizzes.direct import parties_ouvertes_pour
     devoirs_a_rendre = list(
         devoirs_de_l_eleve(user).filter(rendu_en_ligne=True)
         .filter(Q(date_limite__isnull=True) | Q(date_limite__gte=now))
@@ -1024,6 +1025,7 @@ def student_dashboard(request):
         'page_title': 'Tableau de bord élève',
         'todo': todo[:6],
         'devoirs_a_rendre': devoirs_a_rendre,
+        'parties_directes': list(parties_ouvertes_pour(user)),
         'todo_count': len(todo),
         'profile': profile,
         'stats': stats,

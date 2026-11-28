@@ -350,6 +350,8 @@ def retirer_page(request, pk):
         raise Http404
     if rendu.corrige_le:
         messages.error(request, 'Ce travail est déjà corrigé : il ne peut plus être modifié.')
+    elif page.annote_le:
+        messages.error(request, 'Cette page est déjà annotée par le professeur : elle ne peut plus être retirée.')
     else:
         with transaction.atomic():
             supprimer_fichier(page)
@@ -361,9 +363,19 @@ def retirer_page(request, pk):
 
 @login_required_simple
 def fichier_rendu(request, pk):
+    """La page rendue ; « ?version=corrigee » : la page annotée par le professeur ;
+    « ?version=calque » : le calque seul (professeur, pour reprendre la correction)."""
     page = get_object_or_404(FichierRendu.objects.select_related('rendu', 'rendu__devoir'), pk=pk)
     user = request.edubac_user
-    if page.rendu.eleve_id != user.pk and not acces.peut_gerer(user, page.rendu.devoir):
+    gere = acces.peut_gerer(user, page.rendu.devoir)
+    if page.rendu.eleve_id != user.pk and not gere:
+        raise Http404
+    version = request.GET.get('version')
+    if version == 'corrigee' and page.annotee:
+        return _servir_png(page.annotee, f'corrige-{page.nom.rsplit(".", 1)[0]}.png', request)
+    if version == 'calque' and gere and page.calque:
+        return _servir_png(page.calque, 'calque.png', request)
+    if version in ('corrigee', 'calque'):
         raise Http404
     try:
         flux = page.fichier.open('rb')
@@ -420,3 +432,71 @@ def rendus(request, pk):
     return render(request, 'devoirs/rendus.html', {
         'devoir': devoir, 'groupes': groupes, 'page_title': f'Copies — {devoir.titre}',
     })
+
+
+def _servir_png(champ, nom, request):
+    try:
+        flux = champ.open('rb')
+    except (FileNotFoundError, OSError, ValueError):
+        raise Http404 from None
+    reponse = FileResponse(flux, as_attachment=request.GET.get('telecharger') == '1', filename=nom,
+                           content_type='image/png')
+    reponse['Cache-Control'] = 'private, no-store'
+    reponse['X-Content-Type-Options'] = 'nosniff'
+    return reponse
+
+
+TAILLE_PNG_MAX = 15 * 1024 * 1024
+
+
+def _png_valide(envoi):
+    if envoi is None or envoi.size > TAILLE_PNG_MAX or envoi.size < 8:
+        return False
+    debut = envoi.read(8)
+    envoi.seek(0)
+    return debut == b'\x89PNG\r\n\x1a\n'
+
+
+@teacher_required
+def annoter(request, pk):
+    """Corriger une page photographiée : dessin, texte, ✓ et ✗ par-dessus ; l'original reste intact."""
+    page = get_object_or_404(FichierRendu.objects.select_related('rendu__devoir', 'rendu__eleve'), pk=pk)
+    if not acces.peut_gerer(request.edubac_user, page.rendu.devoir) or not page.annotable:
+        raise Http404
+    if request.method == 'POST':
+        from django.http import JsonResponse
+        calque, annotee = request.FILES.get('calque'), request.FILES.get('annotee')
+        if not (_png_valide(calque) and _png_valide(annotee)):
+            return JsonResponse({'error': 'Image de correction invalide.'}, status=400)
+        # Noms relevés avant l'enregistrement : FieldFile prend le nouveau nom après save().
+        anciens = [(f.storage, f.name) for f in (page.calque, page.annotee) if f]
+        premiere = page.annote_le is None
+        with transaction.atomic():
+            page.calque.save('calque.png', calque, save=False)
+            page.annotee.save('corrigee.png', annotee, save=False)
+            page.annote_le = timezone.now()
+            page.save(update_fields=['calque', 'annotee', 'annote_le'])
+            for stockage, chemin in anciens:
+                transaction.on_commit(lambda s=stockage, c=chemin: s.delete(c) if s.exists(c) else None)
+            if premiere:
+                transaction.on_commit(lambda: _notifier_annotation(page))
+        return JsonResponse({'ok': True, 'url': reverse('devoirs:rendus', args=[page.rendu.devoir_id]) + f'#rendu-{page.rendu_id}'})
+    pages = [p for p in page.rendu.fichiers.all() if p.annotable]
+    i = next((k for k, p in enumerate(pages) if p.pk == page.pk), 0)
+    return render(request, 'devoirs/annoter.html', {
+        'page': page, 'rendu': page.rendu, 'devoir': page.rendu.devoir,
+        'precedente': pages[i - 1] if i > 0 else None, 'suivante': pages[i + 1] if i + 1 < len(pages) else None,
+        'numero': i + 1, 'total': len(pages), 'page_title': f'Corriger — {page.nom}',
+    })
+
+
+def _notifier_annotation(page):
+    from notifications.services import notify_user
+    rendu = page.rendu
+    notify_user(
+        user=rendu.eleve, title='Copie corrigée',
+        message=f'Le professeur a annoté ta copie « {rendu.devoir.titre} ».',
+        type='devoir', actor=rendu.devoir.teacher,
+        link=reverse('devoirs:detail', args=[rendu.devoir_id]) + '#mon-travail',
+        group_key=f'devoir_annotation:{rendu.pk}', send_email=False,
+    )

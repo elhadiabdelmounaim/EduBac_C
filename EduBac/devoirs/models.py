@@ -110,12 +110,26 @@ def chemin_rendu(instance, filename):
     return f'devoirs/{instance.rendu.devoir_id}/rendus/{uuid.uuid4().hex}{extension}'
 
 
+def chemin_annotation(instance, filename):
+    return f'devoirs/{instance.rendu.devoir_id}/corrections/{uuid.uuid4().hex}.png'
+
+
 class FichierRendu(models.Model):
     rendu = models.ForeignKey(RenduDevoir, on_delete=models.CASCADE, related_name='fichiers')
     fichier = models.FileField(upload_to=chemin_rendu, max_length=255)
     nom = models.CharField(max_length=255)
     taille = models.PositiveIntegerField(default=0)
     ajoute_le = models.DateTimeField(auto_now_add=True)
+    # Correction dessinée par le professeur : le calque seul (pour la reprendre) et la page corrigée.
+    calque = models.FileField(upload_to=chemin_annotation, max_length=255, blank=True)
+    annotee = models.FileField(upload_to=chemin_annotation, max_length=255, blank=True)
+    annote_le = models.DateTimeField(null=True, blank=True)
+
+    ANNOTABLES = {'png', 'jpg', 'jpeg', 'webp', 'gif'}
+
+    @property
+    def annotable(self):
+        return self.extension in self.ANNOTABLES
 
     class Meta:
         ordering = ['ajoute_le', 'pk']

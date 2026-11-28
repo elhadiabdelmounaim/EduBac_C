@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% load edubac_assets %}
+{% block extra_css %}{% include "includes/katex.html" %}<link rel="stylesheet" href="{% asset 'css/direct.css' %}">{% endblock %}
+{% block recherche_vocale %}{% endblock %}
+{% block content %}
+<div id="directApp" class="direct-eleve" data-mode="eleve" data-csrf="{{ csrf_token }}"
+     data-etat="{% url 'quizzes:live_state' session.pk %}" data-repondre="{% url 'quizzes:live_answer' session.pk %}">
+  <div class="direct-eleve-tete"><i class="bi bi-broadcast" aria-hidden="true"></i> {{ session.quiz.title }}</div>
+  <main class="direct-scene" id="directScene" aria-live="polite"></main>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% asset 'js/direct.js' %}"></script>{% endblock %}

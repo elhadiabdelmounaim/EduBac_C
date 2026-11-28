@@ -57,6 +57,12 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'mes_notes' %}active{% endif %}"
+                   href="{% url 'classrooms:mes_notes' %}">
+                    <i class="bi bi-journal-bookmark-fill"></i><span>Mes notes</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'review_mistakes' %}active{% endif %}"
                    href="{% url 'quizzes:review_mistakes' %}">
                     <i class="bi bi-arrow-repeat"></i><span>Revoir mes erreurs</span>

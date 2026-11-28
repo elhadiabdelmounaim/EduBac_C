@@ -40,7 +40,9 @@
         <ul class="dv-pages">
           {% for page in l.rendu.fichiers.all %}
           <li><a href="{% url 'devoirs:fichier_rendu' page.pk %}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-image" aria-hidden="true"></i> {{ page.nom }}</a>
-            <span class="dv-fichier-meta">{{ page.taille|filesizeformat }}</span></li>
+            <span class="dv-fichier-meta">{{ page.taille|filesizeformat }}</span>
+            {% if page.annotable %}<a href="{% url 'devoirs:annoter' page.pk %}" class="btn btn-sm btn-outline-danger py-0">✏️ {% if page.annote_le %}Reprendre la correction{% else %}Annoter{% endif %}</a>{% endif %}
+            {% if page.annote_le %}<span class="dv-corrige">corrigée</span>{% endif %}</li>
           {% endfor %}
         </ul>
         <form method="post" class="dv-correction">
