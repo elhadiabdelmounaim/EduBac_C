@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load edubac_assets %}
+{% block extra_css %}<link rel="stylesheet" href="{% asset 'css/devoirs.css' %}">{% endblock %}
+{% block content %}
+<div class="dv-page dv-page-large">
+  <a href="{% url 'devoirs:detail' devoir.pk %}" class="dv-retour"><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ devoir.titre }}</a>
+  <header class="dv-entete">
+    <div class="dv-entete-icone" aria-hidden="true"><i class="bi bi-inbox"></i></div>
+    <div class="dv-entete-texte">
+      <h1>Copies rendues</h1>
+      <p>{% if devoir.date_limite %}À rendre le {{ devoir.date_limite|date:"l j F à H\hi" }} · {% endif %}une note sur 20 (facultative) et un commentaire : l’élève est prévenu à la première correction.</p>
+    </div>
+  </header>
+
+  {% if groupes|length > 1 %}
+  <nav class="dv-onglets" aria-label="Classes">
+    {% for g in groupes %}<a href="#classe-{{ g.classe.pk }}" class="dv-classe">{{ g.classe.name }} · {{ g.rendus }}/{{ g.lignes|length }}</a>{% endfor %}
+  </nav>
+  {% endif %}
+
+  {% for g in groupes %}
+  <section class="dv-section" id="classe-{{ g.classe.pk }}" aria-labelledby="titre-{{ g.classe.pk }}">
+    <h2 id="titre-{{ g.classe.pk }}">{{ g.classe.name }} <span class="dv-compte">{{ g.rendus }}/{{ g.lignes|length }} rendue{{ g.rendus|pluralize }} · {{ g.corriges }} corrigée{{ g.corriges|pluralize }}</span></h2>
+    {% if g.lignes %}
+    <ol class="dv-copies">
+      {% for l in g.lignes %}
+      <li class="dv-copie{% if not l.rendu %} est-absente{% endif %}" {% if l.rendu %}id="rendu-{{ l.rendu.pk }}"{% endif %}>
+        <div class="dv-copie-tete">
+          <span class="dv-copie-nom">{{ l.eleve.get_full_name|default:l.eleve.username }}</span>
+          {% if l.rendu %}
+            {% if l.rendu.corrige_le %}<span class="dv-etat est-rendu"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> Corrigé</span>
+            {% elif l.rendu.en_retard %}<span class="dv-etat est-retard"><i class="bi bi-alarm" aria-hidden="true"></i> En retard</span>
+            {% else %}<span class="dv-etat est-rendu"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Rendu</span>{% endif %}
+            <span class="dv-fichier-meta">le {{ l.rendu.rendu_le|date:"j/m à H\hi" }}</span>
+          {% else %}
+            <span class="dv-etat est-a-rendre"><i class="bi bi-x-circle" aria-hidden="true"></i> Non rendu</span>
+          {% endif %}
+        </div>
+        {% if l.rendu %}
+        <ul class="dv-pages">
+          {% for page in l.rendu.fichiers.all %}
+          <li><a href="{% url 'devoirs:fichier_rendu' page.pk %}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-image" aria-hidden="true"></i> {{ page.nom }}</a>
+            <span class="dv-fichier-meta">{{ page.taille|filesizeformat }}</span></li>
+          {% endfor %}
+        </ul>
+        <form method="post" class="dv-correction">
+          {% csrf_token %}
+          <input type="hidden" name="rendu" value="{{ l.rendu.pk }}">
+          <label class="visually-hidden" for="note{{ l.rendu.pk }}">Note sur 20</label>
+          <div class="input-group input-group-sm dv-note-champ">
+            <input type="text" inputmode="decimal" name="note" id="note{{ l.rendu.pk }}" class="form-control" placeholder="Note"
+                   value="{% if l.rendu.note is not None %}{{ l.rendu.note_texte }}{% endif %}">
+            <span class="input-group-text">/20</span>
+          </div>
+          <label class="visually-hidden" for="com{{ l.rendu.pk }}">Commentaire</label>
+          <textarea name="commentaire" id="com{{ l.rendu.pk }}" rows="1" class="form-control form-control-sm" placeholder="Commentaire pour l’élève">{{ l.rendu.commentaire }}</textarea>
+          {% if l.rendu.corrige_le %}
+          <label class="form-check small dv-reprevenir"><input type="checkbox" class="form-check-input" name="prevenir" value="1"> Prévenir à nouveau</label>
+          {% endif %}
+          <button type="submit" class="btn btn-sm btn-edubac">{% if l.rendu.corrige_le %}Mettre à jour{% else %}Corriger{% endif %}</button>
+        </form>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ol>
+    {% else %}
+    <p class="dv-aucune">Aucun élève dans cette classe.</p>
+    {% endif %}
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

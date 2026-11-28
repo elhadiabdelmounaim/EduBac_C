@@ -24,7 +24,7 @@ def pdf(nom='enonce.pdf', contenu=b'%PDF-1.4 devoir'):
 
 
 @override_settings(MEDIA_ROOT=MEDIA, ALLOWED_HOSTS=['testserver'])
-class DevoirsTests(TestCase):
+class BaseDevoirs(TestCase):
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()
@@ -52,12 +52,21 @@ class DevoirsTests(TestCase):
 
     def creer(self, classes, **extra):
         self.connecter(self.prof)
-        data = {'titre': 'DM 3 — Produit scalaire', 'consigne': 'Exercices 1 à 3',
-                'date_limite': '2026-12-01T08:00', 'classes': [c.pk for c in classes]}
+        data = {'titre': 'DM 3 — Produit scalaire', 'consigne': 'Exercices 1 à 3', 'rendu_en_ligne': '1',
+                'date_limite': '2030-12-01T08:00', 'classes': [c.pk for c in classes]}
         data.update(extra)
         with self.captureOnCommitCallbacks(execute=True):
             return self.client.post(reverse('devoirs:creer'), data)
 
+    def preparer(self, **fichier):
+        self.creer([self.a], fichiers=[pdf()])
+        devoir = Devoir.objects.get()
+        correction = FichierDevoir.objects.create(
+            devoir=devoir, fichier=pdf('correction.pdf'), nom='correction.pdf', taille=15, **fichier)
+        return devoir, devoir.fichiers.get(nom='enonce.pdf'), correction
+
+
+class DevoirsTests(BaseDevoirs):
     # ---------- Création ----------
     def test_creation_pour_deux_classes_avec_fichiers_et_notification(self):
         response = self.creer([self.a, self.b], fichiers=[pdf()], fichiers_verrouilles=[pdf('correction.pdf')])
@@ -73,7 +82,7 @@ class DevoirsTests(TestCase):
         self.assertEqual(notifies, {'ea', 'eb'})
         n = Notification.objects.get(recipient=self.eleve_a)
         self.assertEqual(n.link, reverse('devoirs:detail', args=[devoir.pk]))
-        self.assertIn('01/12/2026', n.message)
+        self.assertIn('01/12/2030', n.message)
 
     def test_creation_refusee_sans_classe_ou_classe_d_un_autre(self):
         self.creer([])
@@ -100,12 +109,6 @@ class DevoirsTests(TestCase):
         self.assertFalse(Devoir.objects.exists())
 
     # ---------- Accès des élèves ----------
-    def preparer(self, **fichier):
-        self.creer([self.a], fichiers=[pdf()])
-        devoir = Devoir.objects.get()
-        correction = FichierDevoir.objects.create(
-            devoir=devoir, fichier=pdf('correction.pdf'), nom='correction.pdf', taille=15, **fichier)
-        return devoir, devoir.fichiers.get(nom='enonce.pdf'), correction
 
     def test_eleve_voit_les_devoirs_de_sa_classe_seulement(self):
         devoir, enonce, _ = self.preparer(verrouille=True)
@@ -229,3 +232,154 @@ class DevoirsTests(TestCase):
         self.assertContains(page, 'data-nav="devoirs"')
         donnees = self.client.get(reverse('education:search_quick'), {'q': 'الواجبات'}).json()
         self.assertEqual(donnees['direct'], reverse('devoirs:index'))
+
+
+class RendusTests(BaseDevoirs):
+    """Travail rendu par l'élève, correction, rappels, ouverture à date, tableau de bord."""
+
+    def devoir(self, **extra):
+        self.creer([self.a, self.b], **extra)
+        Notification.objects.all().delete()
+        return Devoir.objects.latest('pk')
+
+    def rendre(self, devoir, eleve, *fichiers):
+        self.connecter(eleve)
+        with self.captureOnCommitCallbacks(execute=True):
+            return self.client.post(reverse('devoirs:rendre', args=[devoir.pk]), {'pages': list(fichiers)})
+
+    def photo(self, nom='page1.jpg'):
+        return SimpleUploadedFile(nom, b'\xff\xd8\xff jpeg', content_type='image/jpeg')
+
+    def test_l_eleve_rend_complete_puis_le_professeur_corrige(self):
+        from .models import RenduDevoir
+        devoir = self.devoir()
+        self.rendre(devoir, self.eleve_a, self.photo('p1.jpg'), self.photo('p2.jpg'))
+        rendu = RenduDevoir.objects.get()
+        self.assertEqual(rendu.fichiers.count(), 2)
+        self.assertFalse(rendu.en_retard)
+        prof = Notification.objects.get(recipient=self.prof)
+        self.assertEqual(prof.type, 'devoir_rendu')
+        self.assertIn('a rendu', prof.message)
+        # Compléter : la notification du professeur est regroupée.
+        self.rendre(devoir, self.eleve_a, pdf('p3.pdf'))
+        self.assertEqual(rendu.fichiers.count(), 3)
+        self.assertEqual(Notification.objects.filter(recipient=self.prof).count(), 1)
+        # Le professeur voit la copie et corrige.
+        self.connecter(self.prof)
+        page = self.client.get(reverse('devoirs:rendus', args=[devoir.pk]))
+        self.assertContains(page, 'p1.jpg')
+        self.assertContains(page, 'Non rendu')            # l'élève de 1bac2
+        page_fichier = rendu.fichiers.first()
+        self.assertEqual(self.client.get(reverse('devoirs:fichier_rendu', args=[page_fichier.pk])).status_code, 200)
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(reverse('devoirs:rendus', args=[devoir.pk]),
+                             {'rendu': rendu.pk, 'note': '15,5', 'commentaire': 'Bien rédigé.'})
+        rendu.refresh_from_db()
+        self.assertEqual(str(rendu.note), '15.50')
+        self.assertIsNotNone(rendu.corrige_le)
+        n = Notification.objects.get(recipient=self.eleve_a, title='Devoir corrigé')
+        self.assertIn('15,5/20', n.message)
+        # Corrigé : l'élève ne peut plus rien changer.
+        self.rendre(devoir, self.eleve_a, self.photo('p4.jpg'))
+        self.assertEqual(rendu.fichiers.count(), 3)
+        self.connecter(self.eleve_a)
+        self.client.post(reverse('devoirs:retirer_page', args=[page_fichier.pk]))
+        self.assertTrue(rendu.fichiers.filter(pk=page_fichier.pk).exists())
+        page = self.client.get(reverse('devoirs:detail', args=[devoir.pk]))
+        self.assertContains(page, '15,5/20')
+        self.assertContains(page, 'Bien rédigé.')
+
+    def test_note_invalide_refusee(self):
+        from .models import RenduDevoir
+        devoir = self.devoir()
+        self.rendre(devoir, self.eleve_a, self.photo())
+        rendu = RenduDevoir.objects.get()
+        self.connecter(self.prof)
+        self.client.post(reverse('devoirs:rendus', args=[devoir.pk]), {'rendu': rendu.pk, 'note': '25'})
+        rendu.refresh_from_db()
+        self.assertIsNone(rendu.corrige_le)
+
+    def test_rendu_en_retard_et_types_refuses(self):
+        from .models import RenduDevoir
+        devoir = self.devoir(date_limite='2020-01-01T08:00')
+        self.rendre(devoir, self.eleve_a, SimpleUploadedFile('x.exe', b'MZ'))
+        self.assertFalse(RenduDevoir.objects.exists())
+        self.rendre(devoir, self.eleve_a, self.photo())
+        self.assertTrue(RenduDevoir.objects.get().en_retard)
+
+    def test_seuls_les_eleves_de_la_classe_rendent_et_voient_les_copies(self):
+        from .models import FichierRendu, RenduDevoir
+        devoir = self.devoir()
+        self.rendre(devoir, self.eleve_x, self.photo())          # autre classe
+        self.assertFalse(RenduDevoir.objects.exists())
+        self.rendre(devoir, self.eleve_a, self.photo())
+        page = FichierRendu.objects.get()
+        for user in (self.eleve_b, self.autre_prof):
+            self.connecter(user)
+            self.assertEqual(self.client.get(reverse('devoirs:fichier_rendu', args=[page.pk])).status_code, 404)
+            self.client.post(reverse('devoirs:retirer_page', args=[page.pk]))
+        self.assertTrue(FichierRendu.objects.exists())
+        self.connecter(self.autre_prof)
+        self.assertEqual(self.client.get(reverse('devoirs:rendus', args=[devoir.pk])).status_code, 404)
+        # Sans rendu en ligne : rien à déposer.
+        Devoir.objects.filter(pk=devoir.pk).update(rendu_en_ligne=False)
+        self.assertEqual(self.rendre(devoir, self.eleve_b, self.photo()).status_code, 404)
+
+    def test_retirer_la_derniere_page_annule_le_rendu(self):
+        from .models import FichierRendu, RenduDevoir
+        devoir = self.devoir()
+        self.rendre(devoir, self.eleve_a, self.photo())
+        page = FichierRendu.objects.get()
+        chemin = Path(page.fichier.path)
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(reverse('devoirs:retirer_page', args=[page.pk]))
+        self.assertFalse(RenduDevoir.objects.exists())
+        self.assertFalse(chemin.exists())
+
+    def test_rappel_24h_avant_une_seule_fois_aux_eleves_sans_rendu(self):
+        from .services import rappels_devoirs
+        devoir = self.devoir(date_limite=timezone.localtime(timezone.now() + timedelta(hours=20)).strftime('%Y-%m-%dT%H:%M'))
+        self.rendre(devoir, self.eleve_a, self.photo())
+        Notification.objects.all().delete()
+        self.assertEqual(rappels_devoirs(), 1)
+        self.assertEqual(list(Notification.objects.values_list('recipient__username', flat=True)), ['eb'])
+        self.assertEqual(rappels_devoirs(), 0)
+        # Rien pour un devoir lointain.
+        lointain = self.devoir(date_limite='2031-01-01T08:00')
+        self.assertEqual(rappels_devoirs(), 0)
+        self.assertIsNone(Devoir.objects.get(pk=lointain.pk).rappel_envoye_le)
+
+    def test_commande_planifiee(self):
+        from io import StringIO
+        from django.core.management import call_command
+        sortie = StringIO()
+        call_command('send_quiz_reminders', stdout=sortie)
+        self.assertIn('rappel(s) de devoir', sortie.getvalue())
+
+    def test_ouverture_a_date_previent_les_eleves_une_fois(self):
+        from .services import ouvertures_automatiques
+        devoir, _, correction = self.preparer(verrouille=True, ouverture_le=timezone.now() - timedelta(minutes=5))
+        Notification.objects.all().delete()
+        self.assertEqual(ouvertures_automatiques(), 1)
+        self.assertEqual(list(Notification.objects.values_list('recipient__username', flat=True)), ['ea'])
+        self.assertEqual(ouvertures_automatiques(), 0)
+
+    def test_deverrouiller_avec_ou_sans_prevenir(self):
+        devoir, enonce, correction = self.preparer(verrouille=True)
+        Notification.objects.all().delete()
+        self.connecter(self.prof)
+        self.client.post(reverse('devoirs:verrou', args=[correction.pk]), {'action': 'deverrouiller'})
+        self.assertFalse(Notification.objects.exists())
+        self.client.post(reverse('devoirs:verrou', args=[correction.pk]), {'action': 'verrouiller'})
+        self.client.post(reverse('devoirs:verrou', args=[correction.pk]), {'action': 'deverrouiller', 'prevenir': '1'})
+        self.assertEqual(Notification.objects.get().title, 'Document disponible')
+
+    def test_tableau_de_bord_devoirs_a_rendre(self):
+        devoir = self.devoir(date_limite=timezone.localtime(timezone.now() + timedelta(hours=30)).strftime('%Y-%m-%dT%H:%M'))
+        self.connecter(self.eleve_a)
+        page = self.client.get(reverse('accounts:dashboard'))
+        self.assertContains(page, 'Devoirs à rendre')
+        self.assertContains(page, reverse('devoirs:detail', args=[devoir.pk]) + '#mon-travail')
+        self.rendre(devoir, self.eleve_a, self.photo())
+        self.connecter(self.eleve_a)
+        self.assertNotContains(self.client.get(reverse('accounts:dashboard')), 'Devoirs à rendre')

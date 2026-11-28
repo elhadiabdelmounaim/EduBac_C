@@ -120,7 +120,7 @@
                         <i class="bi bi-emoji-smile" aria-hidden="true"></i>
                     </button>
                     <label for="chatInput" class="visually-hidden">Votre message</label>
-                    <textarea id="chatInput" rows="1" placeholder="Écrire un message…" title="Astuce : $x^2$ pour écrire une formule" maxlength="4000"></textarea>
+                    <textarea id="chatInput" rows="1" placeholder="Écrire un message…" title="Astuce : $x^2$ pour écrire une formule" maxlength="4000" data-formules></textarea>
                     <div class="chat-attach">
                         <button type="button" class="chat-tool-btn" id="privateAttachToggle" title="Joindre" aria-label="Joindre un fichier, une image ou un audio" aria-haspopup="true" aria-expanded="false" aria-controls="privateAttachMenu">
                             <i class="bi bi-paperclip" aria-hidden="true"></i>
@@ -164,6 +164,7 @@
 <script src="{% asset 'js/chat-voice.js' %}"></script>
 <script src="{% asset 'js/chat-presence.js' %}"></script>
 <script src="{% asset 'js/chat-actions.js' %}"></script>
+<script src="{% asset 'js/chat-outils.js' %}"></script>
 <script src="{% asset 'js/messaging-home.js' %}"></script>
 <script src="{% asset 'js/private-chat.js' %}"></script>
 {% if not user.is_student and contact.is_student %}<script src="{% asset 'js/chat-whiteboard.js' %}"></script>{% endif %}

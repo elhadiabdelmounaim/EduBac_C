@@ -419,6 +419,38 @@ html[data-theme="dark"] #lessonContent.lesson-md--boxed .course-box--note {
 </section>
 {% endif %}
 
+{% if powerpoint is not None %}
+<section class="lecon-acces card border-0 shadow-sm mb-3" id="powerpoint" aria-labelledby="leconPptTitre">
+    <div class="card-body py-2">
+        <h2 class="h6 fw-bold mb-2" id="leconPptTitre"><i class="bi bi-file-earmark-slides" aria-hidden="true"></i> Présentation PowerPoint <span class="text-muted fw-normal small">— visible par les professeurs seulement</span></h2>
+        {% if powerpoint %}
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <a href="{% url 'education:lesson_powerpoint' lesson.pk %}" class="btn btn-sm btn-edubac"><i class="bi bi-download" aria-hidden="true"></i> Télécharger le PowerPoint</a>
+            <span class="small text-muted">{{ powerpoint.nom }} · {{ powerpoint.taille|filesizeformat }}</span>
+        </div>
+        {% else %}
+        <p class="small text-muted mb-2">Aucune présentation pour cette leçon.</p>
+        {% endif %}
+        <details class="mt-2">
+            <summary class="small">{% if powerpoint %}Remplacer ou retirer{% else %}Ajouter un fichier .pptx{% endif %}</summary>
+            <div class="d-flex flex-wrap gap-2 mt-2">
+                <form method="post" action="{% url 'education:lesson_powerpoint' lesson.pk %}" enctype="multipart/form-data" class="d-flex flex-wrap gap-2">
+                    {% csrf_token %}
+                    <input type="file" name="pptx" accept=".pptx" class="form-control form-control-sm" style="max-width:280px" required aria-label="Fichier PowerPoint">
+                    <button type="submit" class="btn btn-sm btn-outline-primary">Enregistrer</button>
+                </form>
+                {% if powerpoint %}
+                <form method="post" action="{% url 'education:lesson_powerpoint' lesson.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" name="action" value="retirer" class="btn btn-sm btn-outline-danger">Retirer</button>
+                </form>
+                {% endif %}
+            </div>
+        </details>
+    </div>
+</section>
+{% endif %}
+
 {% if lesson.summary %}
 <div class="card shadow-sm mb-3 border-0" style="border-left:4px solid var(--edubac-accent)!important;border-radius:16px;">
     <div class="card-body">

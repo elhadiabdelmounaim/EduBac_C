@@ -173,6 +173,53 @@ def _acces_classes_du_professeur(request, lesson):
     return [{'classe': c, 'ouverte': bool(etats.get(c.pk) and etats[c.pk].est_ouverte)} for c in classes]
 
 
+def _est_professeur(request):
+    user = getattr(request, 'edubac_user', None)
+    return bool(user and user.is_teacher())
+
+
+def _powerpoint_du_professeur(request, lesson):
+    """{'nom', 'taille'} de la présentation (ou {} si aucune) pour un professeur ; None sinon."""
+    if not _est_professeur(request):
+        return None
+    from .powerpoint import fichier
+    try:
+        f = fichier(lesson)
+    except ValueError:
+        return None
+    return {'nom': f.name, 'taille': f.stat().st_size} if f else {}
+
+
+def lesson_powerpoint(request, pk):
+    """Télécharger (GET) ou remplacer / retirer (POST) la présentation PowerPoint : professeurs seulement."""
+    from django.contrib import messages
+    from . import powerpoint
+    lesson = get_object_or_404(Lesson.objects.select_related('course'), pk=pk)
+    if not _est_professeur(request):
+        raise Http404
+    if request.method == 'POST':
+        if request.POST.get('action') == 'retirer':
+            powerpoint.retirer(lesson)
+            messages.success(request, 'Présentation PowerPoint retirée.')
+        else:
+            envoi = request.FILES.get('pptx')
+            if not envoi or not envoi.name.lower().endswith('.pptx'):
+                messages.error(request, 'Choisissez un fichier PowerPoint (.pptx).')
+            elif envoi.size > powerpoint.TAILLE_MAX:
+                messages.error(request, 'Fichier trop volumineux (80 Mo au plus).')
+            else:
+                powerpoint.remplacer(lesson, envoi)
+                messages.success(request, 'Présentation PowerPoint enregistrée.')
+        return redirect(reverse('education:lesson_detail', args=[lesson.pk]) + '#powerpoint')
+    f = powerpoint.fichier(lesson)
+    if f is None:
+        raise Http404
+    reponse = FileResponse(open(f, 'rb'), as_attachment=True, filename=f.name,
+                           content_type='application/vnd.openxmlformats-officedocument.presentationml.presentation')
+    reponse['Cache-Control'] = 'private, no-store'
+    return reponse
+
+
 def _documents_lecon(lesson, resources, resource_descriptions, course_html_url):
     """Fichiers des boutons COURS et EXERCICES de la leçon.
 
@@ -274,6 +321,7 @@ def lesson_detail(request, pk):
     docs = _documents_lecon(lesson, resources, resource_descriptions, course_html_url)
     return render(request, 'education/lesson_detail.html', {
         'acces_classes': _acces_classes_du_professeur(request, lesson),
+        'powerpoint': _powerpoint_du_professeur(request, lesson),
         'lesson': lesson,
         'course_content': course_content,
         'course_content_error': course_content_error,
@@ -462,7 +510,8 @@ def search_quick(request):
     from django.http import JsonResponse
     from .recherche_rapide import rechercher
     q = (request.GET.get('q') or '').strip()[:200]
-    reponse = JsonResponse({'q': q, **rechercher(request, q)})
+    lecon = request.GET.get('lecon') or ''
+    reponse = JsonResponse({'q': q, **rechercher(request, q, lecon=int(lecon) if lecon.isdecimal() else None)})
     reponse['Cache-Control'] = 'private, no-store'
     return reponse
 

@@ -7,15 +7,28 @@ from django.contrib import messages
 from django.db import transaction
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from accounts.decorators import login_required_simple, teacher_required
 
 from . import acces
-from .models import Devoir, FichierDevoir
-from .services import (EN_LIGNE, ErreurDevoir, ajouter_fichiers, lire_date, notifier_nouveau_devoir,
-                       supprimer_fichier, verifier_fichiers)
+from .models import Devoir, FichierDevoir, FichierRendu, RenduDevoir
+from .services import (EN_LIGNE, ErreurDevoir, ajouter_fichiers, enregistrer_rendu, lire_date,
+                       notifier_correction, notifier_nouveau_devoir, notifier_ouverture, notifier_rendu,
+                       supprimer_fichier, taches_periodiques, verifier_fichiers)
+
+
+def _taches_si_besoin():
+    """Ouvertures à date et rappels, au plus toutes les 5 minutes, si aucune tâche planifiée ne tourne."""
+    from django.core.cache import cache
+    if cache.add('devoirs:taches', 1, 300):
+        try:
+            taches_periodiques()
+        except Exception:      # jamais au prix de la page
+            import logging
+            logging.getLogger(__name__).exception('Tâches des devoirs')
 
 
 def _classes_par_niveau(classes, cochees=()):
@@ -39,6 +52,7 @@ def _devoir_gere(request, pk):
 
 @login_required_simple
 def index(request):
+    _taches_si_besoin()
     user = request.edubac_user
     maintenant = timezone.now()
     if user.is_teacher():
@@ -48,7 +62,16 @@ def index(request):
         devoirs = acces.devoirs_de_l_eleve(user)
         gestion = False
     devoirs = list(devoirs.prefetch_related('classes', 'fichiers'))
+    mes_rendus = {} if gestion else {
+        r.devoir_id: r for r in RenduDevoir.objects.filter(eleve=user, devoir__in=devoirs)}
+    nb_rendus = {}
+    if gestion:
+        from django.db.models import Count
+        nb_rendus = dict(RenduDevoir.objects.filter(devoir__in=devoirs).values('devoir')
+                         .annotate(n=Count('pk')).values_list('devoir', 'n'))
     for d in devoirs:
+        d.mon_rendu = mes_rendus.get(d.pk)
+        d.nb_rendus = nb_rendus.get(d.pk, 0)
         d.liste_fichiers = list(d.fichiers.all())
         for f in d.liste_fichiers:
             f.visible = f.est_visible(maintenant)
@@ -81,7 +104,7 @@ def creer(request):
             with transaction.atomic():
                 devoir = Devoir.objects.create(
                     teacher=user, titre=valeurs['titre'][:200], consigne=valeurs['consigne'],
-                    date_limite=date_limite,
+                    date_limite=date_limite, rendu_en_ligne=request.POST.get('rendu_en_ligne') == '1',
                 )
                 devoir.classes.set(choisies)
                 ajouter_fichiers(devoir, visibles)
@@ -97,6 +120,7 @@ def creer(request):
             return redirect('devoirs:detail', devoir.pk)
     return render(request, 'devoirs/form.html', {
         'valeurs': valeurs, 'groupes': _classes_par_niveau(classes, cochees), 'creation': True,
+        'rendu_en_ligne': request.POST.get('rendu_en_ligne') == '1' if request.method == 'POST' else True,
         'page_title': 'Nouveau devoir',
     })
 
@@ -130,7 +154,10 @@ def modifier(request, pk):
             with transaction.atomic():
                 devoir.titre = valeurs['titre'][:200]
                 devoir.consigne = valeurs['consigne']
+                if devoir.date_limite != date_limite:
+                    devoir.rappel_envoye_le = None          # nouvelle date : nouveau rappel
                 devoir.date_limite = date_limite
+                devoir.rendu_en_ligne = request.POST.get('rendu_en_ligne') == '1'
                 devoir.save()
                 nouvelles = [c for c in choisies if c not in deja]
                 devoir.classes.set(choisies)
@@ -147,6 +174,7 @@ def modifier(request, pk):
             return redirect('devoirs:detail', devoir.pk)
     return render(request, 'devoirs/form.html', {
         'valeurs': valeurs, 'groupes': _classes_par_niveau(classes, cochees), 'creation': False,
+        'rendu_en_ligne': (request.POST.get('rendu_en_ligne') == '1') if request.method == 'POST' else devoir.rendu_en_ligne,
         'devoir': devoir, 'page_title': f'Modifier « {devoir.titre} »',
     })
 
@@ -158,13 +186,21 @@ def detail(request, pk):
     if not acces.peut_voir(user, devoir):
         messages.error(request, 'Ce devoir n’est pas destiné à votre classe.')
         return redirect('devoirs:index')
+    _taches_si_besoin()
     gestion = acces.peut_gerer(user, devoir)
     maintenant = timezone.now()
     fichiers = list(devoir.fichiers.all())
     for f in fichiers:
         f.visible = f.est_visible(maintenant)
+    mon_rendu, suivi = None, None
+    if gestion:
+        attendus = acces.eleves_des_classes(devoir.classes.all()).count()
+        suivi = {'rendus': devoir.rendus.count(), 'attendus': attendus,
+                 'corriges': devoir.rendus.filter(corrige_le__isnull=False).count()}
+    else:
+        mon_rendu = RenduDevoir.objects.filter(devoir=devoir, eleve=user).prefetch_related('fichiers').first()
     return render(request, 'devoirs/detail.html', {
-        'devoir': devoir, 'fichiers': fichiers, 'gestion': gestion,
+        'devoir': devoir, 'fichiers': fichiers, 'gestion': gestion, 'mon_rendu': mon_rendu, 'suivi': suivi,
         'depasse': bool(devoir.date_limite and devoir.date_limite < maintenant),
         'page_title': devoir.titre,
     })
@@ -176,7 +212,7 @@ def supprimer(request, pk):
     devoir = _devoir_gere(request, pk)
     titre = devoir.titre
     with transaction.atomic():
-        for f in list(devoir.fichiers.all()):
+        for f in list(devoir.fichiers.all()) + list(FichierRendu.objects.filter(rendu__devoir=devoir)):
             supprimer_fichier(f)
         devoir.delete()
     messages.success(request, f'Devoir « {titre} » supprimé.')
@@ -218,11 +254,15 @@ def verrou(request, pk):
     fichier = _fichier_gere(request, pk)
     action = request.POST.get('action')
     try:
+        prevenir = False
         if action == 'deverrouiller':
+            prevenir = request.POST.get('prevenir') == '1' and not fichier.ouverture_notifiee
             fichier.verrouille, fichier.ouverture_le = False, None
+            fichier.ouverture_notifiee = True       # plus rien à annoncer pour cette ouverture
             texte = f'« {fichier.nom} » est maintenant visible par les élèves.'
         elif action == 'verrouiller':
             fichier.verrouille = True
+            fichier.ouverture_notifiee = False
             fichier.ouverture_le = lire_date(request.POST.get('ouverture_le'), 'La date d’ouverture')
             texte = f'« {fichier.nom} » est verrouillé' + (
                 f' jusqu’au {timezone.localtime(fichier.ouverture_le):%d/%m/%Y à %H:%M}.' if fichier.ouverture_le
@@ -232,7 +272,10 @@ def verrou(request, pk):
     except ErreurDevoir as exc:
         messages.error(request, str(exc))
     else:
-        fichier.save(update_fields=['verrouille', 'ouverture_le'])
+        fichier.save(update_fields=['verrouille', 'ouverture_le', 'ouverture_notifiee'])
+        if prevenir:
+            n = notifier_ouverture(fichier)
+            texte += f' {n} élève{"s" if n > 1 else ""} prévenu{"s" if n > 1 else ""}.'
         messages.success(request, texte)
     return redirect('devoirs:detail', fichier.devoir_id)
 
@@ -271,3 +314,109 @@ def telecharger(request, pk):
     reponse['Cache-Control'] = 'private, no-store'
     reponse['X-Content-Type-Options'] = 'nosniff'
     return reponse
+
+
+# ---------- Travail des élèves ----------
+@require_POST
+@login_required_simple
+def rendre(request, pk):
+    """L'élève dépose (ou complète) son travail : photos des pages, PDF…"""
+    devoir = get_object_or_404(Devoir, pk=pk)
+    user = request.edubac_user
+    if not user.is_student() or not acces.peut_voir(user, devoir) or not devoir.rendu_en_ligne:
+        raise Http404
+    fichiers = request.FILES.getlist('pages')
+    try:
+        with transaction.atomic():
+            rendu, nouveau = enregistrer_rendu(devoir, user, fichiers)
+            transaction.on_commit(lambda: notifier_rendu(rendu))
+    except ErreurDevoir as exc:
+        messages.error(request, str(exc))
+    else:
+        n = len(fichiers)
+        retard = ' (après la date limite)' if rendu.en_retard else ''
+        messages.success(request, (f'Travail rendu{retard} : ' if nouveau else f'Travail complété{retard} : ')
+                         + f'{n} fichier{"s" if n > 1 else ""} envoyé{"s" if n > 1 else ""} au professeur.')
+    return redirect(reverse('devoirs:detail', args=[devoir.pk]) + '#mon-travail')
+
+
+@require_POST
+@login_required_simple
+def retirer_page(request, pk):
+    """L'élève retire une page de son travail tant qu'il n'est pas corrigé."""
+    page = get_object_or_404(FichierRendu.objects.select_related('rendu', 'rendu__devoir'), pk=pk)
+    rendu = page.rendu
+    if rendu.eleve_id != request.edubac_user.pk:
+        raise Http404
+    if rendu.corrige_le:
+        messages.error(request, 'Ce travail est déjà corrigé : il ne peut plus être modifié.')
+    else:
+        with transaction.atomic():
+            supprimer_fichier(page)
+            if not rendu.fichiers.exists():
+                rendu.delete()          # plus rien : le devoir redevient « à rendre »
+        messages.success(request, f'« {page.nom} » retiré.')
+    return redirect(reverse('devoirs:detail', args=[rendu.devoir_id]) + '#mon-travail')
+
+
+@login_required_simple
+def fichier_rendu(request, pk):
+    page = get_object_or_404(FichierRendu.objects.select_related('rendu', 'rendu__devoir'), pk=pk)
+    user = request.edubac_user
+    if page.rendu.eleve_id != user.pk and not acces.peut_gerer(user, page.rendu.devoir):
+        raise Http404
+    try:
+        flux = page.fichier.open('rb')
+    except (FileNotFoundError, OSError, ValueError):
+        raise Http404 from None
+    type_en_ligne = EN_LIGNE.get(page.extension)
+    reponse = FileResponse(
+        flux, as_attachment=not type_en_ligne or request.GET.get('telecharger') == '1', filename=page.nom,
+        content_type=type_en_ligne or mimetypes.guess_type(page.nom)[0] or 'application/octet-stream',
+    )
+    reponse['Cache-Control'] = 'private, no-store'
+    reponse['X-Content-Type-Options'] = 'nosniff'
+    return reponse
+
+
+@teacher_required
+def rendus(request, pk):
+    """Suivi des copies : par classe, qui a rendu, en retard, corrigé ; note et commentaire."""
+    from decimal import Decimal, InvalidOperation
+    devoir = _devoir_gere(request, pk)
+    if request.method == 'POST':
+        rendu = get_object_or_404(RenduDevoir, pk=request.POST.get('rendu'), devoir=devoir)
+        brut = (request.POST.get('note') or '').strip().replace(',', '.')
+        try:
+            note = Decimal(brut) if brut else None
+            if note is not None and not (0 <= note <= 20):
+                raise InvalidOperation
+        except InvalidOperation:
+            messages.error(request, 'La note doit être un nombre entre 0 et 20.')
+            return redirect(reverse('devoirs:rendus', args=[devoir.pk]) + f'#rendu-{rendu.pk}')
+        premiere = rendu.corrige_le is None
+        rendu.note = note
+        rendu.commentaire = (request.POST.get('commentaire') or '').strip()
+        rendu.corrige_le = timezone.now()
+        rendu.save(update_fields=['note', 'commentaire', 'corrige_le'])
+        if premiere or request.POST.get('prevenir') == '1':
+            transaction.on_commit(lambda: notifier_correction(rendu))
+        messages.success(request, f'Correction de {rendu.eleve.get_full_name() or rendu.eleve.username} enregistrée.')
+        return redirect(reverse('devoirs:rendus', args=[devoir.pk]) + f'#rendu-{rendu.pk}')
+
+    classes = sorted(devoir.classes.all(), key=lambda c: c.name)
+    tous = {r.eleve_id: r for r in devoir.rendus.prefetch_related('fichiers')}
+    from classrooms.models import ClassroomMember
+    groupes = []
+    for classe in classes:
+        membres = (ClassroomMember.objects.filter(classroom=classe, user__role='student')
+                   .select_related('user').order_by('user__last_name', 'user__first_name', 'user__username'))
+        lignes = [{'eleve': m.user, 'rendu': tous.get(m.user_id)} for m in membres]
+        groupes.append({
+            'classe': classe, 'lignes': lignes,
+            'rendus': sum(1 for l in lignes if l['rendu']),
+            'corriges': sum(1 for l in lignes if l['rendu'] and l['rendu'].corrige_le),
+        })
+    return render(request, 'devoirs/rendus.html', {
+        'devoir': devoir, 'groupes': groupes, 'page_title': f'Copies — {devoir.titre}',
+    })

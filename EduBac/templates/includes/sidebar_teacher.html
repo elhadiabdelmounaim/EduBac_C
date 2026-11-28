@@ -26,6 +26,17 @@
                     <i class="bi bi-person-badge"></i><span>Mes élèves</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'rapport' %}active{% endif %}"
+                   href="{% url 'classrooms:rapport' %}">
+                    <i class="bi bi-clipboard-data"></i><span>Rapport de la semaine</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'education:guide_eleves' %}" target="_blank" rel="noopener">
+                    <i class="bi bi-printer"></i><span>Guide de connexion (élèves)</span>
+                </a>
+            </li>
             <li class="nav-section" role="presentation">Quiz</li>
             <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'manage' %}active{% endif %}"

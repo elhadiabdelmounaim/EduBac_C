@@ -1521,3 +1521,60 @@ fieldset.chat-setting { display: block; }
   .chat-bubble-row.chat-actions-above:hover .chat-msg-actions,
   .chat-bubble-row.chat-actions-above:focus-within .chat-msg-actions { transform: scale(1); }
 }
+
+/* ---------- Sondages rapides ---------- */
+.chat-poll { min-width: min(320px, 70vw); display: grid; gap: 6px; margin: 2px 0 4px; }
+.chat-poll-head { display: flex; align-items: flex-start; gap: 6px; font-size: .98rem; }
+.chat-poll-head .bi { color: var(--nb-teal, #1d4fa3); margin-top: 3px; }
+.chat-poll-option {
+  position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  width: 100%; min-height: 38px; padding: 6px 12px; overflow: hidden; text-align: left;
+  border: 1px solid var(--nb-line, #d9e0ec); border-radius: 10px; background: var(--nb-surface, #fff); color: var(--nb-ink, #263449);
+  cursor: pointer; font-size: .9rem;
+}
+.chat-poll-option:disabled { cursor: default; }
+.chat-poll-option:not(:disabled):hover { border-color: var(--nb-teal, #1d4fa3); }
+.chat-poll-option.is-mine { border-color: var(--nb-teal, #1d4fa3); box-shadow: inset 0 0 0 1px var(--nb-teal, #1d4fa3); font-weight: 600; }
+.chat-poll-bar { position: absolute; inset: 0 auto 0 0; background: var(--nb-teal-soft, #e6eefb); transition: width .3s ease; z-index: 0; }
+.chat-poll-label, .chat-poll-count { position: relative; z-index: 1; }
+.chat-poll-count { flex: none; font-size: .78rem; color: var(--nb-muted, #56627a); font-variant-numeric: tabular-nums; }
+.chat-poll-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: .76rem; opacity: .8; }
+.chat-poll-close { border: 0; background: transparent; color: inherit; text-decoration: underline; font-size: .76rem; padding: 0; }
+.chat-poll.is-closed .chat-poll-option { opacity: .85; }
+.chat-poll-dialog { border: 0; border-radius: 18px; padding: 18px; width: min(440px, calc(100vw - 32px)); box-shadow: 0 24px 60px rgba(15, 23, 42, .3); }
+.chat-poll-dialog::backdrop { background: rgba(15, 23, 42, .45); }
+.chat-poll-modeles { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.chat-poll-choix { display: grid; gap: 6px; }
+html[data-theme="dark"] .chat-poll-dialog { background: #18202e; color: #e6ebf3; }
+
+/* ---------- Mentions ---------- */
+.chat-mention { font-weight: 700; color: var(--nb-teal, #1d4fa3); background: var(--nb-teal-soft, #e6eefb); border-radius: 6px; padding: 0 3px; }
+.chat-mention.is-me { color: #8a4b00; background: #ffe7b8; }
+html[data-theme="dark"] .chat-mention.is-me { color: #ffd98a; background: #4a3a17; }
+.chat-bubble-row.mentions-me .chat-bubble { box-shadow: 0 0 0 2px #f2a516; }
+.chat-mention-list {
+  position: absolute; left: 8px; bottom: calc(100% + 6px); z-index: 30; min-width: 220px; max-width: calc(100% - 16px);
+  list-style: none; margin: 0; padding: 4px; background: var(--nb-surface, #fff); border: 1px solid var(--nb-line, #d9e0ec);
+  border-radius: 12px; box-shadow: 0 10px 28px rgba(15, 23, 42, .18);
+}
+.chat-mention-list[hidden] { display: none; }
+.chat-mention-item { padding: 6px 10px; border-radius: 8px; cursor: pointer; color: var(--nb-ink, #263449); }
+.chat-mention-item small { color: var(--nb-muted, #56627a); }
+.chat-mention-item.is-active, .chat-mention-item:hover { background: var(--nb-teal-soft, #e6eefb); }
+
+/* ---------- Éditeur de formules ---------- */
+.chat-formula-sigma { font-size: 1.15rem; font-weight: 700; line-height: 1; font-family: Georgia, 'Times New Roman', serif; }
+.chat-formula-panel {
+  position: absolute; left: 0; right: 0; bottom: calc(100% + 8px); z-index: 30; padding: 10px;
+  background: var(--nb-surface, #fff); border: 1px solid var(--nb-line, #d9e0ec); border-radius: 14px; box-shadow: 0 12px 32px rgba(15, 23, 42, .2);
+}
+.chat-formula-panel[hidden] { display: none; }
+.chat-formula-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 4px; max-height: 150px; overflow-y: auto; }
+.chat-formula-key {
+  min-height: 36px; border: 1px solid var(--nb-line, #d9e0ec); border-radius: 8px; background: var(--nb-paper, #f4f6fb);
+  color: var(--nb-ink, #263449); font-family: Georgia, 'Times New Roman', serif; font-size: .95rem; cursor: pointer;
+}
+.chat-formula-key:hover, .chat-formula-key:focus-visible { border-color: var(--nb-teal, #1d4fa3); background: var(--nb-teal-soft, #e6eefb); }
+.chat-formula-preview-title { margin-top: 8px; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--nb-muted, #56627a); }
+.chat-formula-preview { min-height: 34px; max-height: 120px; overflow: auto; padding: 6px 8px; border-radius: 8px; background: var(--nb-paper, #f4f6fb); color: var(--nb-ink, #263449); overflow-wrap: anywhere; }
+.chat-formula-help { margin: 6px 0 0; font-size: .74rem; color: var(--nb-muted, #56627a); }

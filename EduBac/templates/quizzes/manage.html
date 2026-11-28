@@ -93,7 +93,7 @@
                         </form>
                     </li>
                     {% endif %}
-                    <li><a class="dropdown-item" href="{% url 'quizzes:question_stats' q.pk %}"><i class="bi bi-bar-chart me-2" aria-hidden="true"></i>Statistiques</a></li>
+                    <li><a class="dropdown-item" href="{% url 'quizzes:question_stats' q.pk %}"><i class="bi bi-bar-chart me-2" aria-hidden="true"></i>Analyse des réponses</a></li>
                     <li>
                         <form method="post" action="{% url 'quizzes:duplicate' q.pk %}">
                             {% csrf_token %}

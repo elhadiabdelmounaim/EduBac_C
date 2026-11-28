@@ -28,6 +28,15 @@
     {% endif %}
   </header>
 
+  {% if gestion and devoir.rendu_en_ligne %}
+  <a class="dv-suivi" href="{% url 'devoirs:rendus' devoir.pk %}">
+    <span class="dv-suivi-icone" aria-hidden="true"><i class="bi bi-inbox"></i></span>
+    <span class="dv-suivi-texte"><strong>{{ suivi.rendus }}/{{ suivi.attendus }} copie{{ suivi.rendus|pluralize }} rendue{{ suivi.rendus|pluralize }}</strong>
+      · {{ suivi.corriges }} corrigée{{ suivi.corriges|pluralize }}</span>
+    <span class="dv-suivi-lien">Voir les copies <i class="bi bi-chevron-right" aria-hidden="true"></i></span>
+  </a>
+  {% endif %}
+
   {% if devoir.consigne %}
   <section class="dv-consigne" aria-label="Consigne">{{ devoir.consigne|linebreaks }}</section>
   {% endif %}
@@ -74,11 +83,18 @@
             </form>
           </details>
           {% else %}
-          <form method="post" action="{% url 'devoirs:verrou' f.pk %}">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="deverrouiller">
-            <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-unlock" aria-hidden="true"></i> Déverrouiller</button>
-          </form>
+          <details class="dv-verrou-menu">
+            <summary class="btn btn-sm btn-success"><i class="bi bi-unlock" aria-hidden="true"></i> Déverrouiller</summary>
+            <form method="post" action="{% url 'devoirs:verrou' f.pk %}" class="dv-verrou-form">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="deverrouiller">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="prevenir" value="1" id="prev{{ f.pk }}" checked>
+                <label class="form-check-label small" for="prev{{ f.pk }}">Prévenir les élèves (notification)</label>
+              </div>
+              <button type="submit" class="btn btn-sm btn-success mt-2 w-100">Rendre visible</button>
+            </form>
+          </details>
           {% endif %}
           <form method="post" action="{% url 'devoirs:retirer' f.pk %}" data-confirmer="Supprimer « {{ f.nom }} » ?">
             {% csrf_token %}
@@ -93,6 +109,57 @@
     <p class="dv-aucune">Aucun fichier{% if gestion %} : ajoutez l’énoncé ci-dessous{% endif %}.</p>
     {% endif %}
   </section>
+
+  {% if not gestion and devoir.rendu_en_ligne %}
+  <section class="dv-section dv-mon-travail" id="mon-travail" aria-labelledby="dvTravailTitre">
+    <h2 id="dvTravailTitre">Mon travail</h2>
+    {% if mon_rendu %}
+    <div class="dv-statut {% if mon_rendu.corrige_le %}est-corrige{% elif mon_rendu.en_retard %}est-retard{% else %}est-rendu{% endif %}">
+      <i class="bi {% if mon_rendu.corrige_le %}bi-patch-check-fill{% else %}bi-check-circle-fill{% endif %}" aria-hidden="true"></i>
+      <span>{% if mon_rendu.corrige_le %}Corrigé le {{ mon_rendu.corrige_le|date:"j F à H\hi" }}{% else %}Rendu le {{ mon_rendu.rendu_le|date:"j F à H\hi" }}{% if mon_rendu.en_retard %} · en retard{% endif %}{% endif %}</span>
+      {% if mon_rendu.note is not None %}<strong class="dv-note">{{ mon_rendu.note_texte }}/20</strong>{% endif %}
+    </div>
+    {% if mon_rendu.commentaire %}<div class="dv-commentaire"><span>Commentaire du professeur</span>{{ mon_rendu.commentaire|linebreaks }}</div>{% endif %}
+    <ul class="dv-pages">
+      {% for page in mon_rendu.fichiers.all %}
+      <li>
+        <a href="{% url 'devoirs:fichier_rendu' page.pk %}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-image" aria-hidden="true"></i> {{ page.nom }}</a>
+        <span class="dv-fichier-meta">{{ page.taille|filesizeformat }}</span>
+        {% if not mon_rendu.corrige_le %}
+        <form method="post" action="{% url 'devoirs:retirer_page' page.pk %}" data-confirmer="Retirer « {{ page.nom }} » ?">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-link text-danger p-0" aria-label="Retirer {{ page.nom }}"><i class="bi bi-x-circle" aria-hidden="true"></i></button>
+        </form>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% elif depasse %}
+    <p class="dv-statut est-retard"><i class="bi bi-hourglass-bottom" aria-hidden="true"></i> La date limite est passée : vous pouvez encore rendre, la copie sera marquée « en retard ».</p>
+    {% else %}
+    <p class="dv-statut"><i class="bi bi-hourglass-split" aria-hidden="true"></i> Pas encore rendu.</p>
+    {% endif %}
+    {% if not mon_rendu.corrige_le %}
+    <form method="post" action="{% url 'devoirs:rendre' devoir.pk %}" enctype="multipart/form-data" class="dv-rendre-form" data-rendre>
+      {% csrf_token %}
+      <div class="dv-rendre-boutons">
+        <label class="btn btn-edubac dv-photo">
+          <i class="bi bi-camera" aria-hidden="true"></i> Photographier une page
+          <input type="file" name="pages" accept="image/*" capture="environment" hidden data-pages data-photo>
+        </label>
+        <label class="btn btn-outline-primary">
+          <i class="bi bi-paperclip" aria-hidden="true"></i> Choisir des fichiers
+          <input type="file" name="pages" accept="image/*,.pdf,.doc,.docx,.odt,.ggb" multiple hidden data-pages>
+        </label>
+      </div>
+      <div data-photos hidden></div>
+      <ul class="dv-choisis" data-choisis hidden></ul>
+      <button type="submit" class="btn btn-success" data-envoyer hidden><i class="bi bi-send" aria-hidden="true"></i> {% if mon_rendu %}Ajouter à mon travail{% else %}Rendre mon travail{% endif %}</button>
+      <p class="dv-aide">Photos des pages, PDF ou Word · 20 Mo au plus par fichier.{% if not mon_rendu %} Vous pourrez compléter tant que le professeur n’a pas corrigé.{% endif %}</p>
+    </form>
+    {% endif %}
+  </section>
+  {% endif %}
 
   {% if gestion %}
   <section class="dv-section dv-ajout" aria-labelledby="dvAjoutTitre">
@@ -125,6 +192,39 @@
       if (!window.confirm(form.getAttribute('data-confirmer'))) event.preventDefault();
     });
   });
+  var rendre = document.querySelector('[data-rendre]');
+  if (rendre) {
+    var liste = rendre.querySelector('[data-choisis]');
+    var envoyer = rendre.querySelector('[data-envoyer]');
+    var maj = function () {
+      var noms = [];
+      rendre.querySelectorAll('[data-pages]').forEach(function (champ) {
+        Array.prototype.forEach.call(champ.files || [], function (f) { noms.push(f.name); });
+      });
+      liste.textContent = '';
+      noms.forEach(function (nom) { var li = document.createElement('li'); li.textContent = nom; liste.appendChild(li); });
+      liste.hidden = envoyer.hidden = !noms.length;
+    };
+    var photos = rendre.querySelector('[data-photos]');
+    var surChangement = function (event) {
+      var champ = event.target;
+      // Chaque photo garde son champ : la suivante s'ajoute au lieu de remplacer la précédente.
+      if (champ.hasAttribute('data-photo') && champ.files && champ.files.length) {
+        var neuf = champ.cloneNode();
+        neuf.value = '';
+        neuf.addEventListener('change', surChangement);
+        champ.removeAttribute('data-photo');
+        champ.parentNode.insertBefore(neuf, champ);
+        photos.appendChild(champ);
+      }
+      maj();
+    };
+    rendre.querySelectorAll('[data-pages]').forEach(function (champ) { champ.addEventListener('change', surChangement); });
+    rendre.addEventListener('submit', function () {
+      envoyer.disabled = true;
+      envoyer.textContent = 'Envoi…';
+    });
+  }
   var bascule = document.getElementById('dvVerrouille');
   var date = document.getElementById('dvAjoutDate');
   if (bascule && date) {

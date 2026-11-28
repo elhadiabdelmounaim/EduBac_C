@@ -1,32 +1,54 @@
 {% extends "base.html" %}
 {% load markdown_extras %}
 {% block content %}
-<h1 class="h3 fw-bold mb-3">Stats par question — {{ quiz.title }}</h1>
+<h1 class="h3 fw-bold mb-1">Analyse des réponses — {{ quiz.title }}</h1>
+<p class="text-muted mb-3">{{ quiz.lesson.title }} · réussite par question, réponse fausse la plus choisie et fiche du cours à reprendre.</p>
+
+{% if a_revoir %}
+<div class="qs-revoir mb-4" role="note">
+    <h2 class="h6 fw-bold mb-2"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> À reprendre en classe</h2>
+    <ul class="mb-0">
+        {% for r in a_revoir %}
+        <li>Question {{ r.numero }} : {{ r.pct }} % de réussite{% if r.piege %} — beaucoup ont répondu « {{ r.piege|latex }} »{% endif %}{% if r.cours %} · <a href="{{ r.cours }}" target="_blank" rel="noopener">revoir dans le cours</a>{% endif %}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
 <div class="table-responsive">
-<table class="table table-hover bg-white shadow-sm">
-    <thead class="table-light"><tr><th>#</th><th>Question</th><th>Réponses</th><th>Correctes</th><th>Réussite</th></tr></thead>
+<table class="table table-hover bg-white shadow-sm align-middle">
+    <thead class="table-light"><tr><th>#</th><th>Question</th><th>Réponses</th><th>Réussite</th><th>Erreur la plus fréquente</th><th>Cours</th></tr></thead>
     <tbody>
     {% for r in rows %}
     <tr>
         <td>{{ forloop.counter }}</td>
         <td>{{ r.question.text|latex }}</td>
         <td>{{ r.total }}</td>
-        <td>{{ r.correct }}</td>
-        <td>
+        <td class="text-nowrap">
             {% if r.pct is not None %}
-            <div class="progress" style="height:10px;width:100px;display:inline-flex;">
+            <div class="progress" style="height:10px;width:90px;display:inline-flex;" role="progressbar" aria-valuenow="{{ r.pct }}" aria-valuemin="0" aria-valuemax="100" aria-label="Réussite">
                 <div class="progress-bar {% if r.pct >= 70 %}bg-success{% elif r.pct >= 40 %}bg-warning{% else %}bg-danger{% endif %}" style="width:{{ r.pct }}%"></div>
             </div>
-            {{ r.pct }}%
+            {{ r.pct }} %
             {% else %}—{% endif %}
         </td>
+        <td>
+            {% if r.piege %}« {{ r.piege|latex }} » <span class="text-muted small">({{ r.piege_n }} élève{{ r.piege_n|pluralize }})</span>{% elif r.total %}<span class="text-muted small">—</span>{% endif %}
+            {% if r.sans_reponse %}<div class="text-muted small">{{ r.sans_reponse }} sans réponse (temps écoulé)</div>{% endif %}
+        </td>
+        <td>{% if r.cours %}<a href="{{ r.cours }}" class="btn btn-sm btn-outline-primary text-nowrap" target="_blank" rel="noopener"><i class="bi bi-book" aria-hidden="true"></i> Revoir</a>{% endif %}</td>
     </tr>
     {% empty %}
-    <tr><td colspan="5" class="text-muted">Pas encore de données.</td></tr>
+    <tr><td colspan="6" class="text-muted">Pas encore de données.</td></tr>
     {% endfor %}
     </tbody>
 </table>
 </div>
 <a href="{% url 'quizzes:manage' %}" class="btn btn-outline-primary btn-sm">Retour</a>
 {% endblock %}
-{% block extra_css %}{% include "includes/katex.html" %}{% endblock %}
+{% block extra_css %}{% include "includes/katex.html" %}
+<style>
+.qs-revoir { border-left: 4px solid #b45309; background: #fff7e8; border-radius: 12px; padding: 12px 16px; color: #4a3200; }
+html[data-theme="dark"] .qs-revoir { background: #3a2f17; color: #ffd98a; }
+</style>
+{% endblock %}

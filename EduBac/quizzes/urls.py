@@ -8,6 +8,7 @@ urlpatterns = [
     # Élève
     path('assignes/', views.assigned_quizzes, name='assigned'),
     path('mes-resultats/', views.my_results, name='my_results'),
+    path('mes-erreurs/', views.review_mistakes, name='review_mistakes'),
     path('entrainement/', views.training, name='training'),
     path('<int:pk>/', views.quiz_detail, name='detail'),
     path('<int:pk>/commencer/', views.start_quiz, name='start'),
@@ -18,6 +19,7 @@ urlpatterns = [
     path('gestion/', views.manage_quizzes, name='manage'),
     path('creer/', views.create_quiz, name='create'),
     path('generer-envoyer/', views.teacher_ai_quiz, name='teacher_ai'),
+    path('prompt-ia/', views.ai_prompt, name='ai_prompt'),
     path('generation/<uuid:generation_id>/suivi/', generation_progress, name='generation_progress'),
     path('affecter/', views.assign_quiz, name='assign'),
     path('affecter/<int:pk>/', views.assign_quiz, name='assign_quiz'),

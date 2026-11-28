@@ -14,18 +14,16 @@
         <div class="form-text">Le quiz restera en brouillon jusqu'à cette date, puis sera envoyé automatiquement.</div>
       </div>
       <div class="mb-3">
-        <label class="form-label fw-semibold" for="scheduleClass">Classe destinataire</label>
-        <select name="classroom" id="scheduleClass" class="form-select">
-          <option value="">— Choisir la classe —</option>
-          {% for classroom in schedule_classrooms %}
-          <option value="{{ classroom.pk }}" {% if classroom.pk == quiz.classroom_id %}selected{% endif %}>
-            {{ classroom.name }} · {{ classroom.student_count }} élève{{ classroom.student_count|pluralize }}
-          </option>
-          {% empty %}
-          <option value="" disabled>Aucune classe de ce niveau</option>
-          {% endfor %}
-        </select>
-        <div class="form-text">Seuls les élèves de cette classe recevront le quiz et une notification.</div>
+        <span class="form-label fw-semibold d-block">Classes destinataires <span class="text-muted fw-normal small">— une ou plusieurs</span></span>
+        {% for classroom in schedule_classrooms %}
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="classroom" value="{{ classroom.pk }}" id="scheduleClass{{ classroom.pk }}"{% if classroom.scheduled %} checked{% endif %}>
+          <label class="form-check-label" for="scheduleClass{{ classroom.pk }}">{{ classroom.name }} · {{ classroom.student_count }} élève{{ classroom.student_count|pluralize }}</label>
+        </div>
+        {% empty %}
+        <p class="text-muted mb-0">Aucune classe de ce niveau.</p>
+        {% endfor %}
+        <div class="form-text">Seuls les élèves des classes cochées recevront le quiz et une notification.</div>
       </div>
       <button type="submit" class="btn btn-edubac">Enregistrer</button>
       <a href="{% url 'quizzes:manage' %}" class="btn btn-link">Annuler</a>

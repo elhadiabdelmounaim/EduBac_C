@@ -60,6 +60,7 @@ PAGES = [
     ('accounts:favorites', 'Favoris', 'star', 'favori', ELEVE),
     ('quizzes:assigned', 'Mes quiz', 'journal-check', 'devoirs controle', ELEVE),
     ('quizzes:my_results', 'Mes résultats', 'bar-chart', 'notes', ELEVE),
+    ('quizzes:review_mistakes', 'Revoir mes erreurs', 'arrow-repeat', 'erreurs fautes reviser corriger', ELEVE),
     ('accounts:progress', 'Ma progression', 'graph-up', 'progres', ELEVE),
     ('accounts:badges', 'Badges', 'award', '', ELEVE),
     ('quizzes:ranking', 'Classement', 'trophy', '', ELEVE),
@@ -68,6 +69,7 @@ PAGES = [
     ('chat:home', 'Messagerie', 'chat-dots', 'chat discussion messages conversation', ELEVE),
     ('classrooms:list', 'Mes classes', 'people', 'classe', PROF),
     ('classrooms:students', 'Mes élèves', 'person-badge', 'eleve', PROF),
+    ('classrooms:rapport', 'Rapport de la semaine', 'clipboard-data', 'hebdomadaire bilan', PROF),
     ('quizzes:manage', 'Mes quiz', 'pencil-square', 'gestion', PROF),
     ('quizzes:teacher_ai', 'Importer un quiz', 'upload', 'json generer', PROF),
     ('quizzes:student_results', 'Résultats des élèves', 'bar-chart-line', 'notes', PROF),
@@ -103,6 +105,11 @@ def mots_de_la_requete(q):
         q = q.replace(ar, f' {fr} ')
     mots = [m for m in normaliser(q).split() if m not in MOTS_VIDES]
     return mots[:8]
+
+
+def mots_du_texte(texte):
+    """Tous les mots utiles d'un texte (sans limite) : énoncés, règles."""
+    return [m for m in normaliser(texte).split() if m not in MOTS_VIDES]
 
 
 def _mot_trouve(mot, texte):
@@ -153,8 +160,14 @@ class _TextesDesBlocs(HTMLParser):
         super().__init__(convert_charrefs=True)
         self.partie, self.n, self.profondeur, self.cle = '', 0, 0, None
         self.textes = {}
+        self.ignore = 0          # texte des figures (SVG), scripts, boutons : hors du texte lisible
+
+    IGNOREES = {'svg', 'figure', 'script', 'style', 'button'}
 
     def handle_starttag(self, tag, attrs):
+        if tag in self.IGNOREES:
+            self.ignore += 1
+            return
         a = dict(attrs)
         classes = (a.get('class') or '').split()
         if tag == 'section' and 'chap' in classes and a.get('id'):
@@ -167,13 +180,16 @@ class _TextesDesBlocs(HTMLParser):
             self.textes[self.cle] = []
 
     def handle_endtag(self, tag):
+        if tag in self.IGNOREES:
+            self.ignore = max(0, self.ignore - 1)
+            return
         if tag == 'div' and self.cle:
             self.profondeur -= 1
             if not self.profondeur:
                 self.cle = None
 
     def handle_data(self, data):
-        if self.cle:
+        if self.cle and not self.ignore:
             self.textes[self.cle].append(data)
 
 
@@ -212,6 +228,7 @@ def _paragraphes(lesson, owners):
             if noeud['type'] == 'bloc':
                 titre = re.sub(r'\s*\(\d+\)$', '', titre)       # « Exemples (2) » → « Exemples »
             liste.append({'cle': noeud['key'], 'titre': titre, 'genre': noeud['type'],
+                          'nature': noeud.get('genre', ''),
                           'partie': partie if noeud['type'] != 'partie' else ''})
         for enfant in noeud.get('enfants') or []:
             visiter(enfant, partie)
@@ -223,6 +240,7 @@ def _paragraphes(lesson, owners):
     for p in liste:
         brut = lecteur.textes.get(p['cle'])
         if brut:
+            p['source'] = ' '.join(' '.join(brut).split())       # avec le LaTeX d'origine
             p['texte'] = _lisible(' '.join(brut))
             p['texte_norm'] = normaliser(p['texte'])
     _plans[chemin] = (cle, liste)
@@ -259,7 +277,7 @@ def _niveaux_du_lecteur(user):
     return niveaux
 
 
-def rechercher(request, q):
+def rechercher(request, q, lecon=None):
     """Résultats triés du plus précis au moins précis, et « direct » : l'adresse où aller sans
     rien demander quand une seule réponse s'impose (dictée « messagerie », « produit scalaire »)."""
     from cahier.acces import peut_voir
@@ -294,6 +312,8 @@ def rechercher(request, q):
         niveau = lesson.course.get_niveau_display()
         verrou = not peut_voir(request, lesson)
         bonus = 15 if lesson.course.niveau in niveaux else 0
+        if lecon and lesson.pk == lecon:
+            bonus += 30          # recherche lancée depuis ce cours : ses fiches d'abord
         s = score(mots, lesson.title, f'{lesson.course.name} {niveau}')
         if s:
             trouves.append({'type': 'lecon', 'titre': lesson.title, 'detail': f'Leçon · {niveau}',
@@ -328,3 +348,22 @@ def rechercher(request, q):
                 or resultats[0]['type'] != 'paragraphe' and premier >= 70 and ecart >= 15):
             direct = resultats[0]['url']
     return {'mots': mots, 'resultats': resultats, 'direct': direct}
+
+
+def paragraphe_le_plus_proche(lesson, texte, owners=None):
+    """Adresse de la fiche du cours en ligne qui parle le plus de « texte » (une règle, un énoncé),
+    ou None. Sert au lien « Revoir dans le cours » des statistiques et de la révision des erreurs."""
+    mots = {m for m in mots_du_texte(texte or '') if len(m) >= 4 and not m.isdigit()}
+    if not mots:
+        return None
+    meilleur, score_max = None, 1
+    for p in _paragraphes(lesson, owners):
+        cible = normaliser(p['titre']) + ' ' + p.get('texte_norm', '')
+        score = sum(1 for m in mots if _mot_trouve(m, cible))
+        if p['genre'] == 'bloc' and p.get('nature') in {'def', 'prop', 'thm', 'meth'}:
+            score += 0.5        # à égalité, une règle plutôt qu'un exemple
+        if score > score_max:
+            meilleur, score_max = p, score
+    if meilleur is None:
+        return None
+    return reverse('education:lesson_course_html', args=[lesson.pk]) + '#' + meilleur['cle']

@@ -36,10 +36,22 @@ TYPES = {
         'email': {'teacher': EMAIL_DIGEST},
     },
     'devoir': {
-        'label': 'Nouveaux devoirs',
+        'label': 'Devoirs (nouveaux, rappels, corrections)',
         'icon': 'bi-journal-arrow-down',
         'roles': {'student'},
         'email': {'student': EMAIL_INSTANT},
+    },
+    'devoir_rendu': {
+        'label': 'Devoirs rendus par les élèves',
+        'icon': 'bi-inbox',
+        'roles': {'teacher'},
+        'email': {'teacher': EMAIL_DIGEST},
+    },
+    'rapport': {
+        'label': 'Rapport hebdomadaire des classes',
+        'icon': 'bi-clipboard-data',
+        'roles': {'teacher'},
+        'email': {'teacher': EMAIL_INSTANT},
     },
     'comment': {
         'label': 'Commentaires du professeur',

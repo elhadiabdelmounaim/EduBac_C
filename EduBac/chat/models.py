@@ -449,6 +449,10 @@ class ChatMessage(ModeratedMessage):
     is_announcement = models.BooleanField(default=False, verbose_name='Annonce importante')
     is_voice = models.BooleanField(default=False, verbose_name='Message vocal')
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    mentions = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, blank=True, related_name='chat_mentions',
+        verbose_name='Personnes mentionnées (@)',
+    )
 
     class Meta:
         verbose_name = 'Message'
@@ -513,8 +517,51 @@ class ChatMessage(ModeratedMessage):
             'reply_to': reply,
             'whiteboard_share': share,
             'reactions': _reactions_resume(self, user),
+            'poll': None if deleted else _poll_payload(self, user),
+            'mentions': [] if deleted else _mentions_payload(self),
             **self.moderation_payload(user),
         }
+
+
+def _poll_payload(message, user):
+    from .sondages import resume_sondage
+    return resume_sondage(message, user)
+
+
+def _mentions_payload(message):
+    """[{id, name}] des personnes mentionnées (préchargées par la liste quand c'est possible)."""
+    cache = getattr(message, '_prefetched_objects_cache', {})
+    personnes = cache['mentions'] if 'mentions' in cache else (
+        list(message.mentions.all()) if message.pk else [])
+    return [{'id': p.pk, 'name': p.get_full_name() or p.username} for p in personnes]
+
+
+class ChatPoll(models.Model):
+    """Sondage rapide du professeur dans le salon de la classe (« Avez-vous compris ? »)."""
+    message = models.OneToOneField(ChatMessage, on_delete=models.CASCADE, related_name='poll')
+    question = models.CharField(max_length=300, verbose_name='Question')
+    options = models.JSONField(default=list, verbose_name='Choix')
+    is_closed = models.BooleanField(default=False, verbose_name='Clos')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Sondage'
+        verbose_name_plural = 'Sondages'
+
+    def __str__(self):
+        return self.question
+
+
+class ChatPollVote(models.Model):
+    poll = models.ForeignKey(ChatPoll, on_delete=models.CASCADE, related_name='votes')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='chat_poll_votes')
+    option = models.PositiveSmallIntegerField()
+    created_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['poll', 'user'], name='un_vote_par_sondage')]
+        verbose_name = 'Vote'
+        verbose_name_plural = 'Votes'
 
 
 class ChatReadState(models.Model):

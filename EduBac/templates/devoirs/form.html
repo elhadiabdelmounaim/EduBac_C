@@ -27,6 +27,11 @@
       <input type="datetime-local" name="date_limite" id="dvDateLimite" class="form-control dv-date-input" value="{{ valeurs.date_limite }}">
     </div>
 
+    <div class="dv-champ form-check form-switch">
+      <input class="form-check-input" type="checkbox" role="switch" name="rendu_en_ligne" value="1" id="dvRendu"{% if rendu_en_ligne %} checked{% endif %}>
+      <label class="form-check-label" for="dvRendu"><strong>Rendu en ligne</strong> — les élèves déposent leur copie (photos ou PDF) dans EduBac</label>
+    </div>
+
     <fieldset class="dv-champ dv-classes-choix">
       <legend class="form-label">Classes <span class="text-danger">*</span> <span class="dv-facultatif">— une ou plusieurs</span></legend>
       {% for niveau, classes in groupes %}

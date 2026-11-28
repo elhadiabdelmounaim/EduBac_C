@@ -57,6 +57,12 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'review_mistakes' %}active{% endif %}"
+                   href="{% url 'quizzes:review_mistakes' %}">
+                    <i class="bi bi-arrow-repeat"></i><span>Revoir mes erreurs</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'progress' %}active{% endif %}"
                    href="{% url 'accounts:progress' %}">
                     <i class="bi bi-graph-up"></i><span>Ma progression</span>

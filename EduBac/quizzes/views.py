@@ -591,7 +591,9 @@ def _publish_scheduled_quizzes():
         return
     for quiz in due:
         try:
-            _publish_to_classroom(quiz, quiz.classroom)
+            # Classes cochées à la programmation ; à défaut (anciens quiz), la classe mémorisée.
+            targets = list(quiz.scheduled_classrooms.order_by('name')) or [quiz.classroom]
+            _publish_to_classrooms(quiz, targets)
         except AssignmentError:
             # Sans classe valide, le quiz reste en brouillon : l'enseignant est prévenu.
             Quiz.objects.filter(pk=quiz.pk).update(publish_at=None)
@@ -866,6 +868,21 @@ def publish_quiz(request, pk):
         request, f'Quiz « {quiz.title} » envoyé à la classe {classroom.name} ({created} élève(s) notifié(s)).',
     )
     return redirect('quizzes:manage')
+
+
+@teacher_required
+def ai_prompt(request):
+    """Prompt à copier dans un assistant IA pour écrire le quiz JSON de la leçon choisie."""
+    from django.http import JsonResponse
+    from .prompt_ia import construire_prompt
+    lesson_id = request.GET.get('lesson') or ''
+    if not lesson_id.isdecimal():
+        return JsonResponse({'error': 'Choisissez d’abord la leçon.'}, status=400)
+    lesson = get_object_or_404(Lesson.objects.select_related('course'), pk=lesson_id)
+    nombre = request.GET.get('n') or '10'
+    prompt = construire_prompt(lesson, nombre=int(nombre) if nombre.isdecimal() else 10,
+                               difficulte=request.GET.get('difficulte') or 'mix')
+    return JsonResponse({'prompt': prompt, 'lesson': lesson.title})
 
 
 @teacher_required
@@ -1463,17 +1480,33 @@ def question_stats(request, pk):
     if quiz.created_by_id and quiz.created_by_id != request.user.id and not _is_platform_admin(request.user):
         messages.error(request, 'Accès refusé.')
         return redirect('quizzes:manage')
-    from django.db.models import Count, Q
-    questions = quiz.get_questions()
+    from collections import Counter, defaultdict
+    from education.recherche_rapide import paragraphe_le_plus_proche
+    questions = list(quiz.get_questions())
+    reponses = defaultdict(list)
+    for question_id, answer, is_correct in StudentAnswer.objects.filter(
+            question__in=questions).values_list('question_id', 'answer', 'is_correct'):
+        reponses[question_id].append((answer, is_correct))
     rows = []
-    for q in questions:
-        total = StudentAnswer.objects.filter(question=q).count()
-        correct = StudentAnswer.objects.filter(question=q, is_correct=True).count()
-        pct = int(100 * correct / total) if total else None
-        rows.append({'question': q, 'total': total, 'correct': correct, 'pct': pct})
+    for numero, q in enumerate(questions, start=1):
+        donnees = reponses.get(q.pk, [])
+        total = len(donnees)
+        correct = sum(1 for _, ok in donnees if ok)
+        erreurs = Counter(a.strip() for a, ok in donnees if not ok and a.strip())
+        piege, piege_n = erreurs.most_common(1)[0] if erreurs else ('', 0)
+        sans_reponse = sum(1 for a, ok in donnees if not ok and not a.strip())
+        rows.append({
+            'question': q, 'numero': numero, 'total': total, 'correct': correct,
+            'pct': int(100 * correct / total) if total else None,
+            'piege': piege, 'piege_n': piege_n, 'sans_reponse': sans_reponse,
+            'cours': paragraphe_le_plus_proche(quiz.lesson, f'{q.regle} {q.text}'),
+        })
+    # Les questions les plus ratées d'abord : ce qu'il faut reprendre en classe.
+    a_revoir = sorted((r for r in rows if r['pct'] is not None and r['pct'] < 50), key=lambda r: r['pct'])
     return render(request, 'quizzes/question_stats.html', {
         'quiz': quiz,
         'rows': rows,
+        'a_revoir': a_revoir,
         'page_title': f'Stats — {quiz.title}',
     })
 
@@ -1690,30 +1723,31 @@ def schedule_quiz(request, pk):
                     dt = None
             if dt is not None and timezone.is_naive(dt):
                 dt = timezone.make_aware(dt)
-            classroom = _managed_classrooms(request.user, is_active=True).filter(
-                pk=(request.POST.get('classroom') or '0') if (request.POST.get('classroom') or '').isdecimal() else 0,
-            ).first()
-            if dt and classroom is None:
+            ids = [v for v in request.POST.getlist('classroom') if v.isdecimal()]
+            chosen = list(_managed_classrooms(request.user, is_active=True).filter(pk__in=ids).order_by('name'))
+            if dt and not chosen:
                 messages.error(request, 'Choisissez la classe qui recevra le quiz.')
                 return redirect('quizzes:schedule', pk=quiz.pk)
-            if dt and classroom.niveau != quiz.lesson.course.niveau:
+            if dt and any(c.niveau != quiz.lesson.course.niveau for c in chosen):
                 messages.error(request, 'La classe choisie n’est pas du niveau de ce quiz.')
                 return redirect('quizzes:schedule', pk=quiz.pk)
             if dt:
                 quiz.publish_at = dt
-                quiz.classroom = classroom
+                quiz.classroom = chosen[0]
                 if quiz.status == 'published':
                     quiz.status = 'draft'
                 quiz.save(update_fields=['publish_at', 'status', 'classroom'])
+                quiz.scheduled_classrooms.set(chosen)
                 messages.success(
                     request,
-                    f'Envoi programmé à la classe {classroom.name} le {timezone.localtime(dt).strftime("%d/%m/%Y à %H:%M")}.',
+                    f'Envoi programmé {_to_classes(chosen)} le {timezone.localtime(dt).strftime("%d/%m/%Y à %H:%M")}.',
                 )
             else:
                 messages.error(request, 'Date invalide.')
         else:
             quiz.publish_at = None
             quiz.save(update_fields=['publish_at'])
+            quiz.scheduled_classrooms.clear()
             messages.info(request, 'Programmation annulée.')
         return redirect('quizzes:manage')
     level = quiz.lesson.course.niveau
@@ -1722,8 +1756,50 @@ def schedule_quiz(request, pk):
             'members', filter=Q(members__user__role='student'), distinct=True)).order_by('name')
         if c.niveau == level
     ]
+    scheduled_ids = set(quiz.scheduled_classrooms.values_list('pk', flat=True)) or {quiz.classroom_id}
+    for classroom in schedule_classrooms:
+        classroom.scheduled = classroom.pk in scheduled_ids
     return render(request, 'quizzes/schedule_quiz.html', {
         'quiz': quiz,
         'schedule_classrooms': schedule_classrooms,
         'page_title': 'Programmer le quiz',
+    })
+
+
+@student_required
+def review_mistakes(request):
+    """« Revoir mes erreurs » : les questions encore ratées (dernière réponse fausse), à refaire
+    sans note, avec la règle du cours et la solution après chaque réponse."""
+    from education.recherche_rapide import paragraphe_le_plus_proche
+    reponses = (
+        StudentAnswer.objects
+        .filter(attempt__student=request.user, attempt__submitted_at__isnull=False)
+        .select_related('question__quiz__lesson', 'attempt')
+        .order_by('-attempt__submitted_at', '-pk')
+    )
+    derniere = {}
+    for r in reponses:
+        derniere.setdefault(r.question_id, r)       # la plus récente d'abord
+    ratees = [r for r in derniere.values() if not r.is_correct][:60]
+    questions = []
+    liens = {}
+    for r in ratees:
+        q = r.question
+        cle = (q.quiz.lesson_id, q.pk)
+        if cle not in liens:
+            liens[cle] = paragraphe_le_plus_proche(q.quiz.lesson, f'{q.regle} {q.text}')
+        questions.append({
+            'id': q.pk,
+            'text': q.text,
+            'quiz': q.quiz.title,
+            'lesson': q.quiz.lesson.title,
+            'ma_reponse': r.answer,
+            'choices': [{'text': c.text, 'ok': c.is_correct} for c in q.get_choices()],
+            'regle': q.regle,
+            'solution': q.explanation,
+            'cours': liens[cle] or '',
+        })
+    return render(request, 'quizzes/review_mistakes.html', {
+        'questions': questions,
+        'page_title': 'Revoir mes erreurs',
     })

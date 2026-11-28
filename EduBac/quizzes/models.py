@@ -95,6 +95,13 @@ class Quiz(models.Model):
         verbose_name='Classe destinataire',
         help_text='Classe à laquelle ce quiz a été envoyé (si applicable).',
     )
+    scheduled_classrooms = models.ManyToManyField(
+        'classrooms.Classroom',
+        blank=True,
+        related_name='scheduled_quizzes',
+        verbose_name='Classes de la publication programmée',
+        help_text='Toutes les classes qui recevront le quiz à la date programmée.',
+    )
 
     class Meta:
         verbose_name = 'Quiz'

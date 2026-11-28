@@ -32,4 +32,4 @@
         </div>
     </div>
 </div>
-<script src="{% asset 'js/recherche-vocale.js' %}" data-url="{% url 'education:search_quick' %}" defer></script>
+<script src="{% asset 'js/recherche-vocale.js' %}" data-url="{% url 'education:search_quick' %}"{% if lecon_courante %} data-lecon="{{ lecon_courante }}"{% endif %} defer></script>

@@ -50,6 +50,16 @@
   var roomState = { can_post: true, can_moderate: isTeacher, restriction: '' };
   var scroll = messagesEl ? Chat.scroller(messagesEl, document.getElementById('chatJumpBtn')) : null;
   var compose = form && input ? Chat.composer(form, input, function () { return !!selectedFile; }) : null;
+  var Outils = window.EduBacChatOutils;
+  var mentionsCtl = Outils && input && classroomId
+    ? Outils.mentionAutocomplete(input, '/chat/api/classe/' + classroomId + '/members/', userId) : null;
+  var pollCtl = Outils && isTeacher && classroomId
+    ? Outils.pollDialog(classroomId, function (message) {
+      renderMessage(message, true, false);
+      if (scroll) scroll.toBottom(true);
+    }) : null;
+  var pollButton = document.getElementById('chatPollBtn');
+  if (pollButton && pollCtl) pollButton.addEventListener('click', function () { pollCtl.ouvrir(); });
 
   var EMOJIS = [
     '😀','😃','😄','😁','😅','😂','😊','😇','🙂','😉','😍','🥰','😘','😋','😜','🤗',
@@ -207,11 +217,15 @@
       }
       var attachment = attachmentNode(m);
       if (attachment) bubble.append(attachment);
-      if (m.body && !m.whiteboard_share) {
+      if (m.poll && Outils) {
+        bubble.append(Outils.pollNode(m, function (updated) { afterAction(updated); }));
+      } else if (m.body && !m.whiteboard_share) {
         var text = el('div', 'chat-message-text' + (attachment ? ' chat-att-caption' : ''));
         Chat.renderText(text, m.body);
+        if (m.mentions && m.mentions.length && Outils) Outils.highlightMentions(text, m.mentions, userId);
         bubble.append(text);
       }
+      if (m.mentions && m.mentions.some(function (p) { return p.id === userId; })) row.classList.add('mentions-me');
     }
 
     var meta = el('span', 'chat-bubble-meta');
@@ -454,6 +468,7 @@
       if (isVoice) fd.append('is_voice', '1');
       if (replyToId) fd.append('reply_to', replyToId);
       if (announcementInput && announcementInput.checked) fd.append('is_announcement', '1');
+      if (mentionsCtl && !isVoice) mentionsCtl.ids().forEach(function (id) { fd.append('mentions', id); });
       req = fetch('/chat/api/classe/' + classroomId + '/send/', {
         method: 'POST', credentials: 'same-origin',
         headers: { 'X-CSRFToken': csrf, Accept: 'application/json' }, body: fd,
@@ -466,6 +481,7 @@
           body: body,
           reply_to: replyToId,
           is_announcement: !!(announcementInput && announcementInput.checked),
+          mentions: mentionsCtl ? mentionsCtl.ids() : [],
         }),
       });
     }
@@ -477,6 +493,7 @@
           input.value = '';
           clearFile();
           closeEmoji();
+          if (mentionsCtl) mentionsCtl.reset();
         }
         if (announcementInput) announcementInput.checked = false;
         clearReply();

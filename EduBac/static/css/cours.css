@@ -502,3 +502,14 @@ html.presentation .minuteur.change:not([hidden]) { animation: minuteur-change .5
   animation: cible-recherche 1.2s ease-in-out 3; }
 @keyframes cible-recherche { 50% { outline-color: rgba(242, 165, 22, .25); } }
 @media (prefers-reduced-motion: reduce) { .cible-recherche { animation: none; } }
+
+/* « Reprendre à la page N » : dernière page lue sur cet appareil. */
+.reprise { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 60;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; max-width: calc(100vw - 24px);
+  padding: 10px 12px 10px 16px; border-radius: 16px; background: #123a53; color: #fff; box-shadow: 0 12px 32px rgba(0, 0, 0, .25);
+  font-family: "Lexend", sans-serif; font-size: 15px; animation: reprise-in .3s ease-out; }
+.reprise-aller { border: 0; border-radius: 10px; padding: 6px 12px; background: #f2a516; color: #1d1300; font-weight: 600; cursor: pointer; }
+.reprise-fermer { border: 0; background: transparent; color: #fff; font-size: 22px; line-height: 1; cursor: pointer; padding: 0 4px; }
+html.presentation .reprise { display: none; }
+@keyframes reprise-in { from { opacity: 0; transform: translate(-50%, 10px); } }
+@media (prefers-reduced-motion: reduce) { .reprise { animation: none; } }

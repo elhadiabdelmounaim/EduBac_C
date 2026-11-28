@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-<header class="page-head"><div><h1 class="h3 mb-1">Mes résultats</h1><p class="text-muted mb-0">Vos notes et corrections, quiz par quiz.</p></div></header>
+<header class="page-head"><div><h1 class="h3 mb-1">Mes résultats</h1><p class="text-muted mb-0">Vos notes et corrections, quiz par quiz.</p></div>
+<a href="{% url 'quizzes:review_mistakes' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Revoir mes erreurs</a></header>
 {% if attempts %}
 <div class="table-responsive">
 <table class="table table-hover bg-white shadow-sm">

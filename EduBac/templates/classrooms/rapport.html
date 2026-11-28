@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="rapport-page">
+  <header class="mb-3">
+    <h1 class="h3 fw-bold mb-1"><i class="bi bi-clipboard-data" aria-hidden="true"></i> Rapport de la semaine</h1>
+    <p class="text-muted mb-0">Du {{ rapport.debut|date:"l j F" }} au {{ rapport.fin|date:"l j F Y" }} · envoyé aussi chaque dimanche soir (notification et e-mail).</p>
+  </header>
+  {% for c in rapport.classes %}
+  <section class="card border-0 shadow-sm mb-3" aria-labelledby="rapport-{{ c.classe.pk }}">
+    <div class="card-body">
+      <div class="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-2">
+        <h2 class="h5 fw-bold mb-0" id="rapport-{{ c.classe.pk }}">{{ c.classe.name }}</h2>
+        <span class="text-muted small">{{ c.classe.get_niveau_display }} · {{ c.eleves }} élève{{ c.eleves|pluralize }}</span>
+      </div>
+      <div class="rapport-chiffres">
+        <div><strong>{{ c.actifs }}</strong><span>élève{{ c.actifs|pluralize }} actif{{ c.actifs|pluralize }}</span>{% if c.inactifs %}<small>{{ c.inactifs }} sans activité</small>{% endif %}</div>
+        <div><strong>{{ c.quiz_faits }}</strong><span>quiz fait{{ c.quiz_faits|pluralize }}</span>{% if c.quiz_faits %}<small>par {{ c.quiz_eleves }} élève{{ c.quiz_eleves|pluralize }}</small>{% endif %}</div>
+        <div><strong>{% if c.moyenne is not None %}{{ c.moyenne }} %{% else %}—{% endif %}</strong><span>moyenne des quiz</span></div>
+      </div>
+      {% if c.devoirs %}
+      <h3 class="h6 fw-bold mt-3 mb-2">Devoirs</h3>
+      <ul class="list-unstyled mb-0 rapport-devoirs">
+        {% for d in c.devoirs %}
+        <li>
+          <a href="{% url 'devoirs:rendus' d.devoir.pk %}">{{ d.devoir.titre }}</a>
+          <span class="small text-muted">{% if d.devoir.date_limite %}pour le {{ d.devoir.date_limite|date:"d/m" }} · {% endif %}{{ d.rendus }}/{{ d.attendus }} rendu{{ d.rendus|pluralize }}{% if d.manquants %} · <strong class="text-danger">{{ d.manquants }} manquant{{ d.manquants|pluralize }}</strong>{% endif %}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+      <a class="small" href="{% url 'classrooms:detail' c.classe.pk %}">Voir la classe ›</a>
+    </div>
+  </section>
+  {% empty %}
+  <p class="text-muted">Aucune classe active.</p>
+  {% endfor %}
+</div>
+<style>
+.rapport-page { max-width: 920px; }
+.rapport-chiffres { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.rapport-chiffres > div { display: flex; flex-direction: column; padding: 10px 14px; border-radius: 12px; background: var(--nb-teal-soft, #e6eefb); }
+.rapport-chiffres strong { font-size: 1.5rem; color: var(--nb-ink, #263449); line-height: 1.1; }
+.rapport-chiffres span { color: var(--nb-ink, #263449); }
+.rapport-chiffres small { color: var(--nb-muted, #56627a); }
+.rapport-devoirs li { display: flex; flex-wrap: wrap; gap: 4px 10px; padding: 4px 0; border-bottom: 1px dashed var(--nb-line, #d9e0ec); }
+</style>
+{% endblock %}

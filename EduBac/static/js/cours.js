@@ -590,6 +590,7 @@
       if (window.history && history.replaceState) {
         history.replaceState(null, '', '#p' + (index + 1));
       }
+      memoriserPage(index);
     }
 
     function pageDePartie(id) {
@@ -601,6 +602,27 @@
 
     function suivante() { if (courante + parVue < pages.length) afficher(courante + parVue); }
     function precedente() { if (courante > 0) afficher(courante - parVue); }
+
+    // « Reprendre à la page 12 » : dernière page lue de ce cours, sur cet appareil seulement.
+    var CLE_REPRISE = 'edubac-cours-page:' + window.location.pathname;
+    function memoriserPage(index) {
+      if (enPresentation()) return;
+      try { if (index > 0) localStorage.setItem(CLE_REPRISE, String(index + 1)); else localStorage.removeItem(CLE_REPRISE); } catch (e) { /* stockage indisponible */ }
+    }
+    function pageMemorisee() {
+      try { return parseInt(localStorage.getItem(CLE_REPRISE) || '0', 10) || 0; } catch (e) { return 0; }
+    }
+    function proposerReprise(page) {
+      if (!(page > 1 && page <= pages.length) || courante === page - 1) return;
+      var bandeau = $('<div>', { 'class': 'reprise', role: 'status' });
+      var aller = $('<button>', { type: 'button', 'class': 'reprise-aller', text: 'Reprendre à la page ' + page });
+      var fermer = $('<button>', { type: 'button', 'class': 'reprise-fermer', 'aria-label': 'Fermer', html: '&times;' });
+      bandeau.append($('<span>', { text: 'Vous lisiez ce cours.' }), aller, fermer).appendTo(document.body);
+      var retirer = function () { bandeau.remove(); };
+      aller.on('click', function () { retirer(); afficher(page - 1); });
+      fermer.on('click', retirer);
+      setTimeout(retirer, 15000);
+    }
 
     // Adresse « #s3-b2 » (recherche rapide) : page du paragraphe, mis en évidence à l'arrivée.
     var cibleAdresse = null;
@@ -771,9 +793,14 @@
     $.when(mathPret, policesPretes()).always(function () {
       var cible = paginer();
       var demande = depuisAdresse();
+      var reprise = window.location.hash ? 0 : pageMemorisee();
       afficher(cibleAdresse ? demande : (demande || cible), true);
       $root.addClass('pagine-pret');
       montrerCible();
+      if (reprise) {
+        memoriserPage(reprise - 1);       // l'affichage de la page 1 ne l'efface pas
+        proposerReprise(reprise);
+      }
       // Lien « #s3-b2 » suivi depuis la page déjà ouverte : même chose sans recharger.
       $(window).on('hashchange', function () {
         var index = depuisAdresse();

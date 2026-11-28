@@ -9,6 +9,7 @@
 
   var script = document.currentScript;
   var URL_RECHERCHE = script ? script.getAttribute('data-url') : '/recherche/rapide/';
+  var LECON = script ? script.getAttribute('data-lecon') || '' : '';
   var $ = function (id) { return document.getElementById(id); };
   var fab = $('rvFab'), fond = $('rvPanel'), champ = $('rvChamp'), micro = $('rvMicro');
   var langueBtn = $('rvLangue'), etat = $('rvEtat'), liste = $('rvResultats'), tout = $('rvTout');
@@ -171,7 +172,7 @@
     if (controleur) controleur.abort();
     controleur = window.AbortController ? new AbortController() : null;
     fond.classList.add('rv-charge');
-    fetch(URL_RECHERCHE + '?q=' + encodeURIComponent(q), {
+    fetch(URL_RECHERCHE + '?q=' + encodeURIComponent(q) + (LECON ? '&lecon=' + encodeURIComponent(LECON) : ''), {
       credentials: 'same-origin', headers: { 'Accept': 'application/json' },
       signal: controleur ? controleur.signal : undefined
     }).then(function (r) {
@@ -255,6 +256,12 @@
   // ---------- Aller directement au résultat ----------
   function aller(url) {
     annulerDirect();
+    var cible = new URL(url, window.location.href);
+    if (cible.pathname === window.location.pathname && cible.hash) {
+      fermer();                         // fiche du cours ouvert : il se place dessus (hashchange)
+      window.location.hash = cible.hash;
+      return;
+    }
     window.location.href = url;
   }
 

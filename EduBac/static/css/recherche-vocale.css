@@ -207,3 +207,11 @@ html[data-theme="dark"] .rv-pied { border-top-color: #273044; }
     .rv-fond, .rv-panneau, .rv-ecoute .rv-micro, .rv-onde i { animation: none; }
     .rv-en-cours .rv-barre { animation-duration: 1.2s; }
 }
+
+/* Cours en ligne (sans Bootstrap) : au-dessus de la barre des pages, masqué au vidéoprojecteur. */
+html.pagine .rv-fab { bottom: calc(76px + env(safe-area-inset-bottom)); }
+html.presentation .rv-fab { display: none; }
+.rv-panneau .visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; padding: 0 !important; margin: -1px !important; }
+@media (max-width: 767.98px) { .rv-pied .rv-aide { display: none !important; } }
+.rv-fond { font-family: inherit; }

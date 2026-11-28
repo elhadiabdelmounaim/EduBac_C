@@ -28,6 +28,15 @@
         <span class="dv-classes">{% for c in d.classes.all|dictsort:"name" %}<span class="dv-classe">{{ c.name }}</span>{% endfor %}</span>
         {% endif %}
         <span class="dv-date">Publié le {{ d.cree_le|date:"j F Y" }}</span>
+        {% if d.rendu_en_ligne %}
+          {% if gestion %}
+          <a class="dv-compteur" href="{% url 'devoirs:rendus' d.pk %}"><i class="bi bi-inbox" aria-hidden="true"></i> {{ d.nb_rendus }} copie{{ d.nb_rendus|pluralize }}</a>
+          {% elif d.mon_rendu %}
+          <span class="dv-etat est-rendu">{% if d.mon_rendu.corrige_le %}<i class="bi bi-patch-check-fill" aria-hidden="true"></i> Corrigé{% if d.mon_rendu.note is not None %} · {{ d.mon_rendu.note_texte }}/20{% endif %}{% else %}<i class="bi bi-check-circle-fill" aria-hidden="true"></i> Rendu{% endif %}</span>
+          {% else %}
+          <span class="dv-etat est-a-rendre"><i class="bi bi-hourglass-split" aria-hidden="true"></i> À rendre</span>
+          {% endif %}
+        {% endif %}
       </div>
       {% if d.liste_fichiers %}
       <ul class="dv-fichiers-mini">

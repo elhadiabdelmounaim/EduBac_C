@@ -29,20 +29,79 @@ def _students():
     return User.objects.filter(role='student', is_staff=False, is_superuser=False)
 
 
-def match_student(name):
-    """L'élève correspondant sans ambiguïté au nom saisi, sinon None."""
-    name = ' '.join(name.split())
+def _norme(texte):
+    """« Bennani-El Idrissi  Amal » → « bennani el idrissi amal » (sans accents ni ponctuation)."""
+    import re
+    import unicodedata
+    texte = unicodedata.normalize('NFKD', texte or '')
+    texte = ''.join(c for c in texte if not unicodedata.combining(c)).lower()
+    return ' '.join(re.findall(r'[a-z0-9]+|[\u0600-\u06ff]+', texte))
+
+
+def _distance_max_1(a, b):
+    """Vrai si a et b diffèrent d'au plus une lettre (ajout, oubli, remplacement ou inversion)."""
+    if a == b:
+        return True
+    if abs(len(a) - len(b)) > 1:
+        return False
+    if len(a) == len(b):
+        ecarts = [i for i, (x, y) in enumerate(zip(a, b)) if x != y]
+        if len(ecarts) == 1:
+            return True
+        return (len(ecarts) == 2 and ecarts[1] == ecarts[0] + 1
+                and a[ecarts[0]] == b[ecarts[1]] and a[ecarts[1]] == b[ecarts[0]])
+    court, long_ = (a, b) if len(a) < len(b) else (b, a)
+    i = 0
+    while i < len(court) and court[i] == long_[i]:
+        i += 1
+    return court[i:] == long_[i + 1:]
+
+
+def match_student(name, classroom_hint=''):
+    """L'élève correspondant sans ambiguïté au nom saisi, sinon None.
+
+    Tolérant : majuscules, accents, tirets et espaces, ordre prénom / nom, une lettre de
+    travers (« Amal Benani » → Amal Bennani). Si plusieurs élèves conviennent, la classe
+    indiquée départage ; sinon personne n'est choisi (l'administrateur cherchera lui-même)."""
+    name = ' '.join((name or '').split())
     if not name:
         return None
-    query = Q(username__iexact=name) | Q(email__iexact=name)
-    terms = name.split(' ')
-    if len(terms) >= 2:
-        full = Q()
-        for term in terms:
-            full &= Q(first_name__iexact=term) | Q(last_name__iexact=term)
-        query |= full
-    found = list(_students().filter(query)[:2])
-    return found[0] if len(found) == 1 else None
+    exact = list(_students().filter(Q(username__iexact=name) | Q(email__iexact=name))[:2])
+    if len(exact) == 1:
+        return exact[0]
+    saisi = _norme(name)
+    if not saisi:
+        return None
+    mots = sorted(saisi.split())
+    colle = saisi.replace(' ', '')
+    exacts, proches = [], []
+    for eleve in _students().only('pk', 'username', 'first_name', 'last_name'):
+        nom = _norme(f'{eleve.first_name} {eleve.last_name}')
+        identifiant = _norme(eleve.username).replace(' ', '')
+        if (nom and sorted(nom.split()) == mots) or identifiant == colle:
+            exacts.append(eleve)
+            continue
+        if len(colle) < 6 or not nom:
+            continue
+        variantes = {nom.replace(' ', ''), _norme(f'{eleve.last_name} {eleve.first_name}').replace(' ', ''), identifiant}
+        if any(_distance_max_1(colle, v) for v in variantes if v):
+            proches.append(eleve)
+    for candidats in (exacts, proches):
+        if len(candidats) == 1:
+            return candidats[0]
+        if len(candidats) > 1 and classroom_hint:
+            classe = _norme(classroom_hint).replace(' ', '')
+            from classrooms.models import ClassroomMember
+            dans_la_classe = [
+                e for e in candidats
+                if any(_norme(n).replace(' ', '') == classe for n in
+                       ClassroomMember.objects.filter(user=e).values_list('classroom__name', flat=True))
+            ]
+            if len(dans_la_classe) == 1:
+                return dans_la_classe[0]
+        if candidats:
+            return None          # ambigu : ne pas deviner
+    return None
 
 
 def _client_key(request):
@@ -116,7 +175,7 @@ def forgot_password(request):
                 help_request = PasswordHelpRequest.objects.create(
                     name=values['name'],
                     classroom_hint=values['classroom'],
-                    student=match_student(values['name']),
+                    student=match_student(values['name'], values['classroom']),
                 )
                 _notify_administrators(help_request)
             return redirect(reverse('accounts:forgot_password') + '?envoye=1')

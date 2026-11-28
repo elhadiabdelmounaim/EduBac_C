@@ -92,7 +92,7 @@
                 <tr>
                     <td>
                         <div class="fw-semibold">{{ a.student.get_full_name|default:a.student.username }}</div>
-                        <div class="small text-muted">{{ a.student.email }}</div>
+                        <div class="small text-muted">{{ a.student.email|default:a.student.username }}</div>
                     </td>
                     <td>{{ a.quiz.title }}</td>
                     <td class="small">{{ a.quiz.lesson.title|default:"—" }}</td>

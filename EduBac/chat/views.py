@@ -369,8 +369,8 @@ def api_messages(request, classroom_id):
 
     after_id = request.GET.get('after_id')
     qs = room.messages.select_related(
-        'sender', 'reply_to__sender', 'whiteboard_share',
-    ).order_by('created_at')
+        'sender', 'reply_to__sender', 'whiteboard_share', 'poll',
+    ).prefetch_related('poll__votes__user', 'mentions').order_by('created_at')
     if after_id:
         try:
             after_id = int(after_id)
@@ -467,8 +467,10 @@ def api_send(request, classroom_id):
     if 'multipart/form-data' in content_type or request.FILES:
         is_voice = (request.POST.get('is_voice') or '') in ('1', 'true', 'True')
         reply_raw = request.POST.get('reply_to')
+        mentions_raw = request.POST.getlist('mentions')
     else:
         reply_raw = payload.get('reply_to') if isinstance(payload, dict) else None
+        mentions_raw = payload.get('mentions') if isinstance(payload, dict) else None
 
     reply_to = None
     if reply_raw:
@@ -507,14 +509,151 @@ def api_send(request, classroom_id):
         is_voice=is_voice,
         is_announcement=is_announcement,
     )
+    mentionnes = _mentions_valides(classroom, user, body, mentions_raw)
+    if mentionnes:
+        msg.mentions.set(mentionnes)
     room.mark_read(user)
     realtime.class_message(classroom.pk, msg)
     if is_announcement:
         from notifications.services import notify_class_announcement
         notify_class_announcement(msg)
     else:
-        _push_class_message(classroom, msg, user)
+        _push_class_message(classroom, msg, user, exclude_ids={u.pk for u in mentionnes})
+    if mentionnes:
+        _notifier_mentions(classroom, msg, user, mentionnes)
     return JsonResponse({'ok': True, 'message': msg.to_dict(user)})
+
+
+def _membres_du_salon(classroom):
+    ids = set(classroom.members.values_list('user_id', flat=True))
+    if classroom.teacher_id:
+        ids.add(classroom.teacher_id)
+    return User.objects.filter(pk__in=ids, is_active=True)
+
+
+def _mentions_valides(classroom, sender, body, raw):
+    """Membres du salon cochés dans l'autocomplétion ET dont « @Prénom Nom » figure dans le texte."""
+    if not raw or not body:
+        return []
+    if not isinstance(raw, (list, tuple)):
+        raw = [raw]
+    ids = {int(v) for v in raw if str(v).isdecimal()}
+    ids.discard(sender.pk)
+    if not ids:
+        return []
+    return [
+        u for u in _membres_du_salon(classroom).filter(pk__in=ids)
+        if f'@{u.get_full_name() or u.username}' in body
+    ][:20]
+
+
+def _notifier_mentions(classroom, message, sender, personnes):
+    from notifications.services import notify_user
+    extrait = message.body[:140]
+    for personne in personnes:
+        notify_user(
+            user=personne,
+            title=f'{sender.get_full_name() or sender.username} vous a mentionné',
+            message=f'{classroom.name} : {extrait}',
+            type='message',
+            actor=sender,
+            link=reverse('chat:room', args=[classroom.pk]) + f'#message-{message.pk}',
+            group_key=f'mention:{classroom.pk}',
+            send_email=False,
+        )
+
+
+# ─── Sondages rapides ─────────────────────────────────────────────────────────
+
+def _json(request):
+    try:
+        data = json.loads(request.body.decode('utf-8') or '{}')
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+@login_required_simple
+@require_POST
+def api_poll_create(request, classroom_id):
+    """Le professeur de la classe publie un sondage dans le salon."""
+    from .models import ChatPoll
+    from .sondages import SondageInvalide, nettoyer
+    user, classroom, err = _require_access(request, classroom_id)
+    if err:
+        return err
+    if not can_moderate_classroom(user, classroom):
+        return JsonResponse({'error': 'Seul le professeur de la classe peut lancer un sondage.'}, status=403)
+    room = ClassChatRoom.get_or_create_for(classroom)
+    data = _json(request)
+    if data is None:
+        return JsonResponse({'error': 'Requête invalide.'}, status=400)
+    try:
+        question, options = nettoyer(data.get('question'), data.get('options'))
+    except SondageInvalide as exc:
+        return JsonResponse({'error': str(exc)}, status=400)
+    from django.db import transaction
+    with transaction.atomic():
+        msg = ChatMessage.objects.create(room=room, sender=user, body=f'📊 {question}')
+        ChatPoll.objects.create(message=msg, question=question, options=options)
+    room.mark_read(user)
+    realtime.class_message(classroom.pk, msg)
+    _push_class_message(classroom, msg, user)
+    msg._reaction_noms = True
+    return JsonResponse({'ok': True, 'message': msg.to_dict(user)})
+
+
+def _poll_for(request, poll_id):
+    from .models import ChatPoll
+    poll = get_object_or_404(ChatPoll.objects.select_related('message__room__classroom'), pk=poll_id)
+    user, classroom, err = _require_access(request, poll.message.room.classroom_id)
+    return poll, user, classroom, err
+
+
+@login_required_simple
+@require_POST
+def api_poll_vote(request, poll_id):
+    """Un choix par personne ; le même choix le retire, un autre le remplace."""
+    from .models import ChatPollVote
+    poll, user, classroom, err = _poll_for(request, poll_id)
+    if err:
+        return err
+    if poll.is_closed or poll.message.is_deleted:
+        return JsonResponse({'error': 'Ce sondage est clos.'}, status=400)
+    data = _json(request) or {}
+    option = data.get('option')
+    if not isinstance(option, int) or not (0 <= option < len(poll.options)):
+        return JsonResponse({'error': 'Choix inconnu.'}, status=400)
+    from django.db import transaction
+    with transaction.atomic():
+        vote = ChatPollVote.objects.filter(poll=poll, user=user).first()
+        if vote and vote.option == option:
+            vote.delete()
+        elif vote:
+            vote.option = option
+            vote.save(update_fields=['option', 'created_at'])
+        else:
+            ChatPollVote.objects.create(poll=poll, user=user, option=option)
+        poll.message.touch()
+    realtime.class_update(classroom.pk, poll.message)
+    poll.message._reaction_noms = can_moderate_classroom(user, classroom)
+    return JsonResponse({'ok': True, 'message': poll.message.to_dict(user)})
+
+
+@login_required_simple
+@require_POST
+def api_poll_close(request, poll_id):
+    poll, user, classroom, err = _poll_for(request, poll_id)
+    if err:
+        return err
+    if not can_moderate_classroom(user, classroom):
+        return JsonResponse({'error': 'Seul le professeur peut clore le sondage.'}, status=403)
+    poll.is_closed = not poll.is_closed
+    poll.save(update_fields=['is_closed'])
+    poll.message.touch()
+    realtime.class_update(classroom.pk, poll.message)
+    poll.message._reaction_noms = True
+    return JsonResponse({'ok': True, 'message': poll.message.to_dict(user)})
 
 
 def _push_class_message(classroom, message, sender, exclude_ids=()):

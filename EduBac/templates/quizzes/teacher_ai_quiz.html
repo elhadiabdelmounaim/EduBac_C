@@ -102,6 +102,29 @@
                                 </select>
                             </div>
                         </div>
+                        <details class="qi-prompt" id="quizPrompt" data-url="{% url 'quizzes:ai_prompt' %}">
+                            <summary><i class="bi bi-robot" aria-hidden="true"></i> Pas encore de fichier ? Préparer le prompt pour une IA (ChatGPT, Claude…)</summary>
+                            <div class="qi-prompt-corps">
+                                <p class="form-text mt-0">Le prompt reprend le plan et les règles du cours en ligne de la leçon choisie, et demande la règle et la solution de chaque question. Collez-le dans l’assistant, enregistrez sa réponse dans un fichier <code>.json</code>, puis importez-le ci-dessous.</p>
+                                <div class="qi-prompt-options">
+                                    <label class="form-label small mb-0" for="promptNombre">Questions</label>
+                                    <input type="number" id="promptNombre" class="form-control form-control-sm" min="3" max="40" value="10">
+                                    <label class="form-label small mb-0" for="promptDifficulte">Difficulté</label>
+                                    <select id="promptDifficulte" class="form-select form-select-sm">
+                                        <option value="mix">Mélange</option>
+                                        <option value="easy">Facile</option>
+                                        <option value="medium">Moyenne</option>
+                                        <option value="hard">Difficile</option>
+                                    </select>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="promptGenerer">Préparer le prompt</button>
+                                </div>
+                                <div class="qi-prompt-resultat" id="promptResultat" hidden>
+                                    <textarea id="promptTexte" class="form-control form-control-sm" rows="8" readonly aria-label="Prompt pour l’IA"></textarea>
+                                    <button type="button" class="btn btn-sm btn-edubac" id="promptCopier"><i class="bi bi-clipboard" aria-hidden="true"></i> Copier le prompt</button>
+                                </div>
+                                <p class="small text-danger mb-0" id="promptErreur" role="alert" hidden></p>
+                            </div>
+                        </details>
                     </div>
                 </div>
 

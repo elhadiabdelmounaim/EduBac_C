@@ -138,11 +138,16 @@
             <i class="bi bi-emoji-smile" aria-hidden="true"></i>
           </button>
           <label for="chatInput" class="visually-hidden">Votre message</label>
-          <textarea id="chatInput" rows="1" placeholder="Écrire un message…" title="Astuce : $x^2$ pour écrire une formule" maxlength="4000"></textarea>
+          <textarea id="chatInput" rows="1" placeholder="Écrire un message… (@ pour mentionner)" title="Astuce : $x^2$ pour écrire une formule, @ pour mentionner" maxlength="4000" data-formules></textarea>
           <button type="button" class="chat-tool-btn" id="chatAttachBtn" title="Image ou fichier" aria-label="Joindre une image ou un fichier">
             <i class="bi bi-paperclip" aria-hidden="true"></i>
           </button>
           <input type="file" id="chatFileInput" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,audio/*" hidden>
+          {% if user.is_teacher or user.is_staff %}
+          <button type="button" class="chat-tool-btn" id="chatPollBtn" title="Sondage rapide" aria-label="Lancer un sondage rapide">
+            <i class="bi bi-bar-chart" aria-hidden="true"></i>
+          </button>
+          {% endif %}
         </div>
         <button type="submit" class="chat-round-btn chat-send-btn" title="Envoyer" aria-label="Envoyer">
           <i class="bi bi-send-fill" aria-hidden="true"></i>
@@ -155,6 +160,29 @@
       </form>
       {% include "chat/_voice_recorder.html" %}
     </footer>
+    {% if user.is_teacher or user.is_staff %}
+    <dialog class="chat-poll-dialog" id="chatPollDialog" aria-labelledby="chatPollTitle">
+      <form method="dialog">
+        <h2 class="h5" id="chatPollTitle"><i class="bi bi-bar-chart" aria-hidden="true"></i> Sondage rapide</h2>
+        <div class="chat-poll-modeles">
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-modele='{"q": "Avez-vous compris ?", "o": ["👍 Oui", "🤔 Un peu", "👎 Non"]}'>Compris ?</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-modele='{"q": "On refait un exemple ?", "o": ["Oui", "Non"]}'>Un autre exemple ?</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-modele='{"q": "Quelle est la bonne réponse ?", "o": ["A", "B", "C", "D"]}'>QCM A–D</button>
+        </div>
+        <label class="form-label small fw-semibold" for="chatPollQuestion">Question</label>
+        <input type="text" name="question" id="chatPollQuestion" class="form-control" maxlength="300" required>
+        <span class="form-label small fw-semibold d-block mt-2">Choix (2 à 6)</span>
+        <div class="chat-poll-choix" data-options></div>
+        <button type="button" class="btn btn-sm btn-link px-0" data-ajouter><i class="bi bi-plus" aria-hidden="true"></i> Ajouter un choix</button>
+        <p class="small text-danger mb-0" data-erreur role="alert" hidden></p>
+        <p class="small text-muted mb-2">Les élèves voient les résultats ; vous seul voyez qui a voté quoi.</p>
+        <div class="d-flex gap-2 justify-content-end">
+          <button type="button" class="btn btn-outline-secondary" data-annuler>Annuler</button>
+          <button type="submit" class="btn btn-edubac">Publier</button>
+        </div>
+      </form>
+    </dialog>
+    {% endif %}
   </section>
 </div>
 {% endblock %}
@@ -162,6 +190,7 @@
 <script src="{% asset 'js/chat-voice.js' %}"></script>
 <script src="{% asset 'js/chat-presence.js' %}"></script>
 <script src="{% asset 'js/chat-actions.js' %}"></script>
+<script src="{% asset 'js/chat-outils.js' %}"></script>
 <script src="{% asset 'js/messaging-home.js' %}"></script>
 <script src="{% asset 'js/chat.js' %}"></script>
 {% if user.is_teacher or user.is_staff %}<script src="{% asset 'js/chat-whiteboard.js' %}"></script>{% endif %}

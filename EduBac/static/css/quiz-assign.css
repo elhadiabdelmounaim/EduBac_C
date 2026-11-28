@@ -76,3 +76,14 @@ html[data-theme="dark"] .qb-assign-summary { background: var(--nb-teal-soft); }
 .qi-extra-label { font-weight: 600; font-size: .88rem; color: var(--nb-ink, #263449); }
 .qi-extra-class { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; }
 .qi-extra-class input { width: 18px; height: 18px; accent-color: var(--nb-teal, #1d4fa3); }
+
+/* Prompt pour une IA (import). */
+.qi-prompt { margin-top: 12px; border: 1px dashed var(--nb-line, #d9e0ec); border-radius: 12px; padding: 8px 12px; }
+.qi-prompt > summary { cursor: pointer; font-weight: 600; color: var(--nb-teal, #1d4fa3); }
+.qi-prompt-corps { display: grid; gap: 8px; margin-top: 8px; }
+.qi-prompt-options { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.qi-prompt-options input { width: 80px; }
+.qi-prompt-options select { width: auto; }
+.qi-prompt-resultat { display: grid; gap: 8px; }
+.qi-prompt-resultat textarea { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .78rem; }
+.qi-prompt-resultat .btn { justify-self: start; }

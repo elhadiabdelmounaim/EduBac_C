@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load edubac_assets %}
+{% block extra_css %}{% include "includes/katex.html" %}
+<link rel="stylesheet" href="{% asset 'css/quiz-assign.css' %}">
+<style>
+.rv-err-page { max-width: 760px; margin: 0 auto; }
+.rv-err-carte { background: var(--nb-surface, #fff); border: 1px solid var(--nb-line, #d9e0ec); border-radius: 20px; padding: clamp(16px, 4vw, 26px); box-shadow: var(--nb-shadow); }
+.rv-err-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; font-size: .82rem; color: var(--nb-muted, #56627a); margin-bottom: 10px; }
+.rv-err-enonce { font-size: 1.12rem; color: var(--nb-ink, #263449); margin-bottom: 14px; overflow-wrap: anywhere; }
+.rv-err-choix { display: grid; gap: 8px; }
+.rv-err-choix button { text-align: left; padding: 10px 14px; border-radius: 12px; border: 2px solid var(--nb-line, #d9e0ec); background: var(--nb-surface, #fff); color: var(--nb-ink, #263449); font-size: 1rem; }
+.rv-err-choix button:not(:disabled):hover { border-color: var(--nb-teal, #1d4fa3); }
+.rv-err-choix button.est-juste { border-color: #2e7d4f; background: #e7f6ec; }
+.rv-err-choix button.est-faux { border-color: #c0392b; background: #fdecea; }
+html[data-theme="dark"] .rv-err-choix button.est-juste { background: #17351f; }
+html[data-theme="dark"] .rv-err-choix button.est-faux { background: #3a1916; }
+.rv-err-avant { font-size: .85rem; color: var(--nb-muted, #56627a); margin-top: 10px; }
+.rv-err-retour { margin-top: 14px; display: grid; gap: 8px; }
+.rv-err-verdict { font-weight: 700; }
+.rv-err-verdict.ok { color: #2e7d4f; }
+.rv-err-verdict.ko { color: #c0392b; }
+.rv-err-bloc { border-left: 4px solid var(--nb-teal, #1d4fa3); background: var(--nb-teal-soft, #e6eefb); border-radius: 10px; padding: 8px 12px; color: var(--nb-ink, #263449); }
+.rv-err-bloc.solution { border-left-color: #2e7d4f; background: rgba(46, 125, 79, .1); }
+.rv-err-bloc > span:first-child { display: block; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--nb-muted, #56627a); }
+.rv-err-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; margin-top: 16px; }
+.rv-err-progres { height: 6px; border-radius: 6px; background: var(--nb-line, #d9e0ec); overflow: hidden; margin-bottom: 14px; }
+.rv-err-progres > div { height: 100%; background: var(--nb-teal, #1d4fa3); transition: width .3s; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="rv-err-page">
+  <h1 class="h3 fw-bold mb-1"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Revoir mes erreurs</h1>
+  {% if questions %}
+  <p class="text-muted">{{ questions|length }} question{{ questions|pluralize }} que tu as ratée{{ questions|pluralize }} la dernière fois. Réessaie : ce n’est pas noté, et la règle du cours s’affiche après ta réponse.</p>
+  <div class="rv-err-progres" aria-hidden="true"><div id="errProgres" style="width:0%"></div></div>
+  <article class="rv-err-carte" id="errCarte" aria-live="polite"></article>
+  {{ questions|json_script:"errQuestions" }}
+  {% else %}
+  <div class="todo-empty mt-3"><i class="bi bi-trophy" aria-hidden="true"></i> Aucune erreur à revoir : tes dernières réponses sont toutes justes. Bravo !</div>
+  <a href="{% url 'quizzes:my_results' %}" class="btn btn-outline-primary btn-sm mt-3">Mes résultats</a>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}
+{% if questions %}
+<script>
+(function () {
+  'use strict';
+  var questions = JSON.parse(document.getElementById('errQuestions').textContent);
+  var carte = document.getElementById('errCarte');
+  var progres = document.getElementById('errProgres');
+  var i = 0, justes = 0, repondu = false;
+  function el(tag, cls, texte) { var n = document.createElement(tag); if (cls) n.className = cls; if (texte) n.textContent = texte; return n; }
+  function maths(n) { if (window.renderMath) window.renderMath(n); }
+  function melanger(liste) {
+    var a = liste.slice();
+    for (var k = a.length - 1; k > 0; k--) { var j = Math.floor(Math.random() * (k + 1)); var t = a[k]; a[k] = a[j]; a[j] = t; }
+    return a;
+  }
+  function fin() {
+    carte.textContent = '';
+    progres.style.width = '100%';
+    carte.append(el('h2', 'h4 fw-bold', 'Terminé !'));
+    carte.append(el('p', '', justes + ' / ' + questions.length + ' juste' + (justes > 1 ? 's' : '') + ' cette fois.'));
+    var actions = el('div', 'rv-err-actions');
+    var encore = el('button', 'btn btn-edubac', 'Recommencer');
+    encore.type = 'button';
+    encore.addEventListener('click', function () { i = 0; justes = 0; afficher(); });
+    var lien = el('a', 'btn btn-outline-primary', 'Mes résultats');
+    lien.href = '{% url "quizzes:my_results" %}';
+    actions.append(encore, lien);
+    carte.append(actions);
+  }
+  function afficher() {
+    if (i >= questions.length) { fin(); return; }
+    var q = questions[i];
+    repondu = false;
+    progres.style.width = Math.round(100 * i / questions.length) + '%';
+    carte.textContent = '';
+    var meta = el('div', 'rv-err-meta');
+    meta.append(el('span', '', 'Question ' + (i + 1) + ' / ' + questions.length), el('span', '', q.quiz + ' · ' + q.lesson));
+    carte.append(meta);
+    carte.append(el('div', 'rv-err-enonce', q.text));
+    var choix = el('div', 'rv-err-choix');
+    melanger(q.choices).forEach(function (c) {
+      var b = el('button', '', c.text);
+      b.type = 'button';
+      b.dataset.juste = c.ok ? '1' : '0';
+      b.addEventListener('click', function () { repondre(q, c, b, choix); });
+      choix.append(b);
+    });
+    carte.append(choix);
+    if (q.ma_reponse) carte.append(el('p', 'rv-err-avant', 'La dernière fois, tu avais répondu : ' + q.ma_reponse));
+    var retour = el('div', 'rv-err-retour');
+    retour.id = 'errRetour';
+    carte.append(retour);
+    maths(carte);
+  }
+  function repondre(q, c, bouton, choix) {
+    if (repondu) return;
+    repondu = true;
+    if (c.ok) justes++;
+    Array.prototype.forEach.call(choix.children, function (b) {
+      b.disabled = true;
+      if (b.dataset.juste === '1') b.classList.add('est-juste');      // la bonne réponse, toujours montrée
+    });
+    if (!c.ok) bouton.classList.add('est-faux');
+    var retour = document.getElementById('errRetour');
+    retour.append(el('div', 'rv-err-verdict ' + (c.ok ? 'ok' : 'ko'), c.ok ? '✓ Juste !' : '✗ Pas encore : regarde la règle et la solution.'));
+    if (q.regle) { var r = el('div', 'rv-err-bloc'); r.append(el('span', '', 'Règle du cours'), document.createTextNode(q.regle)); retour.append(r); }
+    if (q.solution) { var s = el('div', 'rv-err-bloc solution'); s.append(el('span', '', 'Solution'), document.createTextNode(q.solution)); retour.append(s); }
+    var actions = el('div', 'rv-err-actions');
+    if (q.cours) { var lien = el('a', 'btn btn-sm btn-outline-primary', '📖 Revoir dans le cours'); lien.href = q.cours; lien.target = '_blank'; lien.rel = 'noopener'; actions.append(lien); }
+    var suite = el('button', 'btn btn-edubac', i + 1 < questions.length ? 'Question suivante →' : 'Terminer');
+    suite.type = 'button';
+    suite.addEventListener('click', function () { i++; afficher(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    actions.append(suite);
+    retour.append(actions);
+    maths(retour);
+    suite.focus();
+  }
+  afficher();
+})();
+</script>
+{% endif %}
+{% endblock %}

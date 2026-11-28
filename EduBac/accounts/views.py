@@ -1007,9 +1007,23 @@ def student_dashboard(request):
         todo.append(assignment)
     todo.sort(key=lambda a: (a.deadline is None, a.deadline or now))
 
+    # « Devoirs à rendre » : rendu en ligne, pas encore rendu, date limite à venir (ou sans date).
+    from django.db.models import Q
+    from devoirs.acces import devoirs_de_l_eleve
+    devoirs_a_rendre = list(
+        devoirs_de_l_eleve(user).filter(rendu_en_ligne=True)
+        .filter(Q(date_limite__isnull=True) | Q(date_limite__gte=now))
+        .exclude(rendus__eleve=user)
+        .order_by('date_limite', '-cree_le')[:4]
+    )
+    devoirs_a_rendre.sort(key=lambda d: (d.date_limite is None, d.date_limite or now))
+    for devoir in devoirs_a_rendre:
+        devoir.urgent = bool(devoir.date_limite and devoir.date_limite - now < URGENT_DELAY)
+
     return render(request, 'accounts/dashboard_student.html', {
         'page_title': 'Tableau de bord élève',
         'todo': todo[:6],
+        'devoirs_a_rendre': devoirs_a_rendre,
         'todo_count': len(todo),
         'profile': profile,
         'stats': stats,

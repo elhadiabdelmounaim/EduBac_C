@@ -99,7 +99,9 @@ class DevoirsBrowserTests(StaticLiveServerTestCase):
             self.assertEqual(erreurs_tel, [])
 
             # Le professeur déverrouille : l'élève voit maintenant le lien.
-            page.get_by_role('button', name='Déverrouiller').click()
+            page.locator('summary', has_text='Déverrouiller').click()
+            expect(page.locator('input[name="prevenir"]')).to_be_checked()      # élèves prévenus par défaut
+            page.get_by_role('button', name='Rendre visible').click()
             expect(page.locator('.alert-success')).to_contain_text('visible par les élèves')
             tel.reload()
             expect(tel.locator('a.dv-fichier-nom', has_text='Correction_DM3.pdf')).to_be_visible()

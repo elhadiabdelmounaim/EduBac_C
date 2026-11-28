@@ -109,3 +109,54 @@ a.dv-fichier-nom { color: var(--nb-teal); }
     .dv-verrou-form { position: static; width: 100%; margin-top: 8px; box-shadow: none; }
     .dv-date-input { max-width: none; }
 }
+
+/* ---------- Travail rendu ---------- */
+.dv-page-large { max-width: 1040px; }
+.dv-suivi {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 1.25rem; padding: 12px 16px;
+    border-radius: var(--radius-md); background: var(--nb-teal-soft); color: var(--nb-ink); text-decoration: none;
+}
+.dv-suivi:hover { color: var(--nb-ink); filter: brightness(.98); }
+.dv-suivi-icone { font-size: 1.4rem; color: var(--nb-teal); }
+.dv-suivi-texte { flex: 1; min-width: 180px; }
+.dv-suivi-lien { font-weight: 600; color: var(--nb-teal); }
+.dv-etat { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; font-size: .82rem; }
+.dv-etat.est-rendu { color: var(--edubac-green); }
+.dv-etat.est-retard { color: var(--nb-ochre); }
+.dv-etat.est-a-rendre { color: #b42318; }
+html[data-theme="dark"] .dv-etat.est-a-rendre { color: #ff8a80; }
+.dv-compteur { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; text-decoration: none; }
+.dv-mon-travail { background: var(--nb-surface); border: 1px solid var(--nb-line); border-radius: var(--radius-md); padding: 16px; }
+.dv-statut { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 10px; color: var(--nb-muted); font-weight: 600; }
+.dv-statut.est-rendu { color: var(--edubac-green); }
+.dv-statut.est-corrige { color: var(--nb-teal); }
+.dv-statut.est-retard { color: var(--nb-ochre); }
+.dv-note { margin-left: auto; font-size: 1.25rem; color: var(--nb-ink); }
+.dv-commentaire { border-left: 4px solid var(--nb-teal); background: var(--nb-teal-soft); border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; color: var(--nb-ink); }
+.dv-commentaire > span { display: block; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--nb-muted); }
+.dv-commentaire p:last-child { margin-bottom: 0; }
+.dv-pages { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 4px; }
+.dv-pages li { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.dv-pages li > a { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.dv-pages form { margin: 0; }
+.dv-rendre-form { display: grid; gap: 10px; }
+.dv-rendre-boutons { display: flex; flex-wrap: wrap; gap: 8px; }
+.dv-rendre-boutons .btn { cursor: pointer; }
+.dv-choisis { margin: 0; padding-left: 1.2rem; font-size: .88rem; color: var(--nb-ink); }
+.dv-rendre-form > [data-envoyer] { justify-self: start; }
+.dv-onglets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+.dv-onglets a { text-decoration: none; }
+.dv-compte { font-size: .85rem; font-weight: 500; color: var(--nb-muted); margin-left: 6px; }
+.dv-copies { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.dv-copie { background: var(--nb-surface); border: 1px solid var(--nb-line); border-radius: var(--radius-sm); padding: 10px 14px; }
+.dv-copie.est-absente { background: transparent; border-style: dashed; }
+.dv-copie-tete { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.dv-copie-nom { font-weight: 700; color: var(--nb-ink); }
+.dv-correction { display: grid; grid-template-columns: 130px 1fr auto auto; gap: 8px; align-items: start; }
+.dv-correction textarea { min-height: 31px; }
+.dv-reprevenir { align-self: center; white-space: nowrap; margin: 0; }
+@media (max-width: 640px) {
+    .dv-correction { grid-template-columns: 1fr; }
+    .dv-note-champ { max-width: 160px; }
+    .dv-correction .btn { justify-self: start; }
+}

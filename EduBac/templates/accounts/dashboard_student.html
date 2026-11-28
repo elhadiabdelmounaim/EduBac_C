@@ -38,6 +38,27 @@
     {% endif %}
 </section>
 
+{% if devoirs_a_rendre %}
+<section class="dash-section" aria-labelledby="devoirsTitle">
+    <div class="dash-section-head">
+        <h2 class="h5 mb-0" id="devoirsTitle"><i class="bi bi-journal-arrow-down" aria-hidden="true"></i> Devoirs à rendre</h2>
+        <a href="{% url 'devoirs:index' %}" class="small">Tous mes devoirs</a>
+    </div>
+    <ul class="todo-list">
+        {% for d in devoirs_a_rendre %}
+        <li class="todo-item{% if d.urgent %} is-urgent{% endif %}">
+            <span class="todo-icon" aria-hidden="true"><i class="bi bi-journal-text"></i></span>
+            <span class="todo-body">
+                <strong>{{ d.titre }}</strong>
+                <small>{% if d.date_limite %}<span class="todo-deadline">{% if d.urgent %}⏰ {% endif %}avant le {{ d.date_limite|date:"d/m à H:i" }} · dans {{ d.date_limite|timeuntil }}</span>{% else %}Sans date limite{% endif %}</small>
+            </span>
+            <a href="{% url 'devoirs:detail' d.pk %}#mon-travail" class="btn btn-accent btn-sm">Rendre</a>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+
 {% if latest_share %}
 <a class="dash-share" href="{% url 'whiteboard:share_view' latest_share.pk %}">
     <img src="{% url 'whiteboard:share_image' latest_share.pk %}" alt="" loading="lazy">

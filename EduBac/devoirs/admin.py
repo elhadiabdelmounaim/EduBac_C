@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Devoir, FichierDevoir
+from .models import Devoir, FichierDevoir, FichierRendu, RenduDevoir
 
 
 class FichierInline(admin.TabularInline):
@@ -17,3 +17,18 @@ class DevoirAdmin(admin.ModelAdmin):
     search_fields = ('titre', 'consigne')
     filter_horizontal = ('classes',)
     inlines = [FichierInline]
+
+
+class FichierRenduInline(admin.TabularInline):
+    model = FichierRendu
+    extra = 0
+    fields = ('nom', 'fichier', 'taille')
+    readonly_fields = ('taille',)
+
+
+@admin.register(RenduDevoir)
+class RenduDevoirAdmin(admin.ModelAdmin):
+    list_display = ('devoir', 'eleve', 'rendu_le', 'note', 'corrige_le')
+    list_filter = ('devoir',)
+    search_fields = ('eleve__username', 'eleve__last_name', 'devoir__titre')
+    inlines = [FichierRenduInline]

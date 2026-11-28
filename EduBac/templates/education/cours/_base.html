@@ -133,5 +133,9 @@ d.className+=' pagine';setTimeout(function(){if(!/\bpagine-pret\b/.test(d.classN
     </div>
   </div>
 </main>
+{# Recherche rapide (micro) : les fiches de ce cours d'abord ; masquée au vidéoprojecteur. #}
+<link rel="stylesheet" href="{% asset 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
+<link rel="stylesheet" href="{% asset 'css/recherche-vocale.css' %}">
+{% include "includes/recherche_vocale.html" with lecon_courante=lesson.pk %}
 </body>
 </html>

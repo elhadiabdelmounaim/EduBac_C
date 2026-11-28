@@ -132,7 +132,8 @@
                     {% if voir_presence %}{% if m.est_actif %}<span class="presence-etat actif" data-presence="actif"><span class="presence-point" aria-hidden="true"></span>En ligne</span>{% elif m.user.derniere_activite %}<span class="presence-etat" data-presence="inactif">Actif il y a {{ m.user.derniere_activite|timesince }}</span>{% else %}<span class="presence-etat" data-presence="jamais">Pas encore d’activité</span>{% endif %}{% endif %}
                 </div>
                 <div class="small text-muted">
-                    {{ m.user.email }}
+                    {# Sans adresse e-mail (inscription par nom d'utilisateur) : l'identifiant, jamais « None ». #}
+                    {% if m.user.email %}{{ m.user.email }}{% else %}Identifiant : {{ m.user.username }}{% endif %}
                     {% if m.user.student_profile %}
                     · {{ m.user.student_profile.get_niveau_display }}
                     {% endif %}

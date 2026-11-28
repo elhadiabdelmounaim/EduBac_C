@@ -492,3 +492,13 @@ def regenerate_excel(request, pk):
         except Exception as e:
             messages.error(request, f'Erreur lors de la régénération : {e}')
     return redirect('classrooms:results', pk=classroom.pk)
+
+
+@teacher_required
+def rapport_semaine(request):
+    """Rapport des 7 derniers jours, classe par classe (le même que celui du dimanche)."""
+    from .rapport import rapport_professeur
+    return render(request, 'classrooms/rapport.html', {
+        'rapport': rapport_professeur(request.edubac_user),
+        'page_title': 'Rapport de la semaine',
+    })

@@ -1,0 +1,11 @@
+<ol class="explications">
+  {% for r in lignes %}
+  <li>
+    <span class="num">{{ r.n }}</span>
+    <div>
+      <h2>{{ r.titre }}</h2>
+      <p>{{ r.texte }}{% if r.exemple %}<br>مثال: <code>{{ r.exemple }}</code>{% endif %}</p>
+    </div>
+  </li>
+  {% endfor %}
+</ol>

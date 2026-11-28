@@ -105,7 +105,8 @@ class PasswordHelpRequestTests(TestCase):
         self.assertEqual(login.resolver_match.url_name, 'change_password')
 
     def test_unrecognised_request_is_resolved_through_search(self):
-        self.ask('Salma B.', '1bac1')
+        # « Salma B. » est désormais reconnu (identifiant salma.b) : nom vraiment inconnu ici.
+        self.ask('S. Bennani-Alaoui', '1bac1')
         help_request = PasswordHelpRequest.objects.get()
         self.assertIsNone(help_request.student)
         dashboard = self.admin_client.get(reverse('accounts:admin_dashboard'))

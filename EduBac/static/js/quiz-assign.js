@@ -286,3 +286,50 @@
     }
   });
 })();
+
+/** Prompt pour une IA : plan et règles du cours de la leçon choisie, prêt à copier. */
+(function () {
+  'use strict';
+  document.addEventListener('DOMContentLoaded', function () {
+    var bloc = document.getElementById('quizPrompt');
+    if (!bloc) return;
+    var lesson = document.getElementById('quizLesson');
+    var bouton = document.getElementById('promptGenerer');
+    var resultat = document.getElementById('promptResultat');
+    var texte = document.getElementById('promptTexte');
+    var copier = document.getElementById('promptCopier');
+    var erreur = document.getElementById('promptErreur');
+    function dire(message) { erreur.textContent = message || ''; erreur.hidden = !message; }
+    bouton.addEventListener('click', function () {
+      dire('');
+      if (!lesson || !lesson.value) { dire('Choisissez d’abord la leçon (étape 2).'); return; }
+      var params = new URLSearchParams({
+        lesson: lesson.value,
+        n: document.getElementById('promptNombre').value || '10',
+        difficulte: document.getElementById('promptDifficulte').value
+      });
+      bouton.disabled = true;
+      fetch(bloc.getAttribute('data-url') + '?' + params.toString(), {
+        credentials: 'same-origin', headers: { 'Accept': 'application/json' }
+      }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+        .then(function (res) {
+          if (!res.ok) { dire(res.d.error || 'Prompt indisponible.'); return; }
+          texte.value = res.d.prompt;
+          resultat.hidden = false;
+          copier.innerHTML = '<i class="bi bi-clipboard" aria-hidden="true"></i> Copier le prompt';
+        })
+        .catch(function () { dire('Prompt indisponible (connexion ?).'); })
+        .then(function () { bouton.disabled = false; });
+    });
+    copier.addEventListener('click', function () {
+      var fait = function () { copier.innerHTML = '<i class="bi bi-clipboard-check" aria-hidden="true"></i> Copié'; };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(texte.value).then(fait, function () { texte.select(); document.execCommand('copy'); fait(); });
+      } else {
+        texte.select();
+        document.execCommand('copy');
+        fait();
+      }
+    });
+  });
+})();
